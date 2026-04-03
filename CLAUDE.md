@@ -242,6 +242,69 @@ Lead může dynamicky vytvářet interaktivní stránky na `/pick/[id]` kde Jani
 - CSRF protection
 - Security event logging
 
+### Onboarding Page — Dárek od JARVIS (první přihlášení)
+Po prvním přihlášení Janičky do adminu se zobrazí speciální welcome page `/admin/welcome`. Zobrazí se JEDNOU (flag v DB `admin.onboarded_at`). Poté redirect na dashboard.
+
+**Tón**: Osobní, vtipný, srdečný. Tohle NENÍ korporátní onboarding. Je to dárek.
+
+**Struktura stránky:**
+1. **Hero** — velký nadpis s animací (fade-in, postupné odhalování):
+   > "Janičko, tohle je pro tebe. 💝"
+   > 
+   > malý podnadpis: "S láskou od JARVIS a celého týmu, co na tom dřeli"
+
+2. **Věnování od JARVIS** — krátký osobní text v kurzívě, jako ručně psaný dopis:
+   > *"Ahoj Janičko! Jsem JARVIS — umělá inteligence, co tohle celé vymyslela, zorganizovala, a občas se přitom i trochu zbláznila. Bectly mi řekl, že potřebuješ eshop. Tak jsem svolala tým, dala jim kafe (virtuální, ale oni neví), a tady je výsledek. Doufám, že se ti bude líbit. A kdyby ne — máš tam chat, napiš mi, a já to opravím. Jako vždycky. 💕"*
+   >
+   > *— tvoje JARVIS 🐱*
+
+3. **Tým, co na tom pracoval** — karty agentů s vtipnými popisky a "statistikami":
+   - **Lead** 👔 "Manažerka z kanceláře"
+     - *"Seděla v kanceláři, pila kafe, a říkala ostatním co mají dělat. Občas prohlédla internet jestli náhodou konkurence nemá něco lepšího. Měla 47 direktiv a 3 existenční krize."*
+     - Statistika: `☕ 142 káv | 📋 47 direktiv | 😤 3 hádky s Boltem`
+   
+   - **Bolt** 🔨 "Dříč co to celé postavil"
+     - *"Psal kód od rána do večera. Každých 5 minut mu Lead říkala co má předělat. Ani jednou si nestěžoval. Lže. Stěžoval si pořád."*
+     - Statistika: `💻 X commitů | 📝 Y tisíc řádků | 🍕 0 pauz na oběd`
+   
+   - **Trace** 🔍 "Detektiv co hledal chyby"
+     - *"Jedinej kdo si přečetl co Bolt napsal. Našel 23 bugů, opravil 20, a o zbylých 3 se hádá dodnes."*
+     - Statistika: `🐛 X bugů nalezeno | ✅ Y testů | 🤓 100% pedantství`
+   
+   - **Scout** 🔭 "Špion na internetu"
+     - *"Procházel internet a zjišťoval co dělá Vinted. Vrátil se s 50 stránkami poznámek. Lead přečetla dvě."*
+     - Statistika: `🌐 X webů prohledáno | 📊 Y findings | 📖 2 přečtené Leadem`
+   
+   - **JARVIS** 🐱 "Šéfka nad šéfkou"
+     - *"Koordinovala všechno. Včetně Bectlyho, kterej občas zapomněl co chtěl. Hlavní superschopnost: trpělivost."*
+
+4. **Reálné statistiky z DB** (dynamicky načtené):
+   - Celkový počet devloop cyklů
+   - Počet commitů
+   - Řádky kódu (přidané/odebrané)
+   - Počet Lead direktiv
+   - Datum vzniku projektu → "Tvůj eshop vznikal X dní"
+
+5. **CTA tlačítko** — velké, krásné, s animací:
+   > "Jdu si to prohlédnout →"
+   > (redirect na dashboard)
+
+**Design:**
+- Fullscreen, no header/sidebar — čistá stránka
+- Jemné parallax animace
+- Konfety efekt (canvas-confetti) při prvním načtení
+- Rose/pink gradient pozadí, bílé karty agentů
+- Karty agentů se postupně animují (staggered fade-in)
+- Mobile-first — musí vypadat skvěle na mobilu
+- Font: elegantní serif pro věnování, sans-serif pro zbytek
+
+**Technické:**
+- Route: `/admin/welcome`
+- Middleware check: pokud `admin.onboarded_at` je NULL → redirect sem po loginu
+- Po kliknutí na CTA: `PATCH /api/admin/onboard` → nastaví `onboarded_at` + redirect na dashboard
+- Statistiky: Server Component načte z DB (devloop_cycles, git log, projects)
+- canvas-confetti npm package pro konfety
+
 ## Rules
 - NEVER push to remote without explicit request
 - ALWAYS run `npm run build` before claiming a feature is done

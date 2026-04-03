@@ -28,7 +28,8 @@ export default async function AdminDashboardPage() {
     totalCustomers,
     recentProducts,
     recentOrders,
-    allOrders,
+    revenueAgg,
+    statusGroups,
   ] = await Promise.all([
     prisma.product.count(),
     prisma.product.count({ where: { active: true, sold: false } }),
@@ -47,22 +48,24 @@ export default async function AdminDashboardPage() {
         customer: { select: { firstName: true, lastName: true } },
       },
     }),
-    prisma.order.findMany({
-      select: { total: true, status: true },
+    // Aggregate revenue at DB level instead of loading all orders into memory
+    prisma.order.aggregate({
+      where: { status: { not: "cancelled" } },
+      _sum: { total: true },
+    }),
+    // Count orders per status at DB level
+    prisma.order.groupBy({
+      by: ["status"],
+      _count: { status: true },
     }),
   ]);
 
-  const totalRevenue = allOrders
-    .filter((o) => o.status !== "cancelled")
-    .reduce((sum, o) => sum + o.total, 0);
+  const totalRevenue = revenueAgg._sum.total ?? 0;
 
-  const ordersByStatus = allOrders.reduce<Record<string, number>>(
-    (acc, o) => {
-      acc[o.status] = (acc[o.status] || 0) + 1;
-      return acc;
-    },
-    {},
-  );
+  const ordersByStatus: Record<string, number> = {};
+  for (const g of statusGroups) {
+    ordersByStatus[g.status] = g._count.status;
+  }
 
   const stats = [
     {

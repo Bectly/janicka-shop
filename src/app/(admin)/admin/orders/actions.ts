@@ -68,29 +68,32 @@ export async function updateOrderStatus(orderId: string, status: string) {
     ]);
   } else if (order.status === "cancelled" && status !== "cancelled") {
     // Un-cancelling: re-mark products as sold, but only if they haven't been
-    // sold to a different order in the meantime (prevents double-sell)
-    const alreadySold = await prisma.product.findMany({
-      where: { id: { in: productIds }, sold: true },
-      select: { id: true, name: true },
-    });
+    // sold to a different order in the meantime (prevents double-sell).
+    // Both check and update MUST be inside the same transaction to prevent
+    // a TOCTOU race where a concurrent checkout sells the products between
+    // the availability check and the update.
+    await prisma.$transaction(async (tx) => {
+      const alreadySold = await tx.product.findMany({
+        where: { id: { in: productIds }, sold: true },
+        select: { id: true, name: true },
+      });
 
-    if (alreadySold.length > 0) {
-      const names = alreadySold.map((p) => p.name).join(", ");
-      throw new Error(
-        `Nelze obnovit objednávku — tyto produkty byly mezitím prodány v jiné objednávce: ${names}`
-      );
-    }
+      if (alreadySold.length > 0) {
+        const names = alreadySold.map((p) => p.name).join(", ");
+        throw new Error(
+          `Nelze obnovit objednávku — tyto produkty byly mezitím prodány v jiné objednávce: ${names}`
+        );
+      }
 
-    await prisma.$transaction([
-      prisma.order.update({
+      await tx.order.update({
         where: { id: orderId },
         data: { status },
-      }),
-      prisma.product.updateMany({
+      });
+      await tx.product.updateMany({
         where: { id: { in: productIds } },
         data: { sold: true, stock: 0 },
-      }),
-    ]);
+      });
+    });
   } else {
     await prisma.order.update({
       where: { id: orderId },

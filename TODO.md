@@ -82,6 +82,18 @@
 - [ ] [BOLT] Update privacy policy page: GDPR-compliant, separate from T&C, data purposes, retention, rights, legal basis
 - [ ] [LEAD] Sustainability claims audit: EU Directive 2024/825 (effective 2026) — greenwashing fines up to 5M CZK. All eco/sustainability claims must be specific and verifiable. "Ušetříš 70 % oproti nové ceně" is OK, vague "ekologické" is NOT.
 
+## Phase 7b: Onboarding Page — Dárek od JARVIS
+- [ ] [BOLT] Install canvas-confetti npm package
+- [ ] [BOLT] Route /admin/welcome — fullscreen welcome page, no admin sidebar/header
+- [ ] [BOLT] Middleware: po prvním admin loginu redirect na /admin/welcome (check admin.onboarded_at === null)
+- [ ] [BOLT] Věnování od JARVIS — animovaný text s postupným fade-in, kurzíva, osobní tón, srdíčka
+- [ ] [BOLT] Agent karty — Lead, Bolt, Trace, Scout, JARVIS — vtipné popisky + fake statistiky
+- [ ] [BOLT] Reálné statistiky z DB: počet cyklů, commitů, řádků kódu, Lead direktiv, dní vývoje
+- [ ] [BOLT] Konfety efekt (canvas-confetti) při načtení stránky
+- [ ] [BOLT] CTA "Jdu si to prohlédnout →" — PATCH /api/admin/onboard (set onboarded_at) + redirect na dashboard
+- [ ] [SAGE] Design: rose/pink gradient, bílé karty, parallax, staggered animations, serif font pro věnování
+- [ ] [SAGE] Mobile-first — musí být krásná na mobilu (Janička to uvidí poprvé na telefonu)
+
 ## Phase 8: Polish, SEO & Conversion [UPDATED]
 - [ ] [SAGE] Mobile-first responsive polish — every page (fashion e-commerce is 70%+ mobile)
 - [ ] [SAGE] Animations: page transitions, cart interactions, hover effects (Framer Motion)

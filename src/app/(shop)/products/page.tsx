@@ -74,6 +74,7 @@ export default async function ProductsPage({
       where,
       include: { category: { select: { name: true } } },
       orderBy,
+      take: 100, // Cap results to prevent unbounded queries; pagination TODO
     }),
     prisma.category.findMany({ orderBy: { sortOrder: "asc" } }),
     prisma.product.findMany({
