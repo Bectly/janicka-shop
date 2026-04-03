@@ -18,6 +18,10 @@
 - [x] [BOLT] Brand filter — pill-style toggle buttons — done (in product-filters.tsx)
 - [x] [BOLT] Size + condition + price range filters on product listing — done (all wired to URL params, server-side filtering)
 - [ ] [BOLT] Quick view modal on product cards
+- [ ] [BOLT] Mobile filter drawer — wrap existing filter UI in shadcn `Sheet` (component already exists at `src/components/ui/sheet.tsx`). On mobile (`lg:hidden`): show "Filtry" button → opens Sheet from left/bottom with all filter sections inside `Accordion` for collapsibility. On desktop: keep current inline grid. Add "Zobrazit X produktů" apply button at bottom of Sheet. This is the #1 mobile UX gap — current inline filters push product grid far down on small screens.
+- [ ] [BOLT] Filter product counts — show number of matching products per filter option (e.g. "Zara (23)", "M (15)"). Grey out or hide options with 0 results. Eliminates dead-end filter frustration (88% of consumers don't return after poor UX). Requires counting query per filter group.
+- [ ] [BOLT] Color filter — add color filter section to ProductFilters using color swatches (small circles with actual colors, not text). Schema already has `colors` JSON field on Product. Parse unique colors same as sizes. Use 28px circle swatches with checkmark overlay on selected. Most fashion sites use visual swatches — text-only color filters feel dated.
+- [ ] [BOLT] Adopt `nuqs` library for type-safe URL search params — replaces ~50 lines of manual URL parsing in product-filters.tsx. Built-in debouncing (`throttleMs: 500` for price inputs instead of current `onBlur` pattern), server-side cache via `createSearchParamsCache`, batch URL updates. ~10KB. Install: `npm i nuqs`. Add `NuqsAdapter` to root layout. Refactor product-filters.tsx to use `useQueryStates`. Refactor products/page.tsx to use `productFilterCache.parse(searchParams)`.
 - [x] [BOLT] Pagination on product listing (12 items/page, reusable Pagination component) — done Cycle #22
 - [x] [SAGE] Active filter chips with individual removal — done (FilterChip component with X button + "Smazat vše")
 - [ ] [TRACE] E2E test: browse catalog, filter, view product
@@ -30,8 +34,7 @@
 - [x] [BOLT] Cart page: items list, remove, summary
 - [x] [BOLT] Checkout page with contact + shipping form + order summary
 - [x] [BOLT] Order confirmation page with cart clearing
-- [ ] [BOLT] Payment gateway integration — GoPay OR Comgate (decision pending). GoPay: plain `fetch` wrapper, no SDK (all npm packages abandoned). Comgate: `comgate-node` v1.1.2 (maintained TS SDK, 60% cheaper). Both support Apple/Google Pay, inline checkout. Sandbox first, test card `4111 1111 1111 1111`. Architecture: `src/lib/payments/gopay.ts` (client), `src/lib/payments/types.ts`, webhook route.
-- [ ] [LEAD] Create Pick Page for Janička: "GoPay vs Comgate" — GoPay (2.2%+3CZK, more methods, brand) vs Comgate (0.9%+1CZK, CZ #1, maintained SDK). Decision drives implementation.
+- [ ] [BOLT] Payment gateway: **Comgate** (Lead recommendation — Cycle #25 research). Server-side: REST API via `fetch` (simple create/status/refund endpoints, `apidoc.comgate.cz`). Client-side: `@comgate/checkout-js` v2 for inline checkout (Apple Pay + Google Pay auto-detected, no redirect). Architecture: `src/lib/payments/comgate.ts` (REST client), `src/lib/payments/types.ts`, `POST /api/payments/webhook` route. Sandbox first. **Why Comgate**: 60% cheaper (0.9%+1CZK vs GoPay 2.2%+3CZK), CZ market #1, official JS SDK, native BNPL/installments, fees locked through Dec 2026, 6 months free (Start plan). Apple Pay + Google Pay: full support. `comgate-node` npm is stale — use direct REST instead (simpler, more control).
 - [ ] [BOLT] Stripe payment integration (international fallback)
 - [ ] [BOLT] Payment webhook handler: POST /api/payments/webhook (notification_url callback). Verify payment status via GET after receiving notification — never trust webhook payload alone.
 - [ ] [BOLT] Multi-step checkout UI: 1) Kontakt, 2) Doprava (Packeta widget), 3) Platba, 4) Shrnutí
@@ -101,6 +104,8 @@
 - [ ] [SAGE] Swipeable product image gallery on mobile (touch gestures, pinch-to-zoom)
 - [x] [BOLT] SEO structured data — Product JSON-LD with itemCondition, offers, brand, category, image on product detail pages. XSS-safe (\\u003c escaping). — done Cycle #22, hardened Cycle #24
 - [x] [BOLT] SEO basics: Open Graph tags (og:image), sitemap.xml (dynamic from products/categories), robots.txt — done Cycle #22
+- [ ] [BOLT] Enrich JSON-LD with `shippingDetails` + `hasMerchantReturnPolicy` — HIGHEST-ROI SEO action for 2026. Google AI Mode now appears on 14% of shopping queries (5.6x increase in 4 months). Pages with complete Schema.org cited 3.1x more often. +58.3% clicks, +31.8% conversion for shops with full structured data. Google launched Universal Commerce Protocol (UCP) Jan 2026 for AI agents. Add shipping costs, delivery times, 14-day return policy to JSON-LD.
+- [ ] [LEAD] 30-day price history tracking for discount compliance — Czech "fake discount" rule (already in effect) requires showing lowest price from previous 30 days when displaying sale/discount prices. Need: `priceHistory` JSON field or separate model to track price changes, display "Nejnižší cena za posledních 30 dní: X Kč" on products with compareAt. Non-compliance = fines from ČOI.
 - [ ] [BOLT] Performance: image optimization (WebP/AVIF via next/image), lazy loading, ISR for product pages
 - [ ] [LEAD] Sticky "Přidat do košíku" button on mobile product detail — purchase action must remain visible while scrolling. Fashion e-commerce best practice: 70%+ traffic is mobile, losing the CTA on scroll kills conversion.
 - [ ] [LEAD] Move size + fit info HIGHER on product detail page — above fold if possible. Include model measurements in cm (prsa/pas/délka). Sizing uncertainty is the #1 conversion killer in fashion e-commerce (30%+ return rate driver).
@@ -114,25 +119,40 @@
 - [ ] [LEAD] "Právě prodáno" live feed on homepage — show recently sold items with "Prodáno za X hodin" badge. Proves items sell fast, creates honest FOMO for similar items still available. Unlike fake countdown timers — this is REAL social proof that resonates with sustainability-conscious 18-35 demographic.
 - [ ] [LEAD] Wishlist with notifications — notify when a favorited item's price drops or similar items arrive
 - [ ] [LEAD] Customer reviews / social proof on homepage — even 5 reviews can lift conversions ~270% per industry data. Review sweet spot: 4.0-4.7 rating perceived as most credible.
-- [ ] [LEAD] Heureka.cz integration — THE critical Czech trust signal. Brumla (main competitor) has 99% Heureka rating. CZ shoppers actively check Heureka before buying. Implement verified reviews feed + XML product feed for Heureka zbožák.
-- [ ] [LEAD] Instagram integration — show real customers wearing purchased items (UGC social proof)
-- [ ] [LEAD] Messaging strategy: lean into "My jsme to už zkontrolovali, aby ses nemusela" — key differentiator vs Vinted (inconsistent quality, scams, random sellers). Janicka = curated quality, pro photos, guaranteed condition, single-warehouse fast shipping.
+- [ ] [LEAD] Heureka.cz "Verified by Customers" — NEW pricing model (Sept 2025): free "Start" tier (15 reviews/month), paid "Profi" (499 CZK/month, returned as ad credit). 50% of Czech shoppers ONLY buy from Heureka-certified shops. Start with free tier. Integration: XML product feed for Heureka zbožák + review widget. THE #1 Czech trust signal — Brumla has 99% rating.
+- [ ] [LEAD] Instagram Shopping product feed + micro-influencer strategy — Instagram is THE social channel for CZ women 18-35 (70% of CZ internet users follow influencers, CZ influencer spend surpassed $95M). Plan: Instagram Shopping catalog feed, UGC (real customers wearing purchased items), 3-5 micro-influencers in CZ fashion/sustainability niche. TikTok Shop NOT available in CZ — focus 100% on Instagram.
+- [ ] [LEAD] Messaging strategy: lean into "My jsme to už zkontrolovali, aby ses nemusela" — key differentiator vs Vinted (inconsistent quality, scams, random sellers, recent backlash over grouped sizing). Janicka = curated quality, pro photos, guaranteed condition, single-warehouse fast shipping.
+- [ ] [LEAD] QR code payment on order confirmation — CZ bank transfer is #1 payment method at 33% (higher than cards at 25%!). Add QR payment code (Czech banking standard) to order confirmation page and email. Enables instant bank transfer from mobile banking apps. Low effort, high impact for CZ market.
 
-## Priority Order (Lead Recommendation — Updated Cycle #25)
-1. ~~**Image upload**~~ ✅ DONE (Cycle #25) — UploadThing v7, drag-reorder, mobile camera, next/image rendering
-2. ~~**SEO structured data**~~ ✅ DONE (Cycle #22) — JSON-LD, sitemap, robots.txt, OG tags
-3. ~~**Pagination**~~ ✅ DONE (Cycle #22) — 12/page, reusable component
-4. **Product filters UI** (Phase 2) — Size > Brand > Condition > Color > Price (accordion style, no page reload). Filter params already wired. THIS IS THE NEXT CRITICAL ITEM.
-5. **"Nově přidané" section** (Phase 2) — homepage query exists, needs prominent section + badge on cards
-6. **Multi-step checkout + Packeta** (Phase 3 + 6) — combine checkout redesign with Packeta widget integration.
-7. **Payment gateway** (Phase 3) — GoPay or Comgate (Pick Page decision). Apple Pay is MUST-HAVE (20% of CZ card payments). 45% of CZ shoppers abandon without preferred payment method.
-8. **Cart reservation** (Phase 3) — prevent double-sell anxiety for qty=1 items. Must ship before payment.
-9. **Cookie consent** (Phase 7) — lightweight custom, must ship before any analytics scripts.
+## Priority Order (Lead Recommendation — Updated Cycle #25 Research)
+### ✅ DONE
+- ~~Image upload~~ (Cycle #25) — UploadThing v7
+- ~~SEO structured data~~ (Cycle #22) — JSON-LD, sitemap, robots.txt, OG
+- ~~Pagination~~ (Cycle #22) — 12/page
+- ~~Product filters~~ (existing) — brand, size, condition, price range, category, sort, filter chips
+- ~~"Nově přidané"~~ (existing) — homepage section + Novinka badge
+
+### NEXT SPRINT — Phase 2 Polish + Phase 3 Checkout
+1. **Mobile filter drawer** (Phase 2) — wrap filters in shadcn Sheet for mobile. Current inline layout pushes products down. Sheet component already exists. HIGH IMPACT — 70%+ traffic is mobile.
+2. **`nuqs` adoption** (Phase 2) — type-safe URL params, debounced price input, server cache. Eliminates ~50 lines of manual URL parsing. Enables shallow routing.
+3. **Color filter + filter counts** (Phase 2) — color swatches, product count per option ("Zara (23)"), grey out zero-result options. Schema already has colors field.
+4. **Enrich JSON-LD** (Phase 8) — add `shippingDetails` + `hasMerchantReturnPolicy`. Highest-ROI SEO for 2026. +58% clicks, +32% conversion. Google AI Mode growing 5.6x.
+5. **Multi-step checkout + Packeta** (Phase 3+6) — combine checkout redesign with Packeta widget. Steps: Kontakt → Doprava → Platba → Shrnutí.
+6. **Comgate payment** (Phase 3) — 60% cheaper than GoPay, CZ #1, official JS SDK `@comgate/checkout-js`, Apple Pay + Google Pay, BNPL, 6 months free. Decision made — no Pick Page needed.
+7. **Cart reservation** (Phase 3) — 15min timer for qty=1. Prevents double-sell anxiety.
+
+### LAUNCH BLOCKERS
+8. **Cookie consent** (Phase 7) — CZ law requires opt-in. Must ship before analytics.
+9. **30-day price history** (Phase 7) — Czech fake discount rule. Track lowest 30-day price.
 10. **Rate limiting** (Phase 8) — @upstash/ratelimit for checkout + login.
-11. **Email notifications** (Phase 6) — Resend + React Email templates for order confirmation.
-12. **Scarcity UX** (Phase 2) — "Unikátní kus" badges (honest, not fake urgency) + "Právě prodáno" feed.
-13. **Heureka.cz integration** (Phase 9) — critical CZ trust signal. Brumla has 99% rating.
-14. **Saved search alerts** (Phase 9) — biggest competitive differentiator vs Vinted.
+
+### POST-LAUNCH
+11. **Email notifications** (Phase 6) — Resend + React Email templates.
+12. **Heureka.cz** (Phase 9) — free "Start" tier. 50% of CZ shoppers require certification.
+13. **QR code payment** (Phase 9) — bank transfer is #1 CZ payment (33%!). QR on order confirmation.
+14. **Scarcity UX** (Phase 2) — "Unikátní kus" badges + "Právě prodáno" feed.
+15. **Instagram Shopping** (Phase 9) — product feed + micro-influencer partnerships.
+16. **Saved search alerts** (Phase 9) — biggest differentiator vs Vinted.
 
 ## Competitive Positioning (Lead Research C19)
 - **Closest competitor**: MegaSecondHand.cz (women-focused, 3500+ curated pieces)

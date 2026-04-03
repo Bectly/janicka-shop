@@ -1,5 +1,6 @@
 import { Header } from "@/components/shop/header";
 import { Footer } from "@/components/shop/footer";
+import { CookieConsentBanner } from "@/components/shop/cookie-consent";
 
 export default function ShopLayout({
   children,
@@ -11,6 +12,7 @@ export default function ShopLayout({
       <Header />
       <main className="flex-1">{children}</main>
       <Footer />
+      <CookieConsentBanner />
     </>
   );
 }

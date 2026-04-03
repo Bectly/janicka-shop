@@ -31,29 +31,39 @@ export async function reserveProduct(
 ): Promise<ReservationResult> {
   const visitorId = await getVisitorId();
   const now = new Date();
+  const reservedUntil = new Date(now.getTime() + RESERVATION_MS);
 
-  const product = await prisma.product.findUnique({
-    where: { id: productId },
-    select: { sold: true, active: true, reservedUntil: true, reservedBy: true },
+  // Atomic conditional update — prevents TOCTOU race where two concurrent
+  // "Add to cart" clicks both read the product as available and the second
+  // silently overwrites the first visitor's reservation.
+  const result = await prisma.product.updateMany({
+    where: {
+      id: productId,
+      active: true,
+      sold: false,
+      OR: [
+        { reservedUntil: null },
+        { reservedUntil: { lt: now } },
+        { reservedBy: visitorId },
+      ],
+    },
+    data: { reservedUntil, reservedBy: visitorId },
   });
 
-  if (!product) {
-    return { success: false, error: "Produkt nebyl nalezen" };
-  }
-
-  if (!isAvailable(product, visitorId)) {
+  if (result.count === 0) {
+    // Distinguish "not found" from "reserved by someone else"
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      select: { id: true },
+    });
+    if (!product) {
+      return { success: false, error: "Produkt nebyl nalezen" };
+    }
     return {
       success: false,
       error: "Tento produkt je již rezervován nebo nedostupný",
     };
   }
-
-  const reservedUntil = new Date(now.getTime() + RESERVATION_MS);
-
-  await prisma.product.update({
-    where: { id: productId },
-    data: { reservedUntil, reservedBy: visitorId },
-  });
 
   return { success: true, reservedUntil: reservedUntil.toISOString() };
 }
@@ -81,6 +91,8 @@ export async function extendReservations(
   productIds: string[]
 ): Promise<Record<string, string | null>> {
   if (productIds.length === 0) return {};
+  // Cap array size to prevent abuse via crafted requests
+  if (productIds.length > 50) productIds = productIds.slice(0, 50);
 
   const visitorId = await getVisitorId();
   const now = new Date();
@@ -130,6 +142,8 @@ export async function checkAvailability(
   Record<string, "available" | "reserved_by_you" | "reserved" | "sold">
 > {
   if (productIds.length === 0) return {};
+  // Cap array size to prevent abuse via crafted requests
+  if (productIds.length > 50) productIds = productIds.slice(0, 50);
 
   const visitorId = await getVisitorId();
   const now = new Date();

@@ -5,6 +5,7 @@ import { CategoryCard } from "@/components/shop/category-card";
 import { NewsletterForm } from "@/components/shop/newsletter-form";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { getVisitorId } from "@/lib/visitor";
 
 export default async function HomePage() {
   const sevenDaysAgo = new Date();
@@ -32,6 +33,13 @@ export default async function HomePage() {
       orderBy: { createdAt: "desc" },
     }),
   ]);
+
+  const visitorId = await getVisitorId();
+  const now = new Date();
+
+  function isReservedByOther(p: { reservedUntil: Date | null; reservedBy: string | null }) {
+    return !!p.reservedUntil && p.reservedUntil > now && p.reservedBy !== visitorId;
+  }
 
   return (
     <>
@@ -123,6 +131,7 @@ export default async function HomePage() {
                 brand={product.brand}
                 condition={product.condition}
                 isNew
+                isReserved={isReservedByOther(product)}
               />
             ))}
           </div>
@@ -167,6 +176,7 @@ export default async function HomePage() {
               categoryName={product.category.name}
               brand={product.brand}
               condition={product.condition}
+              isReserved={isReservedByOther(product)}
             />
           ))}
         </div>

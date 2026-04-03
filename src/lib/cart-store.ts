@@ -23,6 +23,7 @@ interface CartState {
     color: string,
     quantity: number
   ) => void;
+  updateReservation: (productId: string, reservedUntil: string | null) => void;
   clearCart: () => void;
   totalItems: () => number;
   totalPrice: () => number;
@@ -77,6 +78,17 @@ export const useCartStore = create<CartState>()(
                     ? { ...i, quantity: 1 }
                     : i
                 ),
+        })),
+
+      updateReservation: (productId, reservedUntil) =>
+        set((state) => ({
+          items: reservedUntil
+            ? state.items.map((i) =>
+                i.productId === productId
+                  ? { ...i, reservedUntil }
+                  : i
+              )
+            : state.items.filter((i) => i.productId !== productId),
         })),
 
       clearCart: () => set({ items: [] }),

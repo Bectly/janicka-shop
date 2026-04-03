@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { ShoppingBag, Check } from "lucide-react";
+import { useState, useTransition } from "react";
+import { ShoppingBag, Check, Clock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/lib/cart-store";
+import { reserveProduct } from "@/lib/actions/reservation";
 
 interface AddToCartProps {
   product: {
@@ -15,31 +16,46 @@ interface AddToCartProps {
     sizes: string[];
     colors: string[];
     stock: number;
+    reservedByOther?: boolean;
   };
 }
 
 export function AddToCartButton({ product }: AddToCartProps) {
   const addItem = useCartStore((s) => s.addItem);
+  const items = useCartStore((s) => s.items);
   const [selectedSize, setSelectedSize] = useState(product.sizes[0] ?? "");
   const [selectedColor, setSelectedColor] = useState(product.colors[0] ?? "");
   const [added, setAdded] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const isInCart = items.some((i) => i.productId === product.id);
 
   let imageList: string[] = [];
   try { imageList = JSON.parse(product.images); } catch { /* corrupted data fallback */ }
 
   function handleAdd() {
-    addItem({
-      productId: product.id,
-      name: product.name,
-      price: product.price,
-      image: imageList[0] ?? "",
-      size: selectedSize,
-      color: selectedColor,
-      quantity: 1,
-      slug: product.slug,
+    setError(null);
+    startTransition(async () => {
+      const result = await reserveProduct(product.id);
+      if (!result.success) {
+        setError(result.error ?? "Rezervace se nezdařila");
+        return;
+      }
+      addItem({
+        productId: product.id,
+        name: product.name,
+        price: product.price,
+        image: imageList[0] ?? "",
+        size: selectedSize,
+        color: selectedColor,
+        quantity: 1,
+        slug: product.slug,
+        reservedUntil: result.reservedUntil,
+      });
+      setAdded(true);
+      setTimeout(() => setAdded(false), 2000);
     });
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
   }
 
   return (
@@ -88,17 +104,37 @@ export function AddToCartButton({ product }: AddToCartProps) {
         </div>
       )}
 
+      {/* Error message */}
+      {error && (
+        <p className="text-sm text-destructive">{error}</p>
+      )}
+
       {/* Add to cart button */}
       <Button
         size="lg"
         className="w-full"
         onClick={handleAdd}
-        disabled={product.stock === 0}
+        disabled={product.stock === 0 || isPending || isInCart || product.reservedByOther}
       >
-        {added ? (
+        {isPending ? (
+          <>
+            <Loader2 data-icon="inline-start" className="size-4 animate-spin" />
+            Rezervuji...
+          </>
+        ) : added ? (
           <>
             <Check data-icon="inline-start" className="size-4" />
             Přidáno do košíku
+          </>
+        ) : isInCart ? (
+          <>
+            <Check data-icon="inline-start" className="size-4" />
+            Již v košíku
+          </>
+        ) : product.reservedByOther ? (
+          <>
+            <Clock data-icon="inline-start" className="size-4" />
+            Rezervováno
           </>
         ) : product.stock === 0 ? (
           "Nedostupné"

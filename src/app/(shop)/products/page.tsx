@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { ProductCard } from "@/components/shop/product-card";
 import { ProductFilters } from "@/components/shop/product-filters";
 import { Pagination } from "@/components/shop/pagination";
+import { getVisitorId } from "@/lib/visitor";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -145,6 +146,10 @@ export default async function ProductsPage({
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
+  // Check reservation status for displayed products
+  const visitorId = await getVisitorId();
+  const now = new Date();
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Page heading */}
@@ -184,20 +189,27 @@ export default async function ProductsPage({
       <div className="mt-8">
         {paginatedProducts.length > 0 ? (
           <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
-            {paginatedProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                name={product.name}
-                slug={product.slug}
-                price={product.price}
-                compareAt={product.compareAt}
-                images={product.images}
-                categoryName={product.category.name}
-                brand={product.brand}
-                condition={product.condition}
-                isNew={product.createdAt > sevenDaysAgo}
-              />
-            ))}
+            {paginatedProducts.map((product) => {
+              const isReserved =
+                !!product.reservedUntil &&
+                product.reservedUntil > now &&
+                product.reservedBy !== visitorId;
+              return (
+                <ProductCard
+                  key={product.id}
+                  name={product.name}
+                  slug={product.slug}
+                  price={product.price}
+                  compareAt={product.compareAt}
+                  images={product.images}
+                  categoryName={product.category.name}
+                  brand={product.brand}
+                  condition={product.condition}
+                  isNew={product.createdAt > sevenDaysAgo}
+                  isReserved={isReserved}
+                />
+              );
+            })}
           </div>
         ) : (
           <div className="py-20 text-center">

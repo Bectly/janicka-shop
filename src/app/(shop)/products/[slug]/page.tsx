@@ -7,6 +7,7 @@ import { CONDITION_LABELS, CONDITION_COLORS } from "@/lib/constants";
 import { ProductCard } from "@/components/shop/product-card";
 import { ProductGallery } from "@/components/shop/product-gallery";
 import { AddToCartButton } from "@/components/shop/add-to-cart-button";
+import { getVisitorId } from "@/lib/visitor";
 import type { Metadata } from "next";
 
 const BASE_URL =
@@ -60,6 +61,14 @@ export default async function ProductDetailPage({ params }: Props) {
   const product = await getProduct(slug);
 
   if (!product) notFound();
+
+  // Check if reserved by another visitor
+  const visitorId = await getVisitorId();
+  const now = new Date();
+  const isReservedByOther =
+    !!product.reservedUntil &&
+    product.reservedUntil > now &&
+    product.reservedBy !== visitorId;
 
   let sizes: string[] = [];
   let colors: string[] = [];
@@ -195,6 +204,7 @@ export default async function ProductDetailPage({ params }: Props) {
               sizes,
               colors,
               stock: product.stock,
+              reservedByOther: isReservedByOther,
             }}
           />
 
@@ -202,9 +212,11 @@ export default async function ProductDetailPage({ params }: Props) {
           <p className="mt-4 text-xs text-muted-foreground">
             {product.sold
               ? "Tento kousek už má novou majitelku"
-              : product.stock > 0
-                ? "Poslední kus — unikátní kousek"
-                : "Momentálně nedostupné"}
+              : isReservedByOther
+                ? "Tento kousek si právě někdo prohlíží"
+                : product.stock > 0
+                  ? "Poslední kus — unikátní kousek"
+                  : "Momentálně nedostupné"}
           </p>
         </div>
       </div>

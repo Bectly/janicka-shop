@@ -13,6 +13,7 @@ interface ProductCardProps {
   brand?: string | null;
   condition?: string;
   isNew?: boolean;
+  isReserved?: boolean;
 }
 
 export function ProductCard({
@@ -25,6 +26,7 @@ export function ProductCard({
   brand,
   condition,
   isNew,
+  isReserved,
 }: ProductCardProps) {
   const hasDiscount = compareAt && compareAt > price;
   const discountPercent = hasDiscount
@@ -73,6 +75,11 @@ export function ProductCard({
               className={`rounded-md px-2 py-0.5 text-xs font-medium ${CONDITION_COLORS[condition] ?? "bg-muted text-muted-foreground"}`}
             >
               {CONDITION_LABELS[condition] ?? condition}
+            </span>
+          )}
+          {isReserved && (
+            <span className="rounded-md bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-800">
+              Rezervováno
             </span>
           )}
         </div>

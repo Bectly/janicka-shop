@@ -1,23 +1,49 @@
 "use client";
 
 import Link from "next/link";
-import { Trash2, ShoppingBag, ArrowLeft } from "lucide-react";
+import Image from "next/image";
+import { Trash2, ShoppingBag, ArrowLeft, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCartStore, type CartItem } from "@/lib/cart-store";
 import { formatPrice } from "@/lib/format";
-import { useSyncExternalStore } from "react";
+import { releaseReservation, extendReservations } from "@/lib/actions/reservation";
+import { useSyncExternalStore, useState, useEffect, useCallback, useTransition } from "react";
 
 const emptySubscribe = () => () => {};
 
 export default function CartPage() {
   const items = useCartStore((s) => s.items);
   const removeItem = useCartStore((s) => s.removeItem);
+  const updateReservation = useCartStore((s) => s.updateReservation);
   const totalPrice = useCartStore((s) => s.totalPrice);
   const mounted = useSyncExternalStore(
     emptySubscribe,
     () => true,
     () => false
   );
+
+  // Extend reservations on mount
+  useEffect(() => {
+    if (!mounted || items.length === 0) return;
+    const productIds = items.map((i) => i.productId);
+    extendReservations(productIds).then((result) => {
+      for (const [productId, reservedUntil] of Object.entries(result)) {
+        if (reservedUntil) {
+          updateReservation(productId, reservedUntil);
+        } else {
+          // Product no longer available — remove from cart
+          removeItem(productId, "", "");
+        }
+      }
+    });
+    // Only run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mounted]);
+
+  const handleRemove = useCallback(async (item: CartItem) => {
+    removeItem(item.productId, item.size, item.color);
+    await releaseReservation(item.productId);
+  }, [removeItem]);
 
   if (!mounted) {
     return (
@@ -49,12 +75,20 @@ export default function CartPage() {
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
       <h1 className="font-heading text-3xl font-bold">Košík</h1>
 
-      <div className="mt-8 divide-y">
+      {/* Reservation info banner */}
+      <div className="mt-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <Clock className="size-4 shrink-0" />
+        <span>
+          Produkty jsou pro vás rezervovány na 15 minut. Po vypršení se vrátí do nabídky.
+        </span>
+      </div>
+
+      <div className="mt-6 divide-y">
         {items.map((item) => (
           <CartItemRow
             key={`${item.productId}-${item.size}-${item.color}`}
             item={item}
-            onRemove={() => removeItem(item.productId, item.size, item.color)}
+            onRemove={() => handleRemove(item)}
           />
         ))}
       </div>
@@ -86,6 +120,29 @@ export default function CartPage() {
   );
 }
 
+/** Countdown timer hook — returns "MM:SS" string, empty when expired */
+function useCountdown(expiresAt: string | undefined): string {
+  const [remaining, setRemaining] = useState("");
+
+  useEffect(() => {
+    if (!expiresAt) { setRemaining(""); return; }
+
+    function tick() {
+      const diff = new Date(expiresAt!).getTime() - Date.now();
+      if (diff <= 0) { setRemaining("0:00"); return; }
+      const mins = Math.floor(diff / 60000);
+      const secs = Math.floor((diff % 60000) / 1000);
+      setRemaining(`${mins}:${secs.toString().padStart(2, "0")}`);
+    }
+
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [expiresAt]);
+
+  return remaining;
+}
+
 function CartItemRow({
   item,
   onRemove,
@@ -93,13 +150,27 @@ function CartItemRow({
   item: CartItem;
   onRemove: () => void;
 }) {
+  const countdown = useCountdown(item.reservedUntil);
+  const isExpired = countdown === "0:00";
+  const [isRemoving, startTransition] = useTransition();
+
   return (
-    <div className="flex gap-4 py-4">
-      {/* Image placeholder */}
-      <div className="size-20 shrink-0 rounded-lg bg-muted">
-        <div className="flex size-full items-center justify-center text-lg text-muted-foreground/30">
-          {item.name.charAt(0)}
-        </div>
+    <div className={`flex gap-4 py-4 ${isExpired ? "opacity-50" : ""}`}>
+      {/* Product image */}
+      <div className="size-20 shrink-0 overflow-hidden rounded-lg bg-muted">
+        {item.image ? (
+          <Image
+            src={item.image}
+            alt={item.name}
+            width={80}
+            height={80}
+            className="size-full object-cover"
+          />
+        ) : (
+          <div className="flex size-full items-center justify-center text-lg text-muted-foreground/30">
+            {item.name.charAt(0)}
+          </div>
+        )}
       </div>
 
       <div className="flex flex-1 flex-col">
@@ -123,10 +194,24 @@ function CartItemRow({
         </div>
 
         <div className="mt-auto flex items-center justify-between pt-2">
-          <span className="text-xs text-muted-foreground">Unikátní kus</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Unikátní kus</span>
+            {countdown && !isExpired && (
+              <span className="flex items-center gap-1 rounded-md bg-amber-50 px-1.5 py-0.5 text-xs font-medium text-amber-700">
+                <Clock className="size-3" />
+                {countdown}
+              </span>
+            )}
+            {isExpired && (
+              <span className="text-xs font-medium text-destructive">
+                Rezervace vypršela
+              </span>
+            )}
+          </div>
           <button
-            onClick={onRemove}
-            className="text-muted-foreground transition-colors hover:text-destructive"
+            onClick={() => startTransition(() => { onRemove(); })}
+            disabled={isRemoving}
+            className="text-muted-foreground transition-colors hover:text-destructive disabled:opacity-50"
             aria-label="Odebrat z košíku"
           >
             <Trash2 className="size-4" />

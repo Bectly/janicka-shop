@@ -15,6 +15,7 @@ export async function getVisitorId(): Promise<string> {
   const id = crypto.randomUUID();
   store.set(VISITOR_COOKIE, id, {
     httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     maxAge: VISITOR_MAX_AGE,
     path: "/",

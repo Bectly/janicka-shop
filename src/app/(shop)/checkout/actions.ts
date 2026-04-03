@@ -23,7 +23,7 @@ const checkoutSchema = z.object({
       color: z.string(),
       quantity: z.number(),
     })
-  ).min(1, "Košík je prázdný"),
+  ).min(1, "Košík je prázdný").max(50, "Příliš mnoho položek v košíku"),
 });
 
 class UnavailableError extends Error {

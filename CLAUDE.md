@@ -6,11 +6,11 @@
 - **Styling**: Tailwind CSS v4 + shadcn/ui
 - **Database**: Prisma + SQLite (dev) / Turso (prod)
 - **Auth**: NextAuth v5 (admin panel)
-- **Payments**: GoPay (primární, CZ trh) + Stripe (mezinárodní)
+- **Payments**: Comgate (primární, CZ trh) + Stripe (mezinárodní)
 - **State**: Zustand (košík, UI state)
 - **Email**: Resend (objednávky, registrace)
 - **Deploy**: Vercel (auto-deploy on push to main)
-- **Images**: Uploadthing nebo Cloudinary
+- **Images**: UploadThing v7 (2GB free, unlimited uploads)
 
 ## Project Structure
 ```
@@ -33,7 +33,7 @@ src/
       auth/            # NextAuth
       products/        # Product CRUD
       orders/          # Order management
-      payments/        # GoPay + Stripe webhooks
+      payments/        # Comgate + Stripe webhooks
       upload/          # Image upload
       dev-chat/        # devChat: owner ↔ Lead communication
   components/
@@ -44,7 +44,7 @@ src/
   lib/
     db.ts              # Prisma client
     auth.ts            # NextAuth config
-    payments/          # GoPay + Stripe integrations
+    payments/          # Comgate + Stripe integrations
     utils.ts           # Helpers
   types/               # TypeScript types
 prisma/
@@ -86,17 +86,21 @@ Toto je **second hand eshop** s oblečením. Klíčové rozdíly oproti běžné
 ## Competitive Landscape (Lead Research C19)
 - **Brumla.cz**: Largest CZ online second-hand. 10k new items 2x/week. 99% Heureka. Kids + women + men.
 - **MegaSecondHand.cz**: Closest competitor — women-focused, 3500+ curated pieces. Good Heureka reviews.
-- **Vinted CZ**: 75M+ members, C2C model. Zero seller fees. Weakness: no curation, inconsistent quality, scams.
+- **Vinted CZ**: 75M+ members, $813M revenue (+36%), planning $8B IPO. Zero seller fees. Had user backlash over grouped sizing system (2025). Weakness: no curation, inconsistent quality, scams.
 - **Janicka differentiator**: Premium curation, Instagram-aesthetic UX, pro photos, guaranteed condition, single-warehouse fast shipping. Message: "My jsme to už zkontrolovali, aby ses nemusela."
-- **Market gap**: Nobody in CZ does a visually beautiful, curated second-hand experience for women 18-35 well.
+- **Market gap**: Nobody in CZ does a visually beautiful, curated second-hand experience for women 18-35 well. No new CZ competitors detected in curated second-hand niche as of Q2 2026.
+- **Market size**: European secondhand apparel market EUR 32B (2025) → EUR 35B (2026), growing ~10% per year. Gen Z adopts resale 2.5x faster, 40% of closet is pre-owned. 52% of consumers bought secondhand in 2024.
+- **Mobile**: 62% of Czech e-commerce is mobile. Mobile-first strategy validated.
 
-## CZ Payment Preferences 2026 (Lead Research C19)
-- Cards (Visa/MC): 55% most-used. Apple Pay: 20% of online card payments (!). Google Pay: 6%.
-- QR payments: 74% of Czechs have used. Bank transfers: growing (instant payment infra).
+## CZ Payment Preferences 2026 (Updated — Lead Research C25)
+- **Bank transfer: 33% (#1!)** — higher than cards. QR code on order confirmation is critical.
+- Cards (Visa/MC): 25%. Apple Pay: 20% of ALL online card payments (doubled since 2023). Google Pay: 6%.
+- E-wallets: 22%. Cash on delivery: still 15% (declining but expected).
+- QR payments: 74% of Czechs have used.
 - **45% of CZ shoppers abandon if preferred payment method unavailable.**
-- MUST-HAVE before launch: Cards, Apple Pay, Google Pay, bank transfer.
-- SHOULD-HAVE: QR code on order confirmation, dobírka (declining but expected).
-- NICE-TO-HAVE: BNPL (Skip Pay/Klarna) for higher-priced brand items.
+- MUST-HAVE before launch: Cards, Apple Pay, Google Pay, bank transfer, QR payment code.
+- SHOULD-HAVE: Dobírka (declining but 15% still expect it).
+- NICE-TO-HAVE: BNPL/installments via Comgate (native pay-in-3) for higher-priced brand items.
 
 ## Agents
 - **Lead**: Tech lead — strategie, prioritizace, web research (trendy, UX, konkurence)
@@ -166,13 +170,17 @@ sqlite3 ~/.claude/jarvis-gym/jarvis.db "SELECT name, service, key_value, endpoin
 - **Pricing**: 2.2% + 3 CZK/tx + 190 CZK/mo (<50k CZK/mo). ~25-30 CZK on 1000 CZK sale.
 - **COST ALERT**: GoPay is 2.5x more expensive than Comgate. See Comgate comparison below.
 
-### Comgate — Alternative Payment Gateway (Lead Research C19)
-- **Why consider**: CZ market #1. 60% cheaper than GoPay. Maintained TypeScript SDK.
-- **Pricing**: 0.9% + 1 CZK/tx + 100 CZK/mo (<40k CZK/mo). ~10-11 CZK on 1000 CZK sale.
-- **Features**: Apple Pay, Google Pay, inline checkout, REST API
-- **npm**: `comgate-node` v1.1.2 (TypeScript, Node 18+, actively maintained)
-- **Docs**: `apidoc.comgate.cz`, `help.comgate.cz/docs/pro-programatory`
-- **Decision needed**: GoPay (more methods, inline roadmap, brand) vs Comgate (60% cheaper, maintained SDK, CZ #1). Pick Page candidate for Janička.
+### Comgate Payment Gateway — PRIMARY (Lead Decision — Cycle #25 Research)
+- **Decision**: Comgate selected over GoPay. 60% cheaper, CZ market #1, official JS SDK, fees locked through Dec 2026.
+- **Pricing**: 0.9% + 1 CZK/tx + 100 CZK/mo (<40k CZK/mo). ~10-11 CZK on 1000 CZK sale. **6 months free for new merchants (Start plan).**
+- **Payment methods**: Visa, MC, Apple Pay, Google Pay (no redirect — direct integration via SDK), bank transfers, BNPL/installments (pay-in-3), QR payments.
+- **API**: REST v1. Docs: `apidoc.comgate.cz/en/api/rest/`. Endpoints: create payment, check status, refund, void. Postman collection available.
+- **Client SDK**: `@comgate/checkout-js` v2 (npm) — inline checkout widget, auto-detects Apple Pay/Google Pay. Load in "use client" component.
+- **Server**: Direct `fetch` to REST API (simple create/status/refund). `comgate-node` community SDK exists but stale — raw REST is simpler and more reliable.
+- **Webhook**: POST callback to `notification_url`. Always verify via GET status check — never trust webhook payload alone.
+- **Integration time**: Estimated 1-2 days (vs 3-5 for GoPay raw fetch wrapper).
+- **Architecture**: `src/lib/payments/comgate.ts` (REST client), `src/lib/payments/types.ts`, `POST /api/payments/webhook` route.
+- **Sandbox**: Available for testing. Contact Comgate for sandbox credentials.
 
 ### Packeta / Zásilkovna (Updated — Lead Research C19)
 - **Widget v6**: Load script `https://widget.packeta.com/www/js/library.js` via `next/script` in "use client" component.
@@ -193,11 +201,21 @@ sqlite3 ~/.claude/jarvis-gym/jarvis.db "SELECT name, service, key_value, endpoin
 - **Invoice**: IČO, DIČ, seller address, buyer info, invoice number, dates, items, VAT status. Store 10 years.
 - **EU Directive 2024/825**: Greenwashing fines up to 5M CZK. Sustainability claims must be specific and verifiable.
 - **EET**: Abolished 2023 — no real-time receipt reporting needed.
+- **30-day price rule ("fake discount")**: Already in effect. When showing sale/discount prices, MUST display lowest price from previous 30 days. Non-compliance = fines from ČOI. Need `priceHistory` tracking when admin changes product prices.
+- **Packeta 2026**: Fuel surcharge changed to 12.5%, toll surcharge added (EUR 0.04/kg). No API changes. Factor into shipping cost calculations.
 
-### SEO Strategy (Lead Research C19)
-- **Product structured data**: JSON-LD with `@type: Product`, `itemCondition` (schema.org/UsedCondition or NewCondition), `offers` (price, priceCurrency: CZK, availability), `brand`, `category`, `image`.
-- **Enhanced merchant listings**: Add `shippingDetails` + `hasMerchantReturnPolicy` for Google Shopping eligibility.
-- **AI search visibility**: 65% of Google AI Mode citations + 71% of ChatGPT citations use schema markup. Critical for 2026 discovery.
+### Heureka.cz Integration (Updated — Lead Research C25)
+- **New pricing model (Sept 2025)**: Free "Start" tier (15 reviews/month), paid "Profi" tier (499 CZK/month, returned as Heureka ad credit).
+- **Critical stat**: 50% of Czech shoppers ONLY buy from Heureka-certified shops.
+- **Integration**: XML product feed for Heureka zbožák + "Ověřeno zákazníky" review widget on site.
+- **Start with free tier** — 15 reviews/month is enough for launch phase.
+- **Brumla** (main competitor) has 99% Heureka rating — we need this certification.
+
+### SEO Strategy (Lead Research C19, Updated C25)
+- **Product structured data**: JSON-LD with `@type: Product`, `itemCondition` (schema.org/UsedCondition or NewCondition), `offers` (price, priceCurrency: CZK, availability), `brand`, `category`, `image`. ✅ DONE (Cycle #22).
+- **Enhanced merchant listings**: Add `shippingDetails` + `hasMerchantReturnPolicy` for Google Shopping eligibility. **NOT YET DONE — highest priority SEO task.**
+- **AI search visibility (2026 data)**: Google AI Mode now on 14% of shopping queries (5.6x increase in 4 months). Pages with complete Schema.org cited 3.1x more often. +58.3% clicks, +31.8% conversion. Google launched Universal Commerce Protocol (UCP) Jan 2026 — AI agents use Schema.org to find/compare/purchase products.
+- **ChatGPT impact**: ChatGPT drove 16% of Zara's inbound traffic mid-2025. 71% of ChatGPT citations use schema markup. Structured data is THE gateway to AI-driven discovery.
 - **Impact**: Pages with rich snippets get 20-40% higher CTR than plain blue links.
 
 ### Image Upload — UploadThing (Updated — Lead Research C19)
