@@ -170,39 +170,69 @@ sqlite3 ~/.claude/jarvis-gym/jarvis.db "SELECT name, service, key_value, endpoin
 - **Pricing**: 2.2% + 3 CZK/tx + 190 CZK/mo (<50k CZK/mo). ~25-30 CZK on 1000 CZK sale.
 - **COST ALERT**: GoPay is 2.5x more expensive than Comgate. See Comgate comparison below.
 
-### Comgate Payment Gateway — PRIMARY (Lead Decision — Cycle #25 Research)
-- **Decision**: Comgate selected over GoPay. 60% cheaper, CZ market #1, official JS SDK, fees locked through Dec 2026.
-- **Pricing**: 0.9% + 1 CZK/tx + 100 CZK/mo (<40k CZK/mo). ~10-11 CZK on 1000 CZK sale. **6 months free for new merchants (Start plan).**
-- **Payment methods**: Visa, MC, Apple Pay, Google Pay (no redirect — direct integration via SDK), bank transfers, BNPL/installments (pay-in-3), QR payments.
-- **API**: REST v1. Docs: `apidoc.comgate.cz/en/api/rest/`. Endpoints: create payment, check status, refund, void. Postman collection available.
-- **Client SDK**: `@comgate/checkout-js` v2 (npm) — inline checkout widget, auto-detects Apple Pay/Google Pay. Load in "use client" component.
-- **Server**: Direct `fetch` to REST API (simple create/status/refund). `comgate-node` community SDK exists but stale — raw REST is simpler and more reliable.
+### Comgate Payment Gateway — PRIMARY (Updated — Lead Research C31)
+- **Decision**: Comgate selected over GoPay. CZ market #1, official JS SDK, fees locked through Dec 31, 2026.
+- **Pricing (verified C31)**:
+  - **Start plan** (recommended): 0% card fees for first 6 months (up to 50K CZK/mo), then auto-switches to Easy. Monthly fee: FREE. Bank transfers: 1% + 0 CZK.
+  - **Easy plan** (auto after Start): 1% + 0 CZK for standard EU cards (95% of volume), 2% + 0 CZK for other EU cards. Monthly fee waived over 100K CZK volume.
+  - **Profi plan** (for growth): 0.67% + 1 CZK for standard EU cards. Bank transfers: 0.62% + 0 CZK. BNPL: 0.4-1.9%.
+  - **Common**: Refund: 5 CZK. Chargeback: 990 CZK. Currency conversion: 0.15%. Gateway activation: FREE.
+  - ~10 CZK on 1000 CZK sale (Easy plan).
+- **Payment methods**: Visa, MC, Apple Pay, Google Pay (inline via SDK — no redirect), bank transfers, BNPL/installments (pay-in-3).
+- **IMPORTANT (C31)**: Checkout SDK currently supports Apple Pay + Google Pay inline only. Direct card number entry in SDK is "being prepared" by Comgate — until then, card payments use redirect flow to Comgate gateway.
+- **API**: REST. Docs: `apidoc.comgate.cz`. Endpoints: create payment, check status, refund, void.
+- **Client SDK**: `@comgate/checkout-js` (npm) — replaces old `@comgate/checkout`. TypeScript with bundled types, promise-based API, framework-agnostic (React/Vue/Svelte/vanilla). Handles script injection + caching.
+- **Server**: Direct `fetch` to REST API (simple create/status/refund). `comgate-node` community SDK is stale — raw REST is simpler.
 - **Webhook**: POST callback to `notification_url`. Always verify via GET status check — never trust webhook payload alone.
-- **Integration time**: Estimated 1-2 days (vs 3-5 for GoPay raw fetch wrapper).
 - **Architecture**: `src/lib/payments/comgate.ts` (REST client), `src/lib/payments/types.ts`, `POST /api/payments/webhook` route.
 - **Sandbox**: Available for testing. Contact Comgate for sandbox credentials.
 
-### Packeta / Zásilkovna (Updated — Lead Research C19)
-- **Widget v6**: Load script `https://widget.packeta.com/www/js/library.js` via `next/script` in "use client" component.
+### Packeta / Zásilkovna (Updated — Lead Research C31)
+- **Widget v6**: Load script `https://widget.packeta.com/v6/www/js/library.js` via `next/script` in "use client" component. (NOTE: v6 URL changed from old `widget.packeta.com/www/js/library.js` — use `/v6/` path!)
+- **Widget configurator**: `configurator.widget.packeta.com` — generate config visually.
+- **Validation endpoint**: `https://widget.packeta.com/v6/pps/api/widget/v1/validate` (POST, JSON body).
 - **Open widget**: `Packeta.Widget.pick(apiKey, callback, options)` where options = `{ language: "cs", view: "modal", vendors: [{ country: "cz" }] }`.
 - **Callback**: receives `point` object with `point.name`, `point.id`, `point.street`, `point.city`, `point.zip`, `point.formatedValue`. Null if user cancels.
 - **Requires HTTPS** — geolocation only works over HTTPS.
 - **Store in order**: `shippingPointId` (point.id), `shippingMethod: "packeta"`, display name/address in confirmation.
-- **Packet creation**: SOAP API at `zasilkovna.cz/api/soap` (`createPacket` method). Also has REST at `docs.packeta.com`. Auth: `apiPassword` param (not OAuth).
+- **Packet creation**: REST API at `docs.packeta.com` (preferred) or SOAP at `zasilkovna.cz/api/soap`. Auth: `apiPassword` param.
 - **Labels**: Generated via API after packet creation (A4/A2 formats).
 - **Pricing**: Contract-based, no public API — set fixed shipping price in shop (typicky 69-89 Kč).
-- **No official Node SDK**. Use direct REST/SOAP calls from Server Actions.
+- **No official Node SDK**. Use direct REST calls from Server Actions.
 
-### Czech Legal Requirements (2026 — Updated Lead Research C19)
+### QR Platba / SPAYD — Czech Bank Transfer QR (NEW — Lead Research C31)
+- **Standard**: SPAYD (Short Payment Descriptor) — ČBA standard since 2012, adopted by all Czech banks.
+- **npm**: `spayd` v3.0.4 (TypeScript 85%, UMD/ESM/CJS). Install: `npm install spayd`. Combine with `qrcode` npm for rendering.
+- **Usage**: `import spayd from 'spayd'; const str = spayd({ acc: 'CZ28...IBAN', am: '450.00', cc: 'CZK', xvs: '1234567890', msg: 'Objednávka #123' });`
+- **Fields**: `acc` (IBAN, required), `am` (amount), `cc` (currency, ISO 4217), `xvs` (variable symbol — use order number), `xss` (specific symbol), `xks` (constant symbol), `msg` (message), `dt` (due date), `rn` (receiver name).
+- **QR generation**: `import qrcode from 'qrcode'; const dataUrl = await qrcode.toDataURL(spaydString);`
+- **Architecture**: `src/lib/payments/qr-platba.ts` (generates SPAYD string + QR data URL). Reusable `QrPaymentCode` React component.
+- **Display on**: (1) Order confirmation page, (2) order confirmation email (inline PNG), (3) admin order detail.
+- **Why critical**: Bank transfer is #1 CZ payment at 33%. 74% of Czechs used QR payments. 45% abandon if preferred method unavailable.
+
+### Checkout UX Architecture (NEW — Lead Research C31)
+- **Pattern**: Accordion single-page checkout (NOT multi-step pages). Research: accordion outperforms multi-step by 11-14% in completion rate. ASOS saw 50% abandonment reduction with single-page.
+- **Sections**: 1) Kontakt (email, name, phone) → 2) Doprava (Packeta widget + standard delivery) → 3) Platba (Comgate SDK for Apple/Google Pay, card redirect, bank transfer QR) → 4) Shrnutí (order review + confirm). Each section collapses with green checkmark when completed.
+- **Guest checkout ONLY**: No registration required. 24% of shoppers abandon at forced registration. Offer optional account creation AFTER order.
+- **Trust signals**: Security lock icon + "Zabezpečená platba" badge AT the payment section (not footer — trust anxiety peaks at payment step).
+- **Mobile**: Sticky "Zobrazit shrnutí" bar at bottom showing order total + item count. Expandable order summary.
+- **Form fields**: Target ≤10 fields total. Average is 11.3 — beat it. Pre-fill where possible.
+- **Progress**: Visual step indicator showing completed/current/remaining sections.
+
+### Czech Legal Requirements (2026 — Updated Lead Research C31)
 - **Warranty**: Used goods = min 12 months (not 24). Must be in T&C explicitly.
-- **14-day withdrawal**: Applies fully to second-hand clothing. Must provide withdrawal form (vzorový formulář).
-- **Mandatory footer**: ODR link (ec.europa.eu/odr), ČOI as supervisory authority.
-- **Cookies**: Governed by Electronic Communications Act (ECA, amended 2022) + GDPR + Act 110/2019. Strict OPT-IN model. Categories: essential (no consent needed), analytics, marketing, social, preferences — each needs SEPARATE granular consent. Accept/Reject buttons MUST be same size, font, color (no dark patterns). Cookie walls PROHIBITED. Supervisory authority: ÚOOÚ (Úřad pro ochranu osobních údajů). Penalty: up to 10M EUR or 2% turnover.
+- **14-day withdrawal**: Applies fully to second-hand online clothing sales (C31 verified: 30-day period only applies to door-to-door/organized sales events, NOT regular e-commerce). Must provide withdrawal form (vzorový formulář).
+- **Delivery deadline**: 30 days from contract conclusion unless agreed otherwise. Track `expectedDeliveryDate` in Order model.
+- **Claims handling**: Must resolve within 30 days from claim date unless longer period agreed with consumer.
+- **Mandatory footer**: ODR link (ec.europa.eu/odr), ČOI as supervisory authority. ✅ DONE (Cycle #29).
+- **Cookies**: ✅ DONE (Cycle #27, improved C29-C30). Strict OPT-IN. Granular categories. Same-size Accept/Reject. No dark patterns. ÚOOÚ supervisory. Penalty: up to 10M EUR or 2% turnover.
 - **Invoice**: IČO, DIČ, seller address, buyer info, invoice number, dates, items, VAT status. Store 10 years.
-- **EU Directive 2024/825**: Greenwashing fines up to 5M CZK. Sustainability claims must be specific and verifiable.
+- **EU Directive 2024/825 (Greenwashing)**: Effective Sept 2026. Generic claims like "ekologické", "green", "carbon neutral" PROHIBITED without official certification. Fines up to 5M CZK. Our claims must be specific: "Ušetříš 70 % oproti nové ceně" is OK.
+- **EU AI Act (2026)**: If consumer-facing AI chatbot (devChat exposed to non-admin users), MUST label as AI. "Odpovídá AI asistent" in chat header. If admin-only → no action needed.
+- **Repair Right Directive**: Transposition deadline July 31, 2026. Not directly relevant for second-hand clothing (applies to repair vs replacement choices). Monitor.
 - **EET**: Abolished 2023 — no real-time receipt reporting needed.
-- **30-day price rule ("fake discount")**: Already in effect. When showing sale/discount prices, MUST display lowest price from previous 30 days. Non-compliance = fines from ČOI. Need `priceHistory` tracking when admin changes product prices.
-- **Packeta 2026**: Fuel surcharge changed to 12.5%, toll surcharge added (EUR 0.04/kg). No API changes. Factor into shipping cost calculations.
+- **30-day price rule ("fake discount")**: Already in effect. MUST display lowest price from previous 30 days when showing discounts. Non-compliance = ČOI fines. Need `priceHistory` tracking.
+- **Packeta 2026**: Fuel surcharge 12.5%, toll surcharge EUR 0.04/kg. No API changes.
 
 ### Heureka.cz Integration (Updated — Lead Research C25)
 - **New pricing model (Sept 2025)**: Free "Start" tier (15 reviews/month), paid "Profi" tier (499 CZK/month, returned as Heureka ad credit).

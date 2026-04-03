@@ -8,6 +8,7 @@ import { ProductCard } from "@/components/shop/product-card";
 import { ProductGallery } from "@/components/shop/product-gallery";
 import { AddToCartButton } from "@/components/shop/add-to-cart-button";
 import { getVisitorId } from "@/lib/visitor";
+import { getLowestPrices30d } from "@/lib/price-history";
 import type { Metadata } from "next";
 
 const BASE_URL =
@@ -78,16 +79,21 @@ export default async function ProductDetailPage({ params }: Props) {
   try { productImages = JSON.parse(product.images); } catch { /* corrupted data fallback */ }
   const hasDiscount = product.compareAt && product.compareAt > product.price;
 
-  const relatedProducts = await prisma.product.findMany({
-    where: {
-      categoryId: product.categoryId,
-      id: { not: product.id },
-      active: true,
-      sold: false,
-    },
-    include: { category: { select: { name: true } } },
-    take: 4,
-  });
+  const [relatedProducts, lowestPricesMap] = await Promise.all([
+    prisma.product.findMany({
+      where: {
+        categoryId: product.categoryId,
+        id: { not: product.id },
+        active: true,
+        sold: false,
+      },
+      include: { category: { select: { name: true } } },
+      take: 4,
+    }),
+    getLowestPrices30d([product.id]),
+  ]);
+
+  const lowestPrice30d = lowestPricesMap.get(product.id) ?? null;
 
   // JSON-LD structured data for SEO
   const jsonLd = {
@@ -178,6 +184,11 @@ export default async function ProductDetailPage({ params }: Props) {
               </span>
             )}
           </div>
+          {hasDiscount && lowestPrice30d != null && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              Nejnižší cena za posledních 30 dní: {formatPrice(lowestPrice30d)}
+            </p>
+          )}
 
           {/* Condition badge */}
           <div className="mt-3">

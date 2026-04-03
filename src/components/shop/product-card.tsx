@@ -14,6 +14,7 @@ interface ProductCardProps {
   condition?: string;
   isNew?: boolean;
   isReserved?: boolean;
+  lowestPrice30d?: number | null;
 }
 
 export function ProductCard({
@@ -27,6 +28,7 @@ export function ProductCard({
   condition,
   isNew,
   isReserved,
+  lowestPrice30d,
 }: ProductCardProps) {
   const hasDiscount = compareAt && compareAt > price;
   const discountPercent = hasDiscount
@@ -107,6 +109,11 @@ export function ProductCard({
             </span>
           )}
         </div>
+        {hasDiscount && lowestPrice30d != null && (
+          <p className="text-[10px] leading-tight text-muted-foreground">
+            Nejnižší cena za 30 dní: {formatPrice(lowestPrice30d)}
+          </p>
+        )}
       </div>
     </Link>
   );

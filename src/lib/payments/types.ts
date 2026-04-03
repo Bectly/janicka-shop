@@ -17,6 +17,8 @@ export interface CreatePaymentParams {
   label: string;
   /** Preferred payment method — "ALL" for all available */
   method?: string;
+  /** Order access token — included in return URL to prevent token leakage */
+  accessToken?: string;
 }
 
 /** Successful create payment response */

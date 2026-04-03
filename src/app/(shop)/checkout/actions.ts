@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getVisitorId } from "@/lib/visitor";
 import { createComgatePayment } from "@/lib/payments/comgate";
+import { rateLimitCheckout } from "@/lib/rate-limit";
 
 const PAYMENT_METHODS = ["card", "bank_transfer", "cod"] as const;
 type PaymentMethod = (typeof PAYMENT_METHODS)[number];
@@ -78,6 +79,15 @@ export async function createOrder(
   _prev: CheckoutState,
   formData: FormData
 ): Promise<CheckoutState> {
+  // Rate limit: 5 orders per 5 minutes per IP
+  const rl = await rateLimitCheckout();
+  if (!rl.success) {
+    return {
+      error: "Příliš mnoho pokusů o objednávku. Zkuste to prosím za chvíli.",
+      fieldErrors: {},
+    };
+  }
+
   const itemsJson = formData.get("items") as string;
   let items: z.infer<typeof checkoutSchema>["items"];
   try {
@@ -252,6 +262,7 @@ export async function createOrder(
       email: order.customerEmail,
       label: `Janička #${order.orderNumber.slice(-8)}`,
       method: getComgateMethod(data.paymentMethod),
+      accessToken: order.accessToken ?? undefined,
     });
 
     // Store Comgate transaction ID on the order

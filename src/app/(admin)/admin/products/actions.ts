@@ -77,7 +77,7 @@ export async function createProduct(formData: FormData) {
 
   const validatedImages = parseImages(formData);
 
-  await prisma.product.create({
+  const product = await prisma.product.create({
     data: {
       name: parsed.name,
       slug,
@@ -105,6 +105,11 @@ export async function createProduct(formData: FormData) {
       featured: parsed.featured,
       active: parsed.active,
     },
+  });
+
+  // Log initial price for 30-day price history (Czech fake discount law)
+  await prisma.priceHistory.create({
+    data: { productId: product.id, price: parsed.price },
   });
 
   revalidatePath("/admin/products");
@@ -144,6 +149,17 @@ export async function updateProduct(id: string, formData: FormData) {
   }
 
   const validatedImages = parseImages(formData);
+
+  // Check if price changed — log old price for 30-day price history (Czech fake discount law)
+  const current = await prisma.product.findUnique({
+    where: { id },
+    select: { price: true },
+  });
+  if (current && current.price !== parsed.price) {
+    await prisma.priceHistory.create({
+      data: { productId: id, price: current.price },
+    });
+  }
 
   await prisma.product.update({
     where: { id },

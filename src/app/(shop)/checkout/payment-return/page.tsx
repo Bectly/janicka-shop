@@ -11,11 +11,11 @@ export const metadata: Metadata = {
 };
 
 interface Props {
-  searchParams: Promise<{ refId?: string }>;
+  searchParams: Promise<{ refId?: string; token?: string }>;
 }
 
 export default async function PaymentReturnPage({ searchParams }: Props) {
-  const { refId } = await searchParams;
+  const { refId, token } = await searchParams;
 
   if (!refId) notFound();
 
@@ -32,6 +32,10 @@ export default async function PaymentReturnPage({ searchParams }: Props) {
   });
 
   if (!order) notFound();
+
+  // Validate access token to prevent order detail leakage.
+  // The token is included in the Comgate return URL at payment creation time.
+  if (order.accessToken && order.accessToken !== token) notFound();
 
   // If payment was already processed (by webhook), redirect to order page
   if (order.status === "paid" || order.status === "confirmed") {

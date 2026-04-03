@@ -42,7 +42,8 @@ model Product {
   reservedBy    String?   // visitor ID who reserved this item
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
-  orderItems  OrderItem[]
+  orderItems    OrderItem[]
+  priceHistory  PriceHistory[]
 
   @@index([categoryId])
   @@index([featured])
@@ -140,4 +141,15 @@ model NewsletterSubscriber {
   email     String   @unique
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
+}
+
+model PriceHistory {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  price     Float
+  changedAt DateTime @default(now())
+
+  @@index([productId])
+  @@index([changedAt])
 }

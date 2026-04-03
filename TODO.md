@@ -34,10 +34,10 @@
 - [x] [BOLT] Cart page: items list, remove, summary
 - [x] [BOLT] Checkout page with contact + shipping form + order summary
 - [x] [BOLT] Order confirmation page with cart clearing
-- [ ] [BOLT] Payment gateway: **Comgate** (Lead recommendation — Cycle #25 research). Server-side: REST API via `fetch` (simple create/status/refund endpoints, `apidoc.comgate.cz`). Client-side: `@comgate/checkout-js` v2 for inline checkout (Apple Pay + Google Pay auto-detected, no redirect). Architecture: `src/lib/payments/comgate.ts` (REST client), `src/lib/payments/types.ts`, `POST /api/payments/webhook` route. Sandbox first. **Why Comgate**: 60% cheaper (0.9%+1CZK vs GoPay 2.2%+3CZK), CZ market #1, official JS SDK, native BNPL/installments, fees locked through Dec 2026, 6 months free (Start plan). Apple Pay + Google Pay: full support. `comgate-node` npm is stale — use direct REST instead (simpler, more control).
+- [ ] [BOLT] Payment gateway: **Comgate** (Lead C25+C31 research). Server-side: REST API via `fetch` (create/status/refund at `apidoc.comgate.cz`). Client-side: `@comgate/checkout-js` (replaces old `@comgate/checkout` — TypeScript, promise-based, framework-agnostic). Currently supports Apple Pay + Google Pay inline (card number direct entry "being prepared" by Comgate). Architecture: `src/lib/payments/comgate.ts` (REST client), `src/lib/payments/types.ts`, `POST /api/payments/webhook` route. Sandbox first. **Start Plan pricing (C31 verified)**: 0% card fees for 6 months (up to 50K CZK/mo), then Easy plan auto-applies (1% + 0 CZK for standard EU cards, 2% for other EU cards). Bank transfers: 1% + 0 CZK. Monthly fee: FREE on Start. Refund: 5 CZK. Chargeback: 990 CZK. Fees locked until Dec 31, 2026. **Note**: Until Comgate enables direct card entry in SDK, card payments will use redirect flow — Apple Pay + Google Pay are inline via SDK.
 - [ ] [BOLT] Stripe payment integration (international fallback)
 - [ ] [BOLT] Payment webhook handler: POST /api/payments/webhook (notification_url callback). Verify payment status via GET after receiving notification — never trust webhook payload alone.
-- [ ] [BOLT] Multi-step checkout UI: 1) Kontakt, 2) Doprava (Packeta widget), 3) Platba, 4) Shrnutí
+- [ ] [BOLT] Accordion single-page checkout UI (Lead C31 research: accordion outperforms multi-step by 11-14% in completion rate, ASOS saw 50% abandonment reduction with single-page). Sections: 1) Kontakt, 2) Doprava (Packeta widget), 3) Platba, 4) Shrnutí — each collapses when completed, shows green checkmark. Guest checkout ONLY (no registration — 24% abandon at forced signup). Trust badges + security lock icon AT the payment section (not footer — trust anxiety peaks at payment step). "Zobrazit shrnutí" sticky bar on mobile.
 - [ ] [TRACE] E2E test: full checkout flow
 - [x] [BOLT] Cart reservation timer (15 min) — DONE Cycle #27. Atomic TOCTOU-safe reserve/release/extend server actions, countdown timer in cart, "Rezervováno" badges on product cards/detail, reservation-aware checkout. TOCTOU race fixed Cycle #29.
 
@@ -73,7 +73,7 @@
 - [ ] [TRACE] E2E test: create pick, answer it, verify Lead can read answer
 
 ## Phase 6: Shipping & Invoicing
-- [ ] [BOLT] Packeta/Zásilkovna pickup point widget — load `https://widget.packeta.com/www/js/library.js` via `next/script` in "use client" component. Call `Packeta.Widget.pick(apiKey, callback, { language: "cs", view: "modal", vendors: [{ country: "cz" }] })`. Callback receives `point` with `name`, `id`, `street`, `city`, `zip`. Store selected point data in checkout form state. Requires HTTPS.
+- [ ] [BOLT] Packeta/Zásilkovna pickup point widget v6 (UPDATED C31) — load `https://widget.packeta.com/v6/www/js/library.js` via `next/script` in "use client" component. Call `Packeta.Widget.pick(apiKey, callback, { language: "cs", view: "modal", vendors: [{ country: "cz" }] })`. Callback receives `point` with `name`, `id`, `street`, `city`, `zip`. Store selected point data in checkout form state. Requires HTTPS. Widget configurator: `configurator.widget.packeta.com`. Validation endpoint: `widget.packeta.com/v6/pps/api/widget/v1/validate`. API docs: `docs.packeta.com`.
 - [ ] [BOLT] Packeta shipment creation: SOAP API (createPacket) or REST at docs.packeta.com. Auth via apiPassword. Generate A4 labels.
 - [ ] [BOLT] PDF invoice generation with mandatory CZ fields: IČO, DIČ, seller address, buyer info, invoice number, dates, itemization, VAT status ("Nejsem plátce DPH" if applicable)
 - [ ] [BOLT] Email notifications via Resend (`resend` npm + `@react-email/components`): order confirmation, payment received, shipping dispatched, invoice PDF attachment. Use Server Actions with "use server" — never expose RESEND_API_KEY client-side. Build React Email templates for consistent branding.
@@ -122,9 +122,14 @@
 - [ ] [LEAD] Heureka.cz "Verified by Customers" — NEW pricing model (Sept 2025): free "Start" tier (15 reviews/month), paid "Profi" (499 CZK/month, returned as ad credit). 50% of Czech shoppers ONLY buy from Heureka-certified shops. Start with free tier. Integration: XML product feed for Heureka zbožák + review widget. THE #1 Czech trust signal — Brumla has 99% rating.
 - [ ] [LEAD] Instagram Shopping product feed + micro-influencer strategy — Instagram is THE social channel for CZ women 18-35 (70% of CZ internet users follow influencers, CZ influencer spend surpassed $95M). Plan: Instagram Shopping catalog feed, UGC (real customers wearing purchased items), 3-5 micro-influencers in CZ fashion/sustainability niche. TikTok Shop NOT available in CZ — focus 100% on Instagram.
 - [ ] [LEAD] Messaging strategy: lean into "My jsme to už zkontrolovali, aby ses nemusela" — key differentiator vs Vinted (inconsistent quality, scams, random sellers, recent backlash over grouped sizing). Janicka = curated quality, pro photos, guaranteed condition, single-warehouse fast shipping.
-- [ ] [LEAD] QR code payment on order confirmation — CZ bank transfer is #1 payment method at 33% (higher than cards at 25%!). Add QR payment code (Czech banking standard) to order confirmation page and email. Enables instant bank transfer from mobile banking apps. Low effort, high impact for CZ market.
+- [ ] [BOLT] QR code payment on order confirmation (Lead C31 research — implementation spec). CZ bank transfer is #1 payment method at 33%! Use `spayd` npm (v3.0.4, TypeScript) to generate SPAYD string + `qrcode` npm to render QR image. Fields: `acc` (shop IBAN), `am` (order total), `cc: 'CZK'`, `xvs` (order number as variable symbol), `msg` (shop name + order ref). Display on: (1) order confirmation page, (2) order confirmation email (as inline PNG), (3) admin order detail. User scans with any CZ banking app → payment auto-fills. Architecture: `src/lib/payments/qr-platba.ts` (SPAYD generator), reusable `QrPaymentCode` component. CRITICAL for conversion: 74% of Czechs have used QR payments, 45% abandon if preferred payment unavailable.
 
-## Priority Order (Lead Recommendation — Updated Cycle #25 Research)
+## Phase 10: AI & Compliance [NEW — LEAD RESEARCH C31]
+- [ ] [LEAD] EU AI Act compliance for devChat — if devChat is visible to consumers (not just admin), it MUST be labeled as AI interaction. Add "Odpovídá AI asistent" badge in chat header. Effective 2026. Penalty: significant. If devChat stays admin-only → no action needed.
+- [ ] [LEAD] Delivery deadline tracking — Czech law requires delivery within 30 days of contract unless agreed otherwise. Add `expectedDeliveryDate` to Order model (set on payment confirmation = now + delivery estimate). Show on order confirmation page + email. Track compliance in admin dashboard.
+- [ ] [LEAD] Social commerce features (C31 trend research) — platforms with social/UGC features see 40% higher engagement. Phase 1: "Sdílej na Instagram" button on product detail (generates shareable card image). Phase 2: customer photo reviews (bought + styled). Phase 3: "Právě koupila" feed (anonymous, shows recent purchases with city). Aligns with Gen Z 2.5x faster resale adoption.
+
+## Priority Order (Lead Recommendation — Updated Cycle #31 Research)
 ### ✅ DONE
 - ~~Image upload~~ (Cycle #25) — UploadThing v7
 - ~~SEO structured data~~ (Cycle #22) — JSON-LD, sitemap, robots.txt, OG
@@ -139,22 +144,23 @@
 2. **`nuqs` adoption** (Phase 2) — type-safe URL params, debounced price input, server cache. Eliminates ~50 lines of manual URL parsing. Enables shallow routing.
 3. **Color filter + filter counts** (Phase 2) — color swatches, product count per option ("Zara (23)"), grey out zero-result options. Schema already has colors field.
 4. **Enrich JSON-LD** (Phase 8) — add `shippingDetails` + `hasMerchantReturnPolicy`. Highest-ROI SEO for 2026. +58% clicks, +32% conversion. Google AI Mode growing 5.6x.
-5. **Multi-step checkout + Packeta** (Phase 3+6) — combine checkout redesign with Packeta widget. Steps: Kontakt → Doprava → Platba → Shrnutí.
-6. **Comgate payment** (Phase 3) — 60% cheaper than GoPay, CZ #1, official JS SDK `@comgate/checkout-js`, Apple Pay + Google Pay, BNPL, 6 months free. Decision made — no Pick Page needed.
-7. ~~Cart reservation~~ ✅ DONE (Cycle #27)
+5. **Accordion checkout + Packeta** (Phase 3+6, UPDATED C31) — accordion single-page checkout (NOT multi-step — C31 research: +11-14% completion rate vs multi-step, ASOS saw 50% reduction in abandonment). Sections: Kontakt → Doprava (Packeta widget v6) → Platba (Comgate SDK) → Shrnutí. Guest checkout only. Trust badges at payment section.
+6. **Comgate payment** (Phase 3, UPDATED C31) — Start plan: 0% card fees for 6 months (up to 50K CZK/mo), then 1% + 0 CZK. `@comgate/checkout-js` (TypeScript, promise-based). Apple Pay + Google Pay inline. Card direct entry being prepared by Comgate.
+7. **QR code payment** (Phase 3+9, PROMOTED C31) — `spayd` npm + `qrcode` npm. CRITICAL: bank transfer is #1 CZ payment at 33%. Low effort, massive conversion impact. Ship alongside Comgate.
+8. ~~Cart reservation~~ ✅ DONE (Cycle #27)
 
 ### LAUNCH BLOCKERS
-8. ~~Cookie consent~~ ✅ DONE (Cycle #27)
-9. **30-day price history** (Phase 7) — Czech fake discount rule. Track lowest 30-day price.
-10. **Rate limiting** (Phase 8) — @upstash/ratelimit for checkout + login.
+9. ~~Cookie consent~~ ✅ DONE (Cycle #27)
+10. **30-day price history** (Phase 7) — Czech fake discount rule. Track lowest 30-day price.
+11. **Rate limiting** (Phase 8) — @upstash/ratelimit for checkout + login.
 
 ### POST-LAUNCH
-11. **Email notifications** (Phase 6) — Resend + React Email templates.
-12. **Heureka.cz** (Phase 9) — free "Start" tier. 50% of CZ shoppers require certification.
-13. **QR code payment** (Phase 9) — bank transfer is #1 CZ payment (33%!). QR on order confirmation.
+12. **Email notifications** (Phase 6) — Resend + React Email templates.
+13. **Heureka.cz** (Phase 9) — free "Start" tier. 50% of CZ shoppers require certification.
 14. **Scarcity UX** (Phase 2) — "Unikátní kus" badges + "Právě prodáno" feed.
-15. **Instagram Shopping** (Phase 9) — product feed + micro-influencer partnerships.
-16. **Saved search alerts** (Phase 9) — biggest differentiator vs Vinted.
+15. **Social commerce features** (Phase 10, NEW C31) — share buttons, customer photo reviews, "Právě koupila" feed. 40% higher engagement.
+16. **Instagram Shopping** (Phase 9) — product feed + micro-influencer partnerships.
+17. **Saved search alerts** (Phase 9) — biggest differentiator vs Vinted.
 
 ## Competitive Positioning (Lead Research C19)
 - **Closest competitor**: MegaSecondHand.cz (women-focused, 3500+ curated pieces)

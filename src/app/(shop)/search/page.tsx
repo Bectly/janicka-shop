@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/db";
 import { ProductCard } from "@/components/shop/product-card";
 import { Search } from "lucide-react";
+import { rateLimitSearch } from "@/lib/rate-limit";
+import { getLowestPrices30d } from "@/lib/price-history";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -16,10 +18,17 @@ export default async function SearchPage({
   const params = await searchParams;
   const query = params.q?.trim().slice(0, 100) ?? "";
 
+  // Rate limit: 30 searches per minute per IP
+  let rateLimited = false;
+  if (query.length > 0) {
+    const rl = await rateLimitSearch();
+    rateLimited = !rl.success;
+  }
+
   // Two-pass search: DB-level LIKE filters first (case-insensitive for ASCII),
   // then JS-level pass handles Czech diacritics (Š/š, Č/č, Ř/ř) that SQLite misses.
   const dbResults =
-    query.length > 0
+    query.length > 0 && !rateLimited
       ? await prisma.product.findMany({
           where: {
             active: true,
@@ -42,7 +51,7 @@ export default async function SearchPage({
   // Czech users often search without háčky/čárky (e.g. "saty" instead of "šaty"),
   // so we normalize both query and text by stripping combining diacritical marks.
   let products = dbResults;
-  if (query.length > 0 && dbResults.length === 0) {
+  if (query.length > 0 && !rateLimited && dbResults.length === 0) {
     const normQuery = query
       .toLowerCase()
       .normalize("NFD")
@@ -66,6 +75,10 @@ export default async function SearchPage({
       .slice(0, 40);
   }
 
+  const lowestPricesMap = await getLowestPrices30d(
+    products.map((p) => p.id),
+  );
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <h1 className="sr-only">Vyhledávání</h1>
@@ -86,7 +99,13 @@ export default async function SearchPage({
 
       {/* Results */}
       <div className="mt-8">
-        {query.length > 0 ? (
+        {rateLimited ? (
+          <div className="py-20 text-center">
+            <p className="text-lg text-muted-foreground">
+              Příliš mnoho vyhledávání. Zkuste to prosím za chvíli.
+            </p>
+          </div>
+        ) : query.length > 0 ? (
           <>
             <p className="mb-6 text-sm text-muted-foreground">
               {products.length}{" "}
@@ -111,6 +130,7 @@ export default async function SearchPage({
                     categoryName={product.category.name}
                     brand={product.brand}
                     condition={product.condition}
+                    lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
                   />
                 ))}
               </div>

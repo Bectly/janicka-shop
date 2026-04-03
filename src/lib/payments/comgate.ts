@@ -63,7 +63,7 @@ export async function createComgatePayment(
     email: params.email,
     lang: "cs",
     prepareOnly: "true",
-    url: `${baseUrl}/checkout/payment-return?refId=${encodeURIComponent(params.refId)}`,
+    url: `${baseUrl}/checkout/payment-return?refId=${encodeURIComponent(params.refId)}${params.accessToken ? `&token=${encodeURIComponent(params.accessToken)}` : ""}`,
     notifUrl: `${baseUrl}/api/payments/comgate`,
   });
 

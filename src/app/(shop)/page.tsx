@@ -6,6 +6,7 @@ import { NewsletterForm } from "@/components/shop/newsletter-form";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { getVisitorId } from "@/lib/visitor";
+import { getLowestPrices30d } from "@/lib/price-history";
 
 export default async function HomePage() {
   const sevenDaysAgo = new Date();
