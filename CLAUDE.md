@@ -88,6 +88,38 @@ Toto je **second hand eshop** s oblečením. Klíčové rozdíly oproti běžné
 - **Bolt (DEV)**: Builder — implementace features, kód
 - **Trace (QA)**: Tester — E2E testy, code review, performance audit
 
+## Integration Specs (Lead Research — Cycle #16)
+
+### GoPay Payment Gateway
+- **API**: REST v3. Sandbox: `gw.sandbox.gopay.com/api`, Production: `gate.gopay.cz/api`
+- **Auth**: OAuth 2.0 via `POST /api/oauth2/token` (Basic auth with ClientID:Secret). Scopes: `payment-create`, `payment-all`. Token expires in 30 min — cache for 25 min.
+- **Key endpoints**: `POST /api/payments/payment` (create), `GET /api/payments/payment/{id}` (status), `POST .../refund` (refund)
+- **CZ methods**: Visa, MC, Apple Pay, Google Pay, bank transfers, QR, PayPal
+- **Implementation**: Direct `fetch` in Server Actions / Route Handlers. No heavy SDK needed. Handle `notification_url` via `POST /api/payments/webhook`.
+- **npm options**: `gopay-node` (TS types) or `gopay-js`. Or plain fetch (recommended for simplicity).
+
+### Packeta / Zásilkovna
+- **Widget**: v6 at `widget.packeta.com/v6/`. Iframe-based, communicates via `postMessage`. Load via `next/script` in a `"use client"` component. Requires API key from Packeta client section.
+- **Packet creation**: SOAP API at `zasilkovna.cz/api/soap` (`createPacket` method). Also has REST at `docs.packeta.com`. Auth: `apiPassword` param (not OAuth).
+- **Labels**: Generated via API after packet creation (A4/A2 formats).
+- **Pricing**: Contract-based, no public API — set fixed shipping price in shop (typicky 69-89 Kč).
+- **No official Node SDK**. Use direct REST/SOAP calls from Server Actions.
+
+### Czech Legal Requirements (2026)
+- **Warranty**: Used goods = min 12 months (not 24). Must be in T&C explicitly.
+- **14-day withdrawal**: Applies fully to second-hand clothing. Must provide withdrawal form (vzorový formulář).
+- **Mandatory footer**: ODR link (ec.europa.eu/odr), ČOI as supervisory authority.
+- **Cookies**: Opt-in model. Non-essential blocked until consent. No pre-checked boxes. No cookie walls. Granular choices required.
+- **Invoice**: IČO, DIČ, seller address, buyer info, invoice number, dates, items, VAT status. Store 10 years.
+- **EU Directive 2024/825**: Greenwashing fines up to 5M CZK. Sustainability claims must be specific and verifiable.
+- **EET**: Abolished 2023 — no real-time receipt reporting needed.
+
+### Image Upload Strategy
+- **Recommendation**: UploadThing for MVP (type-safe, managed S3, easy Next.js integration).
+- **Fallback**: Cloudinary if transforms/CDN needed later. More expensive.
+- **Admin UX**: Must support mobile upload (Janička adds products from phone). Multi-image upload, drag-and-drop, reorder.
+- **Optimization**: Serve via `next/image` with WebP/AVIF. Priority on above-the-fold product shots.
+
 ## Feature Inspiration (from vryp — features ONLY, NOT design)
 Must be 100% original implementation, zero copied code/design.
 

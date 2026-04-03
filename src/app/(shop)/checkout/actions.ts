@@ -12,7 +12,7 @@ const checkoutSchema = z.object({
   street: z.string().min(1, "Ulice je povinná"),
   city: z.string().min(1, "Město je povinné"),
   zip: z.string().min(5, "Zadejte platné PSČ"),
-  note: z.string().optional(),
+  note: z.string().max(2000, "Poznámka může mít maximálně 2000 znaků").optional(),
   items: z.array(
     z.object({
       productId: z.string(),

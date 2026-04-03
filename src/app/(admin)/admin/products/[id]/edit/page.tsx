@@ -32,8 +32,10 @@ export default async function EditProductPage({ params }: Props) {
 
   if (!product) notFound();
 
-  const sizes: string[] = JSON.parse(product.sizes);
-  const colors: string[] = JSON.parse(product.colors);
+  let sizes: string[] = [];
+  let colors: string[] = [];
+  try { sizes = JSON.parse(product.sizes); } catch { /* corrupted data fallback */ }
+  try { colors = JSON.parse(product.colors); } catch { /* corrupted data fallback */ }
 
   const productData = {
     id: product.id,

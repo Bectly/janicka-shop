@@ -36,8 +36,10 @@ export default async function ProductDetailPage({ params }: Props) {
 
   if (!product) notFound();
 
-  const sizes: string[] = JSON.parse(product.sizes);
-  const colors: string[] = JSON.parse(product.colors);
+  let sizes: string[] = [];
+  let colors: string[] = [];
+  try { sizes = JSON.parse(product.sizes); } catch { /* corrupted data fallback */ }
+  try { colors = JSON.parse(product.colors); } catch { /* corrupted data fallback */ }
   const hasDiscount = product.compareAt && product.compareAt > product.price;
 
   const relatedProducts = await prisma.product.findMany({

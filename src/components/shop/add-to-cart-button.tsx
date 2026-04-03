@@ -24,7 +24,8 @@ export function AddToCartButton({ product }: AddToCartProps) {
   const [selectedColor, setSelectedColor] = useState(product.colors[0] ?? "");
   const [added, setAdded] = useState(false);
 
-  const imageList: string[] = JSON.parse(product.images);
+  let imageList: string[] = [];
+  try { imageList = JSON.parse(product.images); } catch { /* corrupted data fallback */ }
 
   function handleAdd() {
     addItem({
