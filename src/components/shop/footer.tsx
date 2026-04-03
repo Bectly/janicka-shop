@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CookieSettingsButton } from "@/components/shop/cookie-settings-button";
 
 const footerLinks = {
   nakupovani: {
@@ -69,7 +70,21 @@ export function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-10 border-t pt-6">
+        <div className="mt-10 border-t pt-6 space-y-3">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            <CookieSettingsButton />
+            <a
+              href="https://ec.europa.eu/consumers/odr"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors"
+            >
+              Řešení sporů online (ODR)
+            </a>
+            <span>
+              Dozorový úřad: ČOI (Česká obchodní inspekce)
+            </span>
+          </div>
           <p className="text-center text-xs text-muted-foreground">
             &copy; {new Date().getFullYear()} Janička. Všechna práva vyhrazena.
           </p>

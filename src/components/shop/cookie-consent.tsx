@@ -40,6 +40,19 @@ export function CookieConsentBanner() {
     if (!saved) {
       setVisible(true);
     }
+
+    // Allow re-opening the banner (e.g. from footer "Nastavení cookies" link)
+    function handleReopen() {
+      const saved = getSavedConsent();
+      if (saved) {
+        setAnalytics(saved.analytics);
+        setMarketing(saved.marketing);
+      }
+      setShowDetails(true);
+      setVisible(true);
+    }
+    window.addEventListener("show-cookie-consent", handleReopen);
+    return () => window.removeEventListener("show-cookie-consent", handleReopen);
   }, []);
 
   const handleAcceptAll = useCallback(() => {

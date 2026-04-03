@@ -28,12 +28,9 @@ export default function CartPage() {
     const productIds = items.map((i) => i.productId);
     extendReservations(productIds).then((result) => {
       for (const [productId, reservedUntil] of Object.entries(result)) {
-        if (reservedUntil) {
-          updateReservation(productId, reservedUntil);
-        } else {
-          // Product no longer available — remove from cart
-          removeItem(productId, "", "");
-        }
+        // updateReservation handles both cases:
+        // truthy → updates expiry, null → removes item by productId
+        updateReservation(productId, reservedUntil);
       }
     });
     // Only run on mount

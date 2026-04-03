@@ -3,19 +3,6 @@
 import { prisma } from "@/lib/db";
 import { getVisitorId, RESERVATION_MS } from "@/lib/visitor";
 
-/** Check if a product is available (not sold, not reserved by someone else) */
-function isAvailable(product: {
-  sold: boolean;
-  active: boolean;
-  reservedUntil: Date | null;
-  reservedBy: string | null;
-}, visitorId: string): boolean {
-  if (product.sold || !product.active) return false;
-  if (!product.reservedUntil) return true;
-  if (product.reservedUntil < new Date()) return true; // expired reservation
-  return product.reservedBy === visitorId; // reserved by this visitor
-}
-
 export type ReservationResult = {
   success: boolean;
   error?: string;
@@ -99,27 +86,32 @@ export async function extendReservations(
   const reservedUntil = new Date(now.getTime() + RESERVATION_MS);
   const result: Record<string, string | null> = {};
 
+  // Atomic batch update — extends only products that are available to this visitor.
+  // Prevents TOCTOU race where individual read-then-write could overwrite
+  // another visitor's reservation made between the read and write.
+  await prisma.product.updateMany({
+    where: {
+      id: { in: productIds },
+      active: true,
+      sold: false,
+      OR: [
+        { reservedUntil: null },
+        { reservedUntil: { lt: now } },
+        { reservedBy: visitorId },
+      ],
+    },
+    data: { reservedUntil, reservedBy: visitorId },
+  });
+
+  // Read back to determine which products were successfully extended
   const products = await prisma.product.findMany({
     where: { id: { in: productIds } },
-    select: {
-      id: true,
-      sold: true,
-      active: true,
-      reservedUntil: true,
-      reservedBy: true,
-    },
+    select: { id: true, reservedBy: true },
   });
 
   for (const product of products) {
-    if (isAvailable(product, visitorId)) {
-      await prisma.product.update({
-        where: { id: product.id },
-        data: { reservedUntil, reservedBy: visitorId },
-      });
-      result[product.id] = reservedUntil.toISOString();
-    } else {
-      result[product.id] = null; // no longer available
-    }
+    result[product.id] =
+      product.reservedBy === visitorId ? reservedUntil.toISOString() : null;
   }
 
   // Products not found in DB
