@@ -79,6 +79,28 @@ export default async function PaymentReturnPage({ searchParams }: Props) {
 
         redirect(`/order/${order.orderNumber}?token=${order.accessToken}`);
       }
+
+      // If Comgate says CANCELLED but webhook hasn't processed yet, cancel now.
+      // Without this, products stay marked as sold when user cancels at Comgate,
+      // blocking retry (checkout would fail on "product unavailable").
+      // Uses same atomic pattern as webhook: updateMany with status guard + transaction.
+      if (status.status === "CANCELLED" && order.status === "pending") {
+        await prisma.$transaction(async (tx) => {
+          const updated = await tx.order.updateMany({
+            where: { id: order.id, status: "pending" },
+            data: { status: "cancelled" },
+          });
+          if (updated.count === 0) return; // Webhook already handled it
+          const items = await tx.orderItem.findMany({
+            where: { orderId: order.id },
+            select: { productId: true },
+          });
+          await tx.product.updateMany({
+            where: { id: { in: items.map((i) => i.productId) }, active: true },
+            data: { sold: false, stock: 1 },
+          });
+        });
+      }
     } catch {
       // If status check fails, show pending state — webhook will handle it
       paymentStatus = "PENDING";

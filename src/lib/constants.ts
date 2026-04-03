@@ -71,3 +71,27 @@ export const FREE_SHIPPING_THRESHOLD = 1500;
 
 /** Cash on delivery surcharge in CZK */
 export const COD_SURCHARGE = 39;
+
+/** Czech color names → hex values for visual swatches */
+export const COLOR_MAP: Record<string, string> = {
+  "Černá": "#000000",
+  "Bílá": "#FFFFFF",
+  "Červená": "#DC2626",
+  "Modrá": "#2563EB",
+  "Zelená": "#16A34A",
+  "Žlutá": "#EAB308",
+  "Růžová": "#EC4899",
+  "Fialová": "#8B5CF6",
+  "Oranžová": "#EA580C",
+  "Šedá": "#6B7280",
+  "Hnědá": "#92400E",
+  "Béžová": "#D2B48C",
+  "Krémová": "#FFFDD0",
+  "Zlatá": "#D4A017",
+  "Stříbrná": "#C0C0C0",
+  "Tyrkysová": "#06B6D4",
+  "Bordó": "#800020",
+  "Korálová": "#FF7F50",
+  "Khaki": "#BDB76B",
+  "Námořnická": "#000080",
+};

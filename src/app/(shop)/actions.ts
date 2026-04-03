@@ -5,7 +5,7 @@ import { z } from "zod";
 import { rateLimitNewsletter } from "@/lib/rate-limit";
 
 const newsletterSchema = z.object({
-  email: z.string().email("Zadejte platný e-mail"),
+  email: z.string().trim().email("Zadejte platný e-mail").max(254),
 });
 
 export async function subscribeNewsletter(

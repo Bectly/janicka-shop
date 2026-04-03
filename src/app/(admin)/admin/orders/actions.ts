@@ -59,19 +59,23 @@ export async function updateOrderStatus(orderId: string, status: string) {
 
   // When cancelling an order, release the products back to catalog
   // (second-hand: each piece is unique, cancelled order = item available again)
+  // Uses updateMany with status guard to prevent TOCTOU race: if a webhook
+  // cancels first and a new checkout re-sells the product, the late admin
+  // action safely no-ops instead of releasing the newly sold product.
   if (status === "cancelled" && order.status !== "cancelled") {
-    await prisma.$transaction([
-      prisma.order.update({
-        where: { id: orderId },
-        data: { status },
-      }),
+    await prisma.$transaction(async (tx) => {
+      const updated = await tx.order.updateMany({
+        where: { id: orderId, status: order.status },
+        data: { status: "cancelled" },
+      });
+      if (updated.count === 0) return; // Status already changed — skip product release
       // Only release active products — soft-deleted products (active=false)
       // were explicitly removed by admin and should stay deleted
-      prisma.product.updateMany({
+      await tx.product.updateMany({
         where: { id: { in: productIds }, active: true },
         data: { sold: false, stock: 1 },
-      }),
-    ]);
+      });
+    });
   } else if (order.status === "cancelled" && status !== "cancelled") {
     // Un-cancelling: re-mark products as sold, but only if they haven't been
     // sold to a different order in the meantime (prevents double-sell).
