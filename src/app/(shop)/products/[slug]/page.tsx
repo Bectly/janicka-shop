@@ -7,6 +7,16 @@ import { ProductCard } from "@/components/shop/product-card";
 import { AddToCartButton } from "@/components/shop/add-to-cart-button";
 import type { Metadata } from "next";
 
+const BASE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://janicka-shop.vercel.app";
+
+const CONDITION_TO_SCHEMA: Record<string, string> = {
+  new_with_tags: "https://schema.org/NewCondition",
+  excellent: "https://schema.org/UsedCondition",
+  good: "https://schema.org/UsedCondition",
+  visible_wear: "https://schema.org/UsedCondition",
+};
+
 interface Props {
   params: Promise<{ slug: string }>;
 }
@@ -15,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const product = await prisma.product.findUnique({
     where: { slug, active: true, sold: false },
-    select: { name: true, description: true },
+    select: { name: true, description: true, price: true, slug: true },
   });
 
   if (!product) return {};
@@ -23,6 +33,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: product.name,
     description: product.description,
+    openGraph: {
+      title: product.name,
+      description: product.description,
+      url: `${BASE_URL}/products/${product.slug}`,
+      type: "website",
+      siteName: "Janička",
+      locale: "cs_CZ",
+    },
   };
 }
 
@@ -53,8 +71,41 @@ export default async function ProductDetailPage({ params }: Props) {
     take: 4,
   });
 
+  // JSON-LD structured data for SEO
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description,
+    sku: product.sku,
+    brand: product.brand
+      ? { "@type": "Brand", name: product.brand }
+      : undefined,
+    category: product.category.name,
+    itemCondition:
+      CONDITION_TO_SCHEMA[product.condition] ??
+      "https://schema.org/UsedCondition",
+    offers: {
+      "@type": "Offer",
+      url: `${BASE_URL}/products/${product.slug}`,
+      priceCurrency: "CZK",
+      price: product.price,
+      availability: product.sold
+        ? "https://schema.org/SoldOut"
+        : "https://schema.org/InStock",
+      seller: {
+        "@type": "Organization",
+        name: "Janička",
+      },
+    },
+  };
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Breadcrumb */}
       <nav className="mb-6 text-sm text-muted-foreground">
         <Link href="/products" className="hover:text-foreground">

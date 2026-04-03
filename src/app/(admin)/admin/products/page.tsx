@@ -25,7 +25,13 @@ export default async function AdminProductsPage() {
             Produkty
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {products.length} produktů celkem
+            {products.length}{" "}
+            {products.length === 1
+              ? "produkt"
+              : products.length >= 2 && products.length <= 4
+                ? "produkty"
+                : "produktů"}{" "}
+            celkem
           </p>
         </div>
         <Button render={<Link href="/admin/products/new" />}>

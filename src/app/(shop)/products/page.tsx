@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { prisma } from "@/lib/db";
 import { ProductCard } from "@/components/shop/product-card";
 import { ProductFilters } from "@/components/shop/product-filters";
+import { Pagination } from "@/components/shop/pagination";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -9,6 +10,8 @@ export const metadata: Metadata = {
   description:
     "Prohlédněte si naši kolekci stylového oblečení pro moderní ženy.",
 };
+
+const PRODUCTS_PER_PAGE = 12;
 
 interface SearchParams {
   category?: string;
@@ -19,6 +22,7 @@ interface SearchParams {
   condition?: string | string[];
   minPrice?: string;
   maxPrice?: string;
+  page?: string;
 }
 
 function toArray(v: string | string[] | undefined): string[] {
@@ -32,6 +36,7 @@ export default async function ProductsPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
+  const currentPage = Math.max(1, parseInt(params.page ?? "1") || 1);
 
   const brandFilter = toArray(params.brand);
   const sizeFilter = toArray(params.size);
@@ -69,12 +74,13 @@ export default async function ProductsPage({
         : { createdAt: "desc" };
 
   // Fetch products, categories, and filter options in parallel
+  // Size filter requires JS-level filtering (JSON column), so we fetch all matching
+  // products and paginate after filtering
   const [products, categories, distinctBrands, allSizes] = await Promise.all([
     prisma.product.findMany({
       where,
       include: { category: { select: { name: true } } },
       orderBy,
-      take: 100, // Cap results to prevent unbounded queries; pagination TODO
     }),
     prisma.category.findMany({ orderBy: { sortOrder: "asc" } }),
     prisma.product.findMany({
@@ -124,6 +130,16 @@ export default async function ProductsPage({
         })
       : products;
 
+  // Paginate
+  const totalItems = filteredProducts.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / PRODUCTS_PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * PRODUCTS_PER_PAGE;
+  const paginatedProducts = filteredProducts.slice(
+    startIndex,
+    startIndex + PRODUCTS_PER_PAGE,
+  );
+
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
@@ -138,12 +154,18 @@ export default async function ProductsPage({
             : "Všechny produkty"}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {filteredProducts.length}{" "}
-          {filteredProducts.length === 1
+          {totalItems}{" "}
+          {totalItems === 1
             ? "produkt"
-            : filteredProducts.length >= 2 && filteredProducts.length <= 4
+            : totalItems >= 2 && totalItems <= 4
               ? "produkty"
               : "produktů"}
+          {totalPages > 1 && (
+            <span>
+              {" "}
+              &middot; stránka {safePage} z {totalPages}
+            </span>
+          )}
         </p>
       </div>
 
@@ -158,9 +180,9 @@ export default async function ProductsPage({
 
       {/* Product grid */}
       <div className="mt-8">
-        {filteredProducts.length > 0 ? (
+        {paginatedProducts.length > 0 ? (
           <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
-            {filteredProducts.map((product) => (
+            {paginatedProducts.map((product) => (
               <ProductCard
                 key={product.id}
                 name={product.name}
@@ -183,6 +205,11 @@ export default async function ProductsPage({
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      <Suspense fallback={null}>
+        <Pagination totalItems={totalItems} perPage={PRODUCTS_PER_PAGE} />
+      </Suspense>
     </div>
   );
 }

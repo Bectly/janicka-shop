@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { ProductCard } from "@/components/shop/product-card";
 import { CategoryCard } from "@/components/shop/category-card";
+import { NewsletterForm } from "@/components/shop/newsletter-form";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 
@@ -187,15 +188,7 @@ export default async function HomePage() {
               Přihlaste se k odběru novinek a získejte slevu 10&nbsp;% na první
               nákup.
             </p>
-            <form className="mt-6 flex gap-2">
-              <input
-                type="email"
-                placeholder="váš@email.cz"
-                className="flex-1 rounded-lg border bg-background px-4 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                required
-              />
-              <Button type="submit">Odebírat</Button>
-            </form>
+            <NewsletterForm />
           </div>
         </div>
       </section>

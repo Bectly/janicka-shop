@@ -31,6 +31,8 @@ export function ProductFilters({
   const updateParams = useCallback(
     (updates: Record<string, string | string[] | null>) => {
       const params = new URLSearchParams(searchParams.toString());
+      // Reset to page 1 when filters change
+      params.delete("page");
       for (const [key, value] of Object.entries(updates)) {
         params.delete(key);
         if (value === null || value === "") continue;

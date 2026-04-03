@@ -108,7 +108,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
                       )}
                     </div>
                     <Link
-                      href={`/products/${item.product.slug}`}
+                      href={`/admin/products/${item.productId}/edit`}
                       className="mt-1 inline-block text-xs text-primary hover:underline"
                     >
                       Zobrazit produkt
@@ -185,7 +185,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
               <h2 className="font-heading text-base font-semibold text-foreground">
                 Poznámka
               </h2>
-              <p className="mt-3 text-sm text-muted-foreground">{order.note}</p>
+              <p className="mt-3 whitespace-pre-line text-sm text-muted-foreground">{order.note}</p>
             </div>
           )}
         </div>

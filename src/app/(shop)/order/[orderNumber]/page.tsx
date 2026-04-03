@@ -113,7 +113,7 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
             <h3 className="text-sm font-semibold text-foreground">
               Poznámka
             </h3>
-            <p className="mt-1 text-sm text-muted-foreground">{order.note}</p>
+            <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">{order.note}</p>
           </div>
         )}
       </div>
