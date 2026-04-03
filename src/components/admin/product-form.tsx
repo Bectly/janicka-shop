@@ -1,11 +1,12 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CONDITION_LABELS } from "@/lib/constants";
+import { ImageUpload } from "@/components/admin/image-upload";
 import { Save } from "lucide-react";
 
 interface Category {
@@ -27,6 +28,7 @@ interface ProductData {
   colors: string;
   featured: boolean;
   active: boolean;
+  images: string;
 }
 
 interface ProductFormProps {
@@ -36,6 +38,15 @@ interface ProductFormProps {
 }
 
 export function ProductForm({ categories, product, action }: ProductFormProps) {
+  const [imageUrls, setImageUrls] = useState<string[]>(() => {
+    if (!product?.images) return [];
+    try {
+      return JSON.parse(product.images);
+    } catch {
+      return [];
+    }
+  });
+
   async function formAction(_prev: string | null, formData: FormData) {
     try {
       await action(formData);
@@ -57,6 +68,13 @@ export function ProductForm({ categories, product, action }: ProductFormProps) {
           {error}
         </div>
       )}
+
+      {/* Images */}
+      <div className="space-y-2">
+        <Label>Fotky produktu</Label>
+        <ImageUpload value={imageUrls} onChange={setImageUrls} />
+        <input type="hidden" name="images" value={JSON.stringify(imageUrls)} />
+      </div>
 
       <div className="grid gap-6 sm:grid-cols-2">
         {/* Name */}

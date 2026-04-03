@@ -51,6 +51,7 @@ export default async function EditProductPage({ params }: Props) {
     colors: colors.join(", "),
     featured: product.featured,
     active: product.active,
+    images: product.images,
   };
 
   async function action(formData: FormData) {

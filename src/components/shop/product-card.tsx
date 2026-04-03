@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { formatPrice } from "@/lib/format";
 import { CONDITION_LABELS, CONDITION_COLORS } from "@/lib/constants";
 
@@ -19,6 +20,7 @@ export function ProductCard({
   slug,
   price,
   compareAt,
+  images,
   categoryName,
   brand,
   condition,
@@ -29,15 +31,32 @@ export function ProductCard({
     ? Math.round(((compareAt - price) / compareAt) * 100)
     : 0;
 
+  let parsedImages: string[] = [];
+  try {
+    parsedImages = JSON.parse(images);
+  } catch {
+    /* corrupted data fallback */
+  }
+  const mainImage = parsedImages[0];
+
   return (
     <Link href={`/products/${slug}`} className="group block">
       <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-muted">
-        {/* Placeholder — real images will be added later */}
-        <div className="flex size-full items-center justify-center bg-gradient-to-br from-muted to-muted/50 transition-transform duration-300 group-hover:scale-105">
-          <span className="text-3xl text-muted-foreground/30">
-            {name.charAt(0)}
-          </span>
-        </div>
+        {mainImage ? (
+          <Image
+            src={mainImage}
+            alt={name}
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          />
+        ) : (
+          <div className="flex size-full items-center justify-center bg-gradient-to-br from-muted to-muted/50 transition-transform duration-300 group-hover:scale-105">
+            <span className="text-3xl text-muted-foreground/30">
+              {name.charAt(0)}
+            </span>
+          </div>
+        )}
         <div className="absolute top-2 left-2 flex flex-col gap-1">
           {isNew && (
             <span className="rounded-md bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">

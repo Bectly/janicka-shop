@@ -87,7 +87,7 @@ export async function createProduct(formData: FormData) {
           .map((s) => s.trim())
           .filter(Boolean)
       ),
-      images: "[]",
+      images: (formData.get("images") as string) || "[]",
       stock: 1,
       featured: parsed.featured,
       active: parsed.active,
@@ -154,6 +154,7 @@ export async function updateProduct(id: string, formData: FormData) {
           .map((s) => s.trim())
           .filter(Boolean)
       ),
+      images: (formData.get("images") as string) || "[]",
       featured: parsed.featured,
       active: parsed.active,
     },

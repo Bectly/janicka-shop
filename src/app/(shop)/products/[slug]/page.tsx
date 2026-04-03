@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { formatPrice } from "@/lib/format";
 import { CONDITION_LABELS, CONDITION_COLORS } from "@/lib/constants";
 import { ProductCard } from "@/components/shop/product-card";
+import { ProductGallery } from "@/components/shop/product-gallery";
 import { AddToCartButton } from "@/components/shop/add-to-cart-button";
 import type { Metadata } from "next";
 
@@ -25,10 +26,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const product = await prisma.product.findUnique({
     where: { slug, active: true, sold: false },
-    select: { name: true, description: true, price: true, slug: true },
+    select: { name: true, description: true, price: true, slug: true, images: true },
   });
 
   if (!product) return {};
+
+  let images: string[] = [];
+  try { images = JSON.parse(product.images); } catch { /* fallback */ }
 
   return {
     title: product.name,
@@ -40,6 +44,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: "website",
       siteName: "Janička",
       locale: "cs_CZ",
+      ...(images.length > 0 && { images: [{ url: images[0], alt: product.name }] }),
     },
   };
 }
@@ -56,8 +61,10 @@ export default async function ProductDetailPage({ params }: Props) {
 
   let sizes: string[] = [];
   let colors: string[] = [];
+  let productImages: string[] = [];
   try { sizes = JSON.parse(product.sizes); } catch { /* corrupted data fallback */ }
   try { colors = JSON.parse(product.colors); } catch { /* corrupted data fallback */ }
+  try { productImages = JSON.parse(product.images); } catch { /* corrupted data fallback */ }
   const hasDiscount = product.compareAt && product.compareAt > product.price;
 
   const relatedProducts = await prisma.product.findMany({
@@ -77,6 +84,7 @@ export default async function ProductDetailPage({ params }: Props) {
     "@type": "Product",
     name: product.name,
     description: product.description,
+    image: productImages.length > 0 ? productImages : undefined,
     sku: product.sku,
     brand: product.brand
       ? { "@type": "Brand", name: product.brand }
@@ -104,7 +112,9 @@ export default async function ProductDetailPage({ params }: Props) {
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+        }}
       />
       {/* Breadcrumb */}
       <nav className="mb-6 text-sm text-muted-foreground">
@@ -123,14 +133,8 @@ export default async function ProductDetailPage({ params }: Props) {
       </nav>
 
       <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
-        {/* Image */}
-        <div className="aspect-[3/4] overflow-hidden rounded-2xl bg-muted">
-          <div className="flex size-full items-center justify-center bg-gradient-to-br from-muted to-muted/50">
-            <span className="text-6xl text-muted-foreground/20">
-              {product.name.charAt(0)}
-            </span>
-          </div>
-        </div>
+        {/* Image Gallery */}
+        <ProductGallery images={productImages} productName={product.name} />
 
         {/* Info */}
         <div className="flex flex-col">
