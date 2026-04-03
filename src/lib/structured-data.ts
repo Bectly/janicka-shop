@@ -27,15 +27,16 @@ const SHIPPING_DETAILS = {
     "@type": "DeliveryChargeSpecification" as const,
     price: "69",
     priceCurrency: "CZK",
-    freeShippingThreshold: {
-      "@type": "DeliveryChargeSpecification" as const,
-      price: "0",
+  },
+  // freeShippingThreshold is a property of OfferShippingDetails, NOT DeliveryChargeSpecification
+  freeShippingThreshold: {
+    "@type": "DeliveryChargeSpecification" as const,
+    price: "0",
+    priceCurrency: "CZK",
+    eligibleTransactionVolume: {
+      "@type": "PriceSpecification" as const,
+      price: "1500",
       priceCurrency: "CZK",
-      eligibleTransactionVolume: {
-        "@type": "PriceSpecification" as const,
-        price: "1500",
-        priceCurrency: "CZK",
-      },
     },
   },
   shippingDestination: {

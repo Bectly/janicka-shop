@@ -22,7 +22,8 @@ const checkoutSchema = z
     email: z.string().email("Zadejte platný email").max(254),
     firstName: z.string().min(1, "Jméno je povinné").max(100, "Jméno je příliš dlouhé"),
     lastName: z.string().min(1, "Příjmení je povinné").max(100, "Příjmení je příliš dlouhé"),
-    phone: z.string().min(9, "Zadejte platné telefonní číslo").max(30, "Neplatné telefonní číslo"),
+    phone: z.string()
+      .regex(/^\+?[\d\s\-()]{9,30}$/, "Zadejte platné telefonní číslo"),
     // Address fields — required only for home delivery methods (validated in refine)
     street: z.string().max(200, "Adresa je příliš dlouhá").optional(),
     city: z.string().max(100, "Název města je příliš dlouhý").optional(),
@@ -320,8 +321,8 @@ export async function createOrder(
       await tx.orderItem.createMany({
         data: data.items.map((item) => {
           const dbProduct = productMap.get(item.productId)!;
-          let validatedSize = item.size;
-          let validatedColor = item.color;
+          const validatedSize = item.size;
+          const validatedColor = item.color;
           try {
             const dbSizes: string[] = JSON.parse(dbProduct.sizes);
             if (dbSizes.length > 0 && !dbSizes.includes(item.size)) {

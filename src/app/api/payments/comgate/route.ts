@@ -159,6 +159,15 @@ async function processPaymentStatus(
       // Card authorized but not captured — keep as pending, will become PAID
       break;
     }
-    // PENDING — no action needed, order already in pending state
+    case "PENDING": {
+      // No action needed, order already in pending state
+      break;
+    }
+    default: {
+      console.warn(
+        `[Comgate webhook] Unknown payment status "${comgateStatus}" for order ${orderId}`,
+      );
+      break;
+    }
   }
 }
