@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/db";
-import { rateLimitLogin } from "@/lib/rate-limit";
+import { rateLimitLogin, recordLoginFailure } from "@/lib/rate-limit";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -22,7 +22,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           where: { email: credentials.email as string },
         });
 
-        if (!admin) return null;
+        if (!admin) {
+          await recordLoginFailure();
+          return null;
+        }
 
         // Dynamic import to avoid bundling bcryptjs on client
         const { compare } = await import("bcryptjs");
@@ -31,7 +34,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           admin.password
         );
 
-        if (!isValid) return null;
+        if (!isValid) {
+          await recordLoginFailure();
+          return null;
+        }
 
         return {
           id: admin.id,
@@ -46,6 +52,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   session: {
     strategy: "jwt",
+    maxAge: 24 * 60 * 60, // 24 hours
   },
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {

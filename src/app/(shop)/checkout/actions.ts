@@ -51,11 +51,11 @@ const checkoutSchema = z
       .array(
         z.object({
           productId: z.string().min(1, "Neplatný produkt").max(128),
-          name: z.string(),
-          price: z.number(),
-          size: z.string(),
-          color: z.string(),
-          quantity: z.number(),
+          name: z.string().min(1).max(300),
+          price: z.number().finite().positive(),
+          size: z.string().max(50),
+          color: z.string().max(50),
+          quantity: z.number().int().positive(),
         })
       )
       .min(1, "Košík je prázdný")
@@ -142,6 +142,9 @@ export async function createOrder(
   }
 
   const itemsJson = formData.get("items") as string;
+  if (!itemsJson || itemsJson.length > 50_000) {
+    return { error: "Neplatná data košíku", fieldErrors: {} };
+  }
   let items: Array<{
     productId: string;
     name: string;
@@ -306,18 +309,33 @@ export async function createOrder(
         },
       });
 
-      // Create order items
+      // Create order items — validate size/color against product DB data
       await tx.orderItem.createMany({
         data: data.items.map((item) => {
           const dbProduct = productMap.get(item.productId)!;
+          // Validate submitted size against product's available sizes
+          let validatedSize = item.size;
+          let validatedColor = item.color;
+          try {
+            const dbSizes: string[] = JSON.parse(dbProduct.sizes);
+            if (dbSizes.length > 0 && !dbSizes.includes(item.size)) {
+              validatedSize = dbSizes[0]; // fallback to first available size
+            }
+          } catch { /* use submitted value if sizes JSON is corrupted */ }
+          try {
+            const dbColors: string[] = JSON.parse(dbProduct.colors);
+            if (dbColors.length > 0 && item.color && !dbColors.includes(item.color)) {
+              validatedColor = dbColors[0]; // fallback to first available color
+            }
+          } catch { /* use submitted value if colors JSON is corrupted */ }
           return {
             orderId: created.id,
             productId: item.productId,
             name: dbProduct.name,
             price: dbProduct.price,
             quantity: 1,
-            size: item.size,
-            color: item.color,
+            size: validatedSize,
+            color: validatedColor,
           };
         }),
       });

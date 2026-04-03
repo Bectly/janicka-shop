@@ -82,13 +82,29 @@
 - [ ] [BOLT] PDF invoice generation with mandatory CZ fields: IČO, DIČ, seller address, buyer info, invoice number, dates, itemization, VAT status ("Nejsem plátce DPH" if applicable)
 - [ ] [BOLT] Email notifications via Resend (`resend` npm + `@react-email/components`): order confirmation, payment received, shipping dispatched, invoice PDF attachment. Use Server Actions with "use server" — never expose RESEND_API_KEY client-side. Build React Email templates for consistent branding.
 
-## Phase 7: Legal Compliance [UPDATED — LEAD RESEARCH C19]
+## Phase 7: Legal Compliance [UPDATED — LEAD RESEARCH C19, C37]
 - [x] [BOLT] Cookie consent banner — DONE Cycle #27. Granular categories (essential/analytics/marketing), same-size Accept/Reject buttons, no dark patterns, localStorage persistence, conditional script loading. Re-consent mechanism + footer button added Cycle #29. Secure flag on HTTPS fixed Cycle #30.
 - [ ] [BOLT] Withdrawal form (vzorový formulář pro odstoupení od smlouvy) — downloadable PDF or inline form. 14-day return right applies fully to second-hand.
 - [ ] [BOLT] Footer legal links: ODR platform (ec.europa.eu/odr), ČOI as supervisory authority
 - [ ] [BOLT] Update obchodní podmínky (terms page): add 12-month warranty clause for used goods (§2167 Civil Code), seller IČO + sídlo, all payment/delivery terms, withdrawal rights
 - [ ] [BOLT] Update privacy policy page: GDPR-compliant, separate from T&C, data purposes, retention, rights, legal basis
 - [ ] [LEAD] Sustainability claims audit: EU Directive 2024/825 (effective 2026) — greenwashing fines up to 5M CZK. All eco/sustainability claims must be specific and verifiable. "Ušetříš 70 % oproti nové ceně" is OK, vague "ekologické" is NOT.
+
+## Phase 7c: EU Accessibility Act (EAA) Compliance [NEW — LEAD RESEARCH C37] ⚠️ LAUNCH BLOCKER
+Czech Act No. 424/2023 Coll. — **in force since June 28, 2025**. Supervised by ČOI. Janicka shop built AFTER enforcement date = NO transition period. Must be WCAG 2.1 AA compliant from launch. Fines: up to €100,000 or 4% annual revenue. France filed enforcement actions within days. CZ ČOI plans to publish non-compliant lists.
+- [ ] [LEAD] Accessibility audit of existing pages — run axe-core or Lighthouse accessibility audit on all current pages. Identify violations against WCAG 2.1 AA. Prioritize fixes by severity (critical → serious → moderate).
+- [ ] [BOLT] Semantic HTML audit + fix — ensure all pages use correct heading hierarchy (h1→h2→h3, no skips), landmark elements (`<nav>`, `<main>`, `<header>`, `<footer>`, `<aside>`), lists for navigation items, `<button>` for actions (not div onclick). Check all existing components.
+- [ ] [BOLT] Keyboard navigation for product filters — ALL filter controls (brand pills, size buttons, condition, price range, color swatches, sort dropdown) must be operable via keyboard. Tab order must be logical. Active filter chips must be keyboard-removable. Focus must return to logical position after filter change.
+- [ ] [BOLT] Keyboard navigation for checkout — accordion sections must be keyboard-operable (Enter/Space to expand/collapse). All form fields accessible. Packeta widget keyboard support verification. Payment buttons reachable via Tab.
+- [ ] [BOLT] Visible focus indicators — add `focus-visible` outlines to ALL interactive elements (buttons, links, inputs, selects, custom controls). Use consistent, high-contrast focus ring (e.g. 2px solid with offset). Tailwind: `focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-pink-500`. NEVER use `outline-none` without `focus-visible` replacement.
+- [ ] [BOLT] Alt text on all product images — every `<img>` and `next/image` must have descriptive alt text. Product images: "[Brand] [Product name] - [condition]" (e.g. "Zara letní šaty - výborný stav"). Decorative images: `alt=""`. Category icons: descriptive alt. Hero/banner images: descriptive alt.
+- [ ] [BOLT] Color contrast compliance — verify ALL text meets WCAG 2.1 AA contrast ratios: ≥4.5:1 for normal text (<18px or <14px bold), ≥3:1 for large text (≥18px or ≥14px bold). Check: condition badges, price text, discount percentages, muted/secondary text, placeholder text, filter labels. Use Chrome DevTools or axe-core. Fix any violations.
+- [ ] [BOLT] Accessible forms — all form inputs must have visible `<label>` elements (not just placeholder text). Error messages must be associated via `aria-describedby`. Required fields marked with `aria-required="true"`. Form validation errors announced to screen readers (aria-live region or role="alert").
+- [ ] [BOLT] Screen reader support — add `aria-label` to icon-only buttons (cart icon, search icon, close buttons, heart/wishlist). Add `aria-live="polite"` regions for dynamic content updates (cart count, filter results count, reservation timer). Add `sr-only` text for visual-only information (discount percentage, condition dots).
+- [ ] [BOLT] Focus management on route changes — Next.js App Router doesn't auto-manage focus on navigation. After route change, focus must move to `<main>` or page heading (use `tabindex="-1"` + programmatic `.focus()`). Announce page changes to screen readers via aria-live region. Critical for product listing → product detail → back navigation.
+- [ ] [BOLT] Modal/drawer accessibility — all modals (quick view, mobile filters, cart drawer, cookie consent) must: trap focus inside when open, return focus to trigger element on close, close on Escape key, have `role="dialog"` + `aria-modal="true"` + `aria-labelledby`. Shadcn Dialog/Sheet components handle most of this — verify.
+- [ ] [BOLT] Skip navigation link — add "Přeskočit na obsah" (skip to content) link as first focusable element on every page. Visible on focus only (sr-only + focus-visible:not-sr-only). Links to `#main-content` on `<main>`. Standard accessibility pattern.
+- [ ] [TRACE] WCAG 2.1 AA compliance test — automated (axe-core/Lighthouse) + manual keyboard-only navigation test of all critical flows: browse catalog → filter → view product → add to cart → checkout. Every flow must be completable without a mouse.
 
 ## Phase 7b: Onboarding Page — Dárek od JARVIS
 - [ ] [BOLT] Install canvas-confetti npm package
@@ -133,7 +149,7 @@
 - [ ] [LEAD] Delivery deadline tracking — Czech law requires delivery within 30 days of contract unless agreed otherwise. Add `expectedDeliveryDate` to Order model (set on payment confirmation = now + delivery estimate). Show on order confirmation page + email. Track compliance in admin dashboard.
 - [ ] [LEAD] Social commerce features (C31 trend research) — platforms with social/UGC features see 40% higher engagement. Phase 1: "Sdílej na Instagram" button on product detail (generates shareable card image). Phase 2: customer photo reviews (bought + styled). Phase 3: "Právě koupila" feed (anonymous, shows recent purchases with city). Aligns with Gen Z 2.5x faster resale adoption.
 
-## Priority Order (Lead Recommendation — Updated Cycle #31 Research)
+## Priority Order (Lead Recommendation — Updated Cycle #37 Research)
 ### ✅ DONE
 - ~~Image upload~~ (Cycle #25) — UploadThing v7
 - ~~SEO structured data~~ (Cycle #22) — JSON-LD, sitemap, robots.txt, OG
@@ -143,36 +159,38 @@
 - ~~Cart reservation~~ (Cycle #27) — 15min timer, TOCTOU-safe, "Rezervováno" badges, countdown
 - ~~Cookie consent~~ (Cycle #27) — GDPR/ECA compliant, granular categories, re-consent (C29), Secure flag (C30)
 
-### NEXT SPRINT — Phase 2 Polish + Phase 3 Checkout (UPDATED C34)
-1. **Mobile filter drawer** (Phase 2, UPDATED C34) — full-screen overlay on mobile (NOT bottom sheet — Baymard: too cramped). Sticky "Filtry" at bottom of viewport. Accordion inside. "Zobrazit X produktů" sticky footer. HIGH IMPACT — 70%+ traffic is mobile.
-2. **`nuqs` adoption** (Phase 2) — type-safe URL params, debounced price input, server cache. Eliminates ~50 lines of manual URL parsing. Enables shallow routing.
-3. **Color filter + filter counts** (Phase 2, UPDATED C34) — color swatches, product count per option ("Zara (23)"), grey out zero-result options (do NOT hide — causes "where did M go?" confusion). Schema already has colors field.
-4. **Wishlist with localStorage** (Phase 2, NEW C34) — heart icon on product cards, Zustand persist store, `/oblibene` page. No login required. Critical for second-hand: items sell fast, users track favorites. Low effort, high engagement.
-5. **Second image hover** (Phase 2, NEW C34) — crossfade to second image on desktop hover (opacity transition 300ms). Mobile: dot indicators only, no in-card swipe.
-6. **Enrich JSON-LD** (Phase 8) — add `shippingDetails` + `hasMerchantReturnPolicy`. Highest-ROI SEO for 2026. +58% clicks, +32% conversion. Google AI Mode growing 5.6x.
-7. **Accordion checkout + Packeta** (Phase 3+6, UPDATED C34) — accordion single-page checkout. NEW: Apple Pay / Google Pay express buttons at VERY TOP on mobile (above form). Auto-advance sections. BNPL via Comgate pay-in-3 for items >1000 CZK.
-8. **Comgate payment** (Phase 3, C34 CHECK: direct card entry in SDK STILL "being prepared" — no change. Use redirect flow for cards, inline for Apple/Google Pay).
-9. **QR code payment** (Phase 3+9, PROMOTED C31) — `spayd` npm + `qrcode` npm. CRITICAL: bank transfer is #1 CZ payment at 33%. Low effort, massive conversion impact. Ship alongside Comgate.
-10. ~~Cart reservation~~ ✅ DONE (Cycle #27)
+### NEXT SPRINT — Phase 2 Polish + Phase 3 Checkout + Accessibility (UPDATED C37)
+1. **⚠️ EAA Accessibility — semantic HTML + keyboard nav + focus indicators** (Phase 7c, NEW C37) — LAUNCH BLOCKER. Czech Act No. 424/2023 in force since June 2025. No transition period for new sites. Fines: €100K or 4% revenue. Start with: semantic HTML audit, keyboard navigation for filters/checkout, visible focus indicators, skip navigation link, alt text on all images. This must be woven into ALL development from now on — every new component must be accessible by default.
+2. **Mobile filter drawer** (Phase 2, UPDATED C34) — full-screen overlay on mobile (NOT bottom sheet — Baymard: too cramped). Sticky "Filtry" at bottom of viewport. Accordion inside. "Zobrazit X produktů" sticky footer. HIGH IMPACT — 70%+ traffic is mobile. **C37: must be keyboard-accessible from day one (EAA)**.
+3. **`nuqs` adoption** (Phase 2) — type-safe URL params, debounced price input, server cache. Eliminates ~50 lines of manual URL parsing. Enables shallow routing.
+4. **Color filter + filter counts** (Phase 2, UPDATED C34) — color swatches, product count per option ("Zara (23)"), grey out zero-result options (do NOT hide — causes "where did M go?" confusion). Schema already has colors field. **C37: color swatches need accessible labels for screen readers (not just visual color)**.
+5. **Wishlist with localStorage** (Phase 2, NEW C34) — heart icon on product cards, Zustand persist store, `/oblibene` page. No login required. Critical for second-hand: items sell fast, users track favorites. Low effort, high engagement.
+6. **Second image hover** (Phase 2, NEW C34) — crossfade to second image on desktop hover (opacity transition 300ms). Mobile: dot indicators only, no in-card swipe.
+7. **Enrich JSON-LD** (Phase 8) — add `shippingDetails` + `hasMerchantReturnPolicy`. Highest-ROI SEO for 2026. +58% clicks, +32% conversion. Google AI Mode growing 5.6x.
+8. **Accordion checkout + Packeta** (Phase 3+6, UPDATED C34) — accordion single-page checkout. NEW: Apple Pay / Google Pay express buttons at VERY TOP on mobile (above form). Auto-advance sections. BNPL via Comgate pay-in-3 for items >1000 CZK. **C37: accordion must be keyboard-operable, form fields must have labels (not just placeholders)**.
+9. **Comgate payment** (Phase 3, C37 VERIFIED: direct card entry in SDK STILL "being prepared" — no change as of April 2026. Use redirect flow for cards, inline for Apple/Google Pay).
+10. **QR code payment** (Phase 3+9, PROMOTED C31) — `spayd` npm + `qrcode` npm. CRITICAL: bank transfer is #1 CZ payment at 33%. Low effort, massive conversion impact. Ship alongside Comgate.
 
 ### LAUNCH BLOCKERS
 11. ~~Cookie consent~~ ✅ DONE (Cycle #27)
 12. **30-day price history** (Phase 7) — Czech fake discount rule. Track lowest 30-day price. ⚠️ C34 finding: consumer protection fines now up to 4% of turnover.
 13. **Rate limiting** (Phase 8) — @upstash/ratelimit for checkout + login.
+14. **⚠️ EAA accessibility compliance** (Phase 7c, NEW C37) — WCAG 2.1 AA. See Phase 7c for full task breakdown. Semantic HTML, keyboard nav, focus indicators, alt text, color contrast, screen reader support, skip link. Enforcement ACTIVE since June 2025. ČOI supervises. Promoted to LAUNCH BLOCKER because NO transition period for new sites.
 
 ### POST-LAUNCH
-14. **Email notifications** (Phase 6) — Resend + React Email templates.
-15. **Heureka.cz** (Phase 9) — free "Start" tier. 50% of CZ shoppers require certification.
-16. **Curated collections** (Phase 2+9, NEW C34) — editorial-quality themed groups ("Jarní šaty pod 500 Kč"). Vinted launched Collections in 2026. Differentiates from listing dumps.
-17. **Scarcity UX** (Phase 2) — "Unikátní kus" badges + "Právě prodáno" feed.
-18. **Social commerce features** (Phase 10, NEW C31) — share buttons, customer photo reviews, "Právě koupila" feed. 40% higher engagement.
-19. **Instagram Shopping** (Phase 9) — product feed + micro-influencer partnerships.
-20. **Saved search alerts** (Phase 9) — biggest differentiator vs Vinted.
+15. **Email notifications** (Phase 6) — Resend + React Email templates.
+16. **Heureka.cz** (Phase 9) — free "Start" tier. 50% of CZ shoppers require certification.
+17. **Curated collections** (Phase 2+9, NEW C34) — editorial-quality themed groups ("Jarní šaty pod 500 Kč"). Vinted launched Collections in 2026. Differentiates from listing dumps.
+18. **Scarcity UX** (Phase 2) — "Unikátní kus" badges + "Právě prodáno" feed.
+19. **Social commerce features** (Phase 10, NEW C31) — share buttons, customer photo reviews, "Právě koupila" feed. 40% higher engagement.
+20. **Instagram Shopping** (Phase 9) — product feed + micro-influencer partnerships.
+21. **Saved search alerts** (Phase 9) — biggest differentiator vs Vinted.
 
-## Competitive Positioning (Lead Research C19, UPDATED C34)
+## Competitive Positioning (Lead Research C19, UPDATED C34, C37)
 - **Closest competitor**: MegaSecondHand.cz (women-focused, 3500+ curated pieces). **C34 NEW**: launched "Body visualization" (on-body product photos) for select items. Gradually expanding. Also diversifying into men's basics.
 - **Largest**: Brumla.cz (8500 new items Mon+Thu, 99% Heureka rating). No UX changes, no AI features, no visual improvements detected C34. Volume-first, not curated.
-- **Vinted** (C34 UPDATE): IPO ruled out "for now" — BlackRock secondary deal at ~EUR 8B valuation. Launched "Collections" feature (user-curated themed groupings). Expanding to US (NYC Jan 2026) + electronics category. Vinted Pay wallet rolling out in smaller EU markets (NOT CZ yet). CZ trust issues persist (bots, scams, no human support per Trustpilot). UK sizing disaster reversed Jan 2026.
+- **Vinted** (C34 UPDATE): IPO ruled out "for now" — BlackRock secondary deal at ~EUR 8B valuation. Launched "Collections" feature (user-curated themed groupings). Expanding to US (NYC Jan 2026) + electronics category. Vinted Pay wallet rolling out in smaller EU markets (NOT CZ yet). CZ trust issues persist (bots, scams, no human support per Trustpilot). UK sizing disaster reversed Jan 2026. **C37**: ~1M registered CZ members.
+- **CZ online fashion landscape (C37)**: Zalando dominates at 42% of Czech shoppers, About You at 40%, Zoot third at 26%. Foreign e-commerce giants reshaping Czech online fashion.
 - **No new CZ competitors** detected in curated women's second-hand niche as of April 2026. Market gap STILL OPEN.
 - **Global trends**: ThredUp AI image search is killer feature (81% say AI improved experience). Virtual try-on: +40% conversion, ~50% return reduction (Zara launched Jan 2026). Live commerce: 30% conversion vs 2-3% traditional.
 - **Janicka differentiator**: premium curation, Instagram-aesthetic UX, guaranteed quality, pro photos, on-body photography from day one (ahead of MegaSecondHand's gradual rollout), fast single-warehouse shipping
@@ -180,4 +198,6 @@
 - **Anti-pattern**: NO fake countdown timers, NO flashing "limited stock". Sustainability-conscious 18-35 crowd hates manufactured urgency. Use HONEST scarcity (every item IS the last one).
 - **Page speed target**: Sub-2.5s load (2.4s = 1.9% CR, 5.7s = 0.6% CR — 3x difference)
 - **Mobile grid**: 2 columns standard, thumb-friendly quick actions, bottom nav bar
-- **Second-hand market size**: Global $393B (ThredUp 2026 report), ~10% of total apparel spend. Growing 2-3x faster than first-hand (2025-2027).
+- **Second-hand market size**: Global $393B (ThredUp 2026 report), ~10% of total apparel spend. Growing 2-3x faster than first-hand (2025-2027). **C37**: Europe second-hand clothing market $35.33B (2026), projected $75.57B by 2034 (CAGR ~10%).
+- **Conversion benchmarks (C37)**: Fashion avg 3.01% CR. On-model photography: +33% conversion. 50+ reviews: 4.6x better. Personalization: +150% uplift. Sizing uncertainty = #1 return driver.
+- **Accessibility as differentiator (C37)**: EAA compliance is NOT just legal requirement — it's competitive advantage. NONE of the CZ second-hand competitors (Brumla, MegaSecondHand, Vinted CZ) appear to have made significant accessibility improvements. Being WCAG 2.1 AA compliant from launch positions Janicka as the most inclusive second-hand shop in CZ.

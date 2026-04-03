@@ -57,9 +57,14 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
   // Generate QR payment code for bank transfer orders that are still pending
   const isBankTransfer = order.paymentMethod === "comgate" || order.paymentMethod === "bank_transfer";
   const showQr = isPending && isBankTransfer;
-  const qrPayment = showQr
-    ? await generateOrderQrPayment(order.orderNumber, order.total)
-    : null;
+  let qrPayment: Awaited<ReturnType<typeof generateOrderQrPayment>> | null = null;
+  if (showQr) {
+    try {
+      qrPayment = await generateOrderQrPayment(order.orderNumber, order.total);
+    } catch {
+      // QR generation failed — page continues without QR code, which is acceptable
+    }
+  }
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6 lg:px-8">

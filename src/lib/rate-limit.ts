@@ -116,10 +116,20 @@ export async function getClientIp(): Promise<string> {
 
 const MINUTE = 60 * 1000;
 
-/** Login: 5 attempts per 15 minutes per IP */
+/**
+ * Login: 5 FAILED attempts per 15 minutes per IP.
+ * Only checks — does NOT record the attempt. Call recordLoginFailure() after
+ * a failed auth so successful logins don't consume rate limit tokens.
+ */
 export async function rateLimitLogin(): Promise<RateLimitResult> {
   const ip = await getClientIp();
-  return checkRateLimit(`login:${ip}`, 5, 15 * MINUTE);
+  return checkRateLimitOnly(`login:${ip}`, 5, 15 * MINUTE);
+}
+
+/** Record a failed login attempt against the rate limiter. */
+export async function recordLoginFailure(): Promise<void> {
+  const ip = await getClientIp();
+  recordRateLimitHit(`login:${ip}`);
 }
 
 /** Checkout: 5 orders per 5 minutes per IP */

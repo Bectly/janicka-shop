@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const product = await getProduct(slug);
 
-  if (!product) return {};
+  if (!product) notFound();
 
   let images: string[] = [];
   try { images = JSON.parse(product.images); } catch { /* fallback */ }
