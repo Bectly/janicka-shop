@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { rateLimitAdmin } from "@/lib/rate-limit";
 
 const categorySchema = z.object({
   name: z.string().min(1, "Název je povinný"),
@@ -29,6 +30,8 @@ async function requireAdmin() {
 
 export async function createCategory(formData: FormData) {
   await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
 
   const raw = {
     name: formData.get("name") as string,
@@ -72,6 +75,8 @@ export async function createCategory(formData: FormData) {
 
 export async function updateCategory(id: string, formData: FormData) {
   await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
 
   const raw = {
     name: formData.get("name") as string,
@@ -118,6 +123,8 @@ export async function updateCategory(id: string, formData: FormData) {
 
 export async function deleteCategory(id: string) {
   await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
 
   // Check if category has products — prevent deletion to avoid orphans
   const productCount = await prisma.product.count({

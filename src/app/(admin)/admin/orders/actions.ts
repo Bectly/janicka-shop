@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { ORDER_STATUS_LABELS } from "@/lib/constants";
 import { sendOrderStatusEmail } from "@/lib/email";
+import { rateLimitAdmin } from "@/lib/rate-limit";
 
 const VALID_STATUSES = [
   "pending",
@@ -32,6 +33,8 @@ async function requireAdmin() {
 
 export async function updateOrderStatus(orderId: string, status: string) {
   await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
 
   if (!VALID_STATUSES.includes(status)) {
     throw new Error("Neplatný status objednávky");

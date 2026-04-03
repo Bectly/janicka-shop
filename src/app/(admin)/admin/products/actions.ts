@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { rateLimitAdmin } from "@/lib/rate-limit";
 
 const productSchema = z.object({
   name: z.string().min(1, "Název je povinný").max(200),
@@ -52,6 +53,8 @@ async function requireAdmin() {
 
 export async function createProduct(formData: FormData) {
   await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
 
   const raw = {
     name: formData.get("name") as string,
@@ -123,6 +126,8 @@ export async function createProduct(formData: FormData) {
 
 export async function updateProduct(id: string, formData: FormData) {
   await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
 
   const raw = {
     name: formData.get("name") as string,
@@ -203,6 +208,8 @@ export async function updateProduct(id: string, formData: FormData) {
 
 export async function deleteProduct(id: string) {
   await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
 
   // Check if product has order items — if so, soft-delete to preserve order history
   const orderItemCount = await prisma.orderItem.count({

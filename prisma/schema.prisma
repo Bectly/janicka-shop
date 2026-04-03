@@ -50,6 +50,7 @@ model Product {
   @@index([active])
   @@index([sold])
   @@index([reservedUntil])
+  @@index([reservedBy])
 }
 
 model Customer {

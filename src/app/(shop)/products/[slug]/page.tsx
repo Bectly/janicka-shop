@@ -10,6 +10,7 @@ import { AddToCartButton } from "@/components/shop/add-to-cart-button";
 import { getVisitorId } from "@/lib/visitor";
 import { getLowestPrices30d } from "@/lib/price-history";
 import { buildProductSchema, jsonLdString } from "@/lib/structured-data";
+import { ShareButtons } from "@/components/shop/share-buttons";
 import type { Metadata } from "next";
 
 const BASE_URL =
@@ -282,6 +283,15 @@ export default async function ProductDetailPage({ params }: Props) {
           <p className="mt-5 leading-relaxed text-muted-foreground">
             {product.description}
           </p>
+
+          {/* Social sharing */}
+          <div className="mt-4">
+            <ShareButtons
+              url={`${BASE_URL}/products/${product.slug}`}
+              title={product.name}
+              description={product.description}
+            />
+          </div>
 
           {/* Add to cart */}
           <AddToCartButton

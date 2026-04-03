@@ -149,3 +149,9 @@ export async function rateLimitSearch(): Promise<RateLimitResult> {
   const ip = await getClientIp();
   return checkRateLimit(`search:${ip}`, 30, MINUTE);
 }
+
+/** Admin actions: 30 write operations per minute per IP */
+export async function rateLimitAdmin(): Promise<RateLimitResult> {
+  const ip = await getClientIp();
+  return checkRateLimit(`admin:${ip}`, 30, MINUTE);
+}
