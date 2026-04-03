@@ -48,6 +48,16 @@
 - [ ] [BOLT] Lead integration: GET /api/dev-chat?status=new returns new messages for Lead agent to process
 - [ ] [TRACE] E2E test: send message from page, verify page context captured, verify Lead can read it
 
+## Phase 5b: Pick Pages — Lead → Janička rozhodovací stránky
+- [ ] [BOLT] Prisma model: DevPick (id, slug, title, description, pick_type, options JSON, selected_option, custom_text, status, default_option, created_at, answered_at, expires_at)
+- [ ] [BOLT] API routes: POST /api/dev-picks (create pick), GET /api/dev-picks/[slug] (pick data), PATCH /api/dev-picks/[slug] (answer), GET /api/dev-picks?status=answered (Lead reads)
+- [ ] [BOLT] Pick page /pick/[slug]: krásný klikací UI, velké karty s preview, komentář ke každé volbě, mobile-first
+- [ ] [BOLT] Pick types: image_choice (obrázky), choice (text options), text (volný input), rating (1-5)
+- [ ] [BOLT] Auto-expiry: pokud Janička neodpoví do expires_at, Lead vybere default_option
+- [ ] [BOLT] Notifikace: při vytvoření picku → devChat zpráva + volitelně Resend email
+- [ ] [BOLT] Redis pub při odpovědi → Lead se probudí okamžitě
+- [ ] [TRACE] E2E test: create pick, answer it, verify Lead can read answer
+
 ## Phase 6: Shipping & Invoicing
 - [ ] [BOLT] Packeta/Zásilkovna integration: pickup point widget, SOAP API labels
 - [ ] [BOLT] PDF invoice generation with Czech QR payment code

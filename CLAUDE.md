@@ -167,6 +167,42 @@ Floating chat widget dostupný na KAŽDÉ stránce (shop i admin). Janička (own
 5. **Janička píše během deploye** → zprávy se ukládají normálně, nic se neztrácí. Po deployi Lead pokračuje.
 6. **Duplicitní zprávy** → debounce na API — stejný text ze stejné stránky do 30s se ignoruje.
 
+### Pick Pages — Lead → Janička rozhodovací stránky
+Lead může dynamicky vytvářet interaktivní stránky na `/pick/[id]` kde Janička vybírá z možností. Lead vytvoří, Janička klikne/napíše, Lead přečte odpověď a jedná.
+
+**DB model `dev_picks`:**
+- id, slug (unique), title, description, pick_type (choice/text/rating/image_choice), options (JSON array), selected_option, custom_text, status (pending/answered/expired/superseded), created_at, answered_at, expires_at
+
+**Pick Types:**
+- `image_choice` — obrázky na výběr (loga, barvy, layouty). Klikací karty s preview.
+- `choice` — textové možnosti (A/B/C). Radio buttons nebo klikací karty.
+- `text` — volný text input (název eshopu, slogan, cokoliv)
+- `rating` — hodnocení 1-5 (jak se ti líbí tenhle design?)
+
+**API:**
+- `POST /api/dev-picks` — Lead vytvoří nový pick (s options, type, title)
+- `GET /api/dev-picks/[slug]` — data pro pick page
+- `PATCH /api/dev-picks/[slug]` — Janička odpovídá (selected_option nebo custom_text)
+- `GET /api/dev-picks?status=answered` — Lead čte odpovědi
+
+**Flow:**
+1. Lead potřebuje rozhodnutí (logo, barva, název) → `POST /api/dev-picks` s možnostmi
+2. Lead pošle Janičce zprávu přes devChat: "Připravila jsem ti výběr log — klikni sem: /pick/logo-v1"
+3. Janička otevře `/pick/logo-v1`, vidí varianty, klikne na oblíbenou
+4. Lead na dalším cyklu přečte odpověď → zadá Boltovi implementaci vybraného loga
+5. **Pokud Janička neodpoví** do expires_at → Lead vybere sám (default_option) a jede dál. Dá se přepsat později.
+
+**UX stránky `/pick/[slug]`:**
+- Krásný, jednoduchý UI — žádný admin feeling
+- Velké klikací karty s preview
+- Možnost přidat komentář ke každé volbě
+- Po výběru: "Díky! Předám vývojářům." + redirect zpět
+- Mobile-first (Janička bude vybírat z mobilu)
+
+**Notifikace:**
+- Když Lead vytvoří pick → Janička dostane notif v devChatu + volitelně email přes Resend
+- Když Janička odpoví → Redis pub → Lead se probudí okamžitě (stejný mechanismus jako devChat)
+
 ### Security
 - Bcrypt password hashing
 - Encrypted session cookies (iron-session)
