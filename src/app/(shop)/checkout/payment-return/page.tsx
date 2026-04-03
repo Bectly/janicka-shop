@@ -49,10 +49,11 @@ export default async function PaymentReturnPage({ searchParams }: Props) {
       const status = await getComgatePaymentStatus(order.paymentId);
       paymentStatus = status.status;
 
-      // If Comgate says PAID but webhook hasn't processed yet, update now
+      // If Comgate says PAID but webhook hasn't processed yet, update now.
+      // Use updateMany with status guard for atomic TOCTOU-safe write.
       if (status.status === "PAID" && order.status === "pending") {
-        await prisma.order.update({
-          where: { id: order.id },
+        await prisma.order.updateMany({
+          where: { id: order.id, status: "pending" },
           data: { status: "paid", paymentMethod: "comgate" },
         });
         redirect(`/order/${order.orderNumber}?token=${order.accessToken}`);

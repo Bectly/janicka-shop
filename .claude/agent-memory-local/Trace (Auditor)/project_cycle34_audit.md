@@ -1,6 +1,6 @@
 ---
-name: cycle34_checkout_payment_audit
-description: Cycle #34 deep audit of checkout/actions.ts, payment-return page, comgate.ts, webhook route, checkout page — open issues after C33 fixes
+name: cycle34_cart_reservation_auth_audit
+description: Cycle #34 extended audit — cart/reservation system, rate-limit.ts, auth.ts, schema.prisma, webhook, checkout. All open issues after C33 fixes.
 type: project
 ---
 
@@ -53,6 +53,38 @@ Audit covers: src/app/(shop)/checkout/actions.ts, src/app/(shop)/checkout/paymen
 - File: src/lib/rate-limit.ts, line 70
 - `h.get("x-forwarded-for")?.split(",")[0]?.trim()` — takes the leftmost IP. On Vercel this is correct (Vercel sets the header from the actual client IP). But if someone deploys behind a different proxy layer that doesn't strip/rewrite the header, an attacker can spoof X-Forwarded-For with an arbitrary first value to bypass per-IP rate limiting. Low risk on Vercel's infrastructure specifically, but fragile if infra changes.
 
-**Why:** Core transaction safety is solid. C33 fixes are confirmed in place. Remaining gaps are operational (rate-limit backend, webhook hardening) and edge-case (null token bypass on legacy orders, rollback UX).
+## Additional findings from cart/reservation/auth/schema audit
 
-**How to apply:** Next Bolt cycle priority: (1) Upstash Redis for rate limiting, (2) Comgate webhook IP allowlist, (3) accessToken null-bypass guard fix.
+### HIGH — In-memory rate limiter: brute-force login protection non-functional on Vercel (expanded analysis)
+- login: 5 attempts / 15 min per IP. Each Vercel serverless instance has its own Map. Concurrent requests land on different instances → effective limit is 5 * num_instances. On Vercel with auto-scaling this is unbounded. This is a production-launch blocker for login security.
+
+### MEDIUM — extendReservations: updateMany + findMany are two separate queries (not in a transaction)
+- File: src/lib/actions/reservation.ts:92-114
+- The updateMany fires atomically, but the subsequent findMany to confirm which items got extended is a separate query. Between the two, another visitor's reserveProduct could claim a product. The findMany then gives the wrong answer. No double-sell results (checkout transaction is authoritative), but the cart timer can show "reserved" when the reservation was lost.
+- Fix: wrap both in prisma.$transaction().
+
+### MEDIUM — Admin server actions have no rate limiting
+- Files: admin/products/actions.ts, admin/orders/actions.ts
+- requireAdmin() validates session but no rate limit. A compromised session or automated script can flood product CRUD or order status changes.
+
+### LOW — visitor.ts: visitorId cookie value not validated on read
+- File: src/lib/visitor.ts:11
+- Raw cookie string is used as reservedBy in all DB queries without format validation. A crafted oversized cookie goes directly into parameterized Prisma queries — no injection risk, but adds unnecessary overhead. Fix: validate UUID format; regenerate if invalid.
+
+### LOW — cart-store.ts: addItem dedup uses productId only, not productId+size+color
+- File: src/lib/cart-store.ts:39
+- `find((i) => i.productId === item.productId)` — dedup key does not match removeItem/updateQuantity key (which use productId+size+color triple). Inconsistency could result in items that are not removable if the same productId is added twice with different size/color via direct store manipulation. Fix: match the triple in addItem.
+
+### LOW — auth.ts: JWT strategy has no session expiry configured
+- File: src/lib/auth.ts:48 (`strategy: "jwt"`)
+- No `maxAge` set on the session config. NextAuth default is 30 days. If an admin account is compromised, sessions stay valid for 30 days with no server-side invalidation mechanism (JWT is stateless). Acceptable at launch, but worth noting for ops: if admin password is reset, old JWTs remain valid until natural expiry.
+- Fix for hardened ops: add `maxAge: 8 * 60 * 60` (8 hours) or implement server-side session invalidation.
+
+### LOW — schema.prisma: Product.reservedBy has no DB-level index
+- File: prisma/schema.prisma — Product model has @@index([reservedUntil]) but NOT on reservedBy.
+- releaseReservation and extendReservations filter on both reservedUntil AND reservedBy. Without an index on reservedBy, these WHERE clauses do full table scans as catalog grows. With 1000+ products this is measurable.
+- Fix: add @@index([reservedBy]) or a composite @@index([reservedBy, reservedUntil]).
+
+**Why:** Core transaction safety is solid. C33 fixes are confirmed in place. Critical gap is the in-memory rate limiter being non-functional under Vercel serverless (login brute-force protection broken). Reservation system is correct in the happy path but extendReservations can mislead client state.
+
+**How to apply:** Bolt cycle priority order: (1) Upstash Redis for rate limiting — pre-launch blocker, (2) Comgate webhook IP allowlist, (3) accessToken null-bypass guard fix, (4) extendReservations transaction, (5) reservedBy index.

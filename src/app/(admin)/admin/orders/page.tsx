@@ -19,8 +19,10 @@ export default async function AdminOrdersPage({
 }) {
   const params = await searchParams;
 
+  const VALID_STATUSES = ["pending", "confirmed", "paid", "shipped", "delivered", "cancelled"];
+
   const where: Record<string, unknown> = {};
-  if (params.status && params.status !== "all") {
+  if (params.status && params.status !== "all" && VALID_STATUSES.includes(params.status)) {
     where.status = params.status;
   }
 

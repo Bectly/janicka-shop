@@ -16,16 +16,28 @@ export async function getLowestPrices30d(
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  const histories = await prisma.priceHistory.findMany({
-    where: {
-      productId: { in: productIds },
-      changedAt: { gte: thirtyDaysAgo },
-    },
-    select: { productId: true, price: true },
-  });
+  // Fetch both price history and current product prices in parallel
+  const [histories, products] = await Promise.all([
+    prisma.priceHistory.findMany({
+      where: {
+        productId: { in: productIds },
+        changedAt: { gte: thirtyDaysAgo },
+      },
+      select: { productId: true, price: true },
+    }),
+    prisma.product.findMany({
+      where: { id: { in: productIds } },
+      select: { id: true, price: true },
+    }),
+  ]);
 
-  // Group by productId and find minimum price
+  // Start with current prices — the current price is part of the 30-day window
   const result = new Map<string, number>();
+  for (const p of products) {
+    result.set(p.id, p.price);
+  }
+
+  // Compare with historical prices, keep the minimum
   for (const h of histories) {
     const current = result.get(h.productId);
     if (current === undefined || h.price < current) {

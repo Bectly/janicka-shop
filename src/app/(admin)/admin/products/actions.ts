@@ -7,17 +7,17 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 const productSchema = z.object({
-  name: z.string().min(1, "Název je povinný"),
-  slug: z.string().min(1, "Slug je povinný"),
-  description: z.string().min(1, "Popis je povinný"),
+  name: z.string().min(1, "Název je povinný").max(200),
+  slug: z.string().min(1, "Slug je povinný").max(250),
+  description: z.string().min(1, "Popis je povinný").max(5000),
   price: z.coerce.number().positive("Cena musí být kladná"),
   compareAt: z.coerce.number().positive().nullable(),
-  sku: z.string().min(1, "SKU je povinné"),
+  sku: z.string().min(1, "SKU je povinné").max(50),
   categoryId: z.string().min(1, "Kategorie je povinná"),
-  brand: z.string().nullable(),
+  brand: z.string().max(100).nullable(),
   condition: z.enum(["new_with_tags", "excellent", "good", "visible_wear"]),
-  sizes: z.string(),
-  colors: z.string(),
+  sizes: z.string().max(500),
+  colors: z.string().max(500),
   featured: z.boolean(),
   active: z.boolean(),
 });

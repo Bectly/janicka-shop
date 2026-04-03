@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getComgatePaymentStatus } from "@/lib/payments/comgate";
+import { ComgateError } from "@/lib/payments/types";
 import { revalidatePath } from "next/cache";
 
 /**
@@ -70,10 +71,18 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error(`[Comgate webhook] Error processing transId=${transId}:`, error);
-    // Return 200 to prevent infinite retries on permanent errors
-    // Log for manual investigation
-    return new NextResponse("code=0&message=OK", {
-      status: 200,
+
+    // ComgateError = permanent API error (bad transId, etc.) → return 200 so Comgate won't retry
+    if (error instanceof ComgateError) {
+      return new NextResponse("code=0&message=OK", {
+        status: 200,
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      });
+    }
+
+    // Transient error (network timeout, DB down, etc.) → return 500 so Comgate retries
+    return new NextResponse("code=1&message=TEMPORARY_ERROR", {
+      status: 500,
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
     });
   }
