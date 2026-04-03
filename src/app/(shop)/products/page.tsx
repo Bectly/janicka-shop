@@ -15,7 +15,7 @@ export default async function ProductsPage({
 }) {
   const params = await searchParams;
 
-  const where: Record<string, unknown> = { active: true };
+  const where: Record<string, unknown> = { active: true, sold: false };
 
   if (params.category) {
     where.category = { slug: params.category };
@@ -99,6 +99,8 @@ export default async function ProductsPage({
               compareAt={product.compareAt}
               images={product.images}
               categoryName={product.category.name}
+              brand={product.brand}
+              condition={product.condition}
             />
           ))}
         </div>

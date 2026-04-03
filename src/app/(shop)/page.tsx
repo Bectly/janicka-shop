@@ -8,7 +8,7 @@ import { ArrowRight } from "lucide-react";
 export default async function HomePage() {
   const [featuredProducts, categories] = await Promise.all([
     prisma.product.findMany({
-      where: { featured: true, active: true },
+      where: { featured: true, active: true, sold: false },
       include: { category: { select: { name: true } } },
       take: 8,
       orderBy: { createdAt: "desc" },
@@ -26,14 +26,14 @@ export default async function HomePage() {
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8 lg:py-36">
           <div className="max-w-2xl">
             <p className="text-sm font-medium text-primary">
-              Nová kolekce 2026
+              Second hand &amp; vintage
             </p>
             <h1 className="mt-2 font-heading text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-              Móda, která&nbsp;vás vystihne
+              Unikátní kousky za&nbsp;zlomek ceny
             </h1>
             <p className="mt-4 text-lg leading-relaxed text-muted-foreground sm:text-xl">
-              Objevte kolekci stylového oblečení pro každou příležitost.
-              Od&nbsp;elegantních šatů po každodenní basics.
+              Každý kus je originál. Značkové oblečení v&nbsp;skvělém stavu,
+              udržitelná móda pro moderní ženy.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Button size="lg" render={<Link href="/products" />}>
@@ -85,7 +85,7 @@ export default async function HomePage() {
               Doporučujeme
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Ručně vybrané kousky z naší kolekce
+              Ručně vybrané kousky za nejlepší ceny
             </p>
           </div>
           <Link
@@ -105,6 +105,8 @@ export default async function HomePage() {
               compareAt={product.compareAt}
               images={product.images}
               categoryName={product.category.name}
+              brand={product.brand}
+              condition={product.condition}
             />
           ))}
         </div>

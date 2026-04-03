@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatPrice } from "@/lib/format";
+import { CONDITION_LABELS, CONDITION_COLORS } from "@/lib/constants";
 
 interface ProductCardProps {
   name: string;
@@ -8,6 +9,8 @@ interface ProductCardProps {
   compareAt?: number | null;
   images: string;
   categoryName: string;
+  brand?: string | null;
+  condition?: string;
 }
 
 export function ProductCard({
@@ -16,8 +19,13 @@ export function ProductCard({
   price,
   compareAt,
   categoryName,
+  brand,
+  condition,
 }: ProductCardProps) {
   const hasDiscount = compareAt && compareAt > price;
+  const discountPercent = hasDiscount
+    ? Math.round(((compareAt - price) / compareAt) * 100)
+    : 0;
 
   return (
     <Link href={`/products/${slug}`} className="group block">
@@ -28,14 +36,33 @@ export function ProductCard({
             {name.charAt(0)}
           </span>
         </div>
-        {hasDiscount && (
-          <span className="absolute top-2 left-2 rounded-md bg-destructive/90 px-2 py-0.5 text-xs font-semibold text-white">
-            Sleva
-          </span>
-        )}
+        <div className="absolute top-2 left-2 flex flex-col gap-1">
+          {hasDiscount && (
+            <span className="rounded-md bg-destructive/90 px-2 py-0.5 text-xs font-semibold text-white">
+              -{discountPercent} %
+            </span>
+          )}
+          {condition && (
+            <span
+              className={`rounded-md px-2 py-0.5 text-xs font-medium ${CONDITION_COLORS[condition] ?? "bg-muted text-muted-foreground"}`}
+            >
+              {CONDITION_LABELS[condition] ?? condition}
+            </span>
+          )}
+        </div>
       </div>
       <div className="mt-3 space-y-1">
-        <p className="text-xs text-muted-foreground">{categoryName}</p>
+        <div className="flex items-center gap-1.5">
+          <p className="text-xs text-muted-foreground">{categoryName}</p>
+          {brand && (
+            <>
+              <span className="text-xs text-muted-foreground/50">&middot;</span>
+              <p className="text-xs font-medium text-muted-foreground">
+                {brand}
+              </p>
+            </>
+          )}
+        </div>
         <h3 className="text-sm font-medium leading-snug text-foreground group-hover:text-primary transition-colors">
           {name}
         </h3>

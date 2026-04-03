@@ -35,25 +35,13 @@ export const useCartStore = create<CartState>()(
       addItem: (item) =>
         set((state) => {
           const existing = state.items.find(
-            (i) =>
-              i.productId === item.productId &&
-              i.size === item.size &&
-              i.color === item.color
+            (i) => i.productId === item.productId
           );
 
-          if (existing) {
-            return {
-              items: state.items.map((i) =>
-                i.productId === item.productId &&
-                i.size === item.size &&
-                i.color === item.color
-                  ? { ...i, quantity: i.quantity + item.quantity }
-                  : i
-              ),
-            };
-          }
+          // Second-hand: each piece is unique, no stacking
+          if (existing) return state;
 
-          return { items: [...state.items, item] };
+          return { items: [...state.items, { ...item, quantity: 1 }] };
         }),
 
       removeItem: (productId, size, color) =>
@@ -70,6 +58,7 @@ export const useCartStore = create<CartState>()(
 
       updateQuantity: (productId, size, color, quantity) =>
         set((state) => ({
+          // Second-hand: qty is always 1; decrement to 0 removes the item
           items:
             quantity <= 0
               ? state.items.filter(
@@ -84,7 +73,7 @@ export const useCartStore = create<CartState>()(
                   i.productId === productId &&
                   i.size === size &&
                   i.color === color
-                    ? { ...i, quantity }
+                    ? { ...i, quantity: 1 }
                     : i
                 ),
         })),

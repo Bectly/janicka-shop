@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Trash2, Minus, Plus, ShoppingBag, ArrowLeft } from "lucide-react";
+import { Trash2, ShoppingBag, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCartStore, type CartItem } from "@/lib/cart-store";
 import { formatPrice } from "@/lib/format";
@@ -12,7 +12,6 @@ const emptySubscribe = () => () => {};
 export default function CartPage() {
   const items = useCartStore((s) => s.items);
   const removeItem = useCartStore((s) => s.removeItem);
-  const updateQuantity = useCartStore((s) => s.updateQuantity);
   const totalPrice = useCartStore((s) => s.totalPrice);
   const mounted = useSyncExternalStore(
     emptySubscribe,
@@ -56,9 +55,6 @@ export default function CartPage() {
             key={`${item.productId}-${item.size}-${item.color}`}
             item={item}
             onRemove={() => removeItem(item.productId, item.size, item.color)}
-            onUpdateQuantity={(qty) =>
-              updateQuantity(item.productId, item.size, item.color, qty)
-            }
           />
         ))}
       </div>
@@ -93,11 +89,9 @@ export default function CartPage() {
 function CartItemRow({
   item,
   onRemove,
-  onUpdateQuantity,
 }: {
   item: CartItem;
   onRemove: () => void;
-  onUpdateQuantity: (qty: number) => void;
 }) {
   return (
     <div className="flex gap-4 py-4">
@@ -124,32 +118,12 @@ function CartItemRow({
             </p>
           </div>
           <span className="text-sm font-semibold">
-            {formatPrice(item.price * item.quantity)}
+            {formatPrice(item.price)}
           </span>
         </div>
 
         <div className="mt-auto flex items-center justify-between pt-2">
-          {/* Quantity controls */}
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => onUpdateQuantity(item.quantity - 1)}
-              className="inline-flex size-7 items-center justify-center rounded-md border text-muted-foreground transition-colors hover:bg-muted"
-              aria-label="Odebrat 1"
-            >
-              <Minus className="size-3" />
-            </button>
-            <span className="w-8 text-center text-sm font-medium">
-              {item.quantity}
-            </span>
-            <button
-              onClick={() => onUpdateQuantity(item.quantity + 1)}
-              className="inline-flex size-7 items-center justify-center rounded-md border text-muted-foreground transition-colors hover:bg-muted"
-              aria-label="Přidat 1"
-            >
-              <Plus className="size-3" />
-            </button>
-          </div>
-
+          <span className="text-xs text-muted-foreground">Unikátní kus</span>
           <button
             onClick={onRemove}
             className="text-muted-foreground transition-colors hover:text-destructive"

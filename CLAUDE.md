@@ -143,12 +143,29 @@ Floating chat widget dostupný na KAŽDÉ stránce (shop i admin). Janička (own
 - **Status badge**: na widgetu ukazuje počet nerozřešených zpráv
 - **Auth**: pouze přihlášený admin (Janička) může psát, Lead odpovídá přes API s Bearer tokenem
 
-**UX Flow:**
+**Real-time Flow (INSTANT — nečeká na scheduled cyklus):**
 1. Janička je na `/products` → klikne chat bubble → napíše "tyhle karty jsou moc malé"
-2. Zpráva se uloží s `page_path: "/products"`, `page_title: "Katalog"`
-3. Lead při dalším cyklu přečte nové zprávy → vytvoří direktivu: "Sage: zvětšit product cards na /products"
-4. Po implementaci Lead označí resolved + napíše odpověď "Hotovo, karty zvětšeny"
-5. Janička vidí odpověď v chatu
+2. `POST /api/dev-chat` uloží zprávu do Turso s `page_path: "/products"`, `page_title: "Katalog"`
+3. **Zároveň** API pošle notifikaci na JARVIS session manager (Redis pub `jarvis:dev-chat:new` nebo webhook)
+4. Session manager **okamžitě** enqueuene Lead task s obsahem zprávy
+5. Lead se probudí, přečte zprávu, **HNED odepíše** Janičce přes `PATCH /api/dev-chat/[id]` (odpověď typu "Jasně, předám vývojářům, karty zvětšíme")
+6. Lead vytvoří direktivu/task pro Bolt: "zvětšit product cards na /products"
+7. Janička vidí odpověď v chatu **do sekund** — ne až při dalším cyklu
+8. Po implementaci Lead pošle druhou zprávu: "Hotovo, karty zvětšeny — podívej se"
+
+**Session Manager Integration:**
+- `POST /api/dev-chat` po uložení publishne na Redis: `PUBLISH jarvis:dev-chat:new {message_id, page_path, message}`
+- Session manager subscribne `jarvis:dev-chat:new` → okamžitě enqueuene Lead task s promptem obsahujícím zprávu
+- Fallback: Lead každý scheduled cyklus TAKÉ checkne `GET /api/dev-chat?status=new` (pro případ výpadku Redis)
+- Lead MUSÍ odpovědět Janičce OKAMŽITĚ — žádné "zpracuji později"
+
+**Edge Cases:**
+1. **Lead právě běží** → zpráva se zařadí do fronty. Až Lead dokončí aktuální task, session manager mu HNED enqueuene nový task se všemi novými zprávami najednou (batch). Janičce se mezitím zobrazí: "✓ Přijato — zpracovávám, za chvíli odpovím."
+2. **Lead běží + přijde víc zpráv najednou** → všechny se batchnou do jednoho Lead tasku. Lead odpoví na každou zvlášť v jednom cyklu.
+3. **Devloop neběží (vypnutý)** → `POST /api/dev-chat` detekuje stav (`devloop_active = 0` v DB nebo nedostupný session manager). API SAMO odpoví automatickou zprávou: "Díky za zpětnou vazbu! 📝 Zaznamenala jsem si to. Vývojový tým momentálně nepracuje, ale jakmile se vrátí, tohle bude první věc co uvidí." Zpráva se uloží se `status: new` — Lead ji uvidí jakmile devloop nastartuje.
+4. **Session manager padlý / Redis nedostupný** → stejné jako bod 3, API odpovídá autonomně. Zprávy se hromadí v Turso, Lead je zpracuje hromadně po restartu.
+5. **Janička píše během deploye** → zprávy se ukládají normálně, nic se neztrácí. Po deployi Lead pokračuje.
+6. **Duplicitní zprávy** → debounce na API — stejný text ze stejné stránky do 30s se ignoruje.
 
 ### Security
 - Bcrypt password hashing

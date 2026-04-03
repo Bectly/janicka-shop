@@ -11,14 +11,12 @@ export default async function AdminDashboardPage() {
   const [
     totalProducts,
     activeProducts,
-    soldProducts,
     totalOrders,
     totalCustomers,
     recentProducts,
   ] = await Promise.all([
     prisma.product.count(),
     prisma.product.count({ where: { active: true, sold: false } }),
-    prisma.product.count({ where: { sold: true } }),
     prisma.order.count(),
     prisma.customer.count(),
     prisma.product.findMany({
@@ -42,8 +40,8 @@ export default async function AdminDashboardPage() {
       color: "text-emerald-600 bg-emerald-100",
     },
     {
-      label: "Prodáno",
-      value: soldProducts,
+      label: "Objednávky",
+      value: totalOrders,
       icon: ShoppingCart,
       color: "text-primary bg-primary/10",
     },
