@@ -1,8 +1,18 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useCallback } from "react";
 import Link from "next/link";
-import { ArrowLeft, ShoppingBag, CreditCard, Landmark, Truck } from "lucide-react";
+import {
+  ArrowLeft,
+  ShoppingBag,
+  CreditCard,
+  Landmark,
+  Truck,
+  Package,
+  MapPin,
+  Home,
+  Mail,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,10 +21,39 @@ import { useCartStore } from "@/lib/cart-store";
 import { formatPrice } from "@/lib/format";
 import { createOrder, type CheckoutState } from "./actions";
 import { useSyncExternalStore } from "react";
+import {
+  PacketaWidget,
+  type PacketaPoint,
+} from "@/components/shop/packeta-widget";
 
 const emptySubscribe = () => () => {};
 
 const COD_SURCHARGE = 39;
+const FREE_SHIPPING_THRESHOLD = 1500;
+
+const SHIPPING_OPTIONS = [
+  {
+    id: "packeta_pickup" as const,
+    label: "Zásilkovna — výdejní místo",
+    description: "Vyzvednutí na vybraném místě, obvykle 2–3 dny",
+    price: 69,
+    icon: MapPin,
+  },
+  {
+    id: "packeta_home" as const,
+    label: "Zásilkovna — na adresu",
+    description: "Doručení domů, obvykle 2–3 dny",
+    price: 99,
+    icon: Home,
+  },
+  {
+    id: "czech_post" as const,
+    label: "Česká pošta",
+    description: "Doporučený balík, obvykle 3–5 dní",
+    price: 89,
+    icon: Mail,
+  },
+] as const;
 
 const PAYMENT_OPTIONS = [
   {
@@ -37,10 +76,15 @@ const PAYMENT_OPTIONS = [
   },
 ] as const;
 
+type ShippingMethod = (typeof SHIPPING_OPTIONS)[number]["id"];
+
 export default function CheckoutPage() {
   const items = useCartStore((s) => s.items);
   const totalPrice = useCartStore((s) => s.totalPrice);
   const [paymentMethod, setPaymentMethod] = useState<string>("card");
+  const [shippingMethod, setShippingMethod] =
+    useState<ShippingMethod>("packeta_pickup");
+  const [packetaPoint, setPacketaPoint] = useState<PacketaPoint | null>(null);
   const mounted = useSyncExternalStore(
     emptySubscribe,
     () => true,
@@ -52,10 +96,24 @@ export default function CheckoutPage() {
     { error: null, fieldErrors: {} }
   );
 
+  const handlePacketaPointSelected = useCallback(
+    (point: PacketaPoint | null) => {
+      setPacketaPoint(point);
+    },
+    []
+  );
+
   const isCod = paymentMethod === "cod";
+  const isPacketaPickup = shippingMethod === "packeta_pickup";
   const subtotal = totalPrice();
+
+  // Free shipping for orders above threshold
+  const shippingOption = SHIPPING_OPTIONS.find((o) => o.id === shippingMethod);
+  const baseShipping = shippingOption?.price ?? 0;
+  const shippingCost =
+    subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : baseShipping;
   const codFee = isCod ? COD_SURCHARGE : 0;
-  const total = subtotal + codFee;
+  const total = subtotal + shippingCost + codFee;
 
   if (!mounted) {
     return (
@@ -96,7 +154,10 @@ export default function CheckoutPage() {
       <h1 className="font-heading text-3xl font-bold">Objednávka</h1>
 
       {state.error && (
-        <div role="alert" className="mt-4 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div
+          role="alert"
+          className="mt-4 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive"
+        >
           {state.error}
         </div>
       )}
@@ -118,6 +179,27 @@ export default function CheckoutPage() {
           )}
         />
         <input type="hidden" name="paymentMethod" value={paymentMethod} />
+        <input type="hidden" name="shippingMethod" value={shippingMethod} />
+        {/* Packeta point data */}
+        {packetaPoint && (
+          <>
+            <input
+              type="hidden"
+              name="packetaPointId"
+              value={packetaPoint.id}
+            />
+            <input
+              type="hidden"
+              name="packetaPointName"
+              value={packetaPoint.name}
+            />
+            <input
+              type="hidden"
+              name="packetaPointAddress"
+              value={`${packetaPoint.street}, ${packetaPoint.zip} ${packetaPoint.city}`}
+            />
+          </>
+        )}
 
         <div className="grid gap-8 lg:grid-cols-3">
           {/* Contact + Shipping + Payment form */}
@@ -193,59 +275,161 @@ export default function CheckoutPage() {
               </div>
             </section>
 
-            {/* Shipping address */}
+            {/* Shipping method selection */}
             <section className="rounded-xl border bg-card p-6 shadow-sm">
               <h2 className="font-heading text-lg font-semibold">
-                Doručovací adresa
+                Způsob dopravy
               </h2>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2 sm:col-span-2">
-                  <Label htmlFor="street">Ulice a číslo popisné</Label>
-                  <Input
-                    id="street"
-                    name="street"
-                    required
-                    placeholder="Květná 15"
-                    autoComplete="street-address"
-                  />
-                  {state.fieldErrors.street && (
-                    <p className="text-xs text-destructive">
-                      {state.fieldErrors.street}
-                    </p>
-                  )}
+              {state.fieldErrors.shippingMethod && (
+                <p className="mt-1 text-xs text-destructive">
+                  {state.fieldErrors.shippingMethod}
+                </p>
+              )}
+
+              {subtotal >= FREE_SHIPPING_THRESHOLD && (
+                <div className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+                  <Package className="mr-1.5 inline-block size-4" />
+                  Doprava zdarma u objednávek nad{" "}
+                  {formatPrice(FREE_SHIPPING_THRESHOLD)}
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="city">Město</Label>
-                  <Input
-                    id="city"
-                    name="city"
-                    required
-                    placeholder="Praha"
-                    autoComplete="address-level2"
-                  />
-                  {state.fieldErrors.city && (
-                    <p className="text-xs text-destructive">
-                      {state.fieldErrors.city}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="zip">PSČ</Label>
-                  <Input
-                    id="zip"
-                    name="zip"
-                    required
-                    placeholder="110 00"
-                    autoComplete="postal-code"
-                  />
-                  {state.fieldErrors.zip && (
-                    <p className="text-xs text-destructive">
-                      {state.fieldErrors.zip}
-                    </p>
-                  )}
-                </div>
+              )}
+
+              <div className="mt-4 space-y-3">
+                {SHIPPING_OPTIONS.map((option) => {
+                  const Icon = option.icon;
+                  const isSelected = shippingMethod === option.id;
+                  const isFree = subtotal >= FREE_SHIPPING_THRESHOLD;
+                  return (
+                    <div key={option.id}>
+                      <label
+                        className={`flex cursor-pointer items-center gap-4 rounded-lg border-2 p-4 transition-colors ${
+                          isSelected
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-muted-foreground/30"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="shippingMethodRadio"
+                          value={option.id}
+                          checked={isSelected}
+                          onChange={() => {
+                            setShippingMethod(option.id);
+                            // Clear packeta point when switching away
+                            if (option.id !== "packeta_pickup") {
+                              setPacketaPoint(null);
+                            }
+                          }}
+                          className="sr-only"
+                        />
+                        <div
+                          className={`flex size-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                            isSelected
+                              ? "border-primary"
+                              : "border-muted-foreground/40"
+                          }`}
+                        >
+                          {isSelected && (
+                            <div className="size-2.5 rounded-full bg-primary" />
+                          )}
+                        </div>
+                        <Icon
+                          className={`size-5 shrink-0 ${
+                            isSelected
+                              ? "text-primary"
+                              : "text-muted-foreground"
+                          }`}
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium">{option.label}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {option.description}
+                          </p>
+                        </div>
+                        <span className="shrink-0 text-sm font-semibold">
+                          {isFree ? (
+                            <span className="text-emerald-600">Zdarma</span>
+                          ) : (
+                            formatPrice(option.price)
+                          )}
+                        </span>
+                      </label>
+
+                      {/* Packeta widget — shown when packeta_pickup selected */}
+                      {option.id === "packeta_pickup" && isSelected && (
+                        <div className="mt-3 ml-9">
+                          <PacketaWidget
+                            onPointSelected={handlePacketaPointSelected}
+                            selectedPoint={packetaPoint}
+                          />
+                          {state.fieldErrors.packetaPointId && (
+                            <p className="mt-1 text-xs text-destructive">
+                              {state.fieldErrors.packetaPointId}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </section>
+
+            {/* Shipping address — shown for home delivery methods */}
+            {!isPacketaPickup && (
+              <section className="rounded-xl border bg-card p-6 shadow-sm">
+                <h2 className="font-heading text-lg font-semibold">
+                  Doručovací adresa
+                </h2>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="street">Ulice a číslo popisné</Label>
+                    <Input
+                      id="street"
+                      name="street"
+                      required
+                      placeholder="Květná 15"
+                      autoComplete="street-address"
+                    />
+                    {state.fieldErrors.street && (
+                      <p className="text-xs text-destructive">
+                        {state.fieldErrors.street}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="city">Město</Label>
+                    <Input
+                      id="city"
+                      name="city"
+                      required
+                      placeholder="Praha"
+                      autoComplete="address-level2"
+                    />
+                    {state.fieldErrors.city && (
+                      <p className="text-xs text-destructive">
+                        {state.fieldErrors.city}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="zip">PSČ</Label>
+                    <Input
+                      id="zip"
+                      name="zip"
+                      required
+                      placeholder="110 00"
+                      autoComplete="postal-code"
+                    />
+                    {state.fieldErrors.zip && (
+                      <p className="text-xs text-destructive">
+                        {state.fieldErrors.zip}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </section>
+            )}
 
             {/* Payment method selection */}
             <section className="rounded-xl border bg-card p-6 shadow-sm">
@@ -360,7 +544,11 @@ export default function CheckoutPage() {
                 </div>
                 <div className="mt-1 flex justify-between text-sm">
                   <span className="text-muted-foreground">Doprava</span>
-                  <span className="text-emerald-600">Zdarma</span>
+                  {shippingCost === 0 ? (
+                    <span className="text-emerald-600">Zdarma</span>
+                  ) : (
+                    <span>{formatPrice(shippingCost)}</span>
+                  )}
                 </div>
                 {isCod && (
                   <div className="mt-1 flex justify-between text-sm">

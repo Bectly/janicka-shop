@@ -33,7 +33,7 @@ export interface RateLimitResult {
 }
 
 /**
- * Check rate limit for a given key.
+ * Check rate limit for a given key AND record the attempt.
  * Returns { success: true } if under limit, { success: false } if exceeded.
  */
 export function checkRateLimit(
@@ -61,6 +61,45 @@ export function checkRateLimit(
 
   entry.timestamps.push(now);
   return { success: true, remaining: limit - entry.timestamps.length };
+}
+
+/**
+ * Check rate limit WITHOUT recording an attempt.
+ * Use with recordRateLimitHit() for cases where only failures should count
+ * (e.g. login — successful logins shouldn't consume rate limit tokens).
+ */
+export function checkRateLimitOnly(
+  key: string,
+  limit: number,
+  windowMs: number,
+): RateLimitResult {
+  cleanup(windowMs);
+
+  const cutoff = Date.now() - windowMs;
+
+  const entry = store.get(key);
+  if (!entry) {
+    return { success: true, remaining: limit };
+  }
+
+  const valid = entry.timestamps.filter((t) => t > cutoff);
+  entry.timestamps = valid;
+
+  if (valid.length >= limit) {
+    return { success: false, remaining: 0 };
+  }
+
+  return { success: true, remaining: limit - valid.length };
+}
+
+/** Record a rate limit hit for a key (call after a failed attempt). */
+export function recordRateLimitHit(key: string): void {
+  let entry = store.get(key);
+  if (!entry) {
+    entry = { timestamps: [] };
+    store.set(key, entry);
+  }
+  entry.timestamps.push(Date.now());
 }
 
 /** Extract client IP from request headers (works on Vercel + standard proxies). */

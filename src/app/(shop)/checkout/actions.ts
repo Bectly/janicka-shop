@@ -10,29 +10,85 @@ import { rateLimitCheckout } from "@/lib/rate-limit";
 const PAYMENT_METHODS = ["card", "bank_transfer", "cod"] as const;
 type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
-const checkoutSchema = z.object({
-  email: z.string().email("Zadejte platný email").max(254),
-  firstName: z.string().min(1, "Jméno je povinné").max(100, "Jméno je příliš dlouhé"),
-  lastName: z.string().min(1, "Příjmení je povinné").max(100, "Příjmení je příliš dlouhé"),
-  phone: z.string().min(9, "Zadejte platné telefonní číslo").max(30, "Neplatné telefonní číslo"),
-  street: z.string().min(1, "Ulice je povinná").max(200, "Adresa je příliš dlouhá"),
-  city: z.string().min(1, "Město je povinné").max(100, "Název města je příliš dlouhý"),
-  zip: z.string().min(5, "Zadejte platné PSČ").max(10, "Neplatné PSČ"),
-  note: z.string().max(2000, "Poznámka může mít maximálně 2000 znaků").optional(),
-  paymentMethod: z.enum(PAYMENT_METHODS, {
-    error: "Vyberte platný způsob platby",
-  }),
-  items: z.array(
-    z.object({
-      productId: z.string().min(1, "Neplatný produkt").max(128),
-      name: z.string(),
-      price: z.number(),
-      size: z.string(),
-      color: z.string(),
-      quantity: z.number(),
-    })
-  ).min(1, "Košík je prázdný").max(50, "Příliš mnoho položek v košíku"),
-});
+const SHIPPING_METHODS = ["packeta_pickup", "packeta_home", "czech_post"] as const;
+type ShippingMethod = (typeof SHIPPING_METHODS)[number];
+
+/** Shipping costs in CZK by method */
+const SHIPPING_PRICES: Record<ShippingMethod, number> = {
+  packeta_pickup: 69,
+  packeta_home: 99,
+  czech_post: 89,
+};
+
+/** Free shipping threshold in CZK */
+const FREE_SHIPPING_THRESHOLD = 1500;
+
+/** Cash on delivery surcharge in CZK */
+const COD_SURCHARGE = 39;
+
+const checkoutSchema = z
+  .object({
+    email: z.string().email("Zadejte platný email").max(254),
+    firstName: z.string().min(1, "Jméno je povinné").max(100, "Jméno je příliš dlouhé"),
+    lastName: z.string().min(1, "Příjmení je povinné").max(100, "Příjmení je příliš dlouhé"),
+    phone: z.string().min(9, "Zadejte platné telefonní číslo").max(30, "Neplatné telefonní číslo"),
+    // Address fields — required only for home delivery methods (validated in refine)
+    street: z.string().max(200, "Adresa je příliš dlouhá").optional(),
+    city: z.string().max(100, "Název města je příliš dlouhý").optional(),
+    zip: z.string().max(10, "Neplatné PSČ").optional(),
+    note: z.string().max(2000, "Poznámka může mít maximálně 2000 znaků").optional(),
+    paymentMethod: z.enum(PAYMENT_METHODS, {
+      error: "Vyberte platný způsob platby",
+    }),
+    shippingMethod: z.enum(SHIPPING_METHODS, {
+      error: "Vyberte platný způsob dopravy",
+    }),
+    // Packeta pickup point fields — required when shippingMethod is packeta_pickup
+    packetaPointId: z.string().max(64).optional(),
+    packetaPointName: z.string().max(256).optional(),
+    packetaPointAddress: z.string().max(512).optional(),
+    items: z
+      .array(
+        z.object({
+          productId: z.string().min(1, "Neplatný produkt").max(128),
+          name: z.string(),
+          price: z.number(),
+          size: z.string(),
+          color: z.string(),
+          quantity: z.number(),
+        })
+      )
+      .min(1, "Košík je prázdný")
+      .max(50, "Příliš mnoho položek v košíku"),
+  })
+  .refine(
+    (data) => {
+      // Address required for home delivery methods
+      if (data.shippingMethod !== "packeta_pickup") {
+        return (
+          !!data.street?.trim() && !!data.city?.trim() && !!data.zip?.trim()
+        );
+      }
+      return true;
+    },
+    {
+      message: "Vyplňte doručovací adresu",
+      path: ["street"],
+    }
+  )
+  .refine(
+    (data) => {
+      // Packeta point required for pickup
+      if (data.shippingMethod === "packeta_pickup") {
+        return !!data.packetaPointId;
+      }
+      return true;
+    },
+    {
+      message: "Vyberte výdejní místo",
+      path: ["packetaPointId"],
+    }
+  );
 
 class UnavailableError extends Error {
   constructor(message: string) {
@@ -67,9 +123,6 @@ function getComgateMethod(method: PaymentMethod): string {
   }
 }
 
-/** Cash on delivery surcharge in CZK */
-const COD_SURCHARGE = 39;
-
 export type CheckoutState = {
   error: string | null;
   fieldErrors: Record<string, string>;
@@ -89,7 +142,14 @@ export async function createOrder(
   }
 
   const itemsJson = formData.get("items") as string;
-  let items: z.infer<typeof checkoutSchema>["items"];
+  let items: Array<{
+    productId: string;
+    name: string;
+    price: number;
+    size: string;
+    color: string;
+    quantity: number;
+  }>;
   try {
     items = JSON.parse(itemsJson);
   } catch {
@@ -101,11 +161,16 @@ export async function createOrder(
     firstName: formData.get("firstName") as string,
     lastName: formData.get("lastName") as string,
     phone: formData.get("phone") as string,
-    street: formData.get("street") as string,
-    city: formData.get("city") as string,
-    zip: formData.get("zip") as string,
+    street: (formData.get("street") as string) || undefined,
+    city: (formData.get("city") as string) || undefined,
+    zip: (formData.get("zip") as string) || undefined,
     note: (formData.get("note") as string) || undefined,
     paymentMethod: formData.get("paymentMethod") as string,
+    shippingMethod: formData.get("shippingMethod") as string,
+    packetaPointId: (formData.get("packetaPointId") as string) || undefined,
+    packetaPointName: (formData.get("packetaPointName") as string) || undefined,
+    packetaPointAddress:
+      (formData.get("packetaPointAddress") as string) || undefined,
     items,
   };
 
@@ -125,6 +190,7 @@ export async function createOrder(
   const productIds = data.items.map((i) => i.productId);
   const visitorId = await getVisitorId();
   const isCod = data.paymentMethod === "cod";
+  const isPacketaPickup = data.shippingMethod === "packeta_pickup";
 
   // Use a transaction to prevent double-sell race conditions.
   // Inside the transaction: verify availability, use DB prices (never trust client), create order, mark sold.
@@ -143,7 +209,11 @@ export async function createOrder(
         const p = productMap.get(i.productId);
         if (!p) return true; // not found
         // Check if reserved by someone else (and reservation hasn't expired)
-        if (p.reservedUntil && p.reservedUntil > now && p.reservedBy !== visitorId) {
+        if (
+          p.reservedUntil &&
+          p.reservedUntil > now &&
+          p.reservedBy !== visitorId
+        ) {
           return true;
         }
         return false;
@@ -160,9 +230,22 @@ export async function createOrder(
         const dbProduct = productMap.get(i.productId)!;
         return sum + dbProduct.price * 1; // qty is always 1 for second-hand
       }, 0);
-      const shipping = 0; // Free shipping for now, Packeta will come later
+
+      // Calculate shipping cost server-side (never trust client)
+      const baseShipping =
+        SHIPPING_PRICES[data.shippingMethod as ShippingMethod] ?? 0;
+      const shipping =
+        subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : baseShipping;
       const codFee = isCod ? COD_SURCHARGE : 0;
       const total = subtotal + shipping + codFee;
+
+      // For Packeta pickup: use point address; for home delivery: use form address
+      const shippingName = `${data.firstName} ${data.lastName}`;
+      const shippingStreet = isPacketaPickup
+        ? (data.packetaPointName ?? null)
+        : (data.street ?? null);
+      const shippingCity = isPacketaPickup ? null : (data.city ?? null);
+      const shippingZip = isPacketaPickup ? null : (data.zip ?? null);
 
       // Create or find customer
       let customer = await tx.customer.findUnique({
@@ -176,9 +259,14 @@ export async function createOrder(
             firstName: data.firstName,
             lastName: data.lastName,
             phone: data.phone,
-            street: data.street,
-            city: data.city,
-            zip: data.zip,
+            // Only update address if it was provided (home delivery)
+            ...(data.street
+              ? {
+                  street: data.street,
+                  city: data.city,
+                  zip: data.zip,
+                }
+              : {}),
           },
         });
       } else {
@@ -188,9 +276,9 @@ export async function createOrder(
             firstName: data.firstName,
             lastName: data.lastName,
             phone: data.phone,
-            street: data.street,
-            city: data.city,
-            zip: data.zip,
+            street: data.street ?? null,
+            city: data.city ?? null,
+            zip: data.zip ?? null,
           },
         });
       }
@@ -209,10 +297,12 @@ export async function createOrder(
           shipping,
           total,
           note: data.note ?? null,
-          shippingName: `${data.firstName} ${data.lastName}`,
-          shippingStreet: data.street,
-          shippingCity: data.city,
-          shippingZip: data.zip,
+          shippingName,
+          shippingStreet,
+          shippingCity,
+          shippingZip,
+          shippingMethod: data.shippingMethod,
+          shippingPointId: data.packetaPointId ?? null,
         },
       });
 
@@ -286,7 +376,10 @@ export async function createOrder(
         });
       });
     } catch (rollbackErr) {
-      console.error("[Checkout] Failed to rollback order after payment failure:", rollbackErr);
+      console.error(
+        "[Checkout] Failed to rollback order after payment failure:",
+        rollbackErr
+      );
     }
     console.error("[Checkout] Comgate payment creation failed:", e);
     return {

@@ -83,13 +83,14 @@ Toto je **second hand eshop** s oblečením. Klíčové rozdíly oproti běžné
 - SEO optimalizované — meta tagy, structured data, sitemap
 - Second hand fashion — sustainability messaging, unique pieces
 
-## Competitive Landscape (Lead Research C19, UPDATED C34)
+## Competitive Landscape (Lead Research C19, UPDATED C34, C37)
 - **Brumla.cz**: Largest CZ online second-hand. 8500 new items Mon+Thu. 99% Heureka. Kids + women + men. No UX/AI innovations detected (C34).
 - **MegaSecondHand.cz**: Closest competitor — women-focused, 3500+ curated pieces. Good Heureka reviews. **NEW C34**: launched "Body visualization" (on-body product photos) for select items, gradually expanding. Also diversifying into men's basics.
 - **Vinted CZ**: 75M+ members, ~EUR 8B valuation (BlackRock secondary deal Q1 2026). **IPO ruled out** "for now." Launched "Collections" (user-curated themed groupings). Expanding to US (NYC Jan 2026) + electronics. Vinted Pay wallet rolling out in smaller EU markets (NOT CZ yet). CZ trust issues: bots, scams, no human support (Trustpilot). UK sizing disaster reversed Jan 2026. Weakness: no curation, inconsistent quality.
 - **Janicka differentiator**: Premium curation, Instagram-aesthetic UX, pro photos, **on-body photography from day one** (ahead of MegaSecondHand), guaranteed condition, single-warehouse fast shipping. Message: "My jsme to už zkontrolovali, aby ses nemusela."
 - **Market gap**: Nobody in CZ does a visually beautiful, curated second-hand experience for women 18-35 well. No new CZ competitors detected as of April 2026. Physical vintage thrives in Prague (Kuzmarkt, 1981) — demand exists but not online.
-- **Market size**: Global secondhand apparel $393B (ThredUp 2026), ~10% of total apparel spend. Growing 2-3x faster than first-hand (2025-2027). Gen Z adopts resale 2.5x faster, 40% of closet is pre-owned.
+- **Market size**: Global secondhand apparel $393B (ThredUp 2026), ~10% of total apparel spend. Growing 2-3x faster than first-hand (2025-2027). Gen Z adopts resale 2.5x faster, 40% of closet is pre-owned. **Europe second-hand clothing market (C37)**: $35.33B in 2026, projected $75.57B by 2034 (CAGR ~10%). CZ online fashion dominated by Zalando (42%) and About You (40%), Zoot third (26%). Czech consumers prefer hand-me-downs, repairs, refitting — sustainability is cultural, not just trend.
+- **Conversion benchmarks (C37)**: Fashion e-commerce average 3.01% CR. Mobile: ~1.8% vs desktop ~3.9% (gap narrowing). On-model photography: +33% conversion. Studio + lifestyle combined: +30%. Products with 50+ reviews: 4.6x better conversion. Personalization: 150% average conversion uplift. Sizing uncertainty = #1 return driver in fashion.
 - **Global tech trends (C34)**: ThredUp AI image search (81% satisfaction), Vestiaire AI+blockchain digital passports, Zara virtual try-on (+40% conversion, -50% returns, launched Jan 2026), live commerce (30% vs 2-3% conversion).
 - **Mobile**: 62% of Czech e-commerce is mobile. Mobile-first strategy validated.
 
@@ -171,7 +172,7 @@ sqlite3 ~/.claude/jarvis-gym/jarvis.db "SELECT name, service, key_value, endpoin
 - **Pricing**: 2.2% + 3 CZK/tx + 190 CZK/mo (<50k CZK/mo). ~25-30 CZK on 1000 CZK sale.
 - **COST ALERT**: GoPay is 2.5x more expensive than Comgate. See Comgate comparison below.
 
-### Comgate Payment Gateway — PRIMARY (Updated — Lead Research C31)
+### Comgate Payment Gateway — PRIMARY (Updated — Lead Research C31, verified C37)
 - **Decision**: Comgate selected over GoPay. CZ market #1, official JS SDK, fees locked through Dec 31, 2026.
 - **Pricing (verified C31)**:
   - **Start plan** (recommended): 0% card fees for first 6 months (up to 50K CZK/mo), then auto-switches to Easy. Monthly fee: FREE. Bank transfers: 1% + 0 CZK.
@@ -180,7 +181,7 @@ sqlite3 ~/.claude/jarvis-gym/jarvis.db "SELECT name, service, key_value, endpoin
   - **Common**: Refund: 5 CZK. Chargeback: 990 CZK. Currency conversion: 0.15%. Gateway activation: FREE.
   - ~10 CZK on 1000 CZK sale (Easy plan).
 - **Payment methods**: Visa, MC, Apple Pay, Google Pay (inline via SDK — no redirect), bank transfers, BNPL/installments (pay-in-3).
-- **IMPORTANT (C31)**: Checkout SDK currently supports Apple Pay + Google Pay inline only. Direct card number entry in SDK is "being prepared" by Comgate — until then, card payments use redirect flow to Comgate gateway.
+- **IMPORTANT (C31, verified C37)**: Checkout SDK currently supports Apple Pay + Google Pay inline only. Direct card number entry in SDK is STILL "being prepared" by Comgate — no change as of April 2026. Card payments continue to use redirect flow to Comgate gateway. @comgate/checkout-js is actively maintained and correct package. No timeline given for direct card entry.
 - **API**: REST. Docs: `apidoc.comgate.cz`. Endpoints: create payment, check status, refund, void.
 - **Client SDK**: `@comgate/checkout-js` (npm) — replaces old `@comgate/checkout`. TypeScript with bundled types, promise-based API, framework-agnostic (React/Vue/Svelte/vanilla). Handles script injection + caching.
 - **Server**: Direct `fetch` to REST API (simple create/status/refund). `comgate-node` community SDK is stale — raw REST is simpler.
@@ -222,7 +223,7 @@ sqlite3 ~/.claude/jarvis-gym/jarvis.db "SELECT name, service, key_value, endpoin
 - **Form fields**: Target ≤10 fields total. Average is 11.3 — beat it. Pre-fill where possible.
 - **Progress**: Visual step indicator showing completed/current/remaining sections.
 
-### Czech Legal Requirements (2026 — Updated Lead Research C31, C34)
+### Czech Legal Requirements (2026 — Updated Lead Research C31, C34, C37)
 - **Warranty**: Used goods = min 12 months (not 24). Must be in T&C explicitly.
 - **14-day withdrawal**: Applies fully to second-hand online clothing sales (C31+C34 verified: 14-day period is the standard for regular e-commerce under Czech law. 30-day period only applies to door-to-door/organized sales events, NOT regular online shopping. CMS Expert Guide confirms 14 days. If seller fails to inform consumer of this right, withdrawal period extends to 12 months). Must provide withdrawal form (vzorový formulář).
 - **Delivery deadline**: 30 days from contract conclusion unless agreed otherwise. Track `expectedDeliveryDate` in Order model.
@@ -237,6 +238,8 @@ sqlite3 ~/.claude/jarvis-gym/jarvis.db "SELECT name, service, key_value, endpoin
 - **EET**: Abolished 2023 — no real-time receipt reporting needed.
 - **30-day price rule ("fake discount")**: Already in effect. MUST display lowest price from previous 30 days when showing discounts. Non-compliance = ČOI fines (up to 4% turnover). Need `priceHistory` tracking. ⚠️ HIGH PRIORITY — 30-day lowest price display partially done (C34: homepage product cards), but must be on ALL pages showing discounts.
 - **Packeta 2026**: Fuel surcharge 12.5%, toll surcharge EUR 0.04/kg. No API changes.
+- **EU Accessibility Act (EAA) — ⚠️ LAUNCH BLOCKER (NEW C37)**: Czech Act No. 424/2023 Coll. — in force since **June 28, 2025**. Applies to ALL e-commerce platforms. Supervised by **ČOI** (Czech Trade Inspection Authority). Requires **WCAG 2.1 Level AA** conformance (EN 301 549 standard). Transition period until 2030 ONLY for sites published before June 2025 AND not modified — **Janicka shop is being built AFTER enforcement date, NO transition period applies**. Must be compliant from launch. Fines: up to **€100,000 or 4% annual revenue**. France filed enforcement actions within DAYS of the deadline. Czech ČOI plans to publish non-compliant lists. Key requirements for Janicka: (1) keyboard navigation for ALL interactive elements (filters, modals, cart, checkout), (2) visible focus indicators (focus-visible outlines), (3) semantic HTML (headings h1-h6, landmarks, nav, main, lists), (4) alt text on ALL product images, (5) color contrast ≥4.5:1 normal text / ≥3:1 large text, (6) accessible forms (labels, error messages, field associations), (7) screen reader support (ARIA labels, live regions), (8) focus management on Next.js route changes, (9) no keyboard traps in modals/drawers, (10) accessible product filters and multi-step checkout.
+- **EU Digital Product Passport (DPP) for Textiles (NEW C37)**: Delegated act expected late 2027, 18-month compliance period → mandatory ~2029. Phase 1 (2027): fiber composition, hazardous substances, basic labeling. Phase 2 (2030): carbon/water footprint, supply chain. Phase 3 (2033): repair history, resale data. NOT a compliance blocker for Janicka 2026 launch — second-hand resale is exempt from manufacturer DPP requirements. BUT: DPP enables verified resale and builds buyer trust — monitor as potential competitive advantage. Vestiaire Collective already using AI+blockchain digital passports.
 
 ### Heureka.cz Integration (Updated — Lead Research C25)
 - **New pricing model (Sept 2025)**: Free "Start" tier (15 reviews/month), paid "Profi" tier (499 CZK/month, returned as Heureka ad credit).

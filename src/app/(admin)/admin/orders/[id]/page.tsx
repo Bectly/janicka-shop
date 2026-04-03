@@ -7,6 +7,7 @@ import {
   ORDER_STATUS_COLORS,
   CONDITION_LABELS,
   PAYMENT_METHOD_LABELS,
+  SHIPPING_METHOD_LABELS,
 } from "@/lib/constants";
 import { ArrowLeft } from "lucide-react";
 import { OrderStatusSelect } from "./order-status-select";
@@ -163,20 +164,41 @@ export default async function AdminOrderDetailPage({ params }: Props) {
             </div>
           </div>
 
-          {/* Shipping address */}
+          {/* Shipping */}
           <div className="rounded-xl border bg-card p-5 shadow-sm">
             <h2 className="font-heading text-base font-semibold text-foreground">
-              Doručovací adresa
+              Doprava
             </h2>
             <div className="mt-3 space-y-1 text-sm text-muted-foreground">
               <p className="font-medium text-foreground">
-                {order.shippingName}
+                {SHIPPING_METHOD_LABELS[order.shippingMethod ?? ""] ??
+                  order.shippingMethod ??
+                  "Standardní doručení"}
               </p>
-              <p>{order.shippingStreet}</p>
-              <p>
-                {order.shippingZip} {order.shippingCity}
-              </p>
-              <p>{order.shippingCountry}</p>
+              {order.shippingMethod === "packeta_pickup" && order.shippingPointId ? (
+                <>
+                  <p>{order.shippingStreet}</p>
+                  <p className="font-mono text-xs">
+                    Výdejní místo #{order.shippingPointId}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="font-medium text-foreground">
+                    {order.shippingName}
+                  </p>
+                  <p>{order.shippingStreet}</p>
+                  <p>
+                    {order.shippingZip} {order.shippingCity}
+                  </p>
+                  <p>{order.shippingCountry}</p>
+                </>
+              )}
+              {order.shipping > 0 && (
+                <p className="mt-2 font-medium text-foreground">
+                  Cena dopravy: {formatPrice(order.shipping)}
+                </p>
+              )}
             </div>
           </div>
 

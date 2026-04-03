@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { formatPrice } from "@/lib/format";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Clock, ArrowRight } from "lucide-react";
+import { CheckCircle2, Clock, ArrowRight, MapPin } from "lucide-react";
 import type { Metadata } from "next";
 import { ClearCartOnMount } from "./clear-cart";
 import { generateOrderQrPayment, orderNumberToVariableSymbol } from "@/lib/payments/qr-platba";
@@ -25,6 +25,12 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
   cod: "Dobírka",
 };
 
+const SHIPPING_METHOD_LABELS: Record<string, string> = {
+  packeta_pickup: "Zásilkovna — výdejní místo",
+  packeta_home: "Zásilkovna — na adresu",
+  czech_post: "Česká pošta",
+};
+
 export default async function OrderConfirmationPage({ params, searchParams }: Props) {
   const { orderNumber } = await params;
   const { token } = await searchParams;
@@ -39,9 +45,10 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
 
   if (!order) notFound();
 
-  // Orders with an accessToken require the correct token in the URL.
-  // This prevents enumeration of order details (PII exposure).
-  if (order.accessToken && order.accessToken !== token) notFound();
+  // Every order should have an accessToken (set during checkout).
+  // Require a matching token to prevent order detail enumeration (PII exposure).
+  // If accessToken is somehow null, still require a token to deny access.
+  if (!token || order.accessToken !== token) notFound();
 
   const isPaid = order.status === "paid";
   const isCod = order.paymentMethod === "cod";
@@ -165,18 +172,38 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
           </p>
         </div>
 
-        {/* Shipping address */}
+        {/* Shipping method + address */}
         <div className="mt-4 border-t pt-4">
           <h3 className="text-sm font-semibold text-foreground">
-            Doručovací adresa
+            Doprava
           </h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            {order.shippingName}
-            <br />
-            {order.shippingStreet}
-            <br />
-            {order.shippingZip} {order.shippingCity}
+            {SHIPPING_METHOD_LABELS[order.shippingMethod ?? ""] ??
+              order.shippingMethod ??
+              "Standardní doručení"}
           </p>
+
+          {order.shippingMethod === "packeta_pickup" && order.shippingPointId ? (
+            <div className="mt-2 flex items-start gap-2 rounded-lg bg-muted/50 p-3">
+              <MapPin className="mt-0.5 size-4 shrink-0 text-primary" />
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  {order.shippingStreet}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Výdejní místo #{order.shippingPointId}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <p className="mt-1 text-sm text-muted-foreground">
+              {order.shippingName}
+              <br />
+              {order.shippingStreet}
+              <br />
+              {order.shippingZip} {order.shippingCity}
+            </p>
+          )}
         </div>
 
         {order.note && (

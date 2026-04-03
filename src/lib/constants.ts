@@ -32,6 +32,13 @@ export const PAYMENT_METHOD_LABELS: Record<string, string> = {
   bank_transfer: "Bankovní převod",
 };
 
+/** Shipping method labels */
+export const SHIPPING_METHOD_LABELS: Record<string, string> = {
+  packeta_pickup: "Zásilkovna — výdejní místo",
+  packeta_home: "Zásilkovna — na adresu",
+  czech_post: "Česká pošta",
+};
+
 /** Order status → badge color class */
 export const ORDER_STATUS_COLORS: Record<string, string> = {
   pending: "bg-amber-100 text-amber-800",
