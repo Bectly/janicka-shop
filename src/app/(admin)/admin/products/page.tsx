@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { formatPrice } from "@/lib/format";
@@ -5,17 +6,32 @@ import { CONDITION_LABELS, CONDITION_COLORS } from "@/lib/constants";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DeleteProductButton } from "@/components/admin/delete-product-button";
+import { Pagination } from "@/components/shop/pagination";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Produkty",
 };
 
-export default async function AdminProductsPage() {
-  const products = await prisma.product.findMany({
-    orderBy: { createdAt: "desc" },
-    include: { category: { select: { name: true } } },
-  });
+const ADMIN_PRODUCTS_PER_PAGE = 25;
+
+export default async function AdminProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const params = await searchParams;
+  const currentPage = Math.max(1, parseInt(params.page ?? "1") || 1);
+
+  const [totalCount, products] = await Promise.all([
+    prisma.product.count(),
+    prisma.product.findMany({
+      orderBy: { createdAt: "desc" },
+      include: { category: { select: { name: true } } },
+      skip: (currentPage - 1) * ADMIN_PRODUCTS_PER_PAGE,
+      take: ADMIN_PRODUCTS_PER_PAGE,
+    }),
+  ]);
 
   return (
     <>
@@ -25,10 +41,10 @@ export default async function AdminProductsPage() {
             Produkty
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {products.length}{" "}
-            {products.length === 1
+            {totalCount}{" "}
+            {totalCount === 1
               ? "produkt"
-              : products.length >= 2 && products.length <= 4
+              : totalCount >= 2 && totalCount <= 4
                 ? "produkty"
                 : "produktů"}{" "}
             celkem
@@ -135,6 +151,14 @@ export default async function AdminProductsPage() {
           </table>
         </div>
       </div>
+
+      <Suspense fallback={null}>
+        <Pagination
+          totalItems={totalCount}
+          perPage={ADMIN_PRODUCTS_PER_PAGE}
+          basePath="/admin/products"
+        />
+      </Suspense>
     </>
   );
 }

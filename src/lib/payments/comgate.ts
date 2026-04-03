@@ -8,6 +8,7 @@ import {
 } from "./types";
 
 const COMGATE_API_URL = "https://payments.comgate.cz/v1.0";
+const COMGATE_TIMEOUT_MS = 15_000;
 
 function getConfig() {
   const merchant = process.env.COMGATE_MERCHANT_ID;
@@ -73,6 +74,7 @@ export async function createComgatePayment(
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: body.toString(),
+    signal: AbortSignal.timeout(COMGATE_TIMEOUT_MS),
   });
 
   const text = await res.text();
@@ -114,6 +116,7 @@ export async function getComgatePaymentStatus(
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: body.toString(),
+    signal: AbortSignal.timeout(COMGATE_TIMEOUT_MS),
   });
 
   const text = await res.text();
@@ -169,6 +172,7 @@ export async function refundComgatePayment(
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: body.toString(),
+    signal: AbortSignal.timeout(COMGATE_TIMEOUT_MS),
   });
 
   const text = await res.text();

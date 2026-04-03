@@ -2,6 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getComgatePaymentStatus } from "@/lib/payments/comgate";
+import { sendPaymentConfirmedEmail } from "@/lib/email";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle, Clock, ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
@@ -53,10 +54,29 @@ export default async function PaymentReturnPage({ searchParams }: Props) {
       // If Comgate says PAID but webhook hasn't processed yet, update now.
       // Use updateMany with status guard for atomic TOCTOU-safe write.
       if (status.status === "PAID" && order.status === "pending") {
-        await prisma.order.updateMany({
+        const updated = await prisma.order.updateMany({
           where: { id: order.id, status: "pending" },
           data: { status: "paid" },
         });
+
+        // Send payment confirmed email if we were the ones to transition to PAID
+        // (the webhook would skip since status is no longer "pending").
+        if (updated.count > 0) {
+          const fullOrder = await prisma.order.findUnique({
+            where: { id: order.id },
+            include: { customer: true },
+          });
+          if (fullOrder) {
+            sendPaymentConfirmedEmail({
+              orderNumber: fullOrder.orderNumber,
+              customerName: `${fullOrder.customer.firstName} ${fullOrder.customer.lastName}`,
+              customerEmail: fullOrder.customer.email,
+              total: fullOrder.total,
+              accessToken: fullOrder.accessToken ?? "",
+            });
+          }
+        }
+
         redirect(`/order/${order.orderNumber}?token=${order.accessToken}`);
       }
     } catch {

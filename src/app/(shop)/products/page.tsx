@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { prisma } from "@/lib/db";
+import type { Prisma } from "@prisma/client";
 import { ProductCard } from "@/components/shop/product-card";
 import { ProductFilters } from "@/components/shop/product-filters";
 import { Pagination } from "@/components/shop/pagination";
@@ -7,6 +8,10 @@ import { getVisitorId } from "@/lib/visitor";
 import { getLowestPrices30d } from "@/lib/price-history";
 import { buildItemListSchema, jsonLdString } from "@/lib/structured-data";
 import type { Metadata } from "next";
+
+type ProductWithCategory = Prisma.ProductGetPayload<{
+  include: { category: { select: { name: true } } };
+}>;
 
 export const metadata: Metadata = {
   title: "Katalog",
@@ -76,16 +81,10 @@ export default async function ProductsPage({
         ? { price: "desc" }
         : { createdAt: "desc" };
 
-  // Fetch products, categories, and filter options in parallel
-  // Size filter requires JS-level filtering (JSON column), so we fetch all matching
-  // products and paginate after filtering
-  const [products, categories, distinctBrands, allSizes] = await Promise.all([
-    prisma.product.findMany({
-      where,
-      include: { category: { select: { name: true } } },
-      orderBy,
-      take: 500,
-    }),
+  const hasSizeFilter = sizeFilter.length > 0;
+
+  // Fetch categories, brands, and available sizes in parallel (always needed)
+  const [categories, distinctBrands, allSizes] = await Promise.all([
     prisma.category.findMany({ orderBy: { sortOrder: "asc" } }),
     prisma.product.findMany({
       where: { active: true, sold: false, brand: { not: null } },
@@ -96,7 +95,6 @@ export default async function ProductsPage({
     prisma.product.findMany({
       where: { active: true, sold: false },
       select: { sizes: true },
-      take: 500,
     }),
   ]);
 
@@ -122,28 +120,48 @@ export default async function ProductsPage({
     return a.localeCompare(b, "cs");
   });
 
-  // Apply size filter in JS (sizes stored as JSON string, not queryable via Prisma)
-  const filteredProducts =
-    sizeFilter.length > 0
-      ? products.filter((p) => {
-          try {
-            const pSizes: string[] = JSON.parse(p.sizes);
-            return sizeFilter.some((s) => pSizes.includes(s));
-          } catch {
-            return false;
-          }
-        })
-      : products;
+  let paginatedProducts: ProductWithCategory[];
+  let totalItems: number;
 
-  // Paginate
-  const totalItems = filteredProducts.length;
+  if (hasSizeFilter) {
+    // Size filter requires JS-level filtering (JSON column not queryable via Prisma/SQLite).
+    // Fetch ALL matching products, filter in JS, then paginate.
+    const allProducts = await prisma.product.findMany({
+      where,
+      include: { category: { select: { name: true } } },
+      orderBy,
+    });
+    const filteredProducts = allProducts.filter((p) => {
+      try {
+        const pSizes: string[] = JSON.parse(p.sizes);
+        return sizeFilter.some((s) => pSizes.includes(s));
+      } catch {
+        return false;
+      }
+    });
+    totalItems = filteredProducts.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / PRODUCTS_PER_PAGE));
+    const safePage = Math.min(currentPage, totalPages);
+    const startIndex = (safePage - 1) * PRODUCTS_PER_PAGE;
+    paginatedProducts = filteredProducts.slice(startIndex, startIndex + PRODUCTS_PER_PAGE);
+  } else {
+    // No size filter — use DB-level count + skip/take for efficient pagination
+    const [count, products] = await Promise.all([
+      prisma.product.count({ where }),
+      prisma.product.findMany({
+        where,
+        include: { category: { select: { name: true } } },
+        orderBy,
+        skip: (Math.max(1, currentPage) - 1) * PRODUCTS_PER_PAGE,
+        take: PRODUCTS_PER_PAGE,
+      }),
+    ]);
+    totalItems = count;
+    paginatedProducts = products;
+  }
+
   const totalPages = Math.max(1, Math.ceil(totalItems / PRODUCTS_PER_PAGE));
   const safePage = Math.min(currentPage, totalPages);
-  const startIndex = (safePage - 1) * PRODUCTS_PER_PAGE;
-  const paginatedProducts = filteredProducts.slice(
-    startIndex,
-    startIndex + PRODUCTS_PER_PAGE,
-  );
 
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);

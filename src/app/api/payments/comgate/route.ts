@@ -47,7 +47,10 @@ export async function POST(request: NextRequest) {
           `[Comgate webhook] No order found for transId=${transId}, refId=${paymentStatus.refId}`,
         );
         // Return 200 so Comgate doesn't retry — order might have been deleted
-        return NextResponse.json({ status: "order_not_found" });
+        return new NextResponse("code=0&message=OK", {
+          status: 200,
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        });
       }
 
       // Update paymentId if not set yet

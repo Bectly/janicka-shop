@@ -1,9 +1,12 @@
 import { Resend } from "resend";
 
+let cachedResend: Resend | null | undefined;
+
 function getResendClient(): Resend | null {
+  if (cachedResend !== undefined) return cachedResend;
   const key = process.env.RESEND_API_KEY;
-  if (!key) return null;
-  return new Resend(key);
+  cachedResend = key ? new Resend(key) : null;
+  return cachedResend;
 }
 
 const FROM_EMAIL = process.env.EMAIL_FROM ?? "Janička Shop <objednavky@janicka-shop.cz>";

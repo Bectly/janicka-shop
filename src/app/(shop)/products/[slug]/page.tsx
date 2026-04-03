@@ -17,7 +17,7 @@ const BASE_URL =
 
 const getProduct = cache(async (slug: string) => {
   return prisma.product.findUnique({
-    where: { slug, active: true, sold: false },
+    where: { slug, active: true },
     include: { category: true },
   });
 });
@@ -60,22 +60,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
   if (!product) notFound();
 
-  // Check if reserved by another visitor
-  const visitorId = await getVisitorId();
-  const now = new Date();
-  const isReservedByOther =
-    !!product.reservedUntil &&
-    product.reservedUntil > now &&
-    product.reservedBy !== visitorId;
-
-  let sizes: string[] = [];
-  let colors: string[] = [];
-  let productImages: string[] = [];
-  try { sizes = JSON.parse(product.sizes); } catch { /* corrupted data fallback */ }
-  try { colors = JSON.parse(product.colors); } catch { /* corrupted data fallback */ }
-  try { productImages = JSON.parse(product.images); } catch { /* corrupted data fallback */ }
-  const hasDiscount = product.compareAt && product.compareAt > product.price;
-
+  // Fetch related products (always useful — for sold page and regular page)
   const relatedProducts = await prisma.product.findMany({
     where: {
       categoryId: product.categoryId,
@@ -89,7 +74,6 @@ export default async function ProductDetailPage({ params }: Props) {
 
   const allIds = [product.id, ...relatedProducts.map((p) => p.id)];
   const lowestPricesMap = await getLowestPrices30d(allIds);
-  const lowestPrice30d = lowestPricesMap.get(product.id) ?? null;
 
   // JSON-LD structured data for SEO (Google Shopping + AI search visibility)
   const jsonLd = {
@@ -107,6 +91,120 @@ export default async function ProductDetailPage({ params }: Props) {
       categoryName: product.category.name,
     }),
   };
+
+  let productImages: string[] = [];
+  try { productImages = JSON.parse(product.images); } catch { /* corrupted data fallback */ }
+
+  // --- SOLD PRODUCT VIEW ---
+  if (product.sold) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLdString(jsonLd) }}
+        />
+        <nav className="mb-6 text-sm text-muted-foreground">
+          <Link href="/products" className="hover:text-foreground">
+            Katalog
+          </Link>
+          <span className="mx-2">/</span>
+          <Link
+            href={`/products?category=${product.category.slug}`}
+            className="hover:text-foreground"
+          >
+            {product.category.name}
+          </Link>
+          <span className="mx-2">/</span>
+          <span className="text-foreground">{product.name}</span>
+        </nav>
+
+        <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
+          {/* Image — greyed out */}
+          <div className="relative">
+            <div className="opacity-60 grayscale">
+              <ProductGallery images={productImages} productName={product.name} />
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="rounded-full bg-foreground/80 px-6 py-2 text-lg font-bold text-background">
+                Prodáno
+              </span>
+            </div>
+          </div>
+
+          {/* Info */}
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>{product.category.name}</span>
+              {product.brand && (
+                <>
+                  <span className="text-muted-foreground/50">&middot;</span>
+                  <span className="font-medium">{product.brand}</span>
+                </>
+              )}
+            </div>
+            <h1 className="mt-1 font-heading text-2xl font-bold text-foreground sm:text-3xl">
+              {product.name}
+            </h1>
+
+            <div className="mt-6 rounded-xl border border-dashed border-muted-foreground/30 bg-muted/30 p-6 text-center">
+              <p className="text-lg font-medium text-foreground">
+                Tento kousek už má novou majitelku
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Každý náš kousek je unikát. Podívejte se na podobné kousky níže.
+              </p>
+              <Link
+                href={`/products?category=${product.category.slug}`}
+                className="mt-4 inline-block rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+              >
+                Prohlédnout {product.category.name.toLowerCase()}
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Related products */}
+        {relatedProducts.length > 0 && (
+          <section className="mt-16">
+            <h2 className="font-heading text-xl font-bold text-foreground">
+              Podobné kousky, které jsou ještě dostupné
+            </h2>
+            <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+              {relatedProducts.map((p) => (
+                <ProductCard
+                  key={p.id}
+                  name={p.name}
+                  slug={p.slug}
+                  price={p.price}
+                  compareAt={p.compareAt}
+                  images={p.images}
+                  categoryName={p.category.name}
+                  brand={p.brand}
+                  condition={p.condition}
+                  lowestPrice30d={lowestPricesMap.get(p.id) ?? null}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
+    );
+  }
+
+  // --- REGULAR PRODUCT VIEW ---
+  const visitorId = await getVisitorId();
+  const now = new Date();
+  const isReservedByOther =
+    !!product.reservedUntil &&
+    product.reservedUntil > now &&
+    product.reservedBy !== visitorId;
+
+  let sizes: string[] = [];
+  let colors: string[] = [];
+  try { sizes = JSON.parse(product.sizes); } catch { /* corrupted data fallback */ }
+  try { colors = JSON.parse(product.colors); } catch { /* corrupted data fallback */ }
+  const hasDiscount = product.compareAt && product.compareAt > product.price;
+  const lowestPrice30d = lowestPricesMap.get(product.id) ?? null;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -202,13 +300,11 @@ export default async function ProductDetailPage({ params }: Props) {
 
           {/* Stock info */}
           <p className="mt-4 text-xs text-muted-foreground">
-            {product.sold
-              ? "Tento kousek už má novou majitelku"
-              : isReservedByOther
-                ? "Tento kousek si právě někdo prohlíží"
-                : product.stock > 0
-                  ? "Poslední kus — unikátní kousek"
-                  : "Momentálně nedostupné"}
+            {isReservedByOther
+              ? "Tento kousek si právě někdo prohlíží"
+              : product.stock > 0
+                ? "Poslední kus — unikátní kousek"
+                : "Momentálně nedostupné"}
           </p>
         </div>
       </div>
