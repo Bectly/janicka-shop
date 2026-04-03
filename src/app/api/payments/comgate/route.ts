@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getComgatePaymentStatus } from "@/lib/payments/comgate";
 import { ComgateError } from "@/lib/payments/types";
 import { revalidatePath } from "next/cache";
+import { sendPaymentConfirmedEmail } from "@/lib/email";
 
 /**
  * Comgate webhook notification handler.
@@ -102,13 +103,30 @@ async function processPaymentStatus(
       // Only mark as paid if order is still pending — never regress a more advanced status.
       // Use updateMany with status guard for atomic TOCTOU-safe write (same as payment-return page).
       if (currentOrderStatus === "pending") {
-        await prisma.order.updateMany({
+        const updated = await prisma.order.updateMany({
           where: { id: orderId, status: "pending" },
           data: {
             status: "paid",
             paymentMethod: "comgate",
           },
         });
+
+        // Send payment confirmed email (fire-and-forget)
+        if (updated.count > 0) {
+          const order = await prisma.order.findUnique({
+            where: { id: orderId },
+            include: { customer: true },
+          });
+          if (order) {
+            sendPaymentConfirmedEmail({
+              orderNumber: order.orderNumber,
+              customerName: `${order.customer.firstName} ${order.customer.lastName}`,
+              customerEmail: order.customer.email,
+              total: order.total,
+              accessToken: order.accessToken ?? "",
+            });
+          }
+        }
       }
       break;
     }

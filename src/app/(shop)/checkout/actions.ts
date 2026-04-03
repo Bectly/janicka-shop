@@ -6,6 +6,7 @@ import { z } from "zod";
 import { getVisitorId } from "@/lib/visitor";
 import { createComgatePayment } from "@/lib/payments/comgate";
 import { rateLimitCheckout } from "@/lib/rate-limit";
+import { sendOrderConfirmationEmail } from "@/lib/email";
 import {
   PAYMENT_METHODS,
   SHIPPING_METHODS,
@@ -358,7 +359,9 @@ export async function createOrder(
         data: { sold: true, stock: 0, reservedUntil: null, reservedBy: null },
       });
 
-      return { ...created, customerEmail: customer.email };
+      // Collect DB prices for the email (never use client prices)
+      const dbPrices = new Map(products.map((p) => [p.id, p.price]));
+      return { ...created, customerEmail: customer.email, dbPrices };
     });
   } catch (e) {
     if (e instanceof UnavailableError) {
@@ -366,6 +369,30 @@ export async function createOrder(
     }
     throw e;
   }
+
+  // Send order confirmation email (fire-and-forget — never blocks checkout)
+  sendOrderConfirmationEmail({
+    orderNumber: order.orderNumber,
+    customerName: `${data.firstName} ${data.lastName}`,
+    customerEmail: order.customerEmail,
+    items: data.items.map((item) => {
+      const dbPrice = order.dbPrices.get(item.productId) ?? item.price;
+      return { name: item.name, price: dbPrice, size: item.size, color: item.color };
+    }),
+    subtotal: order.subtotal,
+    shipping: order.shipping,
+    total: order.total,
+    paymentMethod: isCod ? "cod" : (data.paymentMethod as string),
+    shippingMethod: data.shippingMethod,
+    shippingName: `${data.firstName} ${data.lastName}`,
+    shippingStreet: isPacketaPickup ? (data.packetaPointName ?? null) : (data.street ?? null),
+    shippingCity: isPacketaPickup ? null : (data.city ?? null),
+    shippingZip: isPacketaPickup ? null : (data.zip ?? null),
+    shippingPointId: data.packetaPointId ?? null,
+    note: data.note ?? null,
+    accessToken: order.accessToken ?? "",
+    isCod,
+  });
 
   // For cash on delivery — go straight to order confirmation
   if (isCod) {
