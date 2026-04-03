@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
 import { extractRouterConfig } from "uploadthing/server";
 import { ourFileRouter } from "@/app/api/uploadthing/core";
+import { RouteAnnouncer } from "@/components/route-announcer";
 import "./globals.css";
 
 const inter = Inter({
@@ -35,7 +36,14 @@ export default function RootLayout({
   return (
     <html lang="cs" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
+        <a
+          href="#main-content"
+          className="skip-to-content"
+        >
+          Přejít na obsah
+        </a>
         <NextSSRPlugin routerConfig={extractRouterConfig(ourFileRouter)} />
+        <RouteAnnouncer />
         {children}
       </body>
     </html>

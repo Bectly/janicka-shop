@@ -35,7 +35,8 @@ export default async function PaymentReturnPage({ searchParams }: Props) {
 
   // Validate access token to prevent order detail leakage.
   // The token is included in the Comgate return URL at payment creation time.
-  if (order.accessToken && order.accessToken !== token) notFound();
+  // Use strict check: if accessToken is somehow null, still deny access (same as order page).
+  if (!token || order.accessToken !== token) notFound();
 
   // If payment was already processed (by webhook), redirect to order page
   if (order.status === "paid" || order.status === "confirmed") {

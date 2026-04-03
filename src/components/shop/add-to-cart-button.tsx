@@ -63,12 +63,13 @@ export function AddToCartButton({ product }: AddToCartProps) {
       {/* Size selector */}
       {product.sizes.length > 1 && (
         <div>
-          <p className="mb-2 text-sm font-medium">Velikost</p>
-          <div className="flex flex-wrap gap-2">
+          <p className="mb-2 text-sm font-medium" id="size-label">Velikost</p>
+          <div className="flex flex-wrap gap-2" role="group" aria-labelledby="size-label">
             {product.sizes.map((size) => (
               <button
                 key={size}
                 onClick={() => setSelectedSize(size)}
+                aria-pressed={selectedSize === size}
                 className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
                   selectedSize === size
                     ? "border-primary bg-primary/10 text-primary"
@@ -85,12 +86,13 @@ export function AddToCartButton({ product }: AddToCartProps) {
       {/* Color selector */}
       {product.colors.length > 1 && (
         <div>
-          <p className="mb-2 text-sm font-medium">Barva</p>
-          <div className="flex flex-wrap gap-2">
+          <p className="mb-2 text-sm font-medium" id="color-label">Barva</p>
+          <div className="flex flex-wrap gap-2" role="group" aria-labelledby="color-label">
             {product.colors.map((color) => (
               <button
                 key={color}
                 onClick={() => setSelectedColor(color)}
+                aria-pressed={selectedColor === color}
                 className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
                   selectedColor === color
                     ? "border-primary bg-primary/10 text-primary"
@@ -106,8 +108,13 @@ export function AddToCartButton({ product }: AddToCartProps) {
 
       {/* Error message */}
       {error && (
-        <p className="text-sm text-destructive">{error}</p>
+        <p role="alert" className="text-sm text-destructive">{error}</p>
       )}
+
+      {/* Screen reader announcement for cart actions */}
+      <div role="status" aria-live="polite" className="sr-only">
+        {added ? "Produkt přidán do košíku" : ""}
+      </div>
 
       {/* Add to cart button */}
       <Button

@@ -218,9 +218,11 @@ export default function CheckoutPage() {
                     required
                     placeholder="Jana"
                     autoComplete="given-name"
+                    aria-invalid={!!state.fieldErrors.firstName}
+                    aria-describedby={state.fieldErrors.firstName ? "firstName-error" : undefined}
                   />
                   {state.fieldErrors.firstName && (
-                    <p className="text-xs text-destructive">
+                    <p id="firstName-error" role="alert" className="text-xs text-destructive">
                       {state.fieldErrors.firstName}
                     </p>
                   )}
@@ -233,9 +235,11 @@ export default function CheckoutPage() {
                     required
                     placeholder="Nováková"
                     autoComplete="family-name"
+                    aria-invalid={!!state.fieldErrors.lastName}
+                    aria-describedby={state.fieldErrors.lastName ? "lastName-error" : undefined}
                   />
                   {state.fieldErrors.lastName && (
-                    <p className="text-xs text-destructive">
+                    <p id="lastName-error" role="alert" className="text-xs text-destructive">
                       {state.fieldErrors.lastName}
                     </p>
                   )}
@@ -249,9 +253,11 @@ export default function CheckoutPage() {
                     required
                     placeholder="jana@email.cz"
                     autoComplete="email"
+                    aria-invalid={!!state.fieldErrors.email}
+                    aria-describedby={state.fieldErrors.email ? "email-error" : undefined}
                   />
                   {state.fieldErrors.email && (
-                    <p className="text-xs text-destructive">
+                    <p id="email-error" role="alert" className="text-xs text-destructive">
                       {state.fieldErrors.email}
                     </p>
                   )}
@@ -265,9 +271,11 @@ export default function CheckoutPage() {
                     required
                     placeholder="+420 123 456 789"
                     autoComplete="tel"
+                    aria-invalid={!!state.fieldErrors.phone}
+                    aria-describedby={state.fieldErrors.phone ? "phone-error" : undefined}
                   />
                   {state.fieldErrors.phone && (
-                    <p className="text-xs text-destructive">
+                    <p id="phone-error" role="alert" className="text-xs text-destructive">
                       {state.fieldErrors.phone}
                     </p>
                   )}
@@ -390,9 +398,11 @@ export default function CheckoutPage() {
                       required
                       placeholder="Květná 15"
                       autoComplete="street-address"
+                      aria-invalid={!!state.fieldErrors.street}
+                      aria-describedby={state.fieldErrors.street ? "street-error" : undefined}
                     />
                     {state.fieldErrors.street && (
-                      <p className="text-xs text-destructive">
+                      <p id="street-error" role="alert" className="text-xs text-destructive">
                         {state.fieldErrors.street}
                       </p>
                     )}
@@ -405,9 +415,11 @@ export default function CheckoutPage() {
                       required
                       placeholder="Praha"
                       autoComplete="address-level2"
+                      aria-invalid={!!state.fieldErrors.city}
+                      aria-describedby={state.fieldErrors.city ? "city-error" : undefined}
                     />
                     {state.fieldErrors.city && (
-                      <p className="text-xs text-destructive">
+                      <p id="city-error" role="alert" className="text-xs text-destructive">
                         {state.fieldErrors.city}
                       </p>
                     )}
@@ -420,9 +432,11 @@ export default function CheckoutPage() {
                       required
                       placeholder="110 00"
                       autoComplete="postal-code"
+                      aria-invalid={!!state.fieldErrors.zip}
+                      aria-describedby={state.fieldErrors.zip ? "zip-error" : undefined}
                     />
                     {state.fieldErrors.zip && (
-                      <p className="text-xs text-destructive">
+                      <p id="zip-error" role="alert" className="text-xs text-destructive">
                         {state.fieldErrors.zip}
                       </p>
                     )}
@@ -498,7 +512,8 @@ export default function CheckoutPage() {
                 Poznámka k objednávce
               </h2>
               <div className="mt-4">
-                <Textarea
+                <Label htmlFor="note" className="sr-only">Poznámka k objednávce</Label>
+              <Textarea
                   id="note"
                   name="note"
                   rows={3}

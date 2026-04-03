@@ -22,19 +22,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           where: { email: credentials.email as string },
         });
 
-        if (!admin) {
-          await recordLoginFailure();
-          return null;
-        }
-
         // Dynamic import to avoid bundling bcryptjs on client
         const { compare } = await import("bcryptjs");
+
+        // Always run bcrypt compare to prevent timing-based user enumeration.
+        // Without this, non-existent users return instantly (~0ms) vs real users (~100-200ms),
+        // letting attackers determine which emails are registered.
+        const DUMMY_HASH = "$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWX.Z";
         const isValid = await compare(
           credentials.password as string,
-          admin.password
+          admin?.password ?? DUMMY_HASH
         );
 
-        if (!isValid) {
+        if (!admin || !isValid) {
           await recordLoginFailure();
           return null;
         }

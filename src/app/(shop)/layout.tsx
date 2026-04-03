@@ -10,7 +10,7 @@ export default function ShopLayout({
   return (
     <>
       <Header />
-      <main className="flex-1">{children}</main>
+      <main id="main-content" className="flex-1">{children}</main>
       <Footer />
       <CookieConsentBanner />
     </>

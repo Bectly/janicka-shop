@@ -38,7 +38,7 @@ export function MobileNav() {
             </Link>
           </SheetTitle>
         </SheetHeader>
-        <nav className="flex flex-col gap-1 px-4">
+        <nav aria-label="Hlavní navigace" className="flex flex-col gap-1 px-4">
           <Link
             href="/products"
             className="rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted"

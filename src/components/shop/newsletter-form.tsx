@@ -20,7 +20,9 @@ export function NewsletterForm() {
   return (
     <div className="mt-6">
       <form action={action} className="flex gap-2">
+        <label htmlFor="newsletter-email" className="sr-only">Emailová adresa pro odběr novinek</label>
         <input
+          id="newsletter-email"
           type="email"
           name="email"
           placeholder="váš@email.cz"
@@ -32,7 +34,7 @@ export function NewsletterForm() {
         </Button>
       </form>
       {state && !state.success && (
-        <p className="mt-2 text-xs text-destructive">{state.message}</p>
+        <p role="alert" className="mt-2 text-xs text-destructive">{state.message}</p>
       )}
     </div>
   );

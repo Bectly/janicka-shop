@@ -64,7 +64,7 @@ export function ProductForm({ categories, product, action }: ProductFormProps) {
   return (
     <form action={dispatch} className="space-y-6">
       {error && (
-        <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div role="alert" className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
         </div>
       )}

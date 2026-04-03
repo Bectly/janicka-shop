@@ -28,7 +28,7 @@ export function Header() {
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden flex-1 items-center gap-1 md:flex">
+        <nav aria-label="Hlavní navigace" className="hidden flex-1 items-center gap-1 md:flex">
           {navLinks.map((link) => (
             <Link
               key={link.href}

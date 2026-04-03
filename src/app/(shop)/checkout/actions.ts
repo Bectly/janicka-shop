@@ -55,7 +55,7 @@ const checkoutSchema = z
           price: z.number().finite().positive(),
           size: z.string().max(50),
           color: z.string().max(50),
-          quantity: z.number().int().positive(),
+          quantity: z.number().int().positive().max(1, "Second-hand: max 1 ks na produkt"),
         })
       )
       .min(1, "Košík je prázdný")
@@ -309,25 +309,36 @@ export async function createOrder(
         },
       });
 
-      // Create order items — validate size/color against product DB data
+      // Create order items — validate size/color against product DB data.
+      // Reject invalid values instead of silently falling back — the customer
+      // must consent to the exact size/color they're ordering.
       await tx.orderItem.createMany({
         data: data.items.map((item) => {
           const dbProduct = productMap.get(item.productId)!;
-          // Validate submitted size against product's available sizes
           let validatedSize = item.size;
           let validatedColor = item.color;
           try {
             const dbSizes: string[] = JSON.parse(dbProduct.sizes);
             if (dbSizes.length > 0 && !dbSizes.includes(item.size)) {
-              validatedSize = dbSizes[0]; // fallback to first available size
+              throw new UnavailableError(
+                `Velikost „${item.size}" není dostupná pro ${dbProduct.name}. Aktualizujte košík a zkuste to znovu.`
+              );
             }
-          } catch { /* use submitted value if sizes JSON is corrupted */ }
+          } catch (e) {
+            if (e instanceof UnavailableError) throw e;
+            /* use submitted value if sizes JSON is corrupted */
+          }
           try {
             const dbColors: string[] = JSON.parse(dbProduct.colors);
             if (dbColors.length > 0 && item.color && !dbColors.includes(item.color)) {
-              validatedColor = dbColors[0]; // fallback to first available color
+              throw new UnavailableError(
+                `Barva „${item.color}" není dostupná pro ${dbProduct.name}. Aktualizujte košík a zkuste to znovu.`
+              );
             }
-          } catch { /* use submitted value if colors JSON is corrupted */ }
+          } catch (e) {
+            if (e instanceof UnavailableError) throw e;
+            /* use submitted value if colors JSON is corrupted */
+          }
           return {
             orderId: created.id,
             productId: item.productId,

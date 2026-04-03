@@ -86,7 +86,9 @@ export default async function SearchPage({
       <form action="/search" method="get" className="mx-auto max-w-xl">
         <div className="relative">
           <Search className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
+          <label htmlFor="search-input" className="sr-only">Vyhledávání produktů</label>
           <input
+            id="search-input"
             type="search"
             name="q"
             defaultValue={query}

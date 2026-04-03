@@ -27,7 +27,7 @@ export function AdminSidebar({ userName }: { userName: string }) {
   const pathname = usePathname();
 
   return (
-    <aside className="sticky top-0 flex h-screen w-64 flex-col border-r bg-card">
+    <aside aria-label="Administrace" className="sticky top-0 flex h-screen w-64 flex-col border-r bg-card">
       {/* Logo */}
       <div className="flex h-16 items-center gap-2 border-b px-6">
         <Store className="size-5 text-primary" />
@@ -38,7 +38,7 @@ export function AdminSidebar({ userName }: { userName: string }) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-3 py-4">
+      <nav aria-label="Administrace" className="flex-1 space-y-1 px-3 py-4">
         {navItems.map((item) => {
           const isActive = pathname.startsWith(item.href);
           const Icon = item.icon;

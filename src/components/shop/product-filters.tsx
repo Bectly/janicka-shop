@@ -101,9 +101,10 @@ export function ProductFilters({
       </div>
 
       {/* Category pills */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Kategorie">
         <button
           onClick={() => updateParams({ category: null })}
+          aria-pressed={!activeCategory}
           className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
             !activeCategory
               ? "bg-primary text-primary-foreground"
@@ -116,6 +117,7 @@ export function ProductFilters({
           <button
             key={cat.slug}
             onClick={() => updateParams({ category: cat.slug })}
+            aria-pressed={activeCategory === cat.slug}
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
               activeCategory === cat.slug
                 ? "bg-primary text-primary-foreground"
@@ -131,15 +133,16 @@ export function ProductFilters({
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {/* Brand filter */}
         {brands.length > 0 && (
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <fieldset>
+            <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Značka
-            </p>
-            <div className="flex flex-wrap gap-1.5">
+            </legend>
+            <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filtr podle značky">
               {brands.map((brand) => (
                 <button
                   key={brand}
                   onClick={() => toggleMulti("brand", brand, activeBrands)}
+                  aria-pressed={activeBrands.includes(brand)}
                   className={`rounded-lg px-3 py-1 text-xs font-medium transition-colors ${
                     activeBrands.includes(brand)
                       ? "bg-primary text-primary-foreground"
@@ -150,20 +153,21 @@ export function ProductFilters({
                 </button>
               ))}
             </div>
-          </div>
+          </fieldset>
         )}
 
         {/* Size filter */}
         {sizes.length > 0 && (
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <fieldset>
+            <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Velikost
-            </p>
-            <div className="flex flex-wrap gap-1.5">
+            </legend>
+            <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filtr podle velikosti">
               {sizes.map((size) => (
                 <button
                   key={size}
                   onClick={() => toggleMulti("size", size, activeSizes)}
+                  aria-pressed={activeSizes.includes(size)}
                   className={`min-w-[2.5rem] rounded-lg px-2.5 py-1 text-center text-xs font-medium transition-colors ${
                     activeSizes.includes(size)
                       ? "bg-primary text-primary-foreground"
@@ -174,7 +178,7 @@ export function ProductFilters({
                 </button>
               ))}
             </div>
-          </div>
+          </fieldset>
         )}
 
         {/* Condition filter */}

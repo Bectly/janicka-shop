@@ -99,11 +99,11 @@ async function processPaymentStatus(
 ) {
   switch (comgateStatus) {
     case "PAID": {
-      // Only mark as paid if order is still pending — never regress a more advanced status
-      // (e.g. admin may have already moved order to "confirmed" for processing)
+      // Only mark as paid if order is still pending — never regress a more advanced status.
+      // Use updateMany with status guard for atomic TOCTOU-safe write (same as payment-return page).
       if (currentOrderStatus === "pending") {
-        await prisma.order.update({
-          where: { id: orderId },
+        await prisma.order.updateMany({
+          where: { id: orderId, status: "pending" },
           data: {
             status: "paid",
             paymentMethod: "comgate",
@@ -116,11 +116,13 @@ async function processPaymentStatus(
       // Only cancel if order is still pending (hasn't been processed further)
       if (currentOrderStatus === "pending") {
         await prisma.$transaction(async (tx) => {
+          // Re-verify status INSIDE transaction to prevent TOCTOU race
+          // (webhook + payment-return could both try to process simultaneously)
           const order = await tx.order.findUnique({
             where: { id: orderId },
-            select: { items: { select: { productId: true } } },
+            select: { status: true, items: { select: { productId: true } } },
           });
-          if (!order) return;
+          if (!order || order.status !== "pending") return;
 
           // Release products back to catalog — only those still active
           // (soft-deleted products have active=false and should stay deleted)
@@ -141,8 +143,8 @@ async function processPaymentStatus(
     case "AUTHORIZED": {
       // Card authorized but not captured — keep as pending, will become PAID
       if (currentOrderStatus === "pending") {
-        await prisma.order.update({
-          where: { id: orderId },
+        await prisma.order.updateMany({
+          where: { id: orderId, status: "pending" },
           data: { paymentMethod: "comgate" },
         });
       }
