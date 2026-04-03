@@ -52,7 +52,7 @@ prisma/
 ```
 
 ## Conventions
-- **Jazyk UI**: čeština (všechny texty, labely, chybové hlášky)
+- **Jazyk UI**: čeština (všechny texty, labely, chybové hlášky) — VČETNĚ HÁČKŮ A ČÁREK! Žádné "Pridat do kosiku" → správně "Přidat do košíku". UTF-8 everywhere.
 - **Commit style**: konvenční commity (feat:, fix:, chore:)
 - **Components**: React Server Components by default, "use client" only when needed
 - **Imports**: `@/` alias for `src/`
@@ -67,10 +67,21 @@ prisma/
 - Bundy & Kabáty
 - Doplňky (šperky, kabelky, šátky)
 
+## Business Model — SECOND HAND
+Toto je **second hand eshop** s oblečením. Klíčové rozdíly oproti běžnému eshopu:
+- Každý kus je **unikát** (quantity = 1, po prodeji = nedostupný)
+- Stav zboží: nové s visačkou / výborný / dobrý / viditelné opotřebení
+- Značka je důležitá (filtr podle značky)
+- Velikost je kritická (filtr podle velikosti EU/UK/US)
+- Cena je nižší než retail — zobrazovat původní cenu vs second hand cenu (sleva %)
+- Admin musí umět rychle nahodit nový kus (foto z mobilu + pár polí)
+- **Nové kusy přibývají často** — zákaznice chtějí vidět "nově přidané" prominentně
+
 ## Target
 - Cílová skupina: ženy 18-35, CZ trh
 - TOP UX — mobilní first, rychlé načítání, krásný design
 - SEO optimalizované — meta tagy, structured data, sitemap
+- Second hand fashion — sustainability messaging, unique pieces
 
 ## Agents
 - **Lead**: Tech lead — strategie, prioritizace, web research (trendy, UX, konkurence)
@@ -121,14 +132,16 @@ Floating chat widget dostupný na KAŽDÉ stránce (shop i admin). Janička (own
 **Architektura:**
 - `DevChatWidget` — floating bubble (bottom-right), expanduje se do chat panelu
 - Automaticky zachytává `window.location.pathname` → Lead ví ze které stránky zpráva přišla
-- DB tabulka `dev_chat_messages`: id, message, page_path, page_title, sender (owner/lead), status (new/read/resolved), priority, created_at
+- DB tabulka `dev_chat_messages` v **Turso (produkční DB)**: id, message, page_path, page_title, sender (owner/lead), status (new/read/resolved), priority, created_at
 - API route `POST /api/dev-chat` — uložení zprávy + page context
 - API route `GET /api/dev-chat` — výpis zpráv (filtr: status, page)
-- Lead agent endpoint: `GET /api/dev-chat?status=new` — nové zprávy pro Lead
-- Lead označuje resolved: `PATCH /api/dev-chat/[id]` → status=resolved + response
+- Lead agent endpoint: `GET https://janicka-shop.vercel.app/api/dev-chat?status=new` — Lead čte z PRODUKČNÍ API přes HTTP
+- Lead označuje resolved: `PATCH https://janicka-shop.vercel.app/api/dev-chat/[id]` → status=resolved + response
+- **DŮLEŽITÉ**: devChat běží přes Vercel produkci. Lead agent volá live API (ne lokální DB). Janička píše na webu → Turso → Lead přes HTTP → odpověď zpět do Turso → Janička vidí.
+- API musí mít **API key auth** pro Lead agenta (Bearer token), aby nemohl nikdo cizí psát odpovědi
 - **Page context enrichment**: kromě URL i screenshot-like metadata (viewport size, scroll position, selected element hint)
 - **Status badge**: na widgetu ukazuje počet nerozřešených zpráv
-- **Auth**: pouze přihlášený admin (Janička) může psát, Lead odpovídá přes API
+- **Auth**: pouze přihlášený admin (Janička) může psát, Lead odpovídá přes API s Bearer tokenem
 
 **UX Flow:**
 1. Janička je na `/products` → klikne chat bubble → napíše "tyhle karty jsou moc malé"

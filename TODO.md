@@ -1,17 +1,20 @@
 # Janička Shop — TODO
 
 ## Phase 1: Foundation [CURRENT]
+- [ ] [BOLT] Fix html lang="cs", remove Geist font (use system/Inter), all metadata in Czech
 - [ ] [BOLT] Install core dependencies: prisma, @prisma/client, next-auth@5, zustand, zod, react-hook-form, @hookform/resolvers
 - [ ] [BOLT] Install shadcn/ui CLI and init with theme (pink/rose palette, feminine)
-- [ ] [BOLT] Create Prisma schema: Product, Category, Order, OrderItem, Customer, Admin, CartItem, Invoice
+- [ ] [BOLT] Create Prisma schema: Product (+ condition, brand, originalPrice, sizes, unique qty=1), Category, Order, OrderItem, Customer, Admin, CartItem, Invoice
 - [ ] [BOLT] Set up NextAuth v5 with credentials provider for admin
 - [ ] [BOLT] Create Prisma seed script with sample products (šaty, topy, kalhoty, bundy, doplňky)
 - [ ] [BOLT] Create base layout: header (logo, nav, cart icon, search), footer, mobile menu
 
 ## Phase 2: Product Catalog
 - [ ] [BOLT] Homepage: hero banner, featured products, categories grid, newsletter signup
-- [ ] [BOLT] Product listing page with filters (category, price range, size, color), sorting, pagination
-- [ ] [BOLT] Product detail page: image gallery, sizes, add to cart, related products
+- [ ] [BOLT] Product listing page with filters (category, brand, size, price range, condition), sorting (newest, price, brand), pagination
+- [ ] [BOLT] "Nově přidané" section prominently on homepage + badge on new items (last 7 days)
+- [ ] [BOLT] Brand filter — popular brands highlighted, search within brands
+- [ ] [BOLT] Product detail page: image gallery, size, condition badge, brand, original vs second hand price (discount %), add to cart, similar items
 - [ ] [BOLT] Quick view modal on product cards
 - [ ] [BOLT] Search with instant results dropdown
 - [ ] [SAGE] Active filter chips with individual removal

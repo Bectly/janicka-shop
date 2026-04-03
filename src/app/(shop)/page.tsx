@@ -1,0 +1,143 @@
+import Link from "next/link";
+import { prisma } from "@/lib/db";
+import { ProductCard } from "@/components/shop/product-card";
+import { CategoryCard } from "@/components/shop/category-card";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
+
+export default async function HomePage() {
+  const [featuredProducts, categories] = await Promise.all([
+    prisma.product.findMany({
+      where: { featured: true, active: true },
+      include: { category: { select: { name: true } } },
+      take: 8,
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.category.findMany({
+      orderBy: { sortOrder: "asc" },
+      include: { _count: { select: { products: true } } },
+    }),
+  ]);
+
+  return (
+    <>
+      {/* Hero */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/30">
+        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8 lg:py-36">
+          <div className="max-w-2xl">
+            <p className="text-sm font-medium text-primary">
+              Nová kolekce 2026
+            </p>
+            <h1 className="mt-2 font-heading text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+              Móda, která&nbsp;vás vystihne
+            </h1>
+            <p className="mt-4 text-lg leading-relaxed text-muted-foreground sm:text-xl">
+              Objevte kolekci stylového oblečení pro každou příležitost.
+              Od&nbsp;elegantních šatů po každodenní basics.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Button size="lg" render={<Link href="/products" />}>
+                Prohlédnout kolekci
+                <ArrowRight data-icon="inline-end" className="size-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                render={<Link href="/products?sale=true" />}
+              >
+                Výprodej
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Categories */}
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="flex items-end justify-between">
+          <div>
+            <h2 className="font-heading text-2xl font-bold text-foreground">
+              Kategorie
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Najděte přesně to, co hledáte
+            </p>
+          </div>
+        </div>
+        <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          {categories.map((cat) => (
+            <CategoryCard
+              key={cat.id}
+              name={cat.name}
+              slug={cat.slug}
+              description={cat.description}
+              productCount={cat._count.products}
+            />
+          ))}
+        </div>
+      </section>
+
+      {/* Featured products */}
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="flex items-end justify-between">
+          <div>
+            <h2 className="font-heading text-2xl font-bold text-foreground">
+              Doporučujeme
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Ručně vybrané kousky z naší kolekce
+            </p>
+          </div>
+          <Link
+            href="/products"
+            className="hidden text-sm font-medium text-primary hover:underline sm:block"
+          >
+            Zobrazit vše &rarr;
+          </Link>
+        </div>
+        <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+          {featuredProducts.map((product) => (
+            <ProductCard
+              key={product.id}
+              name={product.name}
+              slug={product.slug}
+              price={product.price}
+              compareAt={product.compareAt}
+              images={product.images}
+              categoryName={product.category.name}
+            />
+          ))}
+        </div>
+        <div className="mt-8 text-center sm:hidden">
+          <Button variant="outline" render={<Link href="/products" />}>
+            Zobrazit všechny produkty
+          </Button>
+        </div>
+      </section>
+
+      {/* Newsletter */}
+      <section className="bg-primary/5">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-lg text-center">
+            <h2 className="font-heading text-2xl font-bold text-foreground">
+              Buďte v obraze
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Přihlaste se k odběru novinek a získejte slevu 10&nbsp;% na první
+              nákup.
+            </p>
+            <form className="mt-6 flex gap-2">
+              <input
+                type="email"
+                placeholder="váš@email.cz"
+                className="flex-1 rounded-lg border bg-background px-4 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                required
+              />
+              <Button type="submit">Odebírat</Button>
+            </form>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
