@@ -38,6 +38,13 @@ export default async function HomePage() {
   const visitorId = await getVisitorId();
   const now = new Date();
 
+  // Get 30-day lowest prices for all displayed products
+  const allProductIds = [
+    ...featuredProducts.map((p) => p.id),
+    ...newProducts.map((p) => p.id),
+  ];
+  const lowestPricesMap = await getLowestPrices30d(allProductIds);
+
   function isReservedByOther(p: { reservedUntil: Date | null; reservedBy: string | null }) {
     return !!p.reservedUntil && p.reservedUntil > now && p.reservedBy !== visitorId;
   }
@@ -133,6 +140,7 @@ export default async function HomePage() {
                 condition={product.condition}
                 isNew
                 isReserved={isReservedByOther(product)}
+                lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
               />
             ))}
           </div>
@@ -178,6 +186,7 @@ export default async function HomePage() {
               brand={product.brand}
               condition={product.condition}
               isReserved={isReservedByOther(product)}
+              lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
             />
           ))}
         </div>
