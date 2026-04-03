@@ -14,7 +14,7 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const product = await prisma.product.findUnique({
-    where: { slug },
+    where: { slug, active: true, sold: false },
     select: { name: true, description: true },
   });
 
