@@ -113,28 +113,28 @@ async function processPaymentStatus(
       break;
     }
     case "CANCELLED": {
-      // Only cancel if order is still pending (hasn't been processed further)
+      // Only cancel if order is still pending (hasn't been processed further).
+      // Use updateMany with status guard for atomic TOCTOU-safe write,
+      // consistent with the PAID branch above.
       if (currentOrderStatus === "pending") {
         await prisma.$transaction(async (tx) => {
-          // Re-verify status INSIDE transaction to prevent TOCTOU race
-          // (webhook + payment-return could both try to process simultaneously)
-          const order = await tx.order.findUnique({
-            where: { id: orderId },
-            select: { status: true, items: { select: { productId: true } } },
+          // Atomic status guard: only updates if still "pending"
+          const updated = await tx.order.updateMany({
+            where: { id: orderId, status: "pending" },
+            data: { status: "cancelled", paymentMethod: "comgate" },
           });
-          if (!order || order.status !== "pending") return;
+          if (updated.count === 0) return; // Already advanced past pending
 
           // Release products back to catalog — only those still active
           // (soft-deleted products have active=false and should stay deleted)
-          const productIds = order.items.map((i) => i.productId);
+          const items = await tx.orderItem.findMany({
+            where: { orderId },
+            select: { productId: true },
+          });
+          const productIds = items.map((i) => i.productId);
           await tx.product.updateMany({
             where: { id: { in: productIds }, active: true },
             data: { sold: false, stock: 1 },
-          });
-
-          await tx.order.update({
-            where: { id: orderId },
-            data: { status: "cancelled", paymentMethod: "comgate" },
           });
         });
       }

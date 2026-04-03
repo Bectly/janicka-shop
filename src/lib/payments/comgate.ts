@@ -1,7 +1,9 @@
 import {
   ComgateError,
+  COMGATE_STATUSES,
   type CreatePaymentParams,
   type CreatePaymentResult,
+  type ComgatePaymentStatus,
   type PaymentStatusResult,
 } from "./types";
 
@@ -124,6 +126,11 @@ export async function getComgatePaymentStatus(
     );
   }
 
+  const status = data.status;
+  if (!COMGATE_STATUSES.includes(status as ComgatePaymentStatus)) {
+    throw new ComgateError(999, `Unknown Comgate payment status: ${status}`);
+  }
+
   return {
     merchant: data.merchant,
     test: data.test === "true",
@@ -134,7 +141,7 @@ export async function getComgatePaymentStatus(
     method: data.method,
     email: data.email,
     transId: data.transId,
-    status: data.status as PaymentStatusResult["status"],
+    status: status as ComgatePaymentStatus,
   };
 }
 

@@ -60,14 +60,18 @@ export function orderNumberToVariableSymbol(orderNumber: string): string {
   const datePart = parts[1] ?? "";
   const randPart = parts[2] ?? "";
 
-  // Convert random alphanumeric part to a numeric hash (simple sum-based)
-  let hash = 0;
+  // FNV-1a inspired hash for better distribution across 4-digit space.
+  // Standard 31-mul hash has poor distribution with short alphanumeric inputs.
+  let hash = 2166136261; // FNV offset basis
   for (let i = 0; i < randPart.length; i++) {
-    hash = (hash * 31 + randPart.charCodeAt(i)) % 10000;
+    hash ^= randPart.charCodeAt(i);
+    hash = Math.imul(hash, 16777619); // FNV prime
   }
+  // Reduce to 4 digits (0000-9999), using unsigned conversion
+  const fourDigit = ((hash >>> 0) % 10000);
 
   // Variable symbol: date (6 digits) + hash (4 digits) = 10 digits max
-  return `${datePart}${hash.toString().padStart(4, "0")}`;
+  return `${datePart}${fourDigit.toString().padStart(4, "0")}`;
 }
 
 /**

@@ -101,15 +101,18 @@ function generateOrderNumber(): string {
   return `JN-${y}${m}${d}-${rand}`;
 }
 
-/** Comgate method code for each payment method */
+/** Comgate method code for each online payment method.
+ *  COD orders never reach Comgate — caller must guard before calling this. */
 function getComgateMethod(method: PaymentMethod): string {
   switch (method) {
     case "card":
       return "CARD_CZ_CSOB_2";
     case "bank_transfer":
       return "BANK_ALL";
-    default:
-      return "ALL";
+    case "cod":
+      // COD should never reach Comgate — caller redirects before this point.
+      // Throw to catch logic errors early instead of silently falling through.
+      throw new Error("COD payment should not be sent to Comgate");
   }
 }
 

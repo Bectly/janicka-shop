@@ -1,9 +1,6 @@
 /** Comgate payment statuses */
-export type ComgatePaymentStatus =
-  | "PENDING"
-  | "PAID"
-  | "CANCELLED"
-  | "AUTHORIZED";
+export const COMGATE_STATUSES = ["PENDING", "PAID", "CANCELLED", "AUTHORIZED"] as const;
+export type ComgatePaymentStatus = (typeof COMGATE_STATUSES)[number];
 
 /** Parameters for creating a Comgate payment */
 export interface CreatePaymentParams {

@@ -61,8 +61,8 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
   if (showQr) {
     try {
       qrPayment = await generateOrderQrPayment(order.orderNumber, order.total);
-    } catch {
-      // QR generation failed — page continues without QR code, which is acceptable
+    } catch (e) {
+      console.warn(`[Order] QR payment generation failed for ${order.orderNumber}:`, e);
     }
   }
 
