@@ -5,6 +5,7 @@ import { ProductFilters } from "@/components/shop/product-filters";
 import { Pagination } from "@/components/shop/pagination";
 import { getVisitorId } from "@/lib/visitor";
 import { getLowestPrices30d } from "@/lib/price-history";
+import { buildItemListSchema, jsonLdString } from "@/lib/structured-data";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -154,15 +155,37 @@ export default async function ProductsPage({
     paginatedProducts.map((p) => p.id),
   );
 
+  // Build JSON-LD ItemList for product listing (Google Shopping + AI search)
+  const categoryName = params.category
+    ? (categories.find((c) => c.slug === params.category)?.name ?? "Katalog")
+    : "Všechny produkty";
+  const itemListJsonLd = buildItemListSchema(
+    paginatedProducts.map((p) => ({
+      slug: p.slug,
+      name: p.name,
+      description: p.description,
+      images: p.images,
+      sku: p.sku,
+      brand: p.brand,
+      condition: p.condition,
+      price: p.price,
+      sold: p.sold,
+      categoryName: p.category.name,
+    })),
+    categoryName,
+    `/products${params.category ? `?category=${params.category}` : ""}`,
+  );
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdString(itemListJsonLd) }}
+      />
       {/* Page heading */}
       <div className="mb-6">
         <h1 className="font-heading text-3xl font-bold text-foreground">
-          {params.category
-            ? (categories.find((c) => c.slug === params.category)?.name ??
-              "Katalog")
-            : "Všechny produkty"}
+          {categoryName}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {totalItems}{" "}

@@ -48,3 +48,26 @@ export const ORDER_STATUS_COLORS: Record<string, string> = {
   delivered: "bg-emerald-100 text-emerald-800",
   cancelled: "bg-red-100 text-red-800",
 };
+
+// ---------------------------------------------------------------------------
+// Checkout / shipping / payment constants (shared between client + server)
+// ---------------------------------------------------------------------------
+
+export const PAYMENT_METHODS = ["card", "bank_transfer", "cod"] as const;
+export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
+
+export const SHIPPING_METHODS = ["packeta_pickup", "packeta_home", "czech_post"] as const;
+export type ShippingMethod = (typeof SHIPPING_METHODS)[number];
+
+/** Shipping costs in CZK by method */
+export const SHIPPING_PRICES: Record<ShippingMethod, number> = {
+  packeta_pickup: 69,
+  packeta_home: 99,
+  czech_post: 89,
+};
+
+/** Free shipping threshold in CZK */
+export const FREE_SHIPPING_THRESHOLD = 1500;
+
+/** Cash on delivery surcharge in CZK */
+export const COD_SURCHARGE = 39;

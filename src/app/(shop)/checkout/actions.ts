@@ -6,25 +6,15 @@ import { z } from "zod";
 import { getVisitorId } from "@/lib/visitor";
 import { createComgatePayment } from "@/lib/payments/comgate";
 import { rateLimitCheckout } from "@/lib/rate-limit";
-
-const PAYMENT_METHODS = ["card", "bank_transfer", "cod"] as const;
-type PaymentMethod = (typeof PAYMENT_METHODS)[number];
-
-const SHIPPING_METHODS = ["packeta_pickup", "packeta_home", "czech_post"] as const;
-type ShippingMethod = (typeof SHIPPING_METHODS)[number];
-
-/** Shipping costs in CZK by method */
-const SHIPPING_PRICES: Record<ShippingMethod, number> = {
-  packeta_pickup: 69,
-  packeta_home: 99,
-  czech_post: 89,
-};
-
-/** Free shipping threshold in CZK */
-const FREE_SHIPPING_THRESHOLD = 1500;
-
-/** Cash on delivery surcharge in CZK */
-const COD_SURCHARGE = 39;
+import {
+  PAYMENT_METHODS,
+  SHIPPING_METHODS,
+  SHIPPING_PRICES,
+  FREE_SHIPPING_THRESHOLD,
+  COD_SURCHARGE,
+  type PaymentMethod,
+  type ShippingMethod,
+} from "@/lib/constants";
 
 const checkoutSchema = z
   .object({
@@ -326,7 +316,12 @@ export async function createOrder(
             }
           } catch (e) {
             if (e instanceof UnavailableError) throw e;
-            /* use submitted value if sizes JSON is corrupted */
+            // Corrupted sizes JSON in DB — reject order rather than silently
+            // accepting an unvalidated client value. Admin must fix the product.
+            console.error(`[Checkout] Corrupted sizes JSON for product ${dbProduct.id}: ${dbProduct.sizes}`);
+            throw new UnavailableError(
+              `Produkt „${dbProduct.name}" má poškozená data. Kontaktujte nás prosím.`
+            );
           }
           try {
             const dbColors: string[] = JSON.parse(dbProduct.colors);
@@ -337,7 +332,10 @@ export async function createOrder(
             }
           } catch (e) {
             if (e instanceof UnavailableError) throw e;
-            /* use submitted value if colors JSON is corrupted */
+            console.error(`[Checkout] Corrupted colors JSON for product ${dbProduct.id}: ${dbProduct.colors}`);
+            throw new UnavailableError(
+              `Produkt „${dbProduct.name}" má poškozená data. Kontaktujte nás prosím.`
+            );
           }
           return {
             orderId: created.id,

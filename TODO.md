@@ -90,8 +90,8 @@
 - [ ] [BOLT] Update privacy policy page: GDPR-compliant, separate from T&C, data purposes, retention, rights, legal basis
 - [ ] [LEAD] Sustainability claims audit: EU Directive 2024/825 (effective 2026) — greenwashing fines up to 5M CZK. All eco/sustainability claims must be specific and verifiable. "Ušetříš 70 % oproti nové ceně" is OK, vague "ekologické" is NOT.
 
-## Phase 7c: EU Accessibility Act (EAA) Compliance [NEW — LEAD RESEARCH C37] ⚠️ LAUNCH BLOCKER
-Czech Act No. 424/2023 Coll. — **in force since June 28, 2025**. Supervised by ČOI. Janicka shop built AFTER enforcement date = NO transition period. Must be WCAG 2.1 AA compliant from launch. Fines: up to €100,000 or 4% annual revenue. France filed enforcement actions within days. CZ ČOI plans to publish non-compliant lists.
+## Phase 7c: EU Accessibility Act (EAA) Compliance [C37, UPDATED C40] — RECOMMENDED (NOT legally required)
+Czech Act No. 424/2023 Coll. — in force since June 28, 2025. **⚠️ C40 UPDATE: MICRO-ENTERPRISE EXEMPTION APPLIES.** Zákon 424/2023 Sb. exempts mikropodniky (<10 employees AND <€2M turnover) from SERVICE requirements. Janicka Shop qualifies. Accessibility is NOT a legal launch blocker but remains a COMPETITIVE ADVANTAGE (none of CZ second-hand competitors are WCAG-compliant) and GOOD UX PRACTICE. Implement incrementally. If Janicka grows past threshold, full compliance becomes mandatory.
 - [ ] [LEAD] Accessibility audit of existing pages — run axe-core or Lighthouse accessibility audit on all current pages. Identify violations against WCAG 2.1 AA. Prioritize fixes by severity (critical → serious → moderate).
 - [ ] [BOLT] Semantic HTML audit + fix — ensure all pages use correct heading hierarchy (h1→h2→h3, no skips), landmark elements (`<nav>`, `<main>`, `<header>`, `<footer>`, `<aside>`), lists for navigation items, `<button>` for actions (not div onclick). Check all existing components.
 - [ ] [BOLT] Keyboard navigation for product filters — ALL filter controls (brand pills, size buttons, condition, price range, color swatches, sort dropdown) must be operable via keyboard. Tab order must be logical. Active filter chips must be keyboard-removable. Focus must return to logical position after filter change.
@@ -133,7 +133,7 @@ Czech Act No. 424/2023 Coll. — **in force since June 28, 2025**. Supervised by
 - [ ] [GUARD] Rate limiting: @upstash/ratelimit + Vercel KV (Redis) for production. Apply to: checkout/order creation (5/min), login attempts (5/15min), search (30/min). Edge middleware approach for Vercel compatibility. Currently MEDIUM priority (flagged Cycle #19).
 - [ ] [GUARD] Security audit: CSRF, input sanitization, session security (security headers already done in Cycle #19)
 
-## Phase 9: Growth & Engagement [UPDATED — LEAD RESEARCH C19]
+## Phase 9: Growth & Engagement [UPDATED — LEAD RESEARCH C19, C40]
 - [ ] [LEAD] Saved search alerts — let users save filters (size + category + price range) and get email when matching new items arrive. Vinted's #1 most-requested missing feature. Major differentiator.
 - [ ] [LEAD] "Nově přidané" drop strategy — batch new items, announce at consistent daily time (e.g., 18:00) to train repeat visits. Push/email notification to subscribers.
 - [ ] [LEAD] "Právě prodáno" live feed on homepage — show recently sold items with "Prodáno za X hodin" badge. Proves items sell fast, creates honest FOMO for similar items still available. Unlike fake countdown timers — this is REAL social proof that resonates with sustainability-conscious 18-35 demographic.
@@ -143,13 +143,18 @@ Czech Act No. 424/2023 Coll. — **in force since June 28, 2025**. Supervised by
 - [ ] [LEAD] Instagram Shopping product feed + micro-influencer strategy — Instagram is THE social channel for CZ women 18-35 (70% of CZ internet users follow influencers, CZ influencer spend surpassed $95M). Plan: Instagram Shopping catalog feed, UGC (real customers wearing purchased items), 3-5 micro-influencers in CZ fashion/sustainability niche. TikTok Shop NOT available in CZ — focus 100% on Instagram.
 - [ ] [LEAD] Messaging strategy: lean into "My jsme to už zkontrolovali, aby ses nemusela" — key differentiator vs Vinted (inconsistent quality, scams, random sellers, recent backlash over grouped sizing). Janicka = curated quality, pro photos, guaranteed condition, single-warehouse fast shipping.
 - [ ] [BOLT] QR code payment on order confirmation (Lead C31 research — implementation spec). CZ bank transfer is #1 payment method at 33%! Use `spayd` npm (v3.0.4, TypeScript) to generate SPAYD string + `qrcode` npm to render QR image. Fields: `acc` (shop IBAN), `am` (order total), `cc: 'CZK'`, `xvs` (order number as variable symbol), `msg` (shop name + order ref). Display on: (1) order confirmation page, (2) order confirmation email (as inline PNG), (3) admin order detail. User scans with any CZ banking app → payment auto-fills. Architecture: `src/lib/payments/qr-platba.ts` (SPAYD generator), reusable `QrPaymentCode` component. CRITICAL for conversion: 74% of Czechs have used QR payments, 45% abandon if preferred payment unavailable.
+- [ ] [LEAD] Abandoned cart recovery email flow (NEW C40) — 3-email sequence via Resend for abandoned checkouts. Fashion has 84.61% cart abandonment — HIGHEST of all industries. Mobile: 78.74%. For second-hand unique items (qty=1), urgency is REAL: "Tento kousek je unikát — kdokoliv ho může koupit." Email 1 at 30-60min, Email 2 at 12-24h, Email 3 at 48-72h. If item sold between emails, pivot to "Bohužel prodáno, podívej se na podobné." Requires: (1) capture email early in checkout (Kontakt section first in accordion), (2) server-side cart state for email triggers, (3) React Email templates with dynamic product blocks. Expected recovery: 5-10%+ of abandoned carts.
+- [ ] [LEAD] Google Merchant Center free product listings (NEW C40) — register in Google Merchant Center for free organic listings on Google Shopping tab. No ad spend required. Prerequisite: enriched JSON-LD with shippingDetails + hasMerchantReturnPolicy (TODO item #6 in priority). Required product attributes: ID, title, description, link, image_link, availability, price, condition. Fashion extras: color, size, material, brand. Massive free visibility channel.
+- [ ] [LEAD] Product page sticky CTA + size info above fold (NEW C40) — Baymard 2026 benchmark: 62% of mobile fashion sites have "mediocre or worse" product page UX. Two critical fixes: (1) Sticky "Přidat do košíku" button on mobile (CTA must be visible while scrolling — currently hidden). (2) Move size + fit info HIGHER on PDP — above fold if possible. Sizing uncertainty = #1 conversion killer in fashion (30%+ return rate driver). Include measurements in cm where available.
 
-## Phase 10: AI & Compliance [NEW — LEAD RESEARCH C31]
+## Phase 10: AI & Compliance [UPDATED — LEAD RESEARCH C31, C40]
 - [ ] [LEAD] EU AI Act compliance for devChat — if devChat is visible to consumers (not just admin), it MUST be labeled as AI interaction. Add "Odpovídá AI asistent" badge in chat header. Effective 2026. Penalty: significant. If devChat stays admin-only → no action needed.
 - [ ] [LEAD] Delivery deadline tracking — Czech law requires delivery within 30 days of contract unless agreed otherwise. Add `expectedDeliveryDate` to Order model (set on payment confirmation = now + delivery estimate). Show on order confirmation page + email. Track compliance in admin dashboard.
 - [ ] [LEAD] Social commerce features (C31 trend research) — platforms with social/UGC features see 40% higher engagement. Phase 1: "Sdílej na Instagram" button on product detail (generates shareable card image). Phase 2: customer photo reviews (bought + styled). Phase 3: "Právě koupila" feed (anonymous, shows recent purchases with city). Aligns with Gen Z 2.5x faster resale adoption.
+- [ ] [LEAD] Google UCP preparation (NEW C40) — Google Universal Commerce Protocol (March 2026) is an open API standard enabling AI shopping agents to browse catalogs, add to cart, and checkout directly. Published `/.well-known/ucp` JSON manifest with merchant capabilities. Currently supported by large retailers (Shopify, Etsy, Wayfair). For Janicka: NOT needed for launch, but complete Schema.org JSON-LD (shippingDetails, hasMerchantReturnPolicy, full product attributes) is the FOUNDATION that UCP builds on. Monitor for small merchant adoption. When UCP matures: implement 3 REST endpoints (session create, update, complete) + JSON capability manifest.
+- [ ] [LEAD] Product page video support (NEW C40) — Baymard 2026: short product videos (15-30s) consistently outperform static images on mobile, especially for fashion where fabric movement and texture matter. Consider adding optional `videoUrl` field to Product model for items where video adds value (dresses, flowing fabrics, jewelry). Low priority but high UX impact when available. Can start with Instagram Reels embeds.
 
-## Priority Order (Lead Recommendation — Updated Cycle #37 Research)
+## Priority Order (Lead Recommendation — Updated Cycle #40 Research)
 ### ✅ DONE
 - ~~Image upload~~ (Cycle #25) — UploadThing v7
 - ~~SEO structured data~~ (Cycle #22) — JSON-LD, sitemap, robots.txt, OG
@@ -159,45 +164,51 @@ Czech Act No. 424/2023 Coll. — **in force since June 28, 2025**. Supervised by
 - ~~Cart reservation~~ (Cycle #27) — 15min timer, TOCTOU-safe, "Rezervováno" badges, countdown
 - ~~Cookie consent~~ (Cycle #27) — GDPR/ECA compliant, granular categories, re-consent (C29), Secure flag (C30)
 
-### NEXT SPRINT — Phase 2 Polish + Phase 3 Checkout + Accessibility (UPDATED C37)
-1. **⚠️ EAA Accessibility — semantic HTML + keyboard nav + focus indicators** (Phase 7c, NEW C37) — LAUNCH BLOCKER. Czech Act No. 424/2023 in force since June 2025. No transition period for new sites. Fines: €100K or 4% revenue. Start with: semantic HTML audit, keyboard navigation for filters/checkout, visible focus indicators, skip navigation link, alt text on all images. This must be woven into ALL development from now on — every new component must be accessible by default.
-2. **Mobile filter drawer** (Phase 2, UPDATED C34) — full-screen overlay on mobile (NOT bottom sheet — Baymard: too cramped). Sticky "Filtry" at bottom of viewport. Accordion inside. "Zobrazit X produktů" sticky footer. HIGH IMPACT — 70%+ traffic is mobile. **C37: must be keyboard-accessible from day one (EAA)**.
-3. **`nuqs` adoption** (Phase 2) — type-safe URL params, debounced price input, server cache. Eliminates ~50 lines of manual URL parsing. Enables shallow routing.
-4. **Color filter + filter counts** (Phase 2, UPDATED C34) — color swatches, product count per option ("Zara (23)"), grey out zero-result options (do NOT hide — causes "where did M go?" confusion). Schema already has colors field. **C37: color swatches need accessible labels for screen readers (not just visual color)**.
-5. **Wishlist with localStorage** (Phase 2, NEW C34) — heart icon on product cards, Zustand persist store, `/oblibene` page. No login required. Critical for second-hand: items sell fast, users track favorites. Low effort, high engagement.
-6. **Second image hover** (Phase 2, NEW C34) — crossfade to second image on desktop hover (opacity transition 300ms). Mobile: dot indicators only, no in-card swipe.
-7. **Enrich JSON-LD** (Phase 8) — add `shippingDetails` + `hasMerchantReturnPolicy`. Highest-ROI SEO for 2026. +58% clicks, +32% conversion. Google AI Mode growing 5.6x.
-8. **Accordion checkout + Packeta** (Phase 3+6, UPDATED C34) — accordion single-page checkout. NEW: Apple Pay / Google Pay express buttons at VERY TOP on mobile (above form). Auto-advance sections. BNPL via Comgate pay-in-3 for items >1000 CZK. **C37: accordion must be keyboard-operable, form fields must have labels (not just placeholders)**.
-9. **Comgate payment** (Phase 3, C37 VERIFIED: direct card entry in SDK STILL "being prepared" — no change as of April 2026. Use redirect flow for cards, inline for Apple/Google Pay).
-10. **QR code payment** (Phase 3+9, PROMOTED C31) — `spayd` npm + `qrcode` npm. CRITICAL: bank transfer is #1 CZ payment at 33%. Low effort, massive conversion impact. Ship alongside Comgate.
+### NEXT SPRINT — Phase 2 Polish + Phase 3 Checkout (UPDATED C40)
+1. **Mobile filter drawer** (Phase 2, UPDATED C34) — full-screen overlay on mobile (NOT bottom sheet — Baymard: too cramped). Sticky "Filtry" at bottom of viewport. Accordion inside. "Zobrazit X produktů" sticky footer. HIGH IMPACT — 70%+ traffic is mobile. Use keyboard-accessible controls as best practice.
+2. **`nuqs` adoption** (Phase 2) — type-safe URL params, debounced price input, server cache. Eliminates ~50 lines of manual URL parsing. Enables shallow routing.
+3. **Color filter + filter counts** (Phase 2, UPDATED C34) — color swatches, product count per option ("Zara (23)"), grey out zero-result options (do NOT hide — causes "where did M go?" confusion). Schema already has colors field. Add accessible labels for screen readers on color swatches (best practice).
+4. **Wishlist with localStorage** (Phase 2, NEW C34) — heart icon on product cards, Zustand persist store, `/oblibene` page. No login required. Critical for second-hand: items sell fast, users track favorites. Low effort, high engagement.
+5. **Second image hover** (Phase 2, NEW C34) — crossfade to second image on desktop hover (opacity transition 300ms). Mobile: dot indicators only, no in-card swipe.
+6. **Enrich JSON-LD** (Phase 8) — add `shippingDetails` + `hasMerchantReturnPolicy`. Highest-ROI SEO for 2026. +58% clicks, +32% conversion. Google AI Mode growing 5.6x. **C40**: also needed for Google Merchant Center free listings and future UCP compatibility.
+7. **Accordion checkout + Packeta** (Phase 3+6, UPDATED C34) — accordion single-page checkout. Apple Pay / Google Pay express buttons at VERY TOP on mobile (above form). Auto-advance sections. BNPL via Comgate pay-in-3 for items >1000 CZK. Keyboard-operable accordion, labeled form fields.
+8. **Comgate payment** (Phase 3, C40 RE-VERIFIED: direct card entry in SDK STILL "being prepared" — confirmed no change. Use redirect flow for cards, inline for Apple/Google Pay).
+9. **QR code payment** (Phase 3+9, PROMOTED C31) — `spayd` npm + `qrcode` npm. CRITICAL: bank transfer is #1 CZ payment at 33%. Low effort, massive conversion impact. Ship alongside Comgate.
+10. **Abandoned cart recovery emails** (Phase 9, NEW C40) — 3-email sequence via Resend. Fashion has 84.61% cart abandonment (HIGHEST of all sectors). For unique second-hand items, urgency is REAL (item can sell to someone else). See CLAUDE.md "Abandoned Cart Recovery Email" spec. Recovers 5-10%+ of abandoned carts.
 
 ### LAUNCH BLOCKERS
 11. ~~Cookie consent~~ ✅ DONE (Cycle #27)
 12. **30-day price history** (Phase 7) — Czech fake discount rule. Track lowest 30-day price. ⚠️ C34 finding: consumer protection fines now up to 4% of turnover.
 13. **Rate limiting** (Phase 8) — @upstash/ratelimit for checkout + login.
-14. **⚠️ EAA accessibility compliance** (Phase 7c, NEW C37) — WCAG 2.1 AA. See Phase 7c for full task breakdown. Semantic HTML, keyboard nav, focus indicators, alt text, color contrast, screen reader support, skip link. Enforcement ACTIVE since June 2025. ČOI supervises. Promoted to LAUNCH BLOCKER because NO transition period for new sites.
+14. ~~**EAA accessibility compliance**~~ **DOWNGRADED C40** — micro-enterprise exemption (zákon 424/2023 Sb. §3) applies: <10 employees AND <€2M turnover. Janicka qualifies. Accessibility is RECOMMENDED (competitive advantage, good UX) but NOT a legal launch blocker. Implement incrementally as best practice. Re-evaluate if business grows past threshold.
 
 ### POST-LAUNCH
 15. **Email notifications** (Phase 6) — Resend + React Email templates.
 16. **Heureka.cz** (Phase 9) — free "Start" tier. 50% of CZ shoppers require certification.
-17. **Curated collections** (Phase 2+9, NEW C34) — editorial-quality themed groups ("Jarní šaty pod 500 Kč"). Vinted launched Collections in 2026. Differentiates from listing dumps.
-18. **Scarcity UX** (Phase 2) — "Unikátní kus" badges + "Právě prodáno" feed.
-19. **Social commerce features** (Phase 10, NEW C31) — share buttons, customer photo reviews, "Právě koupila" feed. 40% higher engagement.
-20. **Instagram Shopping** (Phase 9) — product feed + micro-influencer partnerships.
-21. **Saved search alerts** (Phase 9) — biggest differentiator vs Vinted.
+17. **Google Merchant Center free listings** (Phase 8, NEW C40) — register products for Google Shopping free listings (no ad spend). Requires enriched JSON-LD (#6 above). Free organic product visibility on Google Shopping tab.
+18. **Curated collections** (Phase 2+9, NEW C34) — editorial-quality themed groups ("Jarní šaty pod 500 Kč"). Vinted launched Collections in 2026. Differentiates from listing dumps.
+19. **Scarcity UX** (Phase 2) — "Unikátní kus" badges + "Právě prodáno" feed.
+20. **Accessibility incremental** (Phase 7c, MOVED from launch blocker C40) — semantic HTML, alt text, keyboard navigation, focus indicators, color contrast, skip link. Not legally required (micro-enterprise exemption) but competitive advantage and good practice. None of CZ second-hand competitors are WCAG-compliant.
+21. **Social commerce features** (Phase 10, NEW C31) — share buttons, customer photo reviews, "Právě koupila" feed. 40% higher engagement.
+22. **Instagram Shopping** (Phase 9) — product feed + micro-influencer partnerships.
+23. **Saved search alerts** (Phase 9) — biggest differentiator vs Vinted.
+24. **Google UCP preparation** (Phase 10, NEW C40) — monitor Google Universal Commerce Protocol for small merchant adoption. Implement `/.well-known/ucp` manifest when UCP matures beyond large retailers. Foundation: complete Schema.org markup (done via #6).
 
-## Competitive Positioning (Lead Research C19, UPDATED C34, C37)
+## Competitive Positioning (Lead Research C19, UPDATED C34, C37, C40)
 - **Closest competitor**: MegaSecondHand.cz (women-focused, 3500+ curated pieces). **C34 NEW**: launched "Body visualization" (on-body product photos) for select items. Gradually expanding. Also diversifying into men's basics.
 - **Largest**: Brumla.cz (8500 new items Mon+Thu, 99% Heureka rating). No UX changes, no AI features, no visual improvements detected C34. Volume-first, not curated.
 - **Vinted** (C34 UPDATE): IPO ruled out "for now" — BlackRock secondary deal at ~EUR 8B valuation. Launched "Collections" feature (user-curated themed groupings). Expanding to US (NYC Jan 2026) + electronics category. Vinted Pay wallet rolling out in smaller EU markets (NOT CZ yet). CZ trust issues persist (bots, scams, no human support per Trustpilot). UK sizing disaster reversed Jan 2026. **C37**: ~1M registered CZ members.
 - **CZ online fashion landscape (C37)**: Zalando dominates at 42% of Czech shoppers, About You at 40%, Zoot third at 26%. Foreign e-commerce giants reshaping Czech online fashion.
 - **No new CZ competitors** detected in curated women's second-hand niche as of April 2026. Market gap STILL OPEN.
 - **Global trends**: ThredUp AI image search is killer feature (81% say AI improved experience). Virtual try-on: +40% conversion, ~50% return reduction (Zara launched Jan 2026). Live commerce: 30% conversion vs 2-3% traditional.
+- **Google UCP (NEW C40)**: Google Universal Commerce Protocol (March 2026) enables AI agents to browse catalogs, compare, add to cart, and checkout directly. Supported by Shopify/Etsy/Wayfair/Target/Walmart. Foundation = complete Schema.org structured data. This is the FUTURE of product discovery — Janicka must have complete JSON-LD to be UCP-ready.
+- **Second-hand market (UPDATED C40)**: Global secondhand apparel $53.7B in 2026, forecast $154.3B by 2036. Online resale reaching $38B by 2027. Gen Z adopts resale 2.5x faster, 40% of closet is pre-owned. Asia-Pacific emerging as rapid growth hub.
+- **Cart abandonment crisis (NEW C40)**: Fashion has THE HIGHEST cart abandonment at 84.61%. Mobile: 78.74%. One-page checkout -20% abandonment. Apple Pay + Google Pay + guest checkout = 20-35% mobile improvement. 39% abandon due to unexpected costs. For unique second-hand items, abandoned cart emails with REAL urgency ("item can sell to someone else") are exceptionally effective.
 - **Janicka differentiator**: premium curation, Instagram-aesthetic UX, guaranteed quality, pro photos, on-body photography from day one (ahead of MegaSecondHand's gradual rollout), fast single-warehouse shipping
 - **Key message**: "My jsme to už zkontrolovali" — trust > price
-- **Anti-pattern**: NO fake countdown timers, NO flashing "limited stock". Sustainability-conscious 18-35 crowd hates manufactured urgency. Use HONEST scarcity (every item IS the last one).
+- **Anti-pattern**: NO fake countdown timers, NO flashing "limited stock". Sustainability-conscious 18-35 crowd hates manufactured urgency. Use HONEST scarcity (every item IS the last one). Research confirms: faking urgency backfires — customers catch it and question genuineness.
 - **Page speed target**: Sub-2.5s load (2.4s = 1.9% CR, 5.7s = 0.6% CR — 3x difference)
 - **Mobile grid**: 2 columns standard, thumb-friendly quick actions, bottom nav bar
-- **Second-hand market size**: Global $393B (ThredUp 2026 report), ~10% of total apparel spend. Growing 2-3x faster than first-hand (2025-2027). **C37**: Europe second-hand clothing market $35.33B (2026), projected $75.57B by 2034 (CAGR ~10%).
-- **Conversion benchmarks (C37)**: Fashion avg 3.01% CR. On-model photography: +33% conversion. 50+ reviews: 4.6x better. Personalization: +150% uplift. Sizing uncertainty = #1 return driver.
-- **Accessibility as differentiator (C37)**: EAA compliance is NOT just legal requirement — it's competitive advantage. NONE of the CZ second-hand competitors (Brumla, MegaSecondHand, Vinted CZ) appear to have made significant accessibility improvements. Being WCAG 2.1 AA compliant from launch positions Janicka as the most inclusive second-hand shop in CZ.
+- **Product page UX gap (NEW C40)**: Baymard 2026 benchmark — 62% of mobile fashion sites have "mediocre or worse" product page UX. Only 38% of mobile sites score "decent" or better. Short product videos (15-30s) consistently outperform static images on mobile. Fit/size info must be above fold. Sticky CTA mandatory.
+- **Conversion benchmarks (C37, UPDATED C40)**: Fashion avg 3.01% CR. Mobile: ~1.8% vs desktop ~3.9%. On-model photography: +33% conversion. 50+ reviews: 4.6x better. Personalization: +150% uplift. Sizing uncertainty = #1 return driver. Mobile drives 80% of retail visits but only 66% of orders — mobile UX optimization is THE conversion lever.
+- **Accessibility as differentiator (C37, UPDATED C40)**: While Janicka is EXEMPT from EAA as a micro-enterprise, accessibility remains a competitive advantage — NONE of the CZ second-hand competitors are WCAG-compliant. Implement incrementally as good UX practice, not as a legal rush.

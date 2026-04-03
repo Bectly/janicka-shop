@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { getVisitorId } from "@/lib/visitor";
 import { getLowestPrices30d } from "@/lib/price-history";
+import { buildItemListSchema, jsonLdString } from "@/lib/structured-data";
 
 export default async function HomePage() {
   const sevenDaysAgo = new Date();
@@ -49,8 +50,35 @@ export default async function HomePage() {
     return !!p.reservedUntil && p.reservedUntil > now && p.reservedBy !== visitorId;
   }
 
+  // Build JSON-LD structured data for product listings (SEO + AI search visibility)
+  const allDisplayedProducts = [...newProducts, ...featuredProducts];
+  const uniqueProducts = allDisplayedProducts.filter(
+    (p, i, arr) => arr.findIndex((x) => x.id === p.id) === i,
+  );
+
+  const itemListJsonLd = buildItemListSchema(
+    uniqueProducts.map((p) => ({
+      slug: p.slug,
+      name: p.name,
+      description: p.description,
+      images: p.images,
+      sku: p.sku,
+      brand: p.brand,
+      condition: p.condition,
+      price: p.price,
+      sold: p.sold,
+      categoryName: p.category.name,
+    })),
+    "Janička — Unikátní kousky za zlomek ceny",
+    "/",
+  );
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdString(itemListJsonLd) }}
+      />
       {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/30">
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8 lg:py-36">

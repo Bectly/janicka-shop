@@ -25,32 +25,34 @@ import {
   PacketaWidget,
   type PacketaPoint,
 } from "@/components/shop/packeta-widget";
+import {
+  SHIPPING_PRICES,
+  FREE_SHIPPING_THRESHOLD,
+  COD_SURCHARGE,
+} from "@/lib/constants";
 
 const emptySubscribe = () => () => {};
-
-const COD_SURCHARGE = 39;
-const FREE_SHIPPING_THRESHOLD = 1500;
 
 const SHIPPING_OPTIONS = [
   {
     id: "packeta_pickup" as const,
     label: "Zásilkovna — výdejní místo",
     description: "Vyzvednutí na vybraném místě, obvykle 2–3 dny",
-    price: 69,
+    price: SHIPPING_PRICES.packeta_pickup,
     icon: MapPin,
   },
   {
     id: "packeta_home" as const,
     label: "Zásilkovna — na adresu",
     description: "Doručení domů, obvykle 2–3 dny",
-    price: 99,
+    price: SHIPPING_PRICES.packeta_home,
     icon: Home,
   },
   {
     id: "czech_post" as const,
     label: "Česká pošta",
     description: "Doporučený balík, obvykle 3–5 dní",
-    price: 89,
+    price: SHIPPING_PRICES.czech_post,
     icon: Mail,
   },
 ] as const;

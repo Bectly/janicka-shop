@@ -3,6 +3,7 @@ import { ProductCard } from "@/components/shop/product-card";
 import { Search } from "lucide-react";
 import { rateLimitSearch } from "@/lib/rate-limit";
 import { getLowestPrices30d } from "@/lib/price-history";
+import { buildItemListSchema, jsonLdString } from "@/lib/structured-data";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -79,8 +80,34 @@ export default async function SearchPage({
     products.map((p) => p.id),
   );
 
+  const searchJsonLd =
+    query.length > 0 && products.length > 0
+      ? buildItemListSchema(
+          products.map((p) => ({
+            slug: p.slug,
+            name: p.name,
+            description: p.description,
+            images: p.images,
+            sku: p.sku,
+            brand: p.brand,
+            condition: p.condition,
+            price: p.price,
+            sold: p.sold,
+            categoryName: p.category.name,
+          })),
+          `Výsledky hledání: ${query}`,
+          `/search?q=${encodeURIComponent(query)}`,
+        )
+      : null;
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      {searchJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLdString(searchJsonLd) }}
+        />
+      )}
       <h1 className="sr-only">Vyhledávání</h1>
       {/* Search input */}
       <form action="/search" method="get" className="mx-auto max-w-xl">

@@ -9,17 +9,11 @@ import { ProductGallery } from "@/components/shop/product-gallery";
 import { AddToCartButton } from "@/components/shop/add-to-cart-button";
 import { getVisitorId } from "@/lib/visitor";
 import { getLowestPrices30d } from "@/lib/price-history";
+import { buildProductSchema, jsonLdString } from "@/lib/structured-data";
 import type { Metadata } from "next";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://janicka-shop.vercel.app";
-
-const CONDITION_TO_SCHEMA: Record<string, string> = {
-  new_with_tags: "https://schema.org/NewCondition",
-  excellent: "https://schema.org/UsedCondition",
-  good: "https://schema.org/UsedCondition",
-  visible_wear: "https://schema.org/UsedCondition",
-};
 
 const getProduct = cache(async (slug: string) => {
   return prisma.product.findUnique({
@@ -82,96 +76,43 @@ export default async function ProductDetailPage({ params }: Props) {
   try { productImages = JSON.parse(product.images); } catch { /* corrupted data fallback */ }
   const hasDiscount = product.compareAt && product.compareAt > product.price;
 
-  const [relatedProducts, lowestPricesMap] = await Promise.all([
-    prisma.product.findMany({
-      where: {
-        categoryId: product.categoryId,
-        id: { not: product.id },
-        active: true,
-        sold: false,
-      },
-      include: { category: { select: { name: true } } },
-      take: 4,
-    }),
-    getLowestPrices30d([product.id]),
-  ]);
+  const relatedProducts = await prisma.product.findMany({
+    where: {
+      categoryId: product.categoryId,
+      id: { not: product.id },
+      active: true,
+      sold: false,
+    },
+    include: { category: { select: { name: true } } },
+    take: 4,
+  });
 
+  const allIds = [product.id, ...relatedProducts.map((p) => p.id)];
+  const lowestPricesMap = await getLowestPrices30d(allIds);
   const lowestPrice30d = lowestPricesMap.get(product.id) ?? null;
 
-  // JSON-LD structured data for SEO
-  // Enhanced with shippingDetails + hasMerchantReturnPolicy for Google Shopping eligibility
+  // JSON-LD structured data for SEO (Google Shopping + AI search visibility)
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "Product",
-    name: product.name,
-    description: product.description,
-    image: productImages.length > 0 ? productImages : undefined,
-    sku: product.sku,
-    brand: product.brand
-      ? { "@type": "Brand", name: product.brand }
-      : undefined,
-    category: product.category.name,
-    itemCondition:
-      CONDITION_TO_SCHEMA[product.condition] ??
-      "https://schema.org/UsedCondition",
-    offers: {
-      "@type": "Offer",
-      url: `${BASE_URL}/products/${product.slug}`,
-      priceCurrency: "CZK",
+    ...buildProductSchema({
+      slug: product.slug,
+      name: product.name,
+      description: product.description,
+      images: product.images,
+      sku: product.sku,
+      brand: product.brand,
+      condition: product.condition,
       price: product.price,
-      availability: product.sold
-        ? "https://schema.org/SoldOut"
-        : "https://schema.org/InStock",
-      seller: {
-        "@type": "Organization",
-        name: "Janička",
-      },
-      shippingDetails: {
-        "@type": "OfferShippingDetails",
-        shippingRate: {
-          "@type": "MonetaryAmount",
-          value: "0",
-          currency: "CZK",
-        },
-        shippingDestination: {
-          "@type": "DefinedRegion",
-          addressCountry: "CZ",
-        },
-        deliveryTime: {
-          "@type": "ShippingDeliveryTime",
-          handlingTime: {
-            "@type": "QuantitativeValue",
-            minValue: 1,
-            maxValue: 2,
-            unitCode: "DAY",
-          },
-          transitTime: {
-            "@type": "QuantitativeValue",
-            minValue: 1,
-            maxValue: 3,
-            unitCode: "DAY",
-          },
-        },
-      },
-      hasMerchantReturnPolicy: {
-        "@type": "MerchantReturnPolicy",
-        applicableCountry: "CZ",
-        returnPolicyCategory:
-          "https://schema.org/MerchantReturnFiniteReturnWindow",
-        merchantReturnDays: 14,
-        returnMethod: "https://schema.org/ReturnByMail",
-        returnFees: "https://schema.org/ReturnShippingFees",
-      },
-    },
+      sold: product.sold,
+      categoryName: product.category.name,
+    }),
   };
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
-        }}
+        dangerouslySetInnerHTML={{ __html: jsonLdString(jsonLd) }}
       />
       {/* Breadcrumb */}
       <nav className="mb-6 text-sm text-muted-foreground">
@@ -290,6 +231,7 @@ export default async function ProductDetailPage({ params }: Props) {
                 categoryName={p.category.name}
                 brand={p.brand}
                 condition={p.condition}
+                lowestPrice30d={lowestPricesMap.get(p.id) ?? null}
               />
             ))}
           </div>
