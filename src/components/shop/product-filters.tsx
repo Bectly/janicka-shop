@@ -84,9 +84,10 @@ export function ProductFilters({
           )}
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-xs text-muted-foreground">Řazení:</label>
+          <label htmlFor="sort-select" className="text-xs text-muted-foreground">Řazení:</label>
           <div className="relative">
             <select
+              id="sort-select"
               value={activeSort}
               onChange={(e) => updateParams({ sort: e.target.value })}
               className="appearance-none rounded-lg border bg-background py-1.5 pl-3 pr-8 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -182,17 +183,18 @@ export function ProductFilters({
         )}
 
         {/* Condition filter */}
-        <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <fieldset>
+          <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Stav
-          </p>
-          <div className="flex flex-wrap gap-1.5">
+          </legend>
+          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filtr podle stavu">
             {Object.entries(CONDITION_LABELS).map(([key, label]) => (
               <button
                 key={key}
                 onClick={() =>
                   toggleMulti("condition", key, activeConditions)
                 }
+                aria-pressed={activeConditions.includes(key)}
                 className={`rounded-lg px-3 py-1 text-xs font-medium transition-colors ${
                   activeConditions.includes(key)
                     ? "bg-primary text-primary-foreground"
@@ -203,15 +205,17 @@ export function ProductFilters({
               </button>
             ))}
           </div>
-        </div>
+        </fieldset>
 
         {/* Price range */}
-        <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <fieldset>
+          <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Cena (Kč)
-          </p>
+          </legend>
           <div className="flex items-center gap-2">
+            <label htmlFor="filter-minPrice" className="sr-only">Minimální cena</label>
             <input
+              id="filter-minPrice"
               type="number"
               placeholder="od"
               defaultValue={minPrice}
@@ -224,8 +228,10 @@ export function ProductFilters({
               }}
               className="w-full rounded-lg border bg-background px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
-            <span className="text-xs text-muted-foreground">–</span>
+            <span className="text-xs text-muted-foreground" aria-hidden="true">–</span>
+            <label htmlFor="filter-maxPrice" className="sr-only">Maximální cena</label>
             <input
+              id="filter-maxPrice"
               type="number"
               placeholder="do"
               defaultValue={maxPrice}
@@ -239,13 +245,14 @@ export function ProductFilters({
               className="w-full rounded-lg border bg-background px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
           </div>
-        </div>
+        </fieldset>
       </div>
 
       {/* Sale toggle */}
       <div className="flex items-center gap-2">
         <button
           onClick={() => updateParams({ sale: saleOnly ? null : "true" })}
+          aria-pressed={saleOnly}
           className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
             saleOnly
               ? "bg-destructive/10 text-destructive"
