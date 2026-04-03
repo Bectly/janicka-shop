@@ -105,10 +105,7 @@ async function processPaymentStatus(
       if (currentOrderStatus === "pending") {
         const updated = await prisma.order.updateMany({
           where: { id: orderId, status: "pending" },
-          data: {
-            status: "paid",
-            paymentMethod: "comgate",
-          },
+          data: { status: "paid" },
         });
 
         // Send payment confirmed email (fire-and-forget)
@@ -139,7 +136,7 @@ async function processPaymentStatus(
           // Atomic status guard: only updates if still "pending"
           const updated = await tx.order.updateMany({
             where: { id: orderId, status: "pending" },
-            data: { status: "cancelled", paymentMethod: "comgate" },
+            data: { status: "cancelled" },
           });
           if (updated.count === 0) return; // Already advanced past pending
 
@@ -160,12 +157,6 @@ async function processPaymentStatus(
     }
     case "AUTHORIZED": {
       // Card authorized but not captured — keep as pending, will become PAID
-      if (currentOrderStatus === "pending") {
-        await prisma.order.updateMany({
-          where: { id: orderId, status: "pending" },
-          data: { paymentMethod: "comgate" },
-        });
-      }
       break;
     }
     // PENDING — no action needed, order already in pending state

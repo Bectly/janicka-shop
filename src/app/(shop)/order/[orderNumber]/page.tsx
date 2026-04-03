@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
-  comgate: "Online platba",
+  card: "Platba kartou",
   bank_transfer: "Bankovní převod",
   cod: "Dobírka",
 };
@@ -55,7 +55,7 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
   const isPending = order.status === "pending" && !isCod;
 
   // Generate QR payment code for bank transfer orders that are still pending
-  const isBankTransfer = order.paymentMethod === "comgate" || order.paymentMethod === "bank_transfer";
+  const isBankTransfer = order.paymentMethod === "bank_transfer";
   const showQr = isPending && isBankTransfer;
   let qrPayment: Awaited<ReturnType<typeof generateOrderQrPayment>> | null = null;
   if (showQr) {
@@ -68,7 +68,7 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6 lg:px-8">
-      <ClearCartOnMount />
+      <ClearCartOnMount orderedProductIds={order.items.map((i) => i.productId)} />
 
       {isPending ? (
         <Clock className="mx-auto size-16 text-amber-500" />

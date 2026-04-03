@@ -54,6 +54,17 @@ const checkoutSchema = z
   })
   .refine(
     (data) => {
+      // Second-hand: each product is unique — reject duplicate productIds
+      const ids = data.items.map((i) => i.productId);
+      return new Set(ids).size === ids.length;
+    },
+    {
+      message: "Duplicitní produkty v košíku",
+      path: ["items"],
+    }
+  )
+  .refine(
+    (data) => {
       // Address required for home delivery methods
       if (data.shippingMethod !== "packeta_pickup") {
         return (
@@ -289,7 +300,7 @@ export async function createOrder(
           accessToken,
           customerId: customer.id,
           status: "pending",
-          paymentMethod: isCod ? "cod" : "comgate",
+          paymentMethod: data.paymentMethod,
           subtotal,
           shipping,
           total,

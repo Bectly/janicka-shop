@@ -24,14 +24,19 @@ const SELLER = {
 const SHIPPING_DETAILS = {
   "@type": "OfferShippingDetails" as const,
   shippingRate: {
-    "@type": "MonetaryAmount" as const,
-    value: "69",
-    currency: "CZK",
-  },
-  freeShippingThreshold: {
-    "@type": "MonetaryAmount" as const,
-    value: "1500",
-    currency: "CZK",
+    "@type": "DeliveryChargeSpecification" as const,
+    price: "69",
+    priceCurrency: "CZK",
+    freeShippingThreshold: {
+      "@type": "DeliveryChargeSpecification" as const,
+      price: "0",
+      priceCurrency: "CZK",
+      eligibleTransactionVolume: {
+        "@type": "PriceSpecification" as const,
+        price: "1500",
+        priceCurrency: "CZK",
+      },
+    },
   },
   shippingDestination: {
     "@type": "DefinedRegion" as const,

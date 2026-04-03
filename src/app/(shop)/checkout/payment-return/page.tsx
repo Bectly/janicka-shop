@@ -55,7 +55,7 @@ export default async function PaymentReturnPage({ searchParams }: Props) {
       if (status.status === "PAID" && order.status === "pending") {
         await prisma.order.updateMany({
           where: { id: order.id, status: "pending" },
-          data: { status: "paid", paymentMethod: "comgate" },
+          data: { status: "paid" },
         });
         redirect(`/order/${order.orderNumber}?token=${order.accessToken}`);
       }
