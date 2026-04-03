@@ -44,7 +44,7 @@
 - [x] [BOLT] Products CRUD: list, create, edit, delete
 - [x] [BOLT] Orders management: list with status filters, detail with status update (color badges)
 - [x] [BOLT] Categories management: list, create, edit, delete
-- [ ] [BOLT] **IMAGE UPLOAD** — critical missing feature! Admin cannot upload product photos. Options: UploadThing (easiest, type-safe, managed S3) or Cloudinary (transforms + CDN but expensive). Recommendation: UploadThing for MVP, migrate to Cloudinary if needed. Must support mobile upload (Janička adds products from phone).
+- [ ] [BOLT] **IMAGE UPLOAD** — critical missing feature! Use UploadThing v7 (`uploadthing` + `@uploadthing/react`). Free tier: 2GB, unlimited uploads. Steps: (1) `npm install uploadthing @uploadthing/react`, (2) add `UPLOADTHING_TOKEN` to .env, (3) create file router `app/api/uploadthing/core.ts` with `productImage` endpoint (max 10 files, 4MB each, auth middleware), (4) create route handler `app/api/uploadthing/route.ts`, (5) add `NextSSRPlugin` to root layout, (6) wrap Tailwind config with `withUt`, (7) configure `next.config.ts` remotePatterns for `<APP_ID>.ufs.sh`, (8) use `UploadDropzone` in admin product form + store `file.ufsUrl` in Product.images. Must support mobile upload (Janička adds from phone — native camera picker works automatically).
 - [ ] [BOLT] Customers list with order history
 - [ ] [BOLT] Settings: shop info, payment config, shipping config
 - [ ] [TRACE] Admin CRUD tests
@@ -108,24 +108,36 @@
 - [ ] [GUARD] Rate limiting: @upstash/ratelimit + Vercel KV (Redis) for production. Apply to: checkout/order creation (5/min), login attempts (5/15min), search (30/min). Edge middleware approach for Vercel compatibility. Currently MEDIUM priority (flagged Cycle #19).
 - [ ] [GUARD] Security audit: CSRF, input sanitization, session security (security headers already done in Cycle #19)
 
-## Phase 9: Growth & Engagement [NEW — LEAD RESEARCH]
-- [ ] [LEAD] Saved search alerts — let users save filters (size + category + price range) and get email when matching new items arrive. This is Vinted's #1 most-requested missing feature. Major differentiator for a small CZ shop.
+## Phase 9: Growth & Engagement [UPDATED — LEAD RESEARCH C19]
+- [ ] [LEAD] Saved search alerts — let users save filters (size + category + price range) and get email when matching new items arrive. Vinted's #1 most-requested missing feature. Major differentiator.
 - [ ] [LEAD] "Nově přidané" drop strategy — batch new items, announce at consistent daily time (e.g., 18:00) to train repeat visits. Push/email notification to subscribers.
-- [ ] [LEAD] "Prodáno za X hodin" badges on sold items — shows demand, creates FOMO for similar items still available
+- [ ] [LEAD] "Právě prodáno" live feed on homepage — show recently sold items with "Prodáno za X hodin" badge. Proves items sell fast, creates honest FOMO for similar items still available. Unlike fake countdown timers — this is REAL social proof that resonates with sustainability-conscious 18-35 demographic.
 - [ ] [LEAD] Wishlist with notifications — notify when a favorited item's price drops or similar items arrive
-- [ ] [LEAD] Customer reviews / social proof on homepage — even 5 reviews can lift conversions ~270% per industry data
+- [ ] [LEAD] Customer reviews / social proof on homepage — even 5 reviews can lift conversions ~270% per industry data. Review sweet spot: 4.0-4.7 rating perceived as most credible.
+- [ ] [LEAD] Heureka.cz integration — THE critical Czech trust signal. Brumla (main competitor) has 99% Heureka rating. CZ shoppers actively check Heureka before buying. Implement verified reviews feed + XML product feed for Heureka zbožák.
 - [ ] [LEAD] Instagram integration — show real customers wearing purchased items (UGC social proof)
+- [ ] [LEAD] Messaging strategy: lean into "My jsme to už zkontrolovali, aby ses nemusela" — key differentiator vs Vinted (inconsistent quality, scams, random sellers). Janicka = curated quality, pro photos, guaranteed condition, single-warehouse fast shipping.
 
 ## Priority Order (Lead Recommendation — Updated Cycle #19)
-1. **Image upload** (Phase 4) — admin literally cannot add real products without this. UploadThing recommended for MVP (type-safe, managed S3, mobile-friendly). Free tier: 2GB storage, 200 uploads/month.
-2. **Product filters UI** (Phase 2) — brand, size, condition, price range. Filter params already wired in products page, need UI components.
+1. **Image upload** (Phase 4) — admin literally cannot add real products without this. UploadThing v7 (free: 2GB, unlimited uploads, ~4000 product photos).
+2. **Product filters UI** (Phase 2) — Size > Brand > Condition > Color > Price (accordion style, no page reload). Filter params already wired.
 3. **"Nově přidané" section** (Phase 2) — homepage query exists, needs prominent section + badge on cards
-4. **Multi-step checkout + Packeta** (Phase 3 + 6) — combine checkout redesign with Packeta widget integration. Widget v6 loads via single script tag, modal mode.
-5. **GoPay payment** (Phase 3) — REST API v3, OAuth 2.0. Plain `fetch` in Server Actions — no heavy SDK needed. Sandbox first.
-6. **Cart reservation** (Phase 3) — prevent double-sell anxiety. Must ship before payment goes live.
-7. **Cookie consent** (Phase 7) — lightweight custom implementation, no CMP needed. Must ship before any analytics/marketing scripts.
-8. **SEO structured data** (Phase 8) — Product JSON-LD with condition, price, availability. 20-40% CTR lift + AI search visibility.
-9. **Rate limiting** (Phase 8) — @upstash/ratelimit for checkout + login endpoints.
-10. **Email notifications** (Phase 6) — Resend + React Email templates for order confirmation flow.
-11. **Scarcity/urgency UX** (Phase 2) — "Poslední kus" badge (honest, every item IS the last one)
-12. **Saved search alerts** (Phase 9) — biggest competitive differentiator vs Vinted
+4. **Multi-step checkout + Packeta** (Phase 3 + 6) — combine checkout redesign with Packeta widget integration.
+5. **Payment gateway** (Phase 3) — GoPay or Comgate (Pick Page decision). Apple Pay is MUST-HAVE (20% of CZ card payments). 45% of CZ shoppers abandon without preferred payment method.
+6. **Cart reservation** (Phase 3) — prevent double-sell anxiety for qty=1 items. Must ship before payment.
+7. **Cookie consent** (Phase 7) — lightweight custom, must ship before any analytics scripts.
+8. **SEO structured data** (Phase 8) — Product JSON-LD. 20-40% CTR lift + AI search visibility.
+9. **Rate limiting** (Phase 8) — @upstash/ratelimit for checkout + login.
+10. **Email notifications** (Phase 6) — Resend + React Email templates for order confirmation.
+11. **Scarcity UX** (Phase 2) — "Unikátní kus" badges (honest, not fake urgency) + "Právě prodáno" feed.
+12. **Heureka.cz integration** (Phase 9) — critical CZ trust signal. Brumla has 99% rating.
+13. **Saved search alerts** (Phase 9) — biggest competitive differentiator vs Vinted.
+
+## Competitive Positioning (Lead Research C19)
+- **Closest competitor**: MegaSecondHand.cz (women-focused, 3500+ curated pieces)
+- **Largest**: Brumla.cz (10k new items 2x/week, 99% Heureka rating)
+- **Janicka differentiator**: premium curation, Instagram-aesthetic UX, guaranteed quality, pro photos, fast single-warehouse shipping
+- **Key message**: "My jsme to už zkontrolovali" — trust > price
+- **Anti-pattern**: NO fake countdown timers, NO flashing "limited stock". Sustainability-conscious 18-35 crowd hates manufactured urgency. Use HONEST scarcity (every item IS the last one).
+- **Page speed target**: Sub-2.5s load (2.4s = 1.9% CR, 5.7s = 0.6% CR — 3x difference)
+- **Mobile grid**: 2 columns standard, thumb-friendly quick actions, bottom nav bar

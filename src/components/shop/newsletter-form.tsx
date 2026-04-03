@@ -18,22 +18,22 @@ export function NewsletterForm() {
   }
 
   return (
-    <form action={action} className="mt-6 flex gap-2">
-      <input
-        type="email"
-        name="email"
-        placeholder="váš@email.cz"
-        className="flex-1 rounded-lg border bg-background px-4 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-        required
-      />
-      <Button type="submit" disabled={isPending}>
-        {isPending ? "Odesílám..." : "Odebírat"}
-      </Button>
+    <div className="mt-6">
+      <form action={action} className="flex gap-2">
+        <input
+          type="email"
+          name="email"
+          placeholder="váš@email.cz"
+          className="flex-1 rounded-lg border bg-background px-4 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+          required
+        />
+        <Button type="submit" disabled={isPending}>
+          {isPending ? "Odesílám..." : "Odebírat"}
+        </Button>
+      </form>
       {state && !state.success && (
-        <p className="absolute mt-12 text-xs text-destructive">
-          {state.message}
-        </p>
+        <p className="mt-2 text-xs text-destructive">{state.message}</p>
       )}
-    </form>
+    </div>
   );
 }

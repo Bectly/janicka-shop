@@ -210,16 +210,28 @@ export function ProductFilters({
             <input
               type="number"
               placeholder="od"
-              value={minPrice}
-              onChange={(e) => updateParams({ minPrice: e.target.value || null })}
+              defaultValue={minPrice}
+              onBlur={(e) => updateParams({ minPrice: e.target.value || null })}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  updateParams({ minPrice: e.currentTarget.value || null });
+                }
+              }}
               className="w-full rounded-lg border bg-background px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
             <span className="text-xs text-muted-foreground">–</span>
             <input
               type="number"
               placeholder="do"
-              value={maxPrice}
-              onChange={(e) => updateParams({ maxPrice: e.target.value || null })}
+              defaultValue={maxPrice}
+              onBlur={(e) => updateParams({ maxPrice: e.target.value || null })}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  updateParams({ maxPrice: e.currentTarget.value || null });
+                }
+              }}
               className="w-full rounded-lg border bg-background px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
           </div>
