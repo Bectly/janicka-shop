@@ -15,7 +15,11 @@ export default async function HomePage() {
     }),
     prisma.category.findMany({
       orderBy: { sortOrder: "asc" },
-      include: { _count: { select: { products: true } } },
+      include: {
+        _count: {
+          select: { products: { where: { active: true, sold: false } } },
+        },
+      },
     }),
   ]);
 

@@ -25,12 +25,24 @@ const checkoutSchema = z.object({
   ).min(1, "Košík je prázdný"),
 });
 
+class UnavailableError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "UnavailableError";
+  }
+}
+
 function generateOrderNumber(): string {
   const now = new Date();
   const y = now.getFullYear().toString().slice(-2);
   const m = (now.getMonth() + 1).toString().padStart(2, "0");
   const d = now.getDate().toString().padStart(2, "0");
-  const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
+  // 8 random chars for ~2.8 trillion combinations — prevents order URL enumeration
+  const rand = Array.from(crypto.getRandomValues(new Uint8Array(5)))
+    .map((b) => b.toString(36).padStart(2, "0"))
+    .join("")
+    .slice(0, 8)
+    .toUpperCase();
   return `JN-${y}${m}${d}-${rand}`;
 }
 
@@ -76,92 +88,111 @@ export async function createOrder(
   }
 
   const data = result.data;
-
-  // Verify all products are still available
   const productIds = data.items.map((i) => i.productId);
-  const products = await prisma.product.findMany({
-    where: { id: { in: productIds }, active: true, sold: false },
-  });
 
-  const availableIds = new Set(products.map((p) => p.id));
-  const unavailable = data.items.filter((i) => !availableIds.has(i.productId));
-  if (unavailable.length > 0) {
-    const names = unavailable.map((i) => i.name).join(", ");
-    return {
-      error: `Tyto produkty už bohužel nejsou dostupné: ${names}. Odeberte je z košíku a zkuste to znovu.`,
-      fieldErrors: {},
-    };
-  }
+  // Use a transaction to prevent double-sell race conditions.
+  // Inside the transaction: verify availability, use DB prices (never trust client), create order, mark sold.
+  let order;
+  try {
+    order = await prisma.$transaction(async (tx) => {
+      // Verify all products are still available (authoritative check inside transaction)
+      const products = await tx.product.findMany({
+        where: { id: { in: productIds }, active: true, sold: false },
+      });
 
-  // Calculate totals
-  const subtotal = data.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  const shipping = 0; // Free shipping for now, Packeta will come later
-  const total = subtotal + shipping;
+      const productMap = new Map(products.map((p) => [p.id, p]));
+      const unavailable = data.items.filter((i) => !productMap.has(i.productId));
+      if (unavailable.length > 0) {
+        const names = unavailable.map((i) => i.name).join(", ");
+        throw new UnavailableError(
+          `Tyto produkty už bohužel nejsou dostupné: ${names}. Odeberte je z košíku a zkuste to znovu.`
+        );
+      }
 
-  // Create or find customer
-  let customer = await prisma.customer.findUnique({
-    where: { email: data.email },
-  });
+      // Use server-side prices from DB — never trust client-provided prices
+      const subtotal = data.items.reduce((sum, i) => {
+        const dbProduct = productMap.get(i.productId)!;
+        return sum + dbProduct.price * 1; // qty is always 1 for second-hand
+      }, 0);
+      const shipping = 0; // Free shipping for now, Packeta will come later
+      const total = subtotal + shipping;
 
-  if (customer) {
-    customer = await prisma.customer.update({
-      where: { id: customer.id },
-      data: {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        phone: data.phone,
-        street: data.street,
-        city: data.city,
-        zip: data.zip,
-      },
+      // Create or find customer
+      let customer = await tx.customer.findUnique({
+        where: { email: data.email },
+      });
+
+      if (customer) {
+        customer = await tx.customer.update({
+          where: { id: customer.id },
+          data: {
+            firstName: data.firstName,
+            lastName: data.lastName,
+            phone: data.phone,
+            street: data.street,
+            city: data.city,
+            zip: data.zip,
+          },
+        });
+      } else {
+        customer = await tx.customer.create({
+          data: {
+            email: data.email,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            phone: data.phone,
+            street: data.street,
+            city: data.city,
+            zip: data.zip,
+          },
+        });
+      }
+
+      // Create order with DB-sourced prices
+      const orderNumber = generateOrderNumber();
+      const created = await tx.order.create({
+        data: {
+          orderNumber,
+          customerId: customer.id,
+          status: "pending",
+          subtotal,
+          shipping,
+          total,
+          note: data.note ?? null,
+          shippingName: `${data.firstName} ${data.lastName}`,
+          shippingStreet: data.street,
+          shippingCity: data.city,
+          shippingZip: data.zip,
+          items: {
+            create: data.items.map((item) => {
+              const dbProduct = productMap.get(item.productId)!;
+              return {
+                productId: item.productId,
+                name: dbProduct.name,
+                price: dbProduct.price,
+                quantity: 1,
+                size: item.size,
+                color: item.color,
+              };
+            }),
+          },
+        },
+      });
+
+      // Mark products as sold (second-hand: each piece is unique)
+      await tx.product.updateMany({
+        where: { id: { in: productIds } },
+        data: { sold: true, stock: 0 },
+      });
+
+      return created;
     });
-  } else {
-    customer = await prisma.customer.create({
-      data: {
-        email: data.email,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        phone: data.phone,
-        street: data.street,
-        city: data.city,
-        zip: data.zip,
-      },
-    });
+  } catch (e) {
+    if (e instanceof UnavailableError) {
+      return { error: e.message, fieldErrors: {} };
+    }
+    throw e;
   }
-
-  // Create order
-  const orderNumber = generateOrderNumber();
-  const order = await prisma.order.create({
-    data: {
-      orderNumber,
-      customerId: customer.id,
-      status: "pending",
-      subtotal,
-      shipping,
-      total,
-      note: data.note ?? null,
-      shippingName: `${data.firstName} ${data.lastName}`,
-      shippingStreet: data.street,
-      shippingCity: data.city,
-      shippingZip: data.zip,
-      items: {
-        create: data.items.map((item) => ({
-          productId: item.productId,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          size: item.size,
-          color: item.color,
-        })),
-      },
-    },
-  });
-
-  // Mark products as sold (second-hand: each piece is unique)
-  await prisma.product.updateMany({
-    where: { id: { in: productIds } },
-    data: { sold: true, stock: 0 },
-  });
 
   redirect(`/order/${order.orderNumber}`);
 }
