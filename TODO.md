@@ -44,7 +44,7 @@
 - [x] [BOLT] Products CRUD: list, create, edit, delete
 - [x] [BOLT] Orders management: list with status filters, detail with status update (color badges)
 - [x] [BOLT] Categories management: list, create, edit, delete
-- [ ] [BOLT] **IMAGE UPLOAD** — critical missing feature! Use UploadThing v7 (`uploadthing` + `@uploadthing/react`). Free tier: 2GB, unlimited uploads. Steps: (1) `npm install uploadthing @uploadthing/react`, (2) add `UPLOADTHING_TOKEN` to .env, (3) create file router `app/api/uploadthing/core.ts` with `productImage` endpoint (max 10 files, 4MB each, auth middleware), (4) create route handler `app/api/uploadthing/route.ts`, (5) add `NextSSRPlugin` to root layout, (6) wrap Tailwind config with `withUt`, (7) configure `next.config.ts` remotePatterns for `<APP_ID>.ufs.sh`, (8) use `UploadDropzone` in admin product form + store `file.ufsUrl` in Product.images. Must support mobile upload (Janička adds from phone — native camera picker works automatically).
+- [x] [BOLT] **IMAGE UPLOAD** — UploadThing v7 integration. File router with auth middleware (max 10 files, 4MB each), admin ImageUpload component with drag-to-reorder + delete + preview, ProductCard renders real images via next/image, ProductGallery on detail page with thumbnails + arrow nav. NextSSRPlugin in root layout, Tailwind v4 CSS import, next.config.ts remotePatterns for ufs.sh. Mobile upload works via native camera picker.
 - [ ] [BOLT] Customers list with order history
 - [ ] [BOLT] Settings: shop info, payment config, shipping config
 - [ ] [TRACE] Admin CRUD tests
