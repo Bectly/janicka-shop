@@ -1,29 +1,58 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback } from "react";
-import { X, SlidersHorizontal, ChevronDown } from "lucide-react";
-import { CONDITION_LABELS } from "@/lib/constants";
+import { X, SlidersHorizontal, ChevronDown, Check } from "lucide-react";
+import { CONDITION_LABELS, COLOR_MAP } from "@/lib/constants";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+} from "@/components/ui/sheet";
+
+interface FilterCounts {
+  brands: Record<string, number>;
+  sizes: Record<string, number>;
+  conditions: Record<string, number>;
+  colors: Record<string, number>;
+}
 
 interface ProductFiltersProps {
   brands: string[];
   sizes: string[];
+  colors: string[];
   categories: { slug: string; name: string }[];
+  counts: FilterCounts;
+  totalFiltered: number;
+}
+
+/** Czech plural for "produkt" */
+function productPlural(n: number): string {
+  if (n === 1) return "produkt";
+  if (n >= 2 && n <= 4) return "produkty";
+  return "produktů";
 }
 
 export function ProductFilters({
   brands,
   sizes,
+  colors,
   categories,
+  counts,
+  totalFiltered,
 }: ProductFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const activeCategory = searchParams.get("category") ?? "";
   const activeSort = searchParams.get("sort") ?? "newest";
   const activeBrands = searchParams.getAll("brand");
   const activeSizes = searchParams.getAll("size");
   const activeConditions = searchParams.getAll("condition");
+  const activeColors = searchParams.getAll("color");
   const minPrice = searchParams.get("minPrice") ?? "";
   const maxPrice = searchParams.get("maxPrice") ?? "";
   const saleOnly = searchParams.get("sale") === "true";
@@ -31,7 +60,6 @@ export function ProductFilters({
   const updateParams = useCallback(
     (updates: Record<string, string | string[] | null>) => {
       const params = new URLSearchParams(searchParams.toString());
-      // Reset to page 1 when filters change
       params.delete("page");
       for (const [key, value] of Object.entries(updates)) {
         params.delete(key);
@@ -65,265 +93,404 @@ export function ProductFilters({
     activeBrands.length +
     activeSizes.length +
     activeConditions.length +
+    activeColors.length +
     (minPrice ? 1 : 0) +
     (maxPrice ? 1 : 0) +
     (saleOnly ? 1 : 0) +
     (activeCategory ? 1 : 0);
 
-  return (
-    <div className="space-y-6">
-      {/* Sort + filter count header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <SlidersHorizontal className="size-4 text-muted-foreground" />
-          <span className="text-sm font-medium text-foreground">Filtry</span>
-          {activeFilterCount > 0 && (
-            <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground">
-              {activeFilterCount}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <label htmlFor="sort-select" className="text-xs text-muted-foreground">Řazení:</label>
-          <div className="relative">
-            <select
-              id="sort-select"
-              value={activeSort}
-              onChange={(e) => updateParams({ sort: e.target.value })}
-              className="appearance-none rounded-lg border bg-background py-1.5 pl-3 pr-8 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-            >
-              <option value="newest">Nejnovější</option>
-              <option value="price-asc">Cena: od nejnižší</option>
-              <option value="price-desc">Cena: od nejvyšší</option>
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-          </div>
-        </div>
-      </div>
+  // --- Shared filter sections (used in both desktop inline and mobile drawer) ---
 
-      {/* Category pills */}
-      <div className="flex flex-wrap gap-2" role="group" aria-label="Kategorie">
+  const categoryPills = (
+    <div className="flex flex-wrap gap-2" role="group" aria-label="Kategorie">
+      <button
+        onClick={() => updateParams({ category: null })}
+        aria-pressed={!activeCategory}
+        className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+          !activeCategory
+            ? "bg-primary text-primary-foreground"
+            : "bg-muted text-muted-foreground hover:bg-muted/80"
+        }`}
+      >
+        Vše
+      </button>
+      {categories.map((cat) => (
         <button
-          onClick={() => updateParams({ category: null })}
-          aria-pressed={!activeCategory}
+          key={cat.slug}
+          onClick={() => updateParams({ category: cat.slug })}
+          aria-pressed={activeCategory === cat.slug}
           className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-            !activeCategory
+            activeCategory === cat.slug
               ? "bg-primary text-primary-foreground"
               : "bg-muted text-muted-foreground hover:bg-muted/80"
           }`}
         >
-          Vše
+          {cat.name}
         </button>
-        {categories.map((cat) => (
-          <button
-            key={cat.slug}
-            onClick={() => updateParams({ category: cat.slug })}
-            aria-pressed={activeCategory === cat.slug}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-              activeCategory === cat.slug
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
-            }`}
-          >
-            {cat.name}
-          </button>
-        ))}
-      </div>
-
-      {/* Filter groups */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Brand filter */}
-        {brands.length > 0 && (
-          <fieldset>
-            <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Značka
-            </legend>
-            <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filtr podle značky">
-              {brands.map((brand) => (
-                <button
-                  key={brand}
-                  onClick={() => toggleMulti("brand", brand, activeBrands)}
-                  aria-pressed={activeBrands.includes(brand)}
-                  className={`rounded-lg px-3 py-1 text-xs font-medium transition-colors ${
-                    activeBrands.includes(brand)
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  }`}
-                >
-                  {brand}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-        )}
-
-        {/* Size filter */}
-        {sizes.length > 0 && (
-          <fieldset>
-            <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Velikost
-            </legend>
-            <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filtr podle velikosti">
-              {sizes.map((size) => (
-                <button
-                  key={size}
-                  onClick={() => toggleMulti("size", size, activeSizes)}
-                  aria-pressed={activeSizes.includes(size)}
-                  className={`min-w-[2.5rem] rounded-lg px-2.5 py-1 text-center text-xs font-medium transition-colors ${
-                    activeSizes.includes(size)
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  }`}
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-        )}
-
-        {/* Condition filter */}
-        <fieldset>
-          <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Stav
-          </legend>
-          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filtr podle stavu">
-            {Object.entries(CONDITION_LABELS).map(([key, label]) => (
-              <button
-                key={key}
-                onClick={() =>
-                  toggleMulti("condition", key, activeConditions)
-                }
-                aria-pressed={activeConditions.includes(key)}
-                className={`rounded-lg px-3 py-1 text-xs font-medium transition-colors ${
-                  activeConditions.includes(key)
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </fieldset>
-
-        {/* Price range */}
-        <fieldset>
-          <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Cena (Kč)
-          </legend>
-          <div className="flex items-center gap-2">
-            <label htmlFor="filter-minPrice" className="sr-only">Minimální cena</label>
-            <input
-              id="filter-minPrice"
-              type="number"
-              placeholder="od"
-              defaultValue={minPrice}
-              onBlur={(e) => updateParams({ minPrice: e.target.value || null })}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  updateParams({ minPrice: e.currentTarget.value || null });
-                }
-              }}
-              className="w-full rounded-lg border bg-background px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-            <span className="text-xs text-muted-foreground" aria-hidden="true">–</span>
-            <label htmlFor="filter-maxPrice" className="sr-only">Maximální cena</label>
-            <input
-              id="filter-maxPrice"
-              type="number"
-              placeholder="do"
-              defaultValue={maxPrice}
-              onBlur={(e) => updateParams({ maxPrice: e.target.value || null })}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  updateParams({ maxPrice: e.currentTarget.value || null });
-                }
-              }}
-              className="w-full rounded-lg border bg-background px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-          </div>
-        </fieldset>
-      </div>
-
-      {/* Sale toggle */}
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() => updateParams({ sale: saleOnly ? null : "true" })}
-          aria-pressed={saleOnly}
-          className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-            saleOnly
-              ? "bg-destructive/10 text-destructive"
-              : "bg-muted text-muted-foreground hover:bg-muted/80"
-          }`}
-        >
-          Pouze ve slevě
-        </button>
-      </div>
-
-      {/* Active filter chips */}
-      {activeFilterCount > 0 && (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-muted-foreground">Aktivní filtry:</span>
-          {activeCategory && (
-            <FilterChip
-              label={
-                categories.find((c) => c.slug === activeCategory)?.name ??
-                activeCategory
-              }
-              onRemove={() => updateParams({ category: null })}
-            />
-          )}
-          {activeBrands.map((b) => (
-            <FilterChip
-              key={`brand-${b}`}
-              label={b}
-              onRemove={() => toggleMulti("brand", b, activeBrands)}
-            />
-          ))}
-          {activeSizes.map((s) => (
-            <FilterChip
-              key={`size-${s}`}
-              label={`Vel. ${s}`}
-              onRemove={() => toggleMulti("size", s, activeSizes)}
-            />
-          ))}
-          {activeConditions.map((c) => (
-            <FilterChip
-              key={`cond-${c}`}
-              label={CONDITION_LABELS[c] ?? c}
-              onRemove={() => toggleMulti("condition", c, activeConditions)}
-            />
-          ))}
-          {minPrice && (
-            <FilterChip
-              label={`od ${minPrice} Kč`}
-              onRemove={() => updateParams({ minPrice: null })}
-            />
-          )}
-          {maxPrice && (
-            <FilterChip
-              label={`do ${maxPrice} Kč`}
-              onRemove={() => updateParams({ maxPrice: null })}
-            />
-          )}
-          {saleOnly && (
-            <FilterChip
-              label="Ve slevě"
-              onRemove={() => updateParams({ sale: null })}
-            />
-          )}
-          <button
-            onClick={clearAll}
-            className="text-xs font-medium text-destructive hover:underline"
-          >
-            Smazat vše
-          </button>
-        </div>
-      )}
+      ))}
     </div>
+  );
+
+  const brandFilter = brands.length > 0 && (
+    <fieldset>
+      <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        Značka
+      </legend>
+      <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filtr podle značky">
+        {brands.map((brand) => {
+          const count = counts.brands[brand] ?? 0;
+          const isActive = activeBrands.includes(brand);
+          const isDisabled = count === 0 && !isActive;
+          return (
+            <button
+              key={brand}
+              onClick={() => !isDisabled && toggleMulti("brand", brand, activeBrands)}
+              aria-pressed={isActive}
+              aria-disabled={isDisabled}
+              className={`rounded-lg px-3 py-1 text-xs font-medium transition-colors ${
+                isActive
+                  ? "bg-primary text-primary-foreground"
+                  : isDisabled
+                    ? "bg-muted/50 text-muted-foreground/40 cursor-not-allowed"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              {brand}
+              <span className="ml-1 opacity-60">({count})</span>
+            </button>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+
+  const sizeFilterSection = sizes.length > 0 && (
+    <fieldset>
+      <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        Velikost
+      </legend>
+      <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filtr podle velikosti">
+        {sizes.map((size) => {
+          const count = counts.sizes[size] ?? 0;
+          const isActive = activeSizes.includes(size);
+          const isDisabled = count === 0 && !isActive;
+          return (
+            <button
+              key={size}
+              onClick={() => !isDisabled && toggleMulti("size", size, activeSizes)}
+              aria-pressed={isActive}
+              aria-disabled={isDisabled}
+              className={`min-w-[2.5rem] rounded-lg px-2.5 py-1 text-center text-xs font-medium transition-colors ${
+                isActive
+                  ? "bg-primary text-primary-foreground"
+                  : isDisabled
+                    ? "bg-muted/50 text-muted-foreground/40 cursor-not-allowed"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              {size}
+              <span className="ml-0.5 opacity-60">({count})</span>
+            </button>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+
+  const colorFilterSection = colors.length > 0 && (
+    <fieldset>
+      <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        Barva
+      </legend>
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Filtr podle barvy">
+        {colors.map((color) => {
+          const count = counts.colors[color] ?? 0;
+          const isActive = activeColors.includes(color);
+          const isDisabled = count === 0 && !isActive;
+          const hex = COLOR_MAP[color] ?? "#9CA3AF";
+          const isLight = hex === "#FFFFFF" || hex === "#FFFDD0";
+          return (
+            <button
+              key={color}
+              onClick={() => !isDisabled && toggleMulti("color", color, activeColors)}
+              aria-pressed={isActive}
+              aria-disabled={isDisabled}
+              aria-label={`${color} (${count})`}
+              title={`${color} (${count})`}
+              className={`group relative flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium transition-colors ${
+                isActive
+                  ? "bg-primary/10 ring-2 ring-primary"
+                  : isDisabled
+                    ? "opacity-40 cursor-not-allowed"
+                    : "hover:bg-muted/80"
+              }`}
+            >
+              <span
+                className={`inline-block size-5 shrink-0 rounded-full border ${isLight ? "border-gray-300" : "border-transparent"}`}
+                style={{ backgroundColor: hex }}
+              >
+                {isActive && (
+                  <Check className={`size-5 p-0.5 ${isLight ? "text-gray-700" : "text-white"}`} />
+                )}
+              </span>
+              <span className={isDisabled ? "text-muted-foreground/40" : "text-muted-foreground"}>
+                {color}
+                <span className="ml-0.5 opacity-60">({count})</span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+
+  const conditionFilterSection = (
+    <fieldset>
+      <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        Stav
+      </legend>
+      <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filtr podle stavu">
+        {Object.entries(CONDITION_LABELS).map(([key, label]) => {
+          const count = counts.conditions[key] ?? 0;
+          const isActive = activeConditions.includes(key);
+          const isDisabled = count === 0 && !isActive;
+          return (
+            <button
+              key={key}
+              onClick={() => !isDisabled && toggleMulti("condition", key, activeConditions)}
+              aria-pressed={isActive}
+              aria-disabled={isDisabled}
+              className={`rounded-lg px-3 py-1 text-xs font-medium transition-colors ${
+                isActive
+                  ? "bg-primary text-primary-foreground"
+                  : isDisabled
+                    ? "bg-muted/50 text-muted-foreground/40 cursor-not-allowed"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              {label}
+              <span className="ml-1 opacity-60">({count})</span>
+            </button>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+
+  const priceFilterSection = (
+    <fieldset>
+      <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        Cena (Kč)
+      </legend>
+      <div className="flex items-center gap-2">
+        <label htmlFor="filter-minPrice" className="sr-only">Minimální cena</label>
+        <input
+          id="filter-minPrice"
+          type="number"
+          placeholder="od"
+          defaultValue={minPrice}
+          onBlur={(e) => updateParams({ minPrice: e.target.value || null })}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              updateParams({ minPrice: e.currentTarget.value || null });
+            }
+          }}
+          className="w-full rounded-lg border bg-background px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+        />
+        <span className="text-xs text-muted-foreground" aria-hidden="true">–</span>
+        <label htmlFor="filter-maxPrice" className="sr-only">Maximální cena</label>
+        <input
+          id="filter-maxPrice"
+          type="number"
+          placeholder="do"
+          defaultValue={maxPrice}
+          onBlur={(e) => updateParams({ maxPrice: e.target.value || null })}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              updateParams({ maxPrice: e.currentTarget.value || null });
+            }
+          }}
+          className="w-full rounded-lg border bg-background px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+        />
+      </div>
+    </fieldset>
+  );
+
+  const saleToggle = (
+    <button
+      onClick={() => updateParams({ sale: saleOnly ? null : "true" })}
+      aria-pressed={saleOnly}
+      className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+        saleOnly
+          ? "bg-destructive/10 text-destructive"
+          : "bg-muted text-muted-foreground hover:bg-muted/80"
+      }`}
+    >
+      Pouze ve slevě
+    </button>
+  );
+
+  const activeFilterChips = activeFilterCount > 0 && (
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="text-xs text-muted-foreground">Aktivní filtry:</span>
+      {activeCategory && (
+        <FilterChip
+          label={categories.find((c) => c.slug === activeCategory)?.name ?? activeCategory}
+          onRemove={() => updateParams({ category: null })}
+        />
+      )}
+      {activeBrands.map((b) => (
+        <FilterChip key={`brand-${b}`} label={b} onRemove={() => toggleMulti("brand", b, activeBrands)} />
+      ))}
+      {activeSizes.map((s) => (
+        <FilterChip key={`size-${s}`} label={`Vel. ${s}`} onRemove={() => toggleMulti("size", s, activeSizes)} />
+      ))}
+      {activeColors.map((c) => (
+        <FilterChip key={`color-${c}`} label={c} onRemove={() => toggleMulti("color", c, activeColors)} />
+      ))}
+      {activeConditions.map((c) => (
+        <FilterChip key={`cond-${c}`} label={CONDITION_LABELS[c] ?? c} onRemove={() => toggleMulti("condition", c, activeConditions)} />
+      ))}
+      {minPrice && <FilterChip label={`od ${minPrice} Kč`} onRemove={() => updateParams({ minPrice: null })} />}
+      {maxPrice && <FilterChip label={`do ${maxPrice} Kč`} onRemove={() => updateParams({ maxPrice: null })} />}
+      {saleOnly && <FilterChip label="Ve slevě" onRemove={() => updateParams({ sale: null })} />}
+      <button onClick={clearAll} className="text-xs font-medium text-destructive hover:underline">
+        Smazat vše
+      </button>
+    </div>
+  );
+
+  const sortDropdown = (
+    <div className="flex items-center gap-2">
+      <label htmlFor="sort-select" className="text-xs text-muted-foreground">Řazení:</label>
+      <div className="relative">
+        <select
+          id="sort-select"
+          value={activeSort}
+          onChange={(e) => updateParams({ sort: e.target.value })}
+          className="appearance-none rounded-lg border bg-background py-1.5 pl-3 pr-8 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+        >
+          <option value="newest">Nejnovější</option>
+          <option value="price-asc">Cena: od nejnižší</option>
+          <option value="price-desc">Cena: od nejvyšší</option>
+        </select>
+        <ChevronDown className="pointer-events-none absolute right-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+      </div>
+    </div>
+  );
+
+  const filterGroups = (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {brandFilter}
+      {sizeFilterSection}
+      {colorFilterSection}
+      {conditionFilterSection}
+      {priceFilterSection}
+    </div>
+  );
+
+  return (
+    <>
+      {/* ===== DESKTOP: inline filters (hidden on mobile) ===== */}
+      <div className="hidden lg:block space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <SlidersHorizontal className="size-4 text-muted-foreground" />
+            <span className="text-sm font-medium text-foreground">Filtry</span>
+            {activeFilterCount > 0 && (
+              <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground">
+                {activeFilterCount}
+              </span>
+            )}
+          </div>
+          {sortDropdown}
+        </div>
+        {categoryPills}
+        {filterGroups}
+        <div className="flex items-center gap-2">{saleToggle}</div>
+        {activeFilterChips}
+      </div>
+
+      {/* ===== MOBILE: compact bar + drawer (hidden on desktop) ===== */}
+      <div className="lg:hidden space-y-4">
+        {/* Top bar: filter trigger + sort */}
+        <div className="flex items-center justify-between gap-3">
+          <button
+            onClick={() => setIsDrawerOpen(true)}
+            className="inline-flex items-center gap-2 rounded-lg border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+          >
+            <SlidersHorizontal className="size-4" />
+            Filtry
+            {activeFilterCount > 0 && (
+              <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+          {sortDropdown}
+        </div>
+
+        {/* Category pills (always visible on mobile) */}
+        {categoryPills}
+
+        {/* Active filter chips (visible after closing drawer) */}
+        {activeFilterChips}
+
+        {/* Mobile filter drawer */}
+        <Sheet open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+          <SheetContent
+            side="bottom"
+            showCloseButton={false}
+            className="!h-[85vh] rounded-t-2xl"
+          >
+            <SheetHeader className="flex-row items-center justify-between border-b pb-3">
+              <SheetTitle>Filtry</SheetTitle>
+              <button
+                onClick={() => setIsDrawerOpen(false)}
+                className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted"
+                aria-label="Zavřít filtry"
+              >
+                <X className="size-5" />
+              </button>
+            </SheetHeader>
+
+            {/* Scrollable filter content */}
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
+              {brandFilter}
+              {sizeFilterSection}
+              {colorFilterSection}
+              {conditionFilterSection}
+              {priceFilterSection}
+              <div className="flex items-center gap-2">{saleToggle}</div>
+            </div>
+
+            {/* Sticky footer with product count */}
+            <SheetFooter className="border-t pt-3">
+              <button
+                onClick={() => setIsDrawerOpen(false)}
+                className="w-full rounded-xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                style={{ minHeight: "56px" }}
+              >
+                Zobrazit {totalFiltered} {productPlural(totalFiltered)}
+              </button>
+              {activeFilterCount > 0 && (
+                <button
+                  onClick={() => {
+                    clearAll();
+                    setIsDrawerOpen(false);
+                  }}
+                  className="w-full py-2 text-sm font-medium text-destructive hover:underline"
+                >
+                  Smazat všechny filtry
+                </button>
+              )}
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
+      </div>
+    </>
   );
 }
 

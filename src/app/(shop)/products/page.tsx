@@ -28,9 +28,61 @@ interface SearchParams {
   brand?: string | string[];
   size?: string | string[];
   condition?: string | string[];
+  color?: string | string[];
   minPrice?: string;
   maxPrice?: string;
   page?: string;
+}
+
+/** Safely parse a JSON string array, returning [] on failure. */
+function parseJsonArray(json: string): string[] {
+  try { return JSON.parse(json); } catch { return []; }
+}
+
+/** Compute faceted filter counts from all products. Each facet count excludes its own filter. */
+function computeFilterCounts(
+  products: { brand: string | null; sizes: string; colors: string; condition: string; price: number; compareAt: number | null; category: { slug: string } }[],
+  filters: { category?: string; sale?: string; brands: string[]; sizes: string[]; conditions: string[]; colors: string[]; minPrice: number | null; maxPrice: number | null },
+) {
+  const brandCounts: Record<string, number> = {};
+  const sizeCounts: Record<string, number> = {};
+  const conditionCounts: Record<string, number> = {};
+  const colorCounts: Record<string, number> = {};
+
+  for (const p of products) {
+    // Base filters (category, sale, price) — always applied
+    if (filters.category && p.category.slug !== filters.category) continue;
+    if (filters.sale === "true" && !p.compareAt) continue;
+    if (filters.minPrice !== null && p.price < filters.minPrice) continue;
+    if (filters.maxPrice !== null && p.price > filters.maxPrice) continue;
+
+    const pSizes = parseJsonArray(p.sizes);
+    const pColors = parseJsonArray(p.colors);
+
+    const matchesBrand = filters.brands.length === 0 || (!!p.brand && filters.brands.includes(p.brand));
+    const matchesSize = filters.sizes.length === 0 || filters.sizes.some((s) => pSizes.includes(s));
+    const matchesCond = filters.conditions.length === 0 || filters.conditions.includes(p.condition);
+    const matchesColor = filters.colors.length === 0 || filters.colors.some((c) => pColors.includes(c));
+
+    // Brand counts: all filters EXCEPT brand
+    if (matchesSize && matchesCond && matchesColor && p.brand) {
+      brandCounts[p.brand] = (brandCounts[p.brand] ?? 0) + 1;
+    }
+    // Size counts: all filters EXCEPT size
+    if (matchesBrand && matchesCond && matchesColor) {
+      for (const s of pSizes) if (s) sizeCounts[s] = (sizeCounts[s] ?? 0) + 1;
+    }
+    // Condition counts: all filters EXCEPT condition
+    if (matchesBrand && matchesSize && matchesColor) {
+      conditionCounts[p.condition] = (conditionCounts[p.condition] ?? 0) + 1;
+    }
+    // Color counts: all filters EXCEPT color
+    if (matchesBrand && matchesSize && matchesCond) {
+      for (const c of pColors) if (c) colorCounts[c] = (colorCounts[c] ?? 0) + 1;
+    }
+  }
+
+  return { brands: brandCounts, sizes: sizeCounts, conditions: conditionCounts, colors: colorCounts };
 }
 
 function toArray(v: string | string[] | undefined): string[] {
@@ -49,6 +101,7 @@ export default async function ProductsPage({
   const brandFilter = toArray(params.brand);
   const sizeFilter = toArray(params.size);
   const conditionFilter = toArray(params.condition);
+  const colorFilter = toArray(params.color);
   const minPrice = params.minPrice ? parseFloat(params.minPrice) : null;
   const maxPrice = params.maxPrice ? parseFloat(params.maxPrice) : null;
 
@@ -81,50 +134,60 @@ export default async function ProductsPage({
         ? { price: "desc" }
         : { createdAt: "desc" };
 
-  const hasSizeFilter = sizeFilter.length > 0;
+  const hasJsFilter = sizeFilter.length > 0 || colorFilter.length > 0;
 
-  // Fetch categories, brands, and available sizes in parallel (always needed)
-  const [categories, distinctBrands, allSizes] = await Promise.all([
+  // Fetch categories + all products for filter facets in parallel
+  const [categories, countingProducts] = await Promise.all([
     prisma.category.findMany({ orderBy: { sortOrder: "asc" } }),
     prisma.product.findMany({
-      where: { active: true, sold: false, brand: { not: null } },
-      select: { brand: true },
-      distinct: ["brand"],
-      orderBy: { brand: "asc" },
-    }),
-    prisma.product.findMany({
       where: { active: true, sold: false },
-      select: { sizes: true },
+      select: {
+        brand: true,
+        sizes: true,
+        colors: true,
+        condition: true,
+        price: true,
+        compareAt: true,
+        category: { select: { slug: true } },
+      },
     }),
   ]);
 
-  // Extract unique brands
-  const brands = distinctBrands
-    .map((p) => p.brand)
-    .filter((b): b is string => b !== null && b !== "");
-
-  // Extract unique sizes from JSON arrays
+  // Extract unique brands (sorted alphabetically)
+  const brandSet = new Set<string>();
   const sizeSet = new Set<string>();
-  for (const p of allSizes) {
-    try {
-      const parsed: string[] = JSON.parse(p.sizes);
-      for (const s of parsed) if (s) sizeSet.add(s);
-    } catch {
-      // skip corrupted data
-    }
+  const colorSet = new Set<string>();
+  for (const p of countingProducts) {
+    if (p.brand) brandSet.add(p.brand);
+    for (const s of parseJsonArray(p.sizes)) if (s) sizeSet.add(s);
+    for (const c of parseJsonArray(p.colors)) if (c) colorSet.add(c);
   }
+  const brands = Array.from(brandSet).sort((a, b) => a.localeCompare(b, "cs"));
   const sizes = Array.from(sizeSet).sort((a, b) => {
     const numA = parseInt(a);
     const numB = parseInt(b);
     if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
     return a.localeCompare(b, "cs");
   });
+  const colors = Array.from(colorSet).sort((a, b) => a.localeCompare(b, "cs"));
+
+  // Compute faceted filter counts
+  const filterCounts = computeFilterCounts(countingProducts, {
+    category: params.category,
+    sale: params.sale,
+    brands: brandFilter,
+    sizes: sizeFilter,
+    conditions: conditionFilter,
+    colors: colorFilter,
+    minPrice,
+    maxPrice,
+  });
 
   let paginatedProducts: ProductWithCategory[];
   let totalItems: number;
 
-  if (hasSizeFilter) {
-    // Size filter requires JS-level filtering (JSON column not queryable via Prisma/SQLite).
+  if (hasJsFilter) {
+    // Size/color filters require JS-level filtering (JSON columns not queryable via Prisma/SQLite).
     // Fetch ALL matching products, filter in JS, then paginate.
     const allProducts = await prisma.product.findMany({
       where,
@@ -132,12 +195,15 @@ export default async function ProductsPage({
       orderBy,
     });
     const filteredProducts = allProducts.filter((p) => {
-      try {
-        const pSizes: string[] = JSON.parse(p.sizes);
-        return sizeFilter.some((s) => pSizes.includes(s));
-      } catch {
-        return false;
+      if (sizeFilter.length > 0) {
+        const pSizes = parseJsonArray(p.sizes);
+        if (!sizeFilter.some((s) => pSizes.includes(s))) return false;
       }
+      if (colorFilter.length > 0) {
+        const pColors = parseJsonArray(p.colors);
+        if (!colorFilter.some((c) => pColors.includes(c))) return false;
+      }
+      return true;
     });
     totalItems = filteredProducts.length;
     const totalPages = Math.max(1, Math.ceil(totalItems / PRODUCTS_PER_PAGE));
@@ -226,7 +292,10 @@ export default async function ProductsPage({
         <ProductFilters
           brands={brands}
           sizes={sizes}
+          colors={colors}
           categories={categories.map((c) => ({ slug: c.slug, name: c.name }))}
+          counts={filterCounts}
+          totalFiltered={totalItems}
         />
       </Suspense>
 
