@@ -66,6 +66,7 @@ model Customer {
 model Order {
   id            String      @id @default(cuid())
   orderNumber   String      @unique
+  accessToken   String?
   customerId    String
   customer      Customer    @relation(fields: [customerId], references: [id])
   status        String      @default("pending")

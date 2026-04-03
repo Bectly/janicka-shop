@@ -6,7 +6,10 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 
 export default async function HomePage() {
-  const [featuredProducts, categories] = await Promise.all([
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  const [featuredProducts, categories, newProducts] = await Promise.all([
     prisma.product.findMany({
       where: { featured: true, active: true, sold: false },
       include: { category: { select: { name: true } } },
@@ -20,6 +23,12 @@ export default async function HomePage() {
           select: { products: { where: { active: true, sold: false } } },
         },
       },
+    }),
+    prisma.product.findMany({
+      where: { active: true, sold: false, createdAt: { gte: sevenDaysAgo } },
+      include: { category: { select: { name: true } } },
+      take: 8,
+      orderBy: { createdAt: "desc" },
     }),
   ]);
 
@@ -80,6 +89,52 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* Newly added products */}
+      {newProducts.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+          <div className="flex items-end justify-between">
+            <div>
+              <h2 className="font-heading text-2xl font-bold text-foreground">
+                Nově přidané
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Čerstvé kousky za poslední týden
+              </p>
+            </div>
+            <Link
+              href="/products?sort=newest"
+              className="hidden text-sm font-medium text-primary hover:underline sm:block"
+            >
+              Zobrazit vše &rarr;
+            </Link>
+          </div>
+          <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+            {newProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                name={product.name}
+                slug={product.slug}
+                price={product.price}
+                compareAt={product.compareAt}
+                images={product.images}
+                categoryName={product.category.name}
+                brand={product.brand}
+                condition={product.condition}
+                isNew
+              />
+            ))}
+          </div>
+          <div className="mt-8 text-center sm:hidden">
+            <Button
+              variant="outline"
+              render={<Link href="/products?sort=newest" />}
+            >
+              Zobrazit všechny novinky
+            </Button>
+          </div>
+        </section>
+      )}
 
       {/* Featured products */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">

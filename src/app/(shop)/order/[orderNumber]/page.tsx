@@ -9,6 +9,7 @@ import { ClearCartOnMount } from "./clear-cart";
 
 interface Props {
   params: Promise<{ orderNumber: string }>;
+  searchParams: Promise<{ token?: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -16,8 +17,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: `Objednávka ${orderNumber}` };
 }
 
-export default async function OrderConfirmationPage({ params }: Props) {
+export default async function OrderConfirmationPage({ params, searchParams }: Props) {
   const { orderNumber } = await params;
+  const { token } = await searchParams;
 
   const order = await prisma.order.findUnique({
     where: { orderNumber },
@@ -28,6 +30,10 @@ export default async function OrderConfirmationPage({ params }: Props) {
   });
 
   if (!order) notFound();
+
+  // Orders with an accessToken require the correct token in the URL.
+  // This prevents enumeration of order details (PII exposure).
+  if (order.accessToken && order.accessToken !== token) notFound();
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6 lg:px-8">

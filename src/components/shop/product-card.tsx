@@ -11,6 +11,7 @@ interface ProductCardProps {
   categoryName: string;
   brand?: string | null;
   condition?: string;
+  isNew?: boolean;
 }
 
 export function ProductCard({
@@ -21,6 +22,7 @@ export function ProductCard({
   categoryName,
   brand,
   condition,
+  isNew,
 }: ProductCardProps) {
   const hasDiscount = compareAt && compareAt > price;
   const discountPercent = hasDiscount
@@ -37,6 +39,11 @@ export function ProductCard({
           </span>
         </div>
         <div className="absolute top-2 left-2 flex flex-col gap-1">
+          {isNew && (
+            <span className="rounded-md bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
+              Novinka
+            </span>
+          )}
           {hasDiscount && (
             <span className="rounded-md bg-destructive/90 px-2 py-0.5 text-xs font-semibold text-white">
               -{discountPercent} %

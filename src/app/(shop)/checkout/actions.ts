@@ -150,9 +150,11 @@ export async function createOrder(
 
       // Create order with DB-sourced prices
       const orderNumber = generateOrderNumber();
+      const accessToken = crypto.randomUUID();
       const created = await tx.order.create({
         data: {
           orderNumber,
+          accessToken,
           customerId: customer.id,
           status: "pending",
           subtotal,
@@ -194,5 +196,5 @@ export async function createOrder(
     throw e;
   }
 
-  redirect(`/order/${order.orderNumber}`);
+  redirect(`/order/${order.orderNumber}?token=${order.accessToken}`);
 }
