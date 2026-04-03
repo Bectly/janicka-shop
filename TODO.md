@@ -39,7 +39,7 @@
 - [ ] [BOLT] Payment webhook handler: POST /api/payments/webhook (notification_url callback). Verify payment status via GET after receiving notification — never trust webhook payload alone.
 - [ ] [BOLT] Multi-step checkout UI: 1) Kontakt, 2) Doprava (Packeta widget), 3) Platba, 4) Shrnutí
 - [ ] [TRACE] E2E test: full checkout flow
-- [ ] [LEAD] Cart reservation timer (15 min) — CRITICAL for qty=1 second-hand model. Implementation: add `reservedUntil: DateTime?` + `reservedBySessionId: String?` fields to Product model. On add-to-cart → Server Action sets `reservedUntil = now + 15min`. Other users see "Rezervováno" instead of "Přidat do košíku". On checkout → mark `sold=true`. On timeout → clear reservation (check on every product query: `WHERE reservedUntil < now OR reservedUntil IS NULL`). Show countdown in cart UI. This prevents the #1 second-hand UX frustration: "I was about to buy it but someone else got it."
+- [x] [BOLT] Cart reservation timer (15 min) — DONE Cycle #27. Atomic TOCTOU-safe reserve/release/extend server actions, countdown timer in cart, "Rezervováno" badges on product cards/detail, reservation-aware checkout. TOCTOU race fixed Cycle #29.
 
 ## Phase 4: Admin Panel [IN PROGRESS]
 - [x] [BOLT] Admin layout with sidebar navigation
@@ -79,7 +79,7 @@
 - [ ] [BOLT] Email notifications via Resend (`resend` npm + `@react-email/components`): order confirmation, payment received, shipping dispatched, invoice PDF attachment. Use Server Actions with "use server" — never expose RESEND_API_KEY client-side. Build React Email templates for consistent branding.
 
 ## Phase 7: Legal Compliance [UPDATED — LEAD RESEARCH C19]
-- [ ] [BOLT] Cookie consent banner — CZ law: Electronic Communications Act (ECA 2022) + GDPR requires strict OPT-IN. Implementation: lightweight custom banner (no CMP needed for MVP). Categories: essential (no consent), analytics, marketing. Accept/Reject buttons MUST be same size+font+color (no dark patterns). Cookie walls PROHIBITED — cannot block content for refusing. Store consent in localStorage, conditionally load scripts via `next/script strategy="lazyOnload"`. Supervisory authority: ÚOOÚ. Penalty: up to 10M EUR or 2% turnover (GDPR scale).
+- [x] [BOLT] Cookie consent banner — DONE Cycle #27. Granular categories (essential/analytics/marketing), same-size Accept/Reject buttons, no dark patterns, localStorage persistence, conditional script loading. Re-consent mechanism + footer button added Cycle #29. Secure flag on HTTPS fixed Cycle #30.
 - [ ] [BOLT] Withdrawal form (vzorový formulář pro odstoupení od smlouvy) — downloadable PDF or inline form. 14-day return right applies fully to second-hand.
 - [ ] [BOLT] Footer legal links: ODR platform (ec.europa.eu/odr), ČOI as supervisory authority
 - [ ] [BOLT] Update obchodní podmínky (terms page): add 12-month warranty clause for used goods (§2167 Civil Code), seller IČO + sídlo, all payment/delivery terms, withdrawal rights
@@ -131,6 +131,8 @@
 - ~~Pagination~~ (Cycle #22) — 12/page
 - ~~Product filters~~ (existing) — brand, size, condition, price range, category, sort, filter chips
 - ~~"Nově přidané"~~ (existing) — homepage section + Novinka badge
+- ~~Cart reservation~~ (Cycle #27) — 15min timer, TOCTOU-safe, "Rezervováno" badges, countdown
+- ~~Cookie consent~~ (Cycle #27) — GDPR/ECA compliant, granular categories, re-consent (C29), Secure flag (C30)
 
 ### NEXT SPRINT — Phase 2 Polish + Phase 3 Checkout
 1. **Mobile filter drawer** (Phase 2) — wrap filters in shadcn Sheet for mobile. Current inline layout pushes products down. Sheet component already exists. HIGH IMPACT — 70%+ traffic is mobile.
@@ -139,10 +141,10 @@
 4. **Enrich JSON-LD** (Phase 8) — add `shippingDetails` + `hasMerchantReturnPolicy`. Highest-ROI SEO for 2026. +58% clicks, +32% conversion. Google AI Mode growing 5.6x.
 5. **Multi-step checkout + Packeta** (Phase 3+6) — combine checkout redesign with Packeta widget. Steps: Kontakt → Doprava → Platba → Shrnutí.
 6. **Comgate payment** (Phase 3) — 60% cheaper than GoPay, CZ #1, official JS SDK `@comgate/checkout-js`, Apple Pay + Google Pay, BNPL, 6 months free. Decision made — no Pick Page needed.
-7. **Cart reservation** (Phase 3) — 15min timer for qty=1. Prevents double-sell anxiety.
+7. ~~Cart reservation~~ ✅ DONE (Cycle #27)
 
 ### LAUNCH BLOCKERS
-8. **Cookie consent** (Phase 7) — CZ law requires opt-in. Must ship before analytics.
+8. ~~Cookie consent~~ ✅ DONE (Cycle #27)
 9. **30-day price history** (Phase 7) — Czech fake discount rule. Track lowest 30-day price.
 10. **Rate limiting** (Phase 8) — @upstash/ratelimit for checkout + login.
 

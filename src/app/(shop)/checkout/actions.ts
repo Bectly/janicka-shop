@@ -242,7 +242,9 @@ export async function createOrder(
     redirect(`/order/${order.orderNumber}?token=${order.accessToken}`);
   }
 
-  // For online payment — create Comgate payment and redirect to payment page
+  // For online payment — create Comgate payment and redirect to payment page.
+  // redirect() must be OUTSIDE try-catch to avoid catching Next.js redirect signals.
+  let paymentRedirectUrl: string;
   try {
     const payment = await createComgatePayment({
       refId: order.orderNumber,
@@ -258,10 +260,23 @@ export async function createOrder(
       data: { paymentId: payment.transId },
     });
 
-    redirect(payment.redirect);
+    paymentRedirectUrl = payment.redirect;
   } catch (e) {
-    // If payment creation fails, order still exists but unpaid
-    // Customer can retry or contact support
+    // Comgate payment creation failed — rollback the order and un-sell products.
+    // Without rollback, products stay sold:true and the user can't retry checkout
+    // (neither online payment nor COD — both would fail on availability check).
+    try {
+      await prisma.$transaction(async (tx) => {
+        await tx.orderItem.deleteMany({ where: { orderId: order.id } });
+        await tx.order.delete({ where: { id: order.id } });
+        await tx.product.updateMany({
+          where: { id: { in: productIds } },
+          data: { sold: false, stock: 1 },
+        });
+      });
+    } catch (rollbackErr) {
+      console.error("[Checkout] Failed to rollback order after payment failure:", rollbackErr);
+    }
     console.error("[Checkout] Comgate payment creation failed:", e);
     return {
       error:
@@ -269,4 +284,6 @@ export async function createOrder(
       fieldErrors: {},
     };
   }
+
+  redirect(paymentRedirectUrl);
 }

@@ -96,7 +96,7 @@ export default function CheckoutPage() {
       <h1 className="font-heading text-3xl font-bold">Objednávka</h1>
 
       {state.error && (
-        <div className="mt-4 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div role="alert" className="mt-4 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {state.error}
         </div>
       )}
