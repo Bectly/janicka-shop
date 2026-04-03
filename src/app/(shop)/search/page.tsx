@@ -16,23 +16,28 @@ export default async function SearchPage({
   const params = await searchParams;
   const query = params.q?.trim() ?? "";
 
-  const products =
+  // SQLite LIKE is case-insensitive for ASCII only — Czech diacritics (Š/š, Č/č, Ř/ř)
+  // need JS-level matching. For a second-hand shop with limited inventory this is fine.
+  const all =
     query.length > 0
       ? await prisma.product.findMany({
-          where: {
-            active: true,
-            sold: false,
-            OR: [
-              { name: { contains: query } },
-              { description: { contains: query } },
-              { brand: { contains: query } },
-              { sku: { contains: query } },
-            ],
-          },
+          where: { active: true, sold: false },
           include: { category: { select: { name: true } } },
           orderBy: { createdAt: "desc" },
-          take: 40,
         })
+      : [];
+  const lowerQuery = query.toLowerCase();
+  const products =
+    query.length > 0
+      ? all
+          .filter(
+            (p) =>
+              p.name.toLowerCase().includes(lowerQuery) ||
+              p.description.toLowerCase().includes(lowerQuery) ||
+              (p.brand?.toLowerCase().includes(lowerQuery) ?? false) ||
+              p.sku.toLowerCase().includes(lowerQuery)
+          )
+          .slice(0, 40)
       : [];
 
   return (
@@ -60,7 +65,7 @@ export default async function SearchPage({
               {products.length}{" "}
               {products.length === 1
                 ? "výsledek"
-                : products.length < 5
+                : products.length >= 2 && products.length <= 4
                   ? "výsledky"
                   : "výsledků"}{" "}
               pro &ldquo;{query}&rdquo;

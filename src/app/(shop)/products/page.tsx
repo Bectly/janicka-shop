@@ -54,7 +54,7 @@ export default async function ProductsPage({
           {products.length}{" "}
           {products.length === 1
             ? "produkt"
-            : products.length < 5
+            : products.length >= 2 && products.length <= 4
               ? "produkty"
               : "produktů"}
         </p>

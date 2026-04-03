@@ -56,7 +56,7 @@ export default async function AdminOrdersPage({
           {orders.length}{" "}
           {orders.length === 1
             ? "objednávka"
-            : orders.length < 5
+            : orders.length >= 2 && orders.length <= 4
               ? "objednávky"
               : "objednávek"}
         </p>

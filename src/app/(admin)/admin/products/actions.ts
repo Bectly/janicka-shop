@@ -169,7 +169,19 @@ export async function updateProduct(id: string, formData: FormData) {
 export async function deleteProduct(id: string) {
   await requireAdmin();
 
-  await prisma.product.delete({ where: { id } });
+  // Check if product has order items — if so, soft-delete to preserve order history
+  const orderItemCount = await prisma.orderItem.count({
+    where: { productId: id },
+  });
+
+  if (orderItemCount > 0) {
+    await prisma.product.update({
+      where: { id },
+      data: { active: false, sold: true },
+    });
+  } else {
+    await prisma.product.delete({ where: { id } });
+  }
 
   revalidatePath("/admin/products");
   revalidatePath("/products");
