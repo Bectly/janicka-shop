@@ -96,6 +96,7 @@ export default async function ProductDetailPage({ params }: Props) {
   const lowestPrice30d = lowestPricesMap.get(product.id) ?? null;
 
   // JSON-LD structured data for SEO
+  // Enhanced with shippingDetails + hasMerchantReturnPolicy for Google Shopping eligibility
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -121,6 +122,42 @@ export default async function ProductDetailPage({ params }: Props) {
       seller: {
         "@type": "Organization",
         name: "Janička",
+      },
+      shippingDetails: {
+        "@type": "OfferShippingDetails",
+        shippingRate: {
+          "@type": "MonetaryAmount",
+          value: "0",
+          currency: "CZK",
+        },
+        shippingDestination: {
+          "@type": "DefinedRegion",
+          addressCountry: "CZ",
+        },
+        deliveryTime: {
+          "@type": "ShippingDeliveryTime",
+          handlingTime: {
+            "@type": "QuantitativeValue",
+            minValue: 1,
+            maxValue: 2,
+            unitCode: "DAY",
+          },
+          transitTime: {
+            "@type": "QuantitativeValue",
+            minValue: 1,
+            maxValue: 3,
+            unitCode: "DAY",
+          },
+        },
+      },
+      hasMerchantReturnPolicy: {
+        "@type": "MerchantReturnPolicy",
+        applicableCountry: "CZ",
+        returnPolicyCategory:
+          "https://schema.org/MerchantReturnFiniteReturnWindow",
+        merchantReturnDays: 14,
+        returnMethod: "https://schema.org/ReturnByMail",
+        returnFees: "https://schema.org/ReturnShippingFees",
       },
     },
   };

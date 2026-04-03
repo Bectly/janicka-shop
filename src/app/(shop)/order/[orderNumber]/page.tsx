@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock, ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 import { ClearCartOnMount } from "./clear-cart";
+import { generateOrderQrPayment, orderNumberToVariableSymbol } from "@/lib/payments/qr-platba";
+import { QrPaymentCode } from "@/components/shop/qr-payment-code";
 
 interface Props {
   params: Promise<{ orderNumber: string }>;
@@ -19,6 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   comgate: "Online platba",
+  bank_transfer: "Bankovní převod",
   cod: "Dobírka",
 };
 
@@ -43,6 +46,13 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
   const isPaid = order.status === "paid";
   const isCod = order.paymentMethod === "cod";
   const isPending = order.status === "pending" && !isCod;
+
+  // Generate QR payment code for bank transfer orders that are still pending
+  const isBankTransfer = order.paymentMethod === "comgate" || order.paymentMethod === "bank_transfer";
+  const showQr = isPending && isBankTransfer;
+  const qrPayment = showQr
+    ? await generateOrderQrPayment(order.orderNumber, order.total)
+    : null;
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6 lg:px-8">
@@ -81,6 +91,18 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
         <div className="mt-4 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-700">
           Čekáme na potvrzení platby. Jakmile bude platba přijata, pošleme vám
           email.
+        </div>
+      )}
+
+      {/* QR payment code for bank transfer */}
+      {qrPayment && (
+        <div className="mt-6 text-left">
+          <QrPaymentCode
+            qrDataUrl={qrPayment.qrDataUrl}
+            spaydString={qrPayment.spaydString}
+            totalCzk={order.total}
+            variableSymbol={orderNumberToVariableSymbol(order.orderNumber)}
+          />
         </div>
       )}
 

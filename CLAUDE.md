@@ -83,13 +83,14 @@ Toto je **second hand eshop** s oblečením. Klíčové rozdíly oproti běžné
 - SEO optimalizované — meta tagy, structured data, sitemap
 - Second hand fashion — sustainability messaging, unique pieces
 
-## Competitive Landscape (Lead Research C19)
-- **Brumla.cz**: Largest CZ online second-hand. 10k new items 2x/week. 99% Heureka. Kids + women + men.
-- **MegaSecondHand.cz**: Closest competitor — women-focused, 3500+ curated pieces. Good Heureka reviews.
-- **Vinted CZ**: 75M+ members, $813M revenue (+36%), planning $8B IPO. Zero seller fees. Had user backlash over grouped sizing system (2025). Weakness: no curation, inconsistent quality, scams.
-- **Janicka differentiator**: Premium curation, Instagram-aesthetic UX, pro photos, guaranteed condition, single-warehouse fast shipping. Message: "My jsme to už zkontrolovali, aby ses nemusela."
-- **Market gap**: Nobody in CZ does a visually beautiful, curated second-hand experience for women 18-35 well. No new CZ competitors detected in curated second-hand niche as of Q2 2026.
-- **Market size**: European secondhand apparel market EUR 32B (2025) → EUR 35B (2026), growing ~10% per year. Gen Z adopts resale 2.5x faster, 40% of closet is pre-owned. 52% of consumers bought secondhand in 2024.
+## Competitive Landscape (Lead Research C19, UPDATED C34)
+- **Brumla.cz**: Largest CZ online second-hand. 8500 new items Mon+Thu. 99% Heureka. Kids + women + men. No UX/AI innovations detected (C34).
+- **MegaSecondHand.cz**: Closest competitor — women-focused, 3500+ curated pieces. Good Heureka reviews. **NEW C34**: launched "Body visualization" (on-body product photos) for select items, gradually expanding. Also diversifying into men's basics.
+- **Vinted CZ**: 75M+ members, ~EUR 8B valuation (BlackRock secondary deal Q1 2026). **IPO ruled out** "for now." Launched "Collections" (user-curated themed groupings). Expanding to US (NYC Jan 2026) + electronics. Vinted Pay wallet rolling out in smaller EU markets (NOT CZ yet). CZ trust issues: bots, scams, no human support (Trustpilot). UK sizing disaster reversed Jan 2026. Weakness: no curation, inconsistent quality.
+- **Janicka differentiator**: Premium curation, Instagram-aesthetic UX, pro photos, **on-body photography from day one** (ahead of MegaSecondHand), guaranteed condition, single-warehouse fast shipping. Message: "My jsme to už zkontrolovali, aby ses nemusela."
+- **Market gap**: Nobody in CZ does a visually beautiful, curated second-hand experience for women 18-35 well. No new CZ competitors detected as of April 2026. Physical vintage thrives in Prague (Kuzmarkt, 1981) — demand exists but not online.
+- **Market size**: Global secondhand apparel $393B (ThredUp 2026), ~10% of total apparel spend. Growing 2-3x faster than first-hand (2025-2027). Gen Z adopts resale 2.5x faster, 40% of closet is pre-owned.
+- **Global tech trends (C34)**: ThredUp AI image search (81% satisfaction), Vestiaire AI+blockchain digital passports, Zara virtual try-on (+40% conversion, -50% returns, launched Jan 2026), live commerce (30% vs 2-3% conversion).
 - **Mobile**: 62% of Czech e-commerce is mobile. Mobile-first strategy validated.
 
 ## CZ Payment Preferences 2026 (Updated — Lead Research C25)
@@ -210,28 +211,31 @@ sqlite3 ~/.claude/jarvis-gym/jarvis.db "SELECT name, service, key_value, endpoin
 - **Display on**: (1) Order confirmation page, (2) order confirmation email (inline PNG), (3) admin order detail.
 - **Why critical**: Bank transfer is #1 CZ payment at 33%. 74% of Czechs used QR payments. 45% abandon if preferred method unavailable.
 
-### Checkout UX Architecture (NEW — Lead Research C31)
+### Checkout UX Architecture (Lead Research C31, UPDATED C34)
 - **Pattern**: Accordion single-page checkout (NOT multi-step pages). Research: accordion outperforms multi-step by 11-14% in completion rate. ASOS saw 50% abandonment reduction with single-page.
-- **Sections**: 1) Kontakt (email, name, phone) → 2) Doprava (Packeta widget + standard delivery) → 3) Platba (Comgate SDK for Apple/Google Pay, card redirect, bank transfer QR) → 4) Shrnutí (order review + confirm). Each section collapses with green checkmark when completed.
+- **Mobile express payments (NEW C34)**: Apple Pay / Google Pay buttons at VERY TOP of mobile checkout, ABOVE the accordion form. Research: placing express payment options above the form increases mobile conversion significantly.
+- **Sections**: 1) Kontakt (email, name, phone) → 2) Doprava (Packeta widget + standard delivery) → 3) Platba (Comgate SDK for Apple/Google Pay, card redirect, bank transfer QR) → 4) Shrnutí (order review + confirm). Each section collapses with green checkmark when completed. Auto-advance to next section when current is valid.
 - **Guest checkout ONLY**: No registration required. 24% of shoppers abandon at forced registration. Offer optional account creation AFTER order.
 - **Trust signals**: Security lock icon + "Zabezpečená platba" badge AT the payment section (not footer — trust anxiety peaks at payment step).
 - **Mobile**: Sticky "Zobrazit shrnutí" bar at bottom showing order total + item count. Expandable order summary.
+- **BNPL (NEW C34)**: Comgate native pay-in-3 installments. Consider offering for items above 1000 CZK — younger shoppers respond well to BNPL (2026 data: increases AOV and conversion for fashion).
 - **Form fields**: Target ≤10 fields total. Average is 11.3 — beat it. Pre-fill where possible.
 - **Progress**: Visual step indicator showing completed/current/remaining sections.
 
-### Czech Legal Requirements (2026 — Updated Lead Research C31)
+### Czech Legal Requirements (2026 — Updated Lead Research C31, C34)
 - **Warranty**: Used goods = min 12 months (not 24). Must be in T&C explicitly.
-- **14-day withdrawal**: Applies fully to second-hand online clothing sales (C31 verified: 30-day period only applies to door-to-door/organized sales events, NOT regular e-commerce). Must provide withdrawal form (vzorový formulář).
+- **14-day withdrawal**: Applies fully to second-hand online clothing sales (C31+C34 verified: 14-day period is the standard for regular e-commerce under Czech law. 30-day period only applies to door-to-door/organized sales events, NOT regular online shopping. CMS Expert Guide confirms 14 days. If seller fails to inform consumer of this right, withdrawal period extends to 12 months). Must provide withdrawal form (vzorový formulář).
 - **Delivery deadline**: 30 days from contract conclusion unless agreed otherwise. Track `expectedDeliveryDate` in Order model.
 - **Claims handling**: Must resolve within 30 days from claim date unless longer period agreed with consumer.
 - **Mandatory footer**: ODR link (ec.europa.eu/odr), ČOI as supervisory authority. ✅ DONE (Cycle #29).
 - **Cookies**: ✅ DONE (Cycle #27, improved C29-C30). Strict OPT-IN. Granular categories. Same-size Accept/Reject. No dark patterns. ÚOOÚ supervisory. Penalty: up to 10M EUR or 2% turnover.
 - **Invoice**: IČO, DIČ, seller address, buyer info, invoice number, dates, items, VAT status. Store 10 years.
+- **Consumer protection fines (C34)**: Infringements punishable by fines up to **4% of business turnover**. Applies to all consumer protection violations including fake discounts, missing withdrawal info, unfair practices.
 - **EU Directive 2024/825 (Greenwashing)**: Effective Sept 2026. Generic claims like "ekologické", "green", "carbon neutral" PROHIBITED without official certification. Fines up to 5M CZK. Our claims must be specific: "Ušetříš 70 % oproti nové ceně" is OK.
 - **EU AI Act (2026)**: If consumer-facing AI chatbot (devChat exposed to non-admin users), MUST label as AI. "Odpovídá AI asistent" in chat header. If admin-only → no action needed.
 - **Repair Right Directive**: Transposition deadline July 31, 2026. Not directly relevant for second-hand clothing (applies to repair vs replacement choices). Monitor.
 - **EET**: Abolished 2023 — no real-time receipt reporting needed.
-- **30-day price rule ("fake discount")**: Already in effect. MUST display lowest price from previous 30 days when showing discounts. Non-compliance = ČOI fines. Need `priceHistory` tracking.
+- **30-day price rule ("fake discount")**: Already in effect. MUST display lowest price from previous 30 days when showing discounts. Non-compliance = ČOI fines (up to 4% turnover). Need `priceHistory` tracking. ⚠️ HIGH PRIORITY — 30-day lowest price display partially done (C34: homepage product cards), but must be on ALL pages showing discounts.
 - **Packeta 2026**: Fuel surcharge 12.5%, toll surcharge EUR 0.04/kg. No API changes.
 
 ### Heureka.cz Integration (Updated — Lead Research C25)

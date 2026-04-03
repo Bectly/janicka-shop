@@ -18,8 +18,8 @@
 - [x] [BOLT] Brand filter — pill-style toggle buttons — done (in product-filters.tsx)
 - [x] [BOLT] Size + condition + price range filters on product listing — done (all wired to URL params, server-side filtering)
 - [ ] [BOLT] Quick view modal on product cards
-- [ ] [BOLT] Mobile filter drawer — wrap existing filter UI in shadcn `Sheet` (component already exists at `src/components/ui/sheet.tsx`). On mobile (`lg:hidden`): show "Filtry" button → opens Sheet from left/bottom with all filter sections inside `Accordion` for collapsibility. On desktop: keep current inline grid. Add "Zobrazit X produktů" apply button at bottom of Sheet. This is the #1 mobile UX gap — current inline filters push product grid far down on small screens.
-- [ ] [BOLT] Filter product counts — show number of matching products per filter option (e.g. "Zara (23)", "M (15)"). Grey out or hide options with 0 results. Eliminates dead-end filter frustration (88% of consumers don't return after poor UX). Requires counting query per filter group.
+- [ ] [BOLT] Mobile filter drawer — **FULL-SCREEN overlay on mobile** (not bottom sheet — Baymard research: too cramped for 5-6 filter facets). Trigger: sticky "Filtry" button pinned to BOTTOM of viewport (thumb zone, 62% of mobile commerce is one-handed), showing active filter count badge. Overlay: slide-up from bottom (300ms ease-out, CSS transform: translateY for 60fps). Inside: vertical accordion sections (one open at a time — prevents scroll fatigue, 32% of sites fail by showing all at once). Sticky footer: "Zobrazit X produktů" button (56px min height, full-width, primary color, count updates in real-time). Close: X button top-right + swipe-down gesture. On desktop (`lg:`): keep current inline grid. Active filter chips stay above product grid after closing overlay. Shadcn `Sheet` component exists — configure as `side="bottom"` with full height on mobile.
+- [ ] [BOLT] Filter product counts — show `(N)` count next to every filter option (e.g. "Zara (23)", "M (15)"). **Grey out / disable** options with 0 results — do NOT hide them (hiding causes confusion: "where did size M go?"). Update counts dynamically as other filters change. #1 highest-impact filter UX improvement per Baymard research — prevents dead-end zero-result pages. Requires counting query per filter group.
 - [ ] [BOLT] Color filter — add color filter section to ProductFilters using color swatches (small circles with actual colors, not text). Schema already has `colors` JSON field on Product. Parse unique colors same as sizes. Use 28px circle swatches with checkmark overlay on selected. Most fashion sites use visual swatches — text-only color filters feel dated.
 - [ ] [BOLT] Adopt `nuqs` library for type-safe URL search params — replaces ~50 lines of manual URL parsing in product-filters.tsx. Built-in debouncing (`throttleMs: 500` for price inputs instead of current `onBlur` pattern), server-side cache via `createSearchParamsCache`, batch URL updates. ~10KB. Install: `npm i nuqs`. Add `NuqsAdapter` to root layout. Refactor product-filters.tsx to use `useQueryStates`. Refactor products/page.tsx to use `productFilterCache.parse(searchParams)`.
 - [x] [BOLT] Pagination on product listing (12 items/page, reusable Pagination component) — done Cycle #22
@@ -28,6 +28,10 @@
 - [ ] [LEAD] "Poslední kus" scarcity badge on all product cards — honest urgency for qty=1 items (~22% conversion lift per A/B data)
 - [ ] [LEAD] "X lidí si prohlíží" real-time viewer counter on product detail — social proof + urgency
 - [ ] [LEAD] Brand-aware size guide: show measurements in cm (prsa/pas/délka) per product, plus brand sizing note ("Zara 38 = cca EU 36") — reduces returns significantly for second-hand
+- [ ] [LEAD] Wishlist with localStorage (no login required) — heart icon on product cards (top-right of image, 36x36px touch target, outline→filled red on toggle, scale bounce animation 400ms). Zustand `useWishlistStore` with `persist` middleware (same pattern as cart). Separate `/oblibene` page with product grid. Show "Prodáno" overlay on wishlisted items that sold. Critical for second-hand: items sell fast, users need to track favorites. Research: gating wishlist behind login increases abandonment. localStorage note on page: "Oblíbené položky jsou uloženy v tomto prohlížeči."
+- [ ] [LEAD] Second image hover on desktop product cards — crossfade to second image (back/worn view) on `group-hover` using opacity transition (300ms). Both images absolutely positioned, second at `opacity-0 group-hover:opacity-100`. On mobile: NO in-card swipe (second-hand items have 3-8 photos — those belong on PDP). Show dot indicators for image count instead. Low effort, high browse UX improvement.
+- [ ] [LEAD] Curated collections/themes — editorial-quality themed product groups (e.g., "Jarní šaty pod 500 Kč", "Značkové kabelky", "Outfit na rande"). Vinted launched "Collections" feature in 2026 — Janicka should have better curated version. Rotate weekly/biweekly. Creates browse-worthy content, differentiates from listing-dump competitors. Model: `Collection` with title, description, slug, product IDs, featured image, active dates.
+- [ ] [LEAD] Apple Pay / Google Pay express buttons at TOP of mobile checkout — research shows placing express payment options ABOVE the form on mobile increases conversion. When Comgate SDK is integrated, Apple Pay + Google Pay buttons should be the first visible element on mobile checkout, before the Kontakt accordion section.
 
 ## Phase 3: Cart & Checkout [IN PROGRESS]
 - [x] [BOLT] Zustand cart store with persistence (localStorage)
@@ -37,7 +41,7 @@
 - [ ] [BOLT] Payment gateway: **Comgate** (Lead C25+C31 research). Server-side: REST API via `fetch` (create/status/refund at `apidoc.comgate.cz`). Client-side: `@comgate/checkout-js` (replaces old `@comgate/checkout` — TypeScript, promise-based, framework-agnostic). Currently supports Apple Pay + Google Pay inline (card number direct entry "being prepared" by Comgate). Architecture: `src/lib/payments/comgate.ts` (REST client), `src/lib/payments/types.ts`, `POST /api/payments/webhook` route. Sandbox first. **Start Plan pricing (C31 verified)**: 0% card fees for 6 months (up to 50K CZK/mo), then Easy plan auto-applies (1% + 0 CZK for standard EU cards, 2% for other EU cards). Bank transfers: 1% + 0 CZK. Monthly fee: FREE on Start. Refund: 5 CZK. Chargeback: 990 CZK. Fees locked until Dec 31, 2026. **Note**: Until Comgate enables direct card entry in SDK, card payments will use redirect flow — Apple Pay + Google Pay are inline via SDK.
 - [ ] [BOLT] Stripe payment integration (international fallback)
 - [ ] [BOLT] Payment webhook handler: POST /api/payments/webhook (notification_url callback). Verify payment status via GET after receiving notification — never trust webhook payload alone.
-- [ ] [BOLT] Accordion single-page checkout UI (Lead C31 research: accordion outperforms multi-step by 11-14% in completion rate, ASOS saw 50% abandonment reduction with single-page). Sections: 1) Kontakt, 2) Doprava (Packeta widget), 3) Platba, 4) Shrnutí — each collapses when completed, shows green checkmark. Guest checkout ONLY (no registration — 24% abandon at forced signup). Trust badges + security lock icon AT the payment section (not footer — trust anxiety peaks at payment step). "Zobrazit shrnutí" sticky bar on mobile.
+- [ ] [BOLT] Accordion single-page checkout UI (Lead C31+C34 research: accordion outperforms multi-step by 11-14% in completion rate, ASOS saw 50% abandonment reduction with single-page). **Mobile layout**: Apple Pay / Google Pay express buttons at VERY TOP (above form — C34 research: placing express payments above form increases mobile conversion). Then accordion: 1) Kontakt, 2) Doprava (Packeta widget), 3) Platba, 4) Shrnutí — each collapses when completed, shows green checkmark. Auto-advance to next section when current is valid. Guest checkout ONLY (no registration — 24% abandon at forced signup). Trust badges + security lock icon AT the payment section (not footer — trust anxiety peaks at payment step). "Zobrazit shrnutí" sticky bar on mobile showing total + item count. Desktop: sticky order summary sidebar. **BNPL**: Comgate has native pay-in-3 installments — consider for items above 1000 CZK (younger shoppers respond well to BNPL per 2026 data).
 - [ ] [TRACE] E2E test: full checkout flow
 - [x] [BOLT] Cart reservation timer (15 min) — DONE Cycle #27. Atomic TOCTOU-safe reserve/release/extend server actions, countdown timer in cart, "Rezervováno" badges on product cards/detail, reservation-aware checkout. TOCTOU race fixed Cycle #29.
 
@@ -139,34 +143,41 @@
 - ~~Cart reservation~~ (Cycle #27) — 15min timer, TOCTOU-safe, "Rezervováno" badges, countdown
 - ~~Cookie consent~~ (Cycle #27) — GDPR/ECA compliant, granular categories, re-consent (C29), Secure flag (C30)
 
-### NEXT SPRINT — Phase 2 Polish + Phase 3 Checkout
-1. **Mobile filter drawer** (Phase 2) — wrap filters in shadcn Sheet for mobile. Current inline layout pushes products down. Sheet component already exists. HIGH IMPACT — 70%+ traffic is mobile.
+### NEXT SPRINT — Phase 2 Polish + Phase 3 Checkout (UPDATED C34)
+1. **Mobile filter drawer** (Phase 2, UPDATED C34) — full-screen overlay on mobile (NOT bottom sheet — Baymard: too cramped). Sticky "Filtry" at bottom of viewport. Accordion inside. "Zobrazit X produktů" sticky footer. HIGH IMPACT — 70%+ traffic is mobile.
 2. **`nuqs` adoption** (Phase 2) — type-safe URL params, debounced price input, server cache. Eliminates ~50 lines of manual URL parsing. Enables shallow routing.
-3. **Color filter + filter counts** (Phase 2) — color swatches, product count per option ("Zara (23)"), grey out zero-result options. Schema already has colors field.
-4. **Enrich JSON-LD** (Phase 8) — add `shippingDetails` + `hasMerchantReturnPolicy`. Highest-ROI SEO for 2026. +58% clicks, +32% conversion. Google AI Mode growing 5.6x.
-5. **Accordion checkout + Packeta** (Phase 3+6, UPDATED C31) — accordion single-page checkout (NOT multi-step — C31 research: +11-14% completion rate vs multi-step, ASOS saw 50% reduction in abandonment). Sections: Kontakt → Doprava (Packeta widget v6) → Platba (Comgate SDK) → Shrnutí. Guest checkout only. Trust badges at payment section.
-6. **Comgate payment** (Phase 3, UPDATED C31) — Start plan: 0% card fees for 6 months (up to 50K CZK/mo), then 1% + 0 CZK. `@comgate/checkout-js` (TypeScript, promise-based). Apple Pay + Google Pay inline. Card direct entry being prepared by Comgate.
-7. **QR code payment** (Phase 3+9, PROMOTED C31) — `spayd` npm + `qrcode` npm. CRITICAL: bank transfer is #1 CZ payment at 33%. Low effort, massive conversion impact. Ship alongside Comgate.
-8. ~~Cart reservation~~ ✅ DONE (Cycle #27)
+3. **Color filter + filter counts** (Phase 2, UPDATED C34) — color swatches, product count per option ("Zara (23)"), grey out zero-result options (do NOT hide — causes "where did M go?" confusion). Schema already has colors field.
+4. **Wishlist with localStorage** (Phase 2, NEW C34) — heart icon on product cards, Zustand persist store, `/oblibene` page. No login required. Critical for second-hand: items sell fast, users track favorites. Low effort, high engagement.
+5. **Second image hover** (Phase 2, NEW C34) — crossfade to second image on desktop hover (opacity transition 300ms). Mobile: dot indicators only, no in-card swipe.
+6. **Enrich JSON-LD** (Phase 8) — add `shippingDetails` + `hasMerchantReturnPolicy`. Highest-ROI SEO for 2026. +58% clicks, +32% conversion. Google AI Mode growing 5.6x.
+7. **Accordion checkout + Packeta** (Phase 3+6, UPDATED C34) — accordion single-page checkout. NEW: Apple Pay / Google Pay express buttons at VERY TOP on mobile (above form). Auto-advance sections. BNPL via Comgate pay-in-3 for items >1000 CZK.
+8. **Comgate payment** (Phase 3, C34 CHECK: direct card entry in SDK STILL "being prepared" — no change. Use redirect flow for cards, inline for Apple/Google Pay).
+9. **QR code payment** (Phase 3+9, PROMOTED C31) — `spayd` npm + `qrcode` npm. CRITICAL: bank transfer is #1 CZ payment at 33%. Low effort, massive conversion impact. Ship alongside Comgate.
+10. ~~Cart reservation~~ ✅ DONE (Cycle #27)
 
 ### LAUNCH BLOCKERS
-9. ~~Cookie consent~~ ✅ DONE (Cycle #27)
-10. **30-day price history** (Phase 7) — Czech fake discount rule. Track lowest 30-day price.
-11. **Rate limiting** (Phase 8) — @upstash/ratelimit for checkout + login.
+11. ~~Cookie consent~~ ✅ DONE (Cycle #27)
+12. **30-day price history** (Phase 7) — Czech fake discount rule. Track lowest 30-day price. ⚠️ C34 finding: consumer protection fines now up to 4% of turnover.
+13. **Rate limiting** (Phase 8) — @upstash/ratelimit for checkout + login.
 
 ### POST-LAUNCH
-12. **Email notifications** (Phase 6) — Resend + React Email templates.
-13. **Heureka.cz** (Phase 9) — free "Start" tier. 50% of CZ shoppers require certification.
-14. **Scarcity UX** (Phase 2) — "Unikátní kus" badges + "Právě prodáno" feed.
-15. **Social commerce features** (Phase 10, NEW C31) — share buttons, customer photo reviews, "Právě koupila" feed. 40% higher engagement.
-16. **Instagram Shopping** (Phase 9) — product feed + micro-influencer partnerships.
-17. **Saved search alerts** (Phase 9) — biggest differentiator vs Vinted.
+14. **Email notifications** (Phase 6) — Resend + React Email templates.
+15. **Heureka.cz** (Phase 9) — free "Start" tier. 50% of CZ shoppers require certification.
+16. **Curated collections** (Phase 2+9, NEW C34) — editorial-quality themed groups ("Jarní šaty pod 500 Kč"). Vinted launched Collections in 2026. Differentiates from listing dumps.
+17. **Scarcity UX** (Phase 2) — "Unikátní kus" badges + "Právě prodáno" feed.
+18. **Social commerce features** (Phase 10, NEW C31) — share buttons, customer photo reviews, "Právě koupila" feed. 40% higher engagement.
+19. **Instagram Shopping** (Phase 9) — product feed + micro-influencer partnerships.
+20. **Saved search alerts** (Phase 9) — biggest differentiator vs Vinted.
 
-## Competitive Positioning (Lead Research C19)
-- **Closest competitor**: MegaSecondHand.cz (women-focused, 3500+ curated pieces)
-- **Largest**: Brumla.cz (10k new items 2x/week, 99% Heureka rating)
-- **Janicka differentiator**: premium curation, Instagram-aesthetic UX, guaranteed quality, pro photos, fast single-warehouse shipping
+## Competitive Positioning (Lead Research C19, UPDATED C34)
+- **Closest competitor**: MegaSecondHand.cz (women-focused, 3500+ curated pieces). **C34 NEW**: launched "Body visualization" (on-body product photos) for select items. Gradually expanding. Also diversifying into men's basics.
+- **Largest**: Brumla.cz (8500 new items Mon+Thu, 99% Heureka rating). No UX changes, no AI features, no visual improvements detected C34. Volume-first, not curated.
+- **Vinted** (C34 UPDATE): IPO ruled out "for now" — BlackRock secondary deal at ~EUR 8B valuation. Launched "Collections" feature (user-curated themed groupings). Expanding to US (NYC Jan 2026) + electronics category. Vinted Pay wallet rolling out in smaller EU markets (NOT CZ yet). CZ trust issues persist (bots, scams, no human support per Trustpilot). UK sizing disaster reversed Jan 2026.
+- **No new CZ competitors** detected in curated women's second-hand niche as of April 2026. Market gap STILL OPEN.
+- **Global trends**: ThredUp AI image search is killer feature (81% say AI improved experience). Virtual try-on: +40% conversion, ~50% return reduction (Zara launched Jan 2026). Live commerce: 30% conversion vs 2-3% traditional.
+- **Janicka differentiator**: premium curation, Instagram-aesthetic UX, guaranteed quality, pro photos, on-body photography from day one (ahead of MegaSecondHand's gradual rollout), fast single-warehouse shipping
 - **Key message**: "My jsme to už zkontrolovali" — trust > price
 - **Anti-pattern**: NO fake countdown timers, NO flashing "limited stock". Sustainability-conscious 18-35 crowd hates manufactured urgency. Use HONEST scarcity (every item IS the last one).
 - **Page speed target**: Sub-2.5s load (2.4s = 1.9% CR, 5.7s = 0.6% CR — 3x difference)
 - **Mobile grid**: 2 columns standard, thumb-friendly quick actions, bottom nav bar
+- **Second-hand market size**: Global $393B (ThredUp 2026 report), ~10% of total apparel spend. Growing 2-3x faster than first-hand (2025-2027).
