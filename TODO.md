@@ -35,12 +35,22 @@
 - [ ] [BOLT] Settings: shop info, payment config, shipping config
 - [ ] [TRACE] Admin CRUD tests
 
-## Phase 5: Shipping & Invoicing
+## Phase 5: devChat — Owner ↔ Lead Communication
+- [ ] [BOLT] Prisma model: DevChatMessage (id, message, page_path, page_title, sender, status, priority, response, created_at, resolved_at)
+- [ ] [BOLT] API routes: POST /api/dev-chat (send message + page context), GET /api/dev-chat (list, filter by status/page), PATCH /api/dev-chat/[id] (resolve + respond)
+- [ ] [BOLT] DevChatWidget component: floating bubble (bottom-right), expand to chat panel, auto-detect current page path + title
+- [ ] [BOLT] Chat UI: message list (owner vs lead messages), input field, page context badge, status indicators (new/read/resolved)
+- [ ] [BOLT] Unread badge on chat bubble (count of unresolved messages)
+- [ ] [BOLT] Auth guard: only logged-in admin (Janička) can use devChat
+- [ ] [BOLT] Lead integration: GET /api/dev-chat?status=new returns new messages for Lead agent to process
+- [ ] [TRACE] E2E test: send message from page, verify page context captured, verify Lead can read it
+
+## Phase 6: Shipping & Invoicing
 - [ ] [BOLT] Packeta/Zásilkovna integration: pickup point widget, SOAP API labels
 - [ ] [BOLT] PDF invoice generation with Czech QR payment code
 - [ ] [BOLT] Email notifications via Resend: order confirmation, payment, shipping, invoice PDF
 
-## Phase 6: Polish & SEO
+## Phase 7: Polish & SEO
 - [ ] [SAGE] Mobile-first responsive polish — every page
 - [ ] [SAGE] Animations: page transitions, cart interactions, hover effects (Framer Motion)
 - [ ] [BOLT] SEO: meta tags, Open Graph, structured data (Product schema), sitemap.xml
