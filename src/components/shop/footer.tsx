@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CookieSettingsButton } from "@/components/shop/cookie-settings-button";
+import { NewsletterForm } from "@/components/shop/newsletter-form";
 
 const footerLinks = {
   nakupovani: {
@@ -45,6 +46,15 @@ export function Footer() {
               Stylové oblečení pro moderní ženy. Kvalita, elegance a pohodlí v
               každém kousku.
             </p>
+            <div className="mt-4">
+              <h3 className="text-sm font-semibold text-foreground">
+                Novinky do e-mailu
+              </h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Buďte první, kdo uvidí nové kousky.
+              </p>
+              <NewsletterForm />
+            </div>
           </div>
 
           {/* Link columns */}
