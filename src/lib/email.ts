@@ -317,3 +317,165 @@ export async function sendPaymentConfirmedEmail(data: {
     console.error(`[Email] Failed to send payment confirmed email for ${data.orderNumber}:`, error);
   }
 }
+
+// ---------------------------------------------------------------------------
+// Order status change notification emails
+// ---------------------------------------------------------------------------
+
+interface StatusEmailData {
+  orderNumber: string;
+  customerName: string;
+  customerEmail: string;
+  total: number;
+  accessToken: string;
+}
+
+function buildStatusEmailWrapper(content: string, data: Pick<StatusEmailData, "orderNumber" | "accessToken">): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const orderUrl = `${baseUrl}/order/${data.orderNumber}?token=${data.accessToken}`;
+
+  return `<!DOCTYPE html>
+<html lang="cs">
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/></head>
+<body style="margin: 0; padding: 0; background-color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
+
+    <div style="text-align: center; padding: 24px 0;">
+      <h1 style="margin: 0; font-size: 24px; color: #1a1a1a;">Janička Shop</h1>
+    </div>
+
+    <div style="background: #fff; border-radius: 12px; padding: 32px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+      ${content}
+
+      <div style="text-align: center; margin-top: 24px;">
+        <a href="${orderUrl}" style="display: inline-block; background: #1a1a1a; color: #fff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
+          Zobrazit objednávku
+        </a>
+      </div>
+    </div>
+
+    <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
+      <p style="margin: 0;">Janička Shop — Second hand móda</p>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+function buildOrderConfirmedHtml(data: StatusEmailData): string {
+  return buildStatusEmailWrapper(`
+      <div style="text-align: center;">
+        <div style="width: 64px; height: 64px; background: #dbeafe; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+          <span style="font-size: 32px; line-height: 64px;">&#9989;</span>
+        </div>
+        <h2 style="margin: 0 0 8px; font-size: 20px; color: #1a1a1a;">Objednávka potvrzena</h2>
+        <p style="margin: 0 0 4px; color: #666;">
+          ${escapeHtml(data.customerName)}, vaše objednávka
+          <strong style="color: #1a1a1a;">${escapeHtml(data.orderNumber)}</strong>
+          byla potvrzena a připravujeme ji k odeslání.
+        </p>
+        <p style="margin: 16px 0 0; color: #666; font-size: 14px;">
+          O odeslání vás budeme informovat dalším emailem.
+        </p>
+      </div>`, data);
+}
+
+function buildOrderShippedHtml(data: StatusEmailData): string {
+  return buildStatusEmailWrapper(`
+      <div style="text-align: center;">
+        <div style="width: 64px; height: 64px; background: #ede9fe; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+          <span style="font-size: 32px; line-height: 64px;">&#128230;</span>
+        </div>
+        <h2 style="margin: 0 0 8px; font-size: 20px; color: #1a1a1a;">Objednávka odeslána!</h2>
+        <p style="margin: 0 0 4px; color: #666;">
+          ${escapeHtml(data.customerName)}, vaše objednávka
+          <strong style="color: #1a1a1a;">${escapeHtml(data.orderNumber)}</strong>
+          ve výši <strong style="color: #1a1a1a;">${formatPriceCzk(data.total)}</strong>
+          byla odeslána.
+        </p>
+        <p style="margin: 16px 0 0; color: #666; font-size: 14px;">
+          Zásilka je na cestě k vám. Sledujte stav doručení na stránce objednávky.
+        </p>
+      </div>`, data);
+}
+
+function buildOrderDeliveredHtml(data: StatusEmailData): string {
+  return buildStatusEmailWrapper(`
+      <div style="text-align: center;">
+        <div style="width: 64px; height: 64px; background: #ecfdf5; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+          <span style="font-size: 32px; line-height: 64px;">&#127881;</span>
+        </div>
+        <h2 style="margin: 0 0 8px; font-size: 20px; color: #1a1a1a;">Doručeno!</h2>
+        <p style="margin: 0 0 4px; color: #666;">
+          ${escapeHtml(data.customerName)}, vaše objednávka
+          <strong style="color: #1a1a1a;">${escapeHtml(data.orderNumber)}</strong>
+          byla úspěšně doručena.
+        </p>
+        <p style="margin: 16px 0 0; color: #666; font-size: 14px;">
+          Děkujeme za nákup! Doufáme, že vás vaše nové kousky potěší.
+        </p>
+      </div>`, data);
+}
+
+function buildOrderCancelledHtml(data: StatusEmailData): string {
+  return buildStatusEmailWrapper(`
+      <div style="text-align: center;">
+        <div style="width: 64px; height: 64px; background: #fef2f2; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+          <span style="font-size: 32px; line-height: 64px;">&#10060;</span>
+        </div>
+        <h2 style="margin: 0 0 8px; font-size: 20px; color: #1a1a1a;">Objednávka zrušena</h2>
+        <p style="margin: 0 0 4px; color: #666;">
+          ${escapeHtml(data.customerName)}, vaše objednávka
+          <strong style="color: #1a1a1a;">${escapeHtml(data.orderNumber)}</strong>
+          byla zrušena.
+        </p>
+        <p style="margin: 16px 0 0; color: #666; font-size: 14px;">
+          Pokud máte jakékoliv dotazy, neváhejte nás kontaktovat.
+        </p>
+      </div>`, data);
+}
+
+const STATUS_EMAIL_BUILDERS: Record<string, (data: StatusEmailData) => string> = {
+  confirmed: buildOrderConfirmedHtml,
+  shipped: buildOrderShippedHtml,
+  delivered: buildOrderDeliveredHtml,
+  cancelled: buildOrderCancelledHtml,
+};
+
+const STATUS_EMAIL_SUBJECTS: Record<string, string> = {
+  confirmed: "Objednávka potvrzena",
+  shipped: "Objednávka odeslána",
+  delivered: "Objednávka doručena",
+  cancelled: "Objednávka zrušena",
+};
+
+/**
+ * Send status change notification email when admin updates order status.
+ * Supports: confirmed, shipped, delivered, cancelled.
+ * Non-blocking: logs errors instead of throwing.
+ */
+export async function sendOrderStatusEmail(
+  newStatus: string,
+  data: StatusEmailData
+): Promise<void> {
+  const builder = STATUS_EMAIL_BUILDERS[newStatus];
+  const subject = STATUS_EMAIL_SUBJECTS[newStatus];
+  if (!builder || !subject) return; // no email for this status (e.g. pending, paid — handled separately)
+
+  const resend = getResendClient();
+  if (!resend) {
+    console.warn(`[Email] RESEND_API_KEY not set — skipping ${newStatus} email`);
+    return;
+  }
+
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: data.customerEmail,
+      subject: `${subject} — ${data.orderNumber} — Janička Shop`,
+      html: builder(data),
+    });
+  } catch (error) {
+    console.error(`[Email] Failed to send ${newStatus} email for ${data.orderNumber}:`, error);
+  }
+}

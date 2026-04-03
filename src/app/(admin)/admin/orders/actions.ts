@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { ORDER_STATUS_LABELS } from "@/lib/constants";
+import { sendOrderStatusEmail } from "@/lib/email";
 
 const VALID_STATUSES = [
   "pending",
@@ -102,6 +103,31 @@ export async function updateOrderStatus(orderId: string, status: string) {
       data: { status },
     });
   }
+
+  // Fire-and-forget status notification email (never blocks admin action)
+  prisma.order
+    .findUnique({
+      where: { id: orderId },
+      select: {
+        orderNumber: true,
+        accessToken: true,
+        total: true,
+        customer: { select: { firstName: true, lastName: true, email: true } },
+      },
+    })
+    .then((o) => {
+      if (!o || !o.customer.email) return;
+      sendOrderStatusEmail(status, {
+        orderNumber: o.orderNumber,
+        customerName: `${o.customer.firstName} ${o.customer.lastName}`,
+        customerEmail: o.customer.email,
+        total: o.total,
+        accessToken: o.accessToken ?? "",
+      });
+    })
+    .catch((err) => {
+      console.error(`[Email] Failed to fetch order for status email:`, err);
+    });
 
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${orderId}`);
