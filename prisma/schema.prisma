@@ -38,6 +38,8 @@ model Product {
   featured    Boolean     @default(false)
   active      Boolean     @default(true)
   sold        Boolean     @default(false) // marks item as sold (unavailable)
+  reservedUntil DateTime? // reservation expiry — null means not reserved
+  reservedBy    String?   // visitor ID who reserved this item
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   orderItems  OrderItem[]
@@ -46,6 +48,7 @@ model Product {
   @@index([featured])
   @@index([active])
   @@index([sold])
+  @@index([reservedUntil])
 }
 
 model Customer {

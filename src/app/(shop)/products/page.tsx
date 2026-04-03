@@ -81,6 +81,7 @@ export default async function ProductsPage({
       where,
       include: { category: { select: { name: true } } },
       orderBy,
+      take: 500,
     }),
     prisma.category.findMany({ orderBy: { sortOrder: "asc" } }),
     prisma.product.findMany({
@@ -92,6 +93,7 @@ export default async function ProductsPage({
     prisma.product.findMany({
       where: { active: true, sold: false },
       select: { sizes: true },
+      take: 500,
     }),
   ]);
 

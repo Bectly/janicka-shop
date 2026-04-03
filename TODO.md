@@ -14,12 +14,12 @@
 - [x] [BOLT] Product listing page with category filters and sorting (newest, price)
 - [x] [BOLT] Product detail page: image gallery, size, condition badge, brand, original vs SH price (discount %), add to cart, similar items
 - [x] [BOLT] Search page with results
-- [ ] [BOLT] "Nově přidané" section prominently on homepage + badge on new items (last 7 days)
-- [ ] [BOLT] Brand filter — popular brands highlighted, search within brands
-- [ ] [BOLT] Size + condition + price range filters on product listing
+- [x] [BOLT] "Nově přidané" section on homepage with "Čerstvé kousky za poslední týden" + isNew badge + mobile "Zobrazit všechny novinky" CTA — done (in page.tsx)
+- [x] [BOLT] Brand filter — pill-style toggle buttons — done (in product-filters.tsx)
+- [x] [BOLT] Size + condition + price range filters on product listing — done (all wired to URL params, server-side filtering)
 - [ ] [BOLT] Quick view modal on product cards
-- [ ] [BOLT] Pagination on product listing (currently loads all products)
-- [ ] [SAGE] Active filter chips with individual removal
+- [x] [BOLT] Pagination on product listing (12 items/page, reusable Pagination component) — done Cycle #22
+- [x] [SAGE] Active filter chips with individual removal — done (FilterChip component with X button + "Smazat vše")
 - [ ] [TRACE] E2E test: browse catalog, filter, view product
 - [ ] [LEAD] "Poslední kus" scarcity badge on all product cards — honest urgency for qty=1 items (~22% conversion lift per A/B data)
 - [ ] [LEAD] "X lidí si prohlíží" real-time viewer counter on product detail — social proof + urgency
@@ -99,8 +99,8 @@
 - [ ] [SAGE] Mobile-first responsive polish — every page (fashion e-commerce is 70%+ mobile)
 - [ ] [SAGE] Animations: page transitions, cart interactions, hover effects (Framer Motion)
 - [ ] [SAGE] Swipeable product image gallery on mobile (touch gestures, pinch-to-zoom)
-- [ ] [BOLT] SEO structured data — Product schema with: `itemCondition` (UsedCondition/NewCondition), `offers` (price, priceCurrency, availability), `brand`, `category`, `image`. Add `shippingDetails` + `hasMerchantReturnPolicy` for Google Shopping enhanced listings. In 2026, 65% of AI Mode citations use schema markup — critical for AI search visibility. Implement via JSON-LD in product detail page `<head>`.
-- [ ] [BOLT] SEO basics: Open Graph tags (og:image critical for social sharing), sitemap.xml, robots.txt
+- [x] [BOLT] SEO structured data — Product JSON-LD with itemCondition, offers, brand, category, image on product detail pages. XSS-safe (\\u003c escaping). — done Cycle #22, hardened Cycle #24
+- [x] [BOLT] SEO basics: Open Graph tags (og:image), sitemap.xml (dynamic from products/categories), robots.txt — done Cycle #22
 - [ ] [BOLT] Performance: image optimization (WebP/AVIF via next/image), lazy loading, ISR for product pages
 - [ ] [LEAD] Sticky "Přidat do košíku" button on mobile product detail — purchase action must remain visible while scrolling. Fashion e-commerce best practice: 70%+ traffic is mobile, losing the CTA on scroll kills conversion.
 - [ ] [LEAD] Move size + fit info HIGHER on product detail page — above fold if possible. Include model measurements in cm (prsa/pas/délka). Sizing uncertainty is the #1 conversion killer in fashion e-commerce (30%+ return rate driver).
@@ -118,20 +118,21 @@
 - [ ] [LEAD] Instagram integration — show real customers wearing purchased items (UGC social proof)
 - [ ] [LEAD] Messaging strategy: lean into "My jsme to už zkontrolovali, aby ses nemusela" — key differentiator vs Vinted (inconsistent quality, scams, random sellers). Janicka = curated quality, pro photos, guaranteed condition, single-warehouse fast shipping.
 
-## Priority Order (Lead Recommendation — Updated Cycle #19)
-1. **Image upload** (Phase 4) — admin literally cannot add real products without this. UploadThing v7 (free: 2GB, unlimited uploads, ~4000 product photos).
-2. **Product filters UI** (Phase 2) — Size > Brand > Condition > Color > Price (accordion style, no page reload). Filter params already wired.
-3. **"Nově přidané" section** (Phase 2) — homepage query exists, needs prominent section + badge on cards
-4. **Multi-step checkout + Packeta** (Phase 3 + 6) — combine checkout redesign with Packeta widget integration.
-5. **Payment gateway** (Phase 3) — GoPay or Comgate (Pick Page decision). Apple Pay is MUST-HAVE (20% of CZ card payments). 45% of CZ shoppers abandon without preferred payment method.
-6. **Cart reservation** (Phase 3) — prevent double-sell anxiety for qty=1 items. Must ship before payment.
-7. **Cookie consent** (Phase 7) — lightweight custom, must ship before any analytics scripts.
-8. **SEO structured data** (Phase 8) — Product JSON-LD. 20-40% CTR lift + AI search visibility.
-9. **Rate limiting** (Phase 8) — @upstash/ratelimit for checkout + login.
-10. **Email notifications** (Phase 6) — Resend + React Email templates for order confirmation.
-11. **Scarcity UX** (Phase 2) — "Unikátní kus" badges (honest, not fake urgency) + "Právě prodáno" feed.
-12. **Heureka.cz integration** (Phase 9) — critical CZ trust signal. Brumla has 99% rating.
-13. **Saved search alerts** (Phase 9) — biggest competitive differentiator vs Vinted.
+## Priority Order (Lead Recommendation — Updated Cycle #25)
+1. ~~**Image upload**~~ ✅ DONE (Cycle #25) — UploadThing v7, drag-reorder, mobile camera, next/image rendering
+2. ~~**SEO structured data**~~ ✅ DONE (Cycle #22) — JSON-LD, sitemap, robots.txt, OG tags
+3. ~~**Pagination**~~ ✅ DONE (Cycle #22) — 12/page, reusable component
+4. **Product filters UI** (Phase 2) — Size > Brand > Condition > Color > Price (accordion style, no page reload). Filter params already wired. THIS IS THE NEXT CRITICAL ITEM.
+5. **"Nově přidané" section** (Phase 2) — homepage query exists, needs prominent section + badge on cards
+6. **Multi-step checkout + Packeta** (Phase 3 + 6) — combine checkout redesign with Packeta widget integration.
+7. **Payment gateway** (Phase 3) — GoPay or Comgate (Pick Page decision). Apple Pay is MUST-HAVE (20% of CZ card payments). 45% of CZ shoppers abandon without preferred payment method.
+8. **Cart reservation** (Phase 3) — prevent double-sell anxiety for qty=1 items. Must ship before payment.
+9. **Cookie consent** (Phase 7) — lightweight custom, must ship before any analytics scripts.
+10. **Rate limiting** (Phase 8) — @upstash/ratelimit for checkout + login.
+11. **Email notifications** (Phase 6) — Resend + React Email templates for order confirmation.
+12. **Scarcity UX** (Phase 2) — "Unikátní kus" badges (honest, not fake urgency) + "Právě prodáno" feed.
+13. **Heureka.cz integration** (Phase 9) — critical CZ trust signal. Brumla has 99% rating.
+14. **Saved search alerts** (Phase 9) — biggest competitive differentiator vs Vinted.
 
 ## Competitive Positioning (Lead Research C19)
 - **Closest competitor**: MegaSecondHand.cz (women-focused, 3500+ curated pieces)

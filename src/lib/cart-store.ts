@@ -10,6 +10,7 @@ export interface CartItem {
   color: string;
   quantity: number;
   slug: string;
+  reservedUntil?: string; // ISO string — when the reservation expires
 }
 
 interface CartState {

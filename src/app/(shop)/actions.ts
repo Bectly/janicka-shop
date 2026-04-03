@@ -22,23 +22,11 @@ export async function subscribeNewsletter(
   const { email } = parsed.data;
 
   try {
-    const existing = await prisma.newsletterSubscriber.findUnique({
+    await prisma.newsletterSubscriber.upsert({
       where: { email },
+      create: { email, active: true },
+      update: { active: true },
     });
-
-    if (existing) {
-      if (existing.active) {
-        return { success: true, message: "Tento e-mail je již přihlášen k odběru." };
-      }
-      // Reactivate
-      await prisma.newsletterSubscriber.update({
-        where: { email },
-        data: { active: true },
-      });
-      return { success: true, message: "Vítejte zpět! Odběr byl znovu aktivován." };
-    }
-
-    await prisma.newsletterSubscriber.create({ data: { email } });
     return {
       success: true,
       message: "Děkujeme za přihlášení! Brzy se ozveme.",

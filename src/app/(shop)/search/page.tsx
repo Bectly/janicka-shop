@@ -40,7 +40,7 @@ export default async function SearchPage({
   // If DB LIKE found enough results, use them directly.
   // Otherwise, fall back to JS-level filtering for diacritics-insensitive matching.
   let products = dbResults;
-  if (query.length > 0 && dbResults.length < 5) {
+  if (query.length > 0 && dbResults.length === 0) {
     const lowerQuery = query.toLowerCase();
     const all = await prisma.product.findMany({
       where: { active: true, sold: false },

@@ -3,15 +3,16 @@
 import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { getVisitorId } from "@/lib/visitor";
 
 const checkoutSchema = z.object({
-  email: z.string().email("Zadejte platný email"),
-  firstName: z.string().min(1, "Jméno je povinné"),
-  lastName: z.string().min(1, "Příjmení je povinné"),
-  phone: z.string().min(9, "Zadejte platné telefonní číslo"),
-  street: z.string().min(1, "Ulice je povinná"),
-  city: z.string().min(1, "Město je povinné"),
-  zip: z.string().min(5, "Zadejte platné PSČ"),
+  email: z.string().email("Zadejte platný email").max(254),
+  firstName: z.string().min(1, "Jméno je povinné").max(100, "Jméno je příliš dlouhé"),
+  lastName: z.string().min(1, "Příjmení je povinné").max(100, "Příjmení je příliš dlouhé"),
+  phone: z.string().min(9, "Zadejte platné telefonní číslo").max(30, "Neplatné telefonní číslo"),
+  street: z.string().min(1, "Ulice je povinná").max(200, "Adresa je příliš dlouhá"),
+  city: z.string().min(1, "Město je povinné").max(100, "Název města je příliš dlouhý"),
+  zip: z.string().min(5, "Zadejte platné PSČ").max(10, "Neplatné PSČ"),
   note: z.string().max(2000, "Poznámka může mít maximálně 2000 znaků").optional(),
   items: z.array(
     z.object({
@@ -89,6 +90,7 @@ export async function createOrder(
 
   const data = result.data;
   const productIds = data.items.map((i) => i.productId);
+  const visitorId = await getVisitorId();
 
   // Use a transaction to prevent double-sell race conditions.
   // Inside the transaction: verify availability, use DB prices (never trust client), create order, mark sold.
@@ -96,12 +98,22 @@ export async function createOrder(
   try {
     order = await prisma.$transaction(async (tx) => {
       // Verify all products are still available (authoritative check inside transaction)
+      // Products reserved by this visitor are considered available
       const products = await tx.product.findMany({
         where: { id: { in: productIds }, active: true, sold: false },
       });
 
+      const now = new Date();
       const productMap = new Map(products.map((p) => [p.id, p]));
-      const unavailable = data.items.filter((i) => !productMap.has(i.productId));
+      const unavailable = data.items.filter((i) => {
+        const p = productMap.get(i.productId);
+        if (!p) return true; // not found
+        // Check if reserved by someone else (and reservation hasn't expired)
+        if (p.reservedUntil && p.reservedUntil > now && p.reservedBy !== visitorId) {
+          return true;
+        }
+        return false;
+      });
       if (unavailable.length > 0) {
         const names = unavailable.map((i) => i.name).join(", ");
         throw new UnavailableError(
@@ -181,10 +193,10 @@ export async function createOrder(
         },
       });
 
-      // Mark products as sold (second-hand: each piece is unique)
+      // Mark products as sold and clear reservations (second-hand: each piece is unique)
       await tx.product.updateMany({
         where: { id: { in: productIds } },
-        data: { sold: true, stock: 0 },
+        data: { sold: true, stock: 0, reservedUntil: null, reservedBy: null },
       });
 
       return created;

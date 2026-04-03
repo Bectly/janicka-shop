@@ -22,6 +22,17 @@ const productSchema = z.object({
   active: z.boolean(),
 });
 
+const imagesSchema = z.array(z.string().url()).max(10);
+
+function parseImages(formData: FormData): string {
+  try {
+    const parsed = imagesSchema.parse(JSON.parse((formData.get("images") as string) || "[]"));
+    return JSON.stringify(parsed);
+  } catch {
+    return "[]";
+  }
+}
+
 function slugify(text: string): string {
   return text
     .toLowerCase()
@@ -52,7 +63,7 @@ export async function createProduct(formData: FormData) {
     sizes: formData.get("sizes") as string,
     colors: formData.get("colors") as string,
     featured: formData.get("featured") === "on",
-    active: formData.get("active") !== "off",
+    active: formData.get("active") === "on",
   };
 
   const parsed = productSchema.parse(raw);
@@ -63,6 +74,8 @@ export async function createProduct(formData: FormData) {
   if (existing) {
     slug = `${slug}-${Date.now().toString(36)}`;
   }
+
+  const validatedImages = parseImages(formData);
 
   await prisma.product.create({
     data: {
@@ -87,7 +100,7 @@ export async function createProduct(formData: FormData) {
           .map((s) => s.trim())
           .filter(Boolean)
       ),
-      images: (formData.get("images") as string) || "[]",
+      images: validatedImages,
       stock: 1,
       featured: parsed.featured,
       active: parsed.active,
@@ -116,7 +129,7 @@ export async function updateProduct(id: string, formData: FormData) {
     sizes: formData.get("sizes") as string,
     colors: formData.get("colors") as string,
     featured: formData.get("featured") === "on",
-    active: formData.get("active") !== "off",
+    active: formData.get("active") === "on",
   };
 
   const parsed = productSchema.parse(raw);
@@ -129,6 +142,8 @@ export async function updateProduct(id: string, formData: FormData) {
   if (existing) {
     slug = `${slug}-${Date.now().toString(36)}`;
   }
+
+  const validatedImages = parseImages(formData);
 
   await prisma.product.update({
     where: { id },
@@ -154,7 +169,7 @@ export async function updateProduct(id: string, formData: FormData) {
           .map((s) => s.trim())
           .filter(Boolean)
       ),
-      images: (formData.get("images") as string) || "[]",
+      images: validatedImages,
       featured: parsed.featured,
       active: parsed.active,
     },

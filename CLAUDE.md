@@ -103,6 +103,56 @@ Toto je **second hand eshop** s oblečením. Klíčové rozdíly oproti běžné
 - **Bolt (DEV)**: Builder — implementace features, kód
 - **Trace (QA)**: Tester — E2E testy, code review, performance audit
 
+## Infrastructure & Access
+
+### JARVIS DB — Credentials & API Keys
+Všechny API klíče, přístupy, a credentials jsou v JARVIS databázi:
+```bash
+sqlite3 ~/.claude/jarvis-gym/jarvis.db "SELECT name, service, key_value, endpoint FROM api_keys ORDER BY category;"
+```
+- **Vercel token**: `SELECT key_value FROM api_keys WHERE name='vercel';`
+- **Grok/xAI** (image generation): `SELECT key_value, endpoint FROM api_keys WHERE name='xai-grok';`
+- Pro GoPay/Comgate/Stripe/Resend/Packeta klíče: až budou založeny, přidají se sem
+- Nový klíč registruj: `INSERT INTO api_keys (name, category, service, key_value, endpoint, description) VALUES (...);`
+
+### Git & GitHub
+- **Repo**: `git@github.com:Bectly/janicka-shop.git` (HTTPS: `https://github.com/Bectly/janicka-shop.git`)
+- **Branch**: `main` (produkce)
+- **Remote**: origin → GitHub
+- **Commit style**: konvenční (`feat:`, `fix:`, `chore:`, `docs:`)
+- **NIKDY nepushuj** bez explicitního požadavku od bectlyho (GitHub Actions limity)
+- **GitHub CLI**: `gh` je k dispozici — issues, PRs, releases
+
+### Vercel Deploy
+- **Project**: janicka-shop (vryps-projects)
+- **Auto-deploy**: push na `main` → Vercel build
+- **Manuální deploy**: `vercel deploy --prod --token $(sqlite3 ~/.claude/jarvis-gym/jarvis.db "SELECT key_value FROM api_keys WHERE name='vercel'")`
+- **Env vars**: `vercel env add NAME --token $TOKEN` — pro API klíče na produkci
+- **Preview URL**: každý push vytvoří preview URL
+- **Produkce**: janicka-shop.vercel.app (nebo custom doména až bude)
+
+### Database (Turso)
+- **Dev**: SQLite lokálně (prisma/dev.db)
+- **Prod**: Turso (SQLite edge) — `turso db create janicka-shop` až bude potřeba
+- **Turso CLI**: `~/.turso/turso` — `turso db list`, `turso db tokens create`
+- **Prisma driver**: `@libsql/client` + `@prisma/adapter-libsql`
+
+### Dev Server
+- **Start**: `cd ~/development/projects/janicka-shop && npm run dev` → localhost:3000
+- **Build**: `npm run build` — VŽDY před claimováním že feature je hotová
+- **Lint**: `npm run lint`
+
+### Balíčky & Runtime
+- **Node.js**: v22 (fnm)
+- **npm**: package manager
+- **Prisma**: `npx prisma migrate dev`, `npx prisma db seed`, `npx prisma studio`
+
+### Secrets — PRAVIDLA
+- **NIKDY** necommituj klíče do gitu
+- Klíče na produkci → Vercel env vars
+- Klíče lokálně → `.env.local` (je v .gitignore)
+- Nové klíče vždy registruj do JARVIS DB (`api_keys` tabulka)
+
 ## Integration Specs (Lead Research — Cycle #16)
 
 ### GoPay Payment Gateway (Updated — Lead Research C19)

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
@@ -18,16 +19,20 @@ const CONDITION_TO_SCHEMA: Record<string, string> = {
   visible_wear: "https://schema.org/UsedCondition",
 };
 
+const getProduct = cache(async (slug: string) => {
+  return prisma.product.findUnique({
+    where: { slug, active: true, sold: false },
+    include: { category: true },
+  });
+});
+
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const product = await prisma.product.findUnique({
-    where: { slug, active: true, sold: false },
-    select: { name: true, description: true, price: true, slug: true, images: true },
-  });
+  const product = await getProduct(slug);
 
   if (!product) return {};
 
@@ -52,10 +57,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ProductDetailPage({ params }: Props) {
   const { slug } = await params;
 
-  const product = await prisma.product.findUnique({
-    where: { slug, active: true, sold: false },
-    include: { category: true },
-  });
+  const product = await getProduct(slug);
 
   if (!product) notFound();
 
