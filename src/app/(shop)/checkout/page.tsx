@@ -1,8 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ShoppingBag } from "lucide-react";
+import { ArrowLeft, ShoppingBag, CreditCard, Landmark, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,9 +14,33 @@ import { useSyncExternalStore } from "react";
 
 const emptySubscribe = () => () => {};
 
+const COD_SURCHARGE = 39;
+
+const PAYMENT_OPTIONS = [
+  {
+    id: "card" as const,
+    label: "Kartou online",
+    description: "Visa, Mastercard, Apple Pay, Google Pay",
+    icon: CreditCard,
+  },
+  {
+    id: "bank_transfer" as const,
+    label: "Bankovním převodem",
+    description: "Online platba přes vaši banku",
+    icon: Landmark,
+  },
+  {
+    id: "cod" as const,
+    label: "Dobírka",
+    description: `Platba při převzetí (+${COD_SURCHARGE} Kč)`,
+    icon: Truck,
+  },
+] as const;
+
 export default function CheckoutPage() {
   const items = useCartStore((s) => s.items);
   const totalPrice = useCartStore((s) => s.totalPrice);
+  const [paymentMethod, setPaymentMethod] = useState<string>("card");
   const mounted = useSyncExternalStore(
     emptySubscribe,
     () => true,
@@ -27,6 +51,11 @@ export default function CheckoutPage() {
     createOrder,
     { error: null, fieldErrors: {} }
   );
+
+  const isCod = paymentMethod === "cod";
+  const subtotal = totalPrice();
+  const codFee = isCod ? COD_SURCHARGE : 0;
+  const total = subtotal + codFee;
 
   if (!mounted) {
     return (
@@ -88,9 +117,10 @@ export default function CheckoutPage() {
             }))
           )}
         />
+        <input type="hidden" name="paymentMethod" value={paymentMethod} />
 
         <div className="grid gap-8 lg:grid-cols-3">
-          {/* Contact + Shipping form */}
+          {/* Contact + Shipping + Payment form */}
           <div className="space-y-6 lg:col-span-2">
             {/* Contact info */}
             <section className="rounded-xl border bg-card p-6 shadow-sm">
@@ -217,6 +247,67 @@ export default function CheckoutPage() {
               </div>
             </section>
 
+            {/* Payment method selection */}
+            <section className="rounded-xl border bg-card p-6 shadow-sm">
+              <h2 className="font-heading text-lg font-semibold">
+                Způsob platby
+              </h2>
+              {state.fieldErrors.paymentMethod && (
+                <p className="mt-1 text-xs text-destructive">
+                  {state.fieldErrors.paymentMethod}
+                </p>
+              )}
+              <div className="mt-4 space-y-3">
+                {PAYMENT_OPTIONS.map((option) => {
+                  const Icon = option.icon;
+                  const isSelected = paymentMethod === option.id;
+                  return (
+                    <label
+                      key={option.id}
+                      className={`flex cursor-pointer items-center gap-4 rounded-lg border-2 p-4 transition-colors ${
+                        isSelected
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-muted-foreground/30"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="paymentMethodRadio"
+                        value={option.id}
+                        checked={isSelected}
+                        onChange={() => setPaymentMethod(option.id)}
+                        className="sr-only"
+                      />
+                      <div
+                        className={`flex size-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                          isSelected
+                            ? "border-primary"
+                            : "border-muted-foreground/40"
+                        }`}
+                      >
+                        {isSelected && (
+                          <div className="size-2.5 rounded-full bg-primary" />
+                        )}
+                      </div>
+                      <Icon
+                        className={`size-5 shrink-0 ${
+                          isSelected
+                            ? "text-primary"
+                            : "text-muted-foreground"
+                        }`}
+                      />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium">{option.label}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {option.description}
+                        </p>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+            </section>
+
             {/* Note */}
             <section className="rounded-xl border bg-card p-6 shadow-sm">
               <h2 className="font-heading text-lg font-semibold">
@@ -265,15 +356,21 @@ export default function CheckoutPage() {
               <div className="border-t pt-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Mezisoučet</span>
-                  <span>{formatPrice(totalPrice())}</span>
+                  <span>{formatPrice(subtotal)}</span>
                 </div>
                 <div className="mt-1 flex justify-between text-sm">
                   <span className="text-muted-foreground">Doprava</span>
                   <span className="text-emerald-600">Zdarma</span>
                 </div>
+                {isCod && (
+                  <div className="mt-1 flex justify-between text-sm">
+                    <span className="text-muted-foreground">Dobírka</span>
+                    <span>{formatPrice(COD_SURCHARGE)}</span>
+                  </div>
+                )}
                 <div className="mt-3 flex justify-between border-t pt-3 text-lg font-bold">
                   <span>Celkem</span>
-                  <span>{formatPrice(totalPrice())}</span>
+                  <span>{formatPrice(total)}</span>
                 </div>
               </div>
 
@@ -283,11 +380,17 @@ export default function CheckoutPage() {
                 className="w-full"
                 disabled={isPending}
               >
-                {isPending ? "Odesílám objednávku..." : "Odeslat objednávku"}
+                {isPending
+                  ? "Zpracovávám..."
+                  : isCod
+                    ? "Objednat na dobírku"
+                    : "Přejít k platbě"}
               </Button>
 
               <p className="text-center text-xs text-muted-foreground">
-                Platba na dobírku — zaplatíte při převzetí
+                {isCod
+                  ? `Zaplatíte ${formatPrice(total)} při převzetí zásilky`
+                  : "Budete přesměrováni na bezpečnou platební bránu"}
               </p>
             </div>
           </div>

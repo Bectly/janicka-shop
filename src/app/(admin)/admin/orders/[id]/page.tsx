@@ -6,6 +6,7 @@ import {
   ORDER_STATUS_LABELS,
   ORDER_STATUS_COLORS,
   CONDITION_LABELS,
+  PAYMENT_METHOD_LABELS,
 } from "@/lib/constants";
 import { ArrowLeft } from "lucide-react";
 import { OrderStatusSelect } from "./order-status-select";
@@ -176,6 +177,39 @@ export default async function AdminOrderDetailPage({ params }: Props) {
                 {order.shippingZip} {order.shippingCity}
               </p>
               <p>{order.shippingCountry}</p>
+            </div>
+          </div>
+
+          {/* Payment info */}
+          <div className="rounded-xl border bg-card p-5 shadow-sm">
+            <h2 className="font-heading text-base font-semibold text-foreground">
+              Platba
+            </h2>
+            <div className="mt-3 space-y-1 text-sm">
+              <p className="text-muted-foreground">
+                <span className="font-medium text-foreground">Způsob: </span>
+                {PAYMENT_METHOD_LABELS[order.paymentMethod ?? ""] ??
+                  order.paymentMethod ??
+                  "Neurčen"}
+              </p>
+              {order.paymentId && (
+                <p className="text-muted-foreground">
+                  <span className="font-medium text-foreground">ID transakce: </span>
+                  <span className="font-mono text-xs">{order.paymentId}</span>
+                </p>
+              )}
+              <p className="text-muted-foreground">
+                <span className="font-medium text-foreground">Stav: </span>
+                {order.status === "paid" ||
+                order.status === "shipped" ||
+                order.status === "delivered"
+                  ? "Zaplaceno"
+                  : order.status === "cancelled"
+                    ? "Zrušeno"
+                    : order.paymentMethod === "cod"
+                      ? "Dobírka — platba při převzetí"
+                      : "Čeká na platbu"}
+              </p>
             </div>
           </div>
 

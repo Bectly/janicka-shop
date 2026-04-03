@@ -26,7 +26,8 @@ function getSavedConsent(): CookieConsent | null {
 function saveConsent(consent: CookieConsent) {
   localStorage.setItem(CONSENT_KEY, JSON.stringify(consent));
   // Also set a cookie so server can read consent status
-  document.cookie = `cookie-consent=1; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+  const secure = window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `cookie-consent=1; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax${secure}`;
 }
 
 export function CookieConsentBanner() {

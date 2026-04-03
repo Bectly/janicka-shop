@@ -39,22 +39,29 @@ export default async function SearchPage({
 
   // If DB LIKE found enough results, use them directly.
   // Otherwise, fall back to JS-level filtering for diacritics-insensitive matching.
+  // Czech users often search without háčky/čárky (e.g. "saty" instead of "šaty"),
+  // so we normalize both query and text by stripping combining diacritical marks.
   let products = dbResults;
   if (query.length > 0 && dbResults.length === 0) {
-    const lowerQuery = query.toLowerCase();
+    const normQuery = query
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
     const all = await prisma.product.findMany({
       where: { active: true, sold: false },
       include: { category: { select: { name: true } } },
       orderBy: { createdAt: "desc" },
       take: 200,
     });
+    const norm = (s: string) =>
+      s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     products = all
       .filter(
         (p) =>
-          p.name.toLowerCase().includes(lowerQuery) ||
-          p.description.toLowerCase().includes(lowerQuery) ||
-          (p.brand?.toLowerCase().includes(lowerQuery) ?? false) ||
-          p.sku.toLowerCase().includes(lowerQuery)
+          norm(p.name).includes(normQuery) ||
+          norm(p.description).includes(normQuery) ||
+          (p.brand ? norm(p.brand).includes(normQuery) : false) ||
+          norm(p.sku).includes(normQuery)
       )
       .slice(0, 40);
   }

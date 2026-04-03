@@ -24,6 +24,14 @@ export const ORDER_STATUS_LABELS: Record<string, string> = {
   cancelled: "Zrušeno",
 };
 
+/** Payment method labels */
+export const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  comgate: "Online platba",
+  cod: "Dobírka",
+  card: "Kartou",
+  bank_transfer: "Bankovní převod",
+};
+
 /** Order status → badge color class */
 export const ORDER_STATUS_COLORS: Record<string, string> = {
   pending: "bg-amber-100 text-amber-800",

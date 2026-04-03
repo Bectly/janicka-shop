@@ -61,8 +61,10 @@ export async function updateOrderStatus(orderId: string, status: string) {
         where: { id: orderId },
         data: { status },
       }),
+      // Only release active products — soft-deleted products (active=false)
+      // were explicitly removed by admin and should stay deleted
       prisma.product.updateMany({
-        where: { id: { in: productIds } },
+        where: { id: { in: productIds }, active: true },
         data: { sold: false, stock: 1 },
       }),
     ]);

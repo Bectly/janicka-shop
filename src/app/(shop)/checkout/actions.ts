@@ -4,6 +4,10 @@ import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getVisitorId } from "@/lib/visitor";
+import { createComgatePayment } from "@/lib/payments/comgate";
+
+const PAYMENT_METHODS = ["card", "bank_transfer", "cod"] as const;
+type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
 const checkoutSchema = z.object({
   email: z.string().email("Zadejte platný email").max(254),
@@ -14,6 +18,9 @@ const checkoutSchema = z.object({
   city: z.string().min(1, "Město je povinné").max(100, "Název města je příliš dlouhý"),
   zip: z.string().min(5, "Zadejte platné PSČ").max(10, "Neplatné PSČ"),
   note: z.string().max(2000, "Poznámka může mít maximálně 2000 znaků").optional(),
+  paymentMethod: z.enum(PAYMENT_METHODS, {
+    error: "Vyberte platný způsob platby",
+  }),
   items: z.array(
     z.object({
       productId: z.string(),
@@ -47,6 +54,21 @@ function generateOrderNumber(): string {
   return `JN-${y}${m}${d}-${rand}`;
 }
 
+/** Comgate method code for each payment method */
+function getComgateMethod(method: PaymentMethod): string {
+  switch (method) {
+    case "card":
+      return "CARD_CZ_CSOB_2";
+    case "bank_transfer":
+      return "BANK_ALL";
+    default:
+      return "ALL";
+  }
+}
+
+/** Cash on delivery surcharge in CZK */
+const COD_SURCHARGE = 39;
+
 export type CheckoutState = {
   error: string | null;
   fieldErrors: Record<string, string>;
@@ -73,6 +95,7 @@ export async function createOrder(
     city: formData.get("city") as string,
     zip: formData.get("zip") as string,
     note: (formData.get("note") as string) || undefined,
+    paymentMethod: formData.get("paymentMethod") as string,
     items,
   };
 
@@ -91,6 +114,7 @@ export async function createOrder(
   const data = result.data;
   const productIds = data.items.map((i) => i.productId);
   const visitorId = await getVisitorId();
+  const isCod = data.paymentMethod === "cod";
 
   // Use a transaction to prevent double-sell race conditions.
   // Inside the transaction: verify availability, use DB prices (never trust client), create order, mark sold.
@@ -127,7 +151,8 @@ export async function createOrder(
         return sum + dbProduct.price * 1; // qty is always 1 for second-hand
       }, 0);
       const shipping = 0; // Free shipping for now, Packeta will come later
-      const total = subtotal + shipping;
+      const codFee = isCod ? COD_SURCHARGE : 0;
+      const total = subtotal + shipping + codFee;
 
       // Create or find customer
       let customer = await tx.customer.findUnique({
@@ -169,6 +194,7 @@ export async function createOrder(
           accessToken,
           customerId: customer.id,
           status: "pending",
+          paymentMethod: isCod ? "cod" : "comgate",
           subtotal,
           shipping,
           total,
@@ -177,20 +203,23 @@ export async function createOrder(
           shippingStreet: data.street,
           shippingCity: data.city,
           shippingZip: data.zip,
-          items: {
-            create: data.items.map((item) => {
-              const dbProduct = productMap.get(item.productId)!;
-              return {
-                productId: item.productId,
-                name: dbProduct.name,
-                price: dbProduct.price,
-                quantity: 1,
-                size: item.size,
-                color: item.color,
-              };
-            }),
-          },
         },
+      });
+
+      // Create order items
+      await tx.orderItem.createMany({
+        data: data.items.map((item) => {
+          const dbProduct = productMap.get(item.productId)!;
+          return {
+            orderId: created.id,
+            productId: item.productId,
+            name: dbProduct.name,
+            price: dbProduct.price,
+            quantity: 1,
+            size: item.size,
+            color: item.color,
+          };
+        }),
       });
 
       // Mark products as sold and clear reservations (second-hand: each piece is unique)
@@ -199,7 +228,7 @@ export async function createOrder(
         data: { sold: true, stock: 0, reservedUntil: null, reservedBy: null },
       });
 
-      return created;
+      return { ...created, customerEmail: customer.email };
     });
   } catch (e) {
     if (e instanceof UnavailableError) {
@@ -208,5 +237,36 @@ export async function createOrder(
     throw e;
   }
 
-  redirect(`/order/${order.orderNumber}?token=${order.accessToken}`);
+  // For cash on delivery — go straight to order confirmation
+  if (isCod) {
+    redirect(`/order/${order.orderNumber}?token=${order.accessToken}`);
+  }
+
+  // For online payment — create Comgate payment and redirect to payment page
+  try {
+    const payment = await createComgatePayment({
+      refId: order.orderNumber,
+      priceCzk: order.total,
+      email: order.customerEmail,
+      label: `Janička #${order.orderNumber.slice(-8)}`,
+      method: getComgateMethod(data.paymentMethod),
+    });
+
+    // Store Comgate transaction ID on the order
+    await prisma.order.update({
+      where: { id: order.id },
+      data: { paymentId: payment.transId },
+    });
+
+    redirect(payment.redirect);
+  } catch (e) {
+    // If payment creation fails, order still exists but unpaid
+    // Customer can retry or contact support
+    console.error("[Checkout] Comgate payment creation failed:", e);
+    return {
+      error:
+        "Nepodařilo se vytvořit platbu. Zkuste to prosím znovu nebo zvolte platbu na dobírku.",
+      fieldErrors: {},
+    };
+  }
 }

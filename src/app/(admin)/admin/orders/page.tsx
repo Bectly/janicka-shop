@@ -4,6 +4,7 @@ import { formatPrice, formatDate } from "@/lib/format";
 import {
   ORDER_STATUS_LABELS,
   ORDER_STATUS_COLORS,
+  PAYMENT_METHOD_LABELS,
 } from "@/lib/constants";
 import type { Metadata } from "next";
 
@@ -98,6 +99,9 @@ export default async function AdminOrdersPage({
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">
                   Status
                 </th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                  Platba
+                </th>
                 <th className="px-4 py-3 text-right font-medium text-muted-foreground">
                   Položky
                 </th>
@@ -113,7 +117,7 @@ export default async function AdminOrdersPage({
               {orders.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="px-4 py-12 text-center text-muted-foreground"
                   >
                     Žádné objednávky
@@ -148,6 +152,13 @@ export default async function AdminOrdersPage({
                         className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${ORDER_STATUS_COLORS[order.status] ?? "bg-muted text-muted-foreground"}`}
                       >
                         {ORDER_STATUS_LABELS[order.status] ?? order.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-xs text-muted-foreground">
+                        {PAYMENT_METHOD_LABELS[order.paymentMethod ?? ""] ??
+                          order.paymentMethod ??
+                          "—"}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right text-muted-foreground">
