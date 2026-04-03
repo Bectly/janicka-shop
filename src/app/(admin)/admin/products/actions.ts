@@ -20,7 +20,10 @@ const productSchema = z.object({
   colors: z.string().max(500),
   featured: z.boolean(),
   active: z.boolean(),
-});
+}).refine(
+  (data) => !data.compareAt || data.compareAt > data.price,
+  { message: "Původní cena musí být vyšší než aktuální cena", path: ["compareAt"] },
+);
 
 const imagesSchema = z.array(z.string().url()).max(10);
 

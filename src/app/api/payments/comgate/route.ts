@@ -99,8 +99,9 @@ async function processPaymentStatus(
 ) {
   switch (comgateStatus) {
     case "PAID": {
-      // Only mark as paid if order is still pending or confirmed
-      if (currentOrderStatus === "pending" || currentOrderStatus === "confirmed") {
+      // Only mark as paid if order is still pending — never regress a more advanced status
+      // (e.g. admin may have already moved order to "confirmed" for processing)
+      if (currentOrderStatus === "pending") {
         await prisma.order.update({
           where: { id: orderId },
           data: {

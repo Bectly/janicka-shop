@@ -24,7 +24,7 @@ const checkoutSchema = z.object({
   }),
   items: z.array(
     z.object({
-      productId: z.string(),
+      productId: z.string().min(1, "Neplatný produkt").max(128),
       name: z.string(),
       price: z.number(),
       size: z.string(),
