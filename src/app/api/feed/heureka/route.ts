@@ -91,6 +91,15 @@ export async function GET() {
         xml += "    </PARAM>\n";
       }
 
+      // Color parameters — improves Heureka search/filter visibility
+      const colors: string[] = safeJsonParse(product.colors);
+      for (const color of colors) {
+        xml += "    <PARAM>\n";
+        xml += "      <PARAM_NAME>Barva</PARAM_NAME>\n";
+        xml += `      <VAL>${escapeXml(color)}</VAL>\n`;
+        xml += "    </PARAM>\n";
+      }
+
       // Delivery options — Zásilkovna pickup
       xml += "    <DELIVERY>\n";
       xml += "      <DELIVERY_ID>ZASILKOVNA</DELIVERY_ID>\n";
