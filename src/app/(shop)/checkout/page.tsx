@@ -12,6 +12,7 @@ import {
   MapPin,
   Home,
   Mail,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -506,6 +507,16 @@ export default function CheckoutPage() {
                     </label>
                   );
                 })}
+              </div>
+
+              {/* Inline trust badge — 40-60% better conversion than footer placement */}
+              <div className="mt-4 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400">
+                <Lock className="size-4 shrink-0" />
+                <span>
+                  <span className="font-medium">Zabezpečená platba</span>
+                  {" — "}
+                  vaše údaje jsou šifrovány a v bezpečí
+                </span>
               </div>
             </section>
 

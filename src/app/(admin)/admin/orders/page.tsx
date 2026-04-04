@@ -8,6 +8,7 @@ import {
   PAYMENT_METHOD_LABELS,
 } from "@/lib/constants";
 import { OrderSearch } from "@/components/admin/order-search";
+import { OrderExportButton } from "@/components/admin/order-export-button";
 import type { Metadata } from "next";
 import type { Prisma } from "@prisma/client";
 
@@ -67,19 +68,24 @@ export default async function AdminOrdersPage({
 
   return (
     <>
-      <div>
-        <h1 className="font-heading text-2xl font-bold text-foreground">
-          Objednávky
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {orders.length}{" "}
-          {orders.length === 1
-            ? "objednávka"
-            : orders.length >= 2 && orders.length <= 4
-              ? "objednávky"
-              : "objednávek"}
-          {isFiltered && " (filtrováno)"}
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-heading text-2xl font-bold text-foreground">
+            Objednávky
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {orders.length}{" "}
+            {orders.length === 1
+              ? "objednávka"
+              : orders.length >= 2 && orders.length <= 4
+                ? "objednávky"
+                : "objednávek"}
+            {isFiltered && " (filtrováno)"}
+          </p>
+        </div>
+        <Suspense fallback={null}>
+          <OrderExportButton />
+        </Suspense>
       </div>
 
       {/* Search */}

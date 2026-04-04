@@ -151,6 +151,89 @@ export async function updateOrderStatus(orderId: string, status: string) {
   revalidatePath("/");
 }
 
+/** Escape a CSV field: wrap in quotes if it contains comma, quote, or newline */
+function csvField(value: string | number | null | undefined): string {
+  const str = String(value ?? "");
+  if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
+export async function exportOrdersCsv(statusFilter?: string): Promise<string> {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
+
+  const where: Record<string, unknown> = {};
+  if (statusFilter && statusFilter !== "all" && VALID_STATUSES.includes(statusFilter)) {
+    where.status = statusFilter;
+  }
+
+  const orders = await prisma.order.findMany({
+    where,
+    orderBy: { createdAt: "desc" },
+    take: 5000,
+    include: {
+      customer: {
+        select: { firstName: true, lastName: true, email: true, phone: true },
+      },
+      items: { select: { name: true, price: true, size: true, color: true } },
+    },
+  });
+
+  const header = [
+    "Číslo objednávky",
+    "Datum",
+    "Jméno",
+    "Email",
+    "Telefon",
+    "Položky",
+    "Mezisoučet",
+    "Doprava",
+    "Celkem",
+    "Status",
+    "Platba",
+    "Doprava (způsob)",
+    "Sledovací číslo",
+  ];
+
+  const rows = orders.map((o) => {
+    const itemsSummary = o.items
+      .map((i) => `${i.name}${i.size ? ` (${i.size})` : ""}`)
+      .join("; ");
+    const date = new Intl.DateTimeFormat("cs-CZ", {
+      day: "numeric",
+      month: "numeric",
+      year: "numeric",
+    }).format(o.createdAt);
+
+    return [
+      o.orderNumber,
+      date,
+      `${o.customer.firstName} ${o.customer.lastName}`,
+      o.customer.email,
+      o.customer.phone ?? "",
+      itemsSummary,
+      o.subtotal,
+      o.shipping,
+      o.total,
+      ORDER_STATUS_LABELS[o.status] ?? o.status,
+      o.paymentMethod ?? "",
+      o.shippingMethod ?? "",
+      o.trackingNumber ?? "",
+    ];
+  });
+
+  const csv =
+    header.map(csvField).join(",") +
+    "\n" +
+    rows.map((row) => row.map(csvField).join(",")).join("\n");
+
+  // BOM for Excel UTF-8 recognition
+  return "\uFEFF" + csv;
+}
+
 export async function updateTrackingNumber(orderId: string, trackingNumber: string) {
   await requireAdmin();
   const rl = await rateLimitAdmin();

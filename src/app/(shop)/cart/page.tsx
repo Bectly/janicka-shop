@@ -9,6 +9,7 @@ import { formatPrice } from "@/lib/format";
 import { releaseReservation, extendReservations } from "@/lib/actions/reservation";
 import { FREE_SHIPPING_THRESHOLD, SHIPPING_PRICES } from "@/lib/constants";
 import { CartRecommendations } from "@/components/shop/cart-recommendations";
+import { CartExitIntent } from "@/components/shop/cart-exit-intent";
 import { useSyncExternalStore, useState, useEffect, useCallback, useTransition } from "react";
 
 const emptySubscribe = () => () => {};
@@ -121,6 +122,9 @@ export default function CartPage() {
 
       {/* Cross-sell recommendations from same categories */}
       <CartRecommendations />
+
+      {/* Exit intent popup — unique items urgency (desktop only, once per session) */}
+      <CartExitIntent />
     </div>
   );
 }
