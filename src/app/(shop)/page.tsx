@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
 import { ProductCard } from "@/components/shop/product-card";
 import { CategoryCard } from "@/components/shop/category-card";
 import { NewsletterForm } from "@/components/shop/newsletter-form";
@@ -16,7 +18,7 @@ export default async function HomePage() {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  const [featuredProducts, categories, newProducts, recentlySold, brandProducts] = await Promise.all([
+  const [featuredProducts, categories, newProducts, recentlySold, brandProducts, saleProducts] = await Promise.all([
     prisma.product.findMany({
       where: { featured: true, active: true, sold: false },
       include: { category: { select: { name: true } } },
@@ -55,6 +57,16 @@ export default async function HomePage() {
       where: { active: true, sold: false, brand: { not: null } },
       select: { brand: true },
     }),
+    prisma.product.findMany({
+      where: {
+        active: true,
+        sold: false,
+        compareAt: { not: null },
+      },
+      include: { category: { select: { name: true } } },
+      take: 8,
+      orderBy: { createdAt: "desc" },
+    }),
   ]);
 
   const visitorId = await getVisitorId();
@@ -64,6 +76,7 @@ export default async function HomePage() {
   const allProductIds = [
     ...featuredProducts.map((p) => p.id),
     ...newProducts.map((p) => p.id),
+    ...saleProducts.map((p) => p.id),
   ];
   const lowestPricesMap = await getLowestPrices30d(allProductIds);
 

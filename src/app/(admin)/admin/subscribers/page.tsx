@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/db";
 import { formatDate } from "@/lib/format";
+
+export const dynamic = "force-dynamic";
 import { Mail } from "lucide-react";
 import type { Metadata } from "next";
 import { SubscriberToggle } from "./subscriber-toggle";

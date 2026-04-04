@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/db";
 import { formatPrice, formatDate } from "@/lib/format";
+
+export const dynamic = "force-dynamic";
 import {
   ORDER_STATUS_LABELS,
   ORDER_STATUS_COLORS,

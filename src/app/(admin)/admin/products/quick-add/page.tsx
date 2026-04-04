@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
 import { QuickAddForm } from "./quick-add-form";
 import { quickCreateProduct } from "../actions";
 import { ArrowLeft } from "lucide-react";

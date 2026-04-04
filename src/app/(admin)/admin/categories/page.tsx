@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/db";
 import Link from "next/link";
+
+export const dynamic = "force-dynamic";
 import { Plus } from "lucide-react";
 import type { Metadata } from "next";
 import { CategoryRow } from "./category-row";

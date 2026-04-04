@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
 import { formatPrice, formatDate } from "@/lib/format";
 import {
   ORDER_STATUS_LABELS,

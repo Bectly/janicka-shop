@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
 import { formatPrice } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock, ArrowRight, MapPin, Truck } from "lucide-react";

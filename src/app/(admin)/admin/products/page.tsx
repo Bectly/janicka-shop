@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
 import { formatPrice } from "@/lib/format";
 import { CONDITION_LABELS, CONDITION_COLORS } from "@/lib/constants";
 import { Plus, Zap, ImageIcon } from "lucide-react";

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
 import { ProductCard } from "@/components/shop/product-card";
 import { Search } from "lucide-react";
 import { rateLimitSearch } from "@/lib/rate-limit";
