@@ -137,6 +137,8 @@ export async function updateOrderStatus(orderId: string, status: string) {
         total: o.total,
         accessToken: o.accessToken ?? "",
         trackingNumber: o.trackingNumber,
+      }).catch((err: unknown) => {
+        console.error(`[Email] Failed to send order status email:`, err);
       });
     })
     .catch((err) => {

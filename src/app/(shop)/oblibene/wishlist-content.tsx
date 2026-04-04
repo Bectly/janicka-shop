@@ -39,6 +39,9 @@ export function WishlistContent() {
       });
       setProducts(sorted);
       setLoading(false);
+    }).catch(() => {
+      // Show empty state on error instead of infinite loading
+      setLoading(false);
     });
   }, [wishlistIds, mounted]);
 

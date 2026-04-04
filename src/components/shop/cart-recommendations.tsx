@@ -30,7 +30,9 @@ export function CartRecommendations() {
     }
 
     const productIds = items.map((i) => i.productId);
-    getCartRecommendations(productIds).then(setRecommendations);
+    getCartRecommendations(productIds).then(setRecommendations).catch(() => {
+      // Non-critical — cross-sell section simply won't render
+    });
   }, [items]);
 
   if (recommendations.length === 0) return null;

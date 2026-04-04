@@ -34,6 +34,8 @@ export default function CartPage() {
         // truthy → updates expiry, null → removes item by productId
         updateReservation(productId, reservedUntil);
       }
+    }).catch(() => {
+      // Non-critical — reservations continue with existing expiry
     });
     // Only run on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps

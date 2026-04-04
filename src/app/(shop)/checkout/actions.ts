@@ -407,6 +407,8 @@ export async function createOrder(
     note: data.note ?? null,
     accessToken: order.accessToken ?? "",
     isCod,
+  }).catch((err: unknown) => {
+    console.error(`[Checkout] Order confirmation email failed for ${order.orderNumber}:`, err);
   });
 
   // For cash on delivery — go straight to order confirmation
