@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { ProductCard } from "@/components/shop/product-card";
 import { Search } from "lucide-react";
@@ -76,9 +77,29 @@ export default async function SearchPage({
       .slice(0, 40);
   }
 
-  const lowestPricesMap = await getLowestPrices30d(
-    products.map((p) => p.id),
-  );
+  // Fetch discovery data when search is empty or yields no results
+  const showDiscovery = query.length === 0 || (products.length === 0 && !rateLimited);
+  const [categories, featuredProducts] = showDiscovery
+    ? await Promise.all([
+        prisma.category.findMany({
+          orderBy: { sortOrder: "asc" },
+          select: { name: true, slug: true },
+          take: 10,
+        }),
+        prisma.product.findMany({
+          where: { active: true, sold: false, featured: true },
+          include: { category: { select: { name: true } } },
+          orderBy: { createdAt: "desc" },
+          take: 4,
+        }),
+      ])
+    : [[], []];
+
+  const allProductIds = [
+    ...products.map((p) => p.id),
+    ...featuredProducts.map((p) => p.id),
+  ];
+  const lowestPricesMap = await getLowestPrices30d(allProductIds);
 
   const searchJsonLd =
     query.length > 0 && products.length > 0
@@ -170,18 +191,104 @@ export default async function SearchPage({
                 ))}
               </div>
             ) : (
-              <div className="py-20 text-center">
+              <div className="py-12 text-center">
                 <p className="text-lg text-muted-foreground">
-                  Nic jsme nenašli. Zkuste jiný výraz.
+                  Nic jsme nenašli pro &ldquo;{query}&rdquo;
                 </p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Zkuste jiný výraz nebo se podívejte na naše kategorie
+                </p>
+                {categories.length > 0 && (
+                  <div className="mt-6 flex flex-wrap justify-center gap-2">
+                    {categories.map((cat) => (
+                      <Link
+                        key={cat.slug}
+                        href={`/products?category=${cat.slug}`}
+                        className="rounded-full border px-4 py-1.5 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                      >
+                        {cat.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+                {featuredProducts.length > 0 && (
+                  <div className="mt-12 text-left">
+                    <h2 className="font-heading text-lg font-bold text-foreground">
+                      Mohlo by se vám líbit
+                    </h2>
+                    <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+                      {featuredProducts.map((product) => (
+                        <ProductCard
+                          key={product.id}
+                          id={product.id}
+                          name={product.name}
+                          slug={product.slug}
+                          price={product.price}
+                          compareAt={product.compareAt}
+                          images={product.images}
+                          categoryName={product.category.name}
+                          brand={product.brand}
+                          condition={product.condition}
+                          sizes={product.sizes}
+                          colors={product.colors}
+                          lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </>
         ) : (
-          <div className="py-20 text-center">
-            <p className="text-lg text-muted-foreground">
-              Začněte psát a najdeme to za vás.
-            </p>
+          <div className="py-8">
+            {/* Category quick links */}
+            {categories.length > 0 && (
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground">
+                  Nebo procházejte podle kategorie
+                </p>
+                <div className="mt-4 flex flex-wrap justify-center gap-2">
+                  {categories.map((cat) => (
+                    <Link
+                      key={cat.slug}
+                      href={`/products?category=${cat.slug}`}
+                      className="rounded-full border px-4 py-1.5 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                    >
+                      {cat.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Featured products */}
+            {featuredProducts.length > 0 && (
+              <div className="mt-12">
+                <h2 className="font-heading text-lg font-bold text-foreground">
+                  Doporučujeme
+                </h2>
+                <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+                  {featuredProducts.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      id={product.id}
+                      name={product.name}
+                      slug={product.slug}
+                      price={product.price}
+                      compareAt={product.compareAt}
+                      images={product.images}
+                      categoryName={product.category.name}
+                      brand={product.brand}
+                      condition={product.condition}
+                      sizes={product.sizes}
+                      colors={product.colors}
+                      lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
