@@ -255,7 +255,8 @@ export async function updateTrackingNumber(orderId: string, trackingNumber: stri
   const rl = await rateLimitAdmin();
   if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
 
-  const trimmed = trackingNumber.trim();
+  // Validate input length — tracking numbers are typically 10-30 chars
+  const trimmed = trackingNumber.trim().slice(0, 100);
 
   await prisma.order.update({
     where: { id: orderId },

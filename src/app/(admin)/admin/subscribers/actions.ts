@@ -11,6 +11,9 @@ async function requireAdmin() {
 
 export async function toggleSubscriberActive(id: string, active: boolean) {
   await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
+
   await prisma.newsletterSubscriber.update({
     where: { id },
     data: { active },
