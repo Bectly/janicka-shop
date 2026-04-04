@@ -23,7 +23,7 @@ const checkoutSchema = z
     firstName: z.string().min(1, "Jméno je povinné").max(100, "Jméno je příliš dlouhé"),
     lastName: z.string().min(1, "Příjmení je povinné").max(100, "Příjmení je příliš dlouhé"),
     phone: z.string()
-      .regex(/^\+?[\d\s\-()]{9,30}$/, "Zadejte platné telefonní číslo"),
+      .regex(/^\+?[\d \-()]{9,30}$/, "Zadejte platné telefonní číslo"),
     // Address fields — required only for home delivery methods (validated in refine)
     street: z.string().max(200, "Adresa je příliš dlouhá").optional(),
     city: z.string().max(100, "Název města je příliš dlouhý").optional(),

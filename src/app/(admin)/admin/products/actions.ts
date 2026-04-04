@@ -26,7 +26,12 @@ const productSchema = z.object({
   { message: "Původní cena musí být vyšší než aktuální cena", path: ["compareAt"] },
 );
 
-const imagesSchema = z.array(z.string().url()).max(10);
+const imagesSchema = z.array(
+  z.string().url().refine(
+    (u) => u.startsWith("https://") || u.startsWith("http://"),
+    "Pouze HTTP/HTTPS URL",
+  ),
+).max(10);
 
 function parseImages(formData: FormData): string {
   try {

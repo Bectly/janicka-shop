@@ -10,7 +10,10 @@ const categorySchema = z.object({
   name: z.string().min(1, "Název je povinný").max(200, "Název je příliš dlouhý"),
   slug: z.string().min(1, "Slug je povinný").max(250, "Slug je příliš dlouhý"),
   description: z.string().max(2000, "Popis je příliš dlouhý").nullable(),
-  image: z.string().url().max(2048, "URL obrázku je příliš dlouhé").nullable(),
+  image: z.string().url().max(2048, "URL obrázku je příliš dlouhé").refine(
+    (u) => u.startsWith("https://") || u.startsWith("http://"),
+    "Pouze HTTP/HTTPS URL",
+  ).nullable(),
   sortOrder: z.coerce.number().int().default(0),
 });
 

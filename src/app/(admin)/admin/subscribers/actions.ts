@@ -34,7 +34,8 @@ export async function getSubscribersCsv(): Promise<string> {
   const rows = subscribers.map(
     (s) => `${csvField(s.email)},${s.createdAt.toISOString()}`,
   );
-  return [header, ...rows].join("\n");
+  // BOM for Excel UTF-8 recognition (matching orders CSV export)
+  return "\uFEFF" + [header, ...rows].join("\n");
 }
 
 function csvField(value: string): string {
