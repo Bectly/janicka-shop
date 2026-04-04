@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
+import { rateLimitAdmin } from "@/lib/rate-limit";
 
 async function requireAdmin() {
   const session = await auth();
@@ -18,6 +19,9 @@ export async function toggleSubscriberActive(id: string, active: boolean) {
 
 export async function getSubscribersCsv(): Promise<string> {
   await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
+
   const subscribers = await prisma.newsletterSubscriber.findMany({
     where: { active: true },
     orderBy: { createdAt: "desc" },
@@ -25,7 +29,28 @@ export async function getSubscribersCsv(): Promise<string> {
 
   const header = "email,subscribed_at";
   const rows = subscribers.map(
-    (s) => `${s.email},${s.createdAt.toISOString()}`,
+    (s) => `${csvField(s.email)},${s.createdAt.toISOString()}`,
   );
   return [header, ...rows].join("\n");
+}
+
+function csvField(value: string): string {
+  const needsFormulaGuard =
+    value.length > 0 &&
+    (value[0] === "=" ||
+      value[0] === "+" ||
+      value[0] === "-" ||
+      value[0] === "@" ||
+      value[0] === "\t" ||
+      value[0] === "\r");
+  const safe = needsFormulaGuard ? "'" + value : value;
+  if (
+    safe.includes(",") ||
+    safe.includes('"') ||
+    safe.includes("\n") ||
+    safe.includes("\r")
+  ) {
+    return `"${safe.replace(/"/g, '""')}"`;
+  }
+  return safe;
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { ChevronUp, ShoppingBag } from "lucide-react";
 import { formatPrice } from "@/lib/format";
 import {
@@ -16,6 +17,7 @@ interface CartItem {
   price: number;
   size: string;
   color: string;
+  image?: string;
 }
 
 interface MobileCheckoutSummaryProps {
@@ -59,9 +61,20 @@ export function MobileCheckoutSummary({
               {items.map((item) => (
                 <div
                   key={`${item.productId}-${item.size}-${item.color}`}
-                  className="flex justify-between gap-2 py-3"
+                  className="flex items-center gap-3 py-3"
                 >
-                  <div className="min-w-0">
+                  {item.image && (
+                    <div className="relative size-12 shrink-0 overflow-hidden rounded-md border bg-muted">
+                      <Image
+                        src={item.image}
+                        alt={item.name}
+                        fill
+                        sizes="48px"
+                        className="object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{item.name}</p>
                     <p className="text-xs text-muted-foreground">
                       {item.size}

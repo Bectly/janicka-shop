@@ -14,12 +14,52 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { PeriodSelector } from "./period-selector";
 
 export const metadata: Metadata = {
   title: "Přehled",
 };
 
-export default async function AdminDashboardPage() {
+type Period = "today" | "7d" | "30d" | "all";
+
+function getPeriodDate(period: Period): Date | null {
+  if (period === "all") return null;
+  const now = new Date();
+  if (period === "today") {
+    now.setHours(0, 0, 0, 0);
+    return now;
+  }
+  if (period === "7d") {
+    now.setDate(now.getDate() - 7);
+    return now;
+  }
+  // 30d
+  now.setDate(now.getDate() - 30);
+  return now;
+}
+
+const PERIOD_LABELS: Record<Period, string> = {
+  today: "Dnes",
+  "7d": "7 dní",
+  "30d": "30 dní",
+  all: "Celkem",
+};
+
+export default async function AdminDashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ period?: string }>;
+}) {
+  const params = await searchParams;
+  const period = (["today", "7d", "30d", "all"].includes(params.period ?? "")
+    ? params.period
+    : "all") as Period;
+  const sinceDate = getPeriodDate(period);
+  const periodLabel = PERIOD_LABELS[period];
+
+  // Date filter for orders/products (null = no filter = all time)
+  const dateFilter = sinceDate ? { gte: sinceDate } : undefined;
+
   const [
     totalProducts,
     activeProducts,
@@ -31,11 +71,11 @@ export default async function AdminDashboardPage() {
     revenueAgg,
     statusGroups,
   ] = await Promise.all([
-    prisma.product.count(),
-    prisma.product.count({ where: { active: true, sold: false } }),
-    prisma.product.count({ where: { sold: true } }),
-    prisma.order.count(),
-    prisma.customer.count(),
+    prisma.product.count(dateFilter ? { where: { createdAt: dateFilter } } : undefined),
+    prisma.product.count({ where: { active: true, sold: false, ...(dateFilter ? { createdAt: dateFilter } : {}) } }),
+    prisma.product.count({ where: { sold: true, ...(dateFilter ? { updatedAt: dateFilter } : {}) } }),
+    prisma.order.count(dateFilter ? { where: { createdAt: dateFilter } } : undefined),
+    prisma.customer.count(dateFilter ? { where: { createdAt: dateFilter } } : undefined),
     prisma.product.findMany({
       orderBy: { createdAt: "desc" },
       take: 5,
@@ -48,15 +88,14 @@ export default async function AdminDashboardPage() {
         customer: { select: { firstName: true, lastName: true } },
       },
     }),
-    // Aggregate revenue at DB level instead of loading all orders into memory
     prisma.order.aggregate({
-      where: { status: { not: "cancelled" } },
+      where: { status: { not: "cancelled" }, ...(dateFilter ? { createdAt: dateFilter } : {}) },
       _sum: { total: true },
     }),
-    // Count orders per status at DB level
     prisma.order.groupBy({
       by: ["status"],
       _count: { status: true },
+      ...(dateFilter ? { where: { createdAt: dateFilter } } : {}),
     }),
   ]);
 
@@ -69,7 +108,7 @@ export default async function AdminDashboardPage() {
 
   const stats = [
     {
-      label: "Tržby celkem",
+      label: period === "all" ? "Tržby celkem" : `Tržby — ${periodLabel}`,
       value: formatPrice(totalRevenue),
       icon: DollarSign,
       color: "text-emerald-600 bg-emerald-100",
@@ -81,25 +120,25 @@ export default async function AdminDashboardPage() {
       color: "text-sky-600 bg-sky-100",
     },
     {
-      label: "Prodáno",
+      label: period === "all" ? "Prodáno" : `Prodáno — ${periodLabel}`,
       value: soldProducts.toString(),
       icon: CheckCircle,
       color: "text-violet-600 bg-violet-100",
     },
     {
-      label: "Produkty celkem",
+      label: period === "all" ? "Produkty celkem" : `Nové produkty — ${periodLabel}`,
       value: totalProducts.toString(),
       icon: Package,
       color: "text-slate-600 bg-slate-100",
     },
     {
-      label: "Objednávky",
+      label: period === "all" ? "Objednávky" : `Objednávky — ${periodLabel}`,
       value: totalOrders.toString(),
       icon: ShoppingCart,
       color: "text-primary bg-primary/10",
     },
     {
-      label: "Zákazníci",
+      label: period === "all" ? "Zákazníci" : `Noví zákazníci — ${periodLabel}`,
       value: totalCustomers.toString(),
       icon: Users,
       color: "text-amber-600 bg-amber-100",
@@ -108,12 +147,17 @@ export default async function AdminDashboardPage() {
 
   return (
     <>
-      <h1 className="font-heading text-2xl font-bold text-foreground">
-        Přehled
-      </h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Vítej zpět, Janičko!
-      </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="font-heading text-2xl font-bold text-foreground">
+            Přehled
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Vítej zpět, Janičko!
+          </p>
+        </div>
+        <PeriodSelector activePeriod={period} />
+      </div>
 
       {/* Stats grid */}
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

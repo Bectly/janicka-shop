@@ -151,13 +151,29 @@ export async function updateOrderStatus(orderId: string, status: string) {
   revalidatePath("/");
 }
 
-/** Escape a CSV field: wrap in quotes if it contains comma, quote, or newline */
+/** Escape a CSV field: wrap in quotes if it contains comma, quote, or newline.
+ *  Prevents CSV formula injection by prefixing cells starting with =, +, -, @, \t, \r
+ *  with a single quote (Excel text indicator — suppresses formula execution). */
 function csvField(value: string | number | null | undefined): string {
   const str = String(value ?? "");
-  if (str.includes(",") || str.includes('"') || str.includes("\n")) {
-    return `"${str.replace(/"/g, '""')}"`;
+  const needsFormulaGuard =
+    str.length > 0 &&
+    (str[0] === "=" ||
+      str[0] === "+" ||
+      str[0] === "-" ||
+      str[0] === "@" ||
+      str[0] === "\t" ||
+      str[0] === "\r");
+  const safe = needsFormulaGuard ? "'" + str : str;
+  if (
+    safe.includes(",") ||
+    safe.includes('"') ||
+    safe.includes("\n") ||
+    safe.includes("\r")
+  ) {
+    return `"${safe.replace(/"/g, '""')}"`;
   }
-  return str;
+  return safe;
 }
 
 export async function exportOrdersCsv(statusFilter?: string): Promise<string> {
