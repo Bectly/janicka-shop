@@ -161,3 +161,12 @@
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
+
+/* Hide scrollbar for horizontal scroll containers (quick filters, feeds) */
+@utility scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

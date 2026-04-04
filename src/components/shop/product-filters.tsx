@@ -395,6 +395,80 @@ export function ProductFilters({
     </div>
   );
 
+  // --- Promoted quick filters (horizontally scrollable, above product grid) ---
+  // Shows top sizes and colors as quick-access pills — reduces need to open filter drawer.
+  // 61% of sites don't promote filters above the grid (Baymard).
+  const topSizes = sizes.filter((s) => (counts.sizes[s] ?? 0) > 0).slice(0, 12);
+  const topColors = colors.filter((c) => (counts.colors[c] ?? 0) > 0).slice(0, 10);
+  const hasQuickFilters = topSizes.length > 0 || topColors.length > 0;
+
+  const quickFilters = hasQuickFilters && (
+    <div className="space-y-2">
+      {/* Size quick pills */}
+      {topSizes.length > 0 && (
+        <div className="flex items-center gap-2">
+          <span className="shrink-0 text-xs font-medium text-muted-foreground">Velikost:</span>
+          <div className="flex gap-1.5 overflow-x-auto scrollbar-none pb-0.5" role="group" aria-label="Rychlý filtr velikostí">
+            {topSizes.map((size) => {
+              const isActive = activeSizes.includes(size);
+              return (
+                <button
+                  key={size}
+                  onClick={() => toggleMulti("size", size, activeSizes)}
+                  aria-pressed={isActive}
+                  className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                    isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  }`}
+                >
+                  {size}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+      {/* Color quick swatches */}
+      {topColors.length > 0 && (
+        <div className="flex items-center gap-2">
+          <span className="shrink-0 text-xs font-medium text-muted-foreground">Barva:</span>
+          <div className="flex gap-1.5 overflow-x-auto scrollbar-none pb-0.5" role="group" aria-label="Rychlý filtr barev">
+            {topColors.map((color) => {
+              const isActive = activeColors.includes(color);
+              const hex = COLOR_MAP[color] ?? "#9CA3AF";
+              const isLight = isLightColor(hex);
+              return (
+                <button
+                  key={color}
+                  onClick={() => toggleMulti("color", color, activeColors)}
+                  aria-pressed={isActive}
+                  aria-label={color}
+                  title={color}
+                  className={`group flex shrink-0 items-center gap-1 rounded-full py-1 pl-1.5 pr-2.5 text-xs font-medium transition-colors ${
+                    isActive
+                      ? "bg-primary/10 ring-2 ring-primary"
+                      : "bg-muted hover:bg-muted/80"
+                  }`}
+                >
+                  <span
+                    className={`inline-block size-4 rounded-full border ${isLight ? "border-gray-300" : "border-transparent"}`}
+                    style={{ backgroundColor: hex }}
+                  >
+                    {isActive && (
+                      <Check className={`size-4 p-0.5 ${isLight ? "text-gray-700" : "text-white"}`} />
+                    )}
+                  </span>
+                  <span className="text-muted-foreground">{color}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   const filterGroups = (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {brandFilter}
@@ -448,6 +522,9 @@ export function ProductFilters({
 
         {/* Category pills (always visible on mobile) */}
         {categoryPills}
+
+        {/* Promoted quick filters — size pills + color swatches (reduces drawer round-trips) */}
+        {quickFilters}
 
         {/* Active filter chips (visible after closing drawer) */}
         {activeFilterChips}

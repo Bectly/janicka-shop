@@ -23,7 +23,9 @@ const checkoutSchema = z
     firstName: z.string().min(1, "Jméno je povinné").max(100, "Jméno je příliš dlouhé"),
     lastName: z.string().min(1, "Příjmení je povinné").max(100, "Příjmení je příliš dlouhé"),
     phone: z.string()
-      .regex(/^\+?[\d \-()]{9,30}$/, "Zadejte platné telefonní číslo"),
+      .regex(/^\+?[\d \-()]{9,30}$/, "Zadejte platné telefonní číslo")
+      .optional()
+      .or(z.literal("")),
     // Address fields — required only for home delivery methods (validated in refine)
     street: z.string().max(200, "Adresa je příliš dlouhá").optional(),
     city: z.string().max(100, "Název města je příliš dlouhý").optional(),
@@ -62,6 +64,20 @@ const checkoutSchema = z
     {
       message: "Duplicitní produkty v košíku",
       path: ["items"],
+    }
+  )
+  .refine(
+    (data) => {
+      // Phone required for home delivery (courier needs contact number)
+      // Optional for Packeta pickup (39% mobile abandonment at phone fields — Scout C1499)
+      if (data.shippingMethod !== "packeta_pickup") {
+        return !!data.phone?.trim();
+      }
+      return true;
+    },
+    {
+      message: "Telefon je povinný pro doručení na adresu",
+      path: ["phone"],
     }
   )
   .refine(

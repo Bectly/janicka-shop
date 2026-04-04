@@ -23,10 +23,15 @@ async function createClient(): Promise<PrismaClient> {
 export async function getDb(): Promise<PrismaClient> {
   if (globalForPrisma.prisma) return globalForPrisma.prisma;
   if (!globalForPrisma.prismaInitPromise) {
-    globalForPrisma.prismaInitPromise = createClient().then((c) => {
-      globalForPrisma.prisma = c;
-      return c;
-    });
+    globalForPrisma.prismaInitPromise = createClient()
+      .then((c) => {
+        globalForPrisma.prisma = c;
+        return c;
+      })
+      .catch((err) => {
+        globalForPrisma.prismaInitPromise = undefined; // allow retry on next call
+        throw err;
+      });
   }
   return globalForPrisma.prismaInitPromise;
 }
