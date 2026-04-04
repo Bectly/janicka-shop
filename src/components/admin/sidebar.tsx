@@ -14,6 +14,7 @@ import {
   Tags,
   Zap,
   Mail,
+  Layers,
 } from "lucide-react";
 
 const navItems = [
@@ -21,6 +22,7 @@ const navItems = [
   { href: "/admin/products/quick-add", label: "Rychlé přidání", icon: Zap },
   { href: "/admin/products", label: "Produkty", icon: Package },
   { href: "/admin/categories", label: "Kategorie", icon: Tags },
+  { href: "/admin/collections", label: "Kolekce", icon: Layers },
   { href: "/admin/orders", label: "Objednávky", icon: ShoppingCart },
   { href: "/admin/customers", label: "Zákazníci", icon: Users },
   { href: "/admin/subscribers", label: "Newsletter", icon: Mail },
