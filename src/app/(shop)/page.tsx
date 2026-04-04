@@ -158,6 +158,7 @@ export default async function HomePage() {
             {newProducts.map((product) => (
               <ProductCard
                 key={product.id}
+                id={product.id}
                 name={product.name}
                 slug={product.slug}
                 price={product.price}
@@ -205,6 +206,7 @@ export default async function HomePage() {
           {featuredProducts.map((product) => (
             <ProductCard
               key={product.id}
+              id={product.id}
               name={product.name}
               slug={product.slug}
               price={product.price}

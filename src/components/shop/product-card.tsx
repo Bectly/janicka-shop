@@ -2,8 +2,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { formatPrice } from "@/lib/format";
 import { CONDITION_LABELS, CONDITION_COLORS } from "@/lib/constants";
+import { WishlistButton } from "./wishlist-button";
 
 interface ProductCardProps {
+  id: string;
   name: string;
   slug: string;
   price: number;
@@ -18,6 +20,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({
+  id,
   name,
   slug,
   price,
@@ -61,6 +64,9 @@ export function ProductCard({
             </span>
           </div>
         )}
+        <div className="absolute top-2 right-2 z-10">
+          <WishlistButton productId={id} />
+        </div>
         <div className="absolute top-2 left-2 flex flex-col gap-1">
           {isNew && (
             <span className="rounded-md bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { CartButton } from "./cart-button";
+import { WishlistHeaderButton } from "./wishlist-header-button";
 import { MobileNav } from "./mobile-nav";
 
 const navLinks = [
@@ -49,6 +50,7 @@ export function Header() {
           >
             <Search className="size-5" />
           </Link>
+          <WishlistHeaderButton />
           <CartButton />
         </div>
       </div>

@@ -28,6 +28,15 @@ interface ProductFiltersProps {
   totalFiltered: number;
 }
 
+/** Returns true if a hex color (e.g. "#FFFFFF") is perceptually light. */
+function isLightColor(hex: string): boolean {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  // Perceived brightness (ITU-R BT.601)
+  return (r * 299 + g * 587 + b * 114) / 1000 > 160;
+}
+
 /** Czech plural for "produkt" */
 function productPlural(n: number): string {
   if (n === 1) return "produkt";
@@ -208,7 +217,7 @@ export function ProductFilters({
           const isActive = activeColors.includes(color);
           const isDisabled = count === 0 && !isActive;
           const hex = COLOR_MAP[color] ?? "#9CA3AF";
-          const isLight = hex === "#FFFFFF" || hex === "#FFFDD0";
+          const isLight = isLightColor(hex);
           return (
             <button
               key={color}

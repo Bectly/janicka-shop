@@ -150,6 +150,7 @@ export default async function SearchPage({
                 {products.map((product) => (
                   <ProductCard
                     key={product.id}
+                    id={product.id}
                     name={product.name}
                     slug={product.slug}
                     price={product.price}

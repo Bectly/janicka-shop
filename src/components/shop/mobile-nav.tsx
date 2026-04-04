@@ -45,6 +45,12 @@ export function MobileNav() {
           >
             Všechny produkty
           </Link>
+          <Link
+            href="/oblibene"
+            className="rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+          >
+            Oblíbené
+          </Link>
           {categories.map((cat) => (
             <Link
               key={cat.href}

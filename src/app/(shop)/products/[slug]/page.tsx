@@ -11,6 +11,7 @@ import { getVisitorId } from "@/lib/visitor";
 import { getLowestPrices30d } from "@/lib/price-history";
 import { buildProductSchema, jsonLdString } from "@/lib/structured-data";
 import { ShareButtons } from "@/components/shop/share-buttons";
+import { WishlistButton } from "@/components/shop/wishlist-button";
 import type { Metadata } from "next";
 
 const BASE_URL =
@@ -174,6 +175,7 @@ export default async function ProductDetailPage({ params }: Props) {
               {relatedProducts.map((p) => (
                 <ProductCard
                   key={p.id}
+                  id={p.id}
                   name={p.name}
                   slug={p.slug}
                   price={p.price}
@@ -284,8 +286,9 @@ export default async function ProductDetailPage({ params }: Props) {
             {product.description}
           </p>
 
-          {/* Social sharing */}
-          <div className="mt-4">
+          {/* Social sharing + wishlist */}
+          <div className="mt-4 flex items-center gap-3">
+            <WishlistButton productId={product.id} variant="detail" />
             <ShareButtons
               url={`${BASE_URL}/products/${product.slug}`}
               title={product.name}
@@ -329,6 +332,7 @@ export default async function ProductDetailPage({ params }: Props) {
             {relatedProducts.map((p) => (
               <ProductCard
                 key={p.id}
+                id={p.id}
                 name={p.name}
                 slug={p.slug}
                 price={p.price}
