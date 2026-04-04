@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import { getShopSettings } from "./actions";
 import { SettingsForm } from "./settings-form";
