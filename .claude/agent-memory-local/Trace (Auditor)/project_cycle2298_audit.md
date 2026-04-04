@@ -39,7 +39,7 @@ LOW — measurements: decimal step=0.5 but parseMeasurements drops 0.5 increment
 - Mobile InstantSearch z-index: both Sheet and InstantSearch use `z-50`. Sheet is portal-rendered at body root; InstantSearch overlay is a fixed div inside the Sheet portal. DOM order: InstantSearch renders after Sheet backdrop, so it correctly appears above. No z-index bug.
 - `measurements` field in schema is `String @default("{}")` (not nullable). Existing rows without `measurements` in DB would have the default `"{}"` applied at migration time. `parseMeasurements("{}")` returns `{}`, `hasMeasurements({})` returns false — no table rendered. Safe.
 
-**Pre-existing build blocker (unrelated to C2296):** `src/components/analytics-provider.tsx` (untracked, added by Bolt, not committed) has a TypeScript error on line 83: `fn.callMethod` is not typed on the fn function type. This causes `npm run build` to fail. Error existed before and after my C2296 fixes — confirmed by git stash test. Fix: extend fn type to include optional `callMethod` property.
+**Build status:** Clean. `npm run build` passes TypeScript and compiles successfully.
 
 **Cumulative open issues (real bugs, fixed this cycle):** 1 MEDIUM, 3 LOW.
 

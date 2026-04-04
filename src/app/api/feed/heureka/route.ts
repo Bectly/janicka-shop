@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
+import { getImageUrls } from "@/lib/images";
 
 export const dynamic = "force-dynamic";
 import {
@@ -50,7 +51,7 @@ export async function GET() {
     let xml = '<?xml version="1.0" encoding="utf-8"?>\n<SHOP>\n';
 
     for (const product of products) {
-      const images: string[] = safeJsonParse(product.images);
+      const images: string[] = getImageUrls(product.images);
       const sizes: string[] = safeJsonParse(product.sizes);
       const categoryPath =
         HEUREKA_CATEGORIES[product.category.slug] ?? FALLBACK_CATEGORY;
@@ -151,9 +152,7 @@ function safeJsonParse(value: string): string[] {
   try {
     const parsed = JSON.parse(value);
     if (!Array.isArray(parsed)) return [];
-    return parsed.map((item: string | { url: string }) =>
-      typeof item === "string" ? item : item.url,
-    );
+    return parsed.filter((item): item is string => typeof item === "string");
   } catch {
     return [];
   }

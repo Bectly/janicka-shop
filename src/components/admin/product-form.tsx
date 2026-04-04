@@ -114,7 +114,7 @@ export function ProductForm({ categories, product, action }: ProductFormProps) {
           <Label>Popisky fotek (pro SEO a přístupnost)</Label>
           <div className="grid gap-2 sm:grid-cols-2">
             {structuredImages.map((img, i) => (
-              <div key={img.url} className="flex items-center gap-2">
+              <div key={`${img.url}-${i}`} className="flex items-center gap-2">
                 <span className="shrink-0 text-xs text-muted-foreground w-12">
                   {i === 0 ? "Hlavní" : `#${i + 1}`}
                 </span>

@@ -3,7 +3,7 @@
 import { useState, useTransition, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Eye, Loader2, ArrowRight } from "lucide-react";
+import { Eye, Loader2, ArrowRight, Sparkles } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -169,12 +169,16 @@ export function QuickViewButton({ productId }: QuickViewButtonProps) {
                   )}
                 </div>
 
-                {/* Condition */}
-                <div className="mt-2">
+                {/* Condition + scarcity */}
+                <div className="mt-2 flex flex-wrap items-center gap-2">
                   <span
                     className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${CONDITION_COLORS[product.condition] ?? "bg-muted text-muted-foreground"}`}
                   >
                     {CONDITION_LABELS[product.condition] ?? product.condition}
+                  </span>
+                  <span className="flex items-center gap-1 text-[10px] font-medium text-amber-600 dark:text-amber-400">
+                    <Sparkles className="size-2.5" />
+                    Jediný kus
                   </span>
                 </div>
 

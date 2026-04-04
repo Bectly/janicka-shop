@@ -21,7 +21,7 @@ import {
 import { ProductInfoAccordion } from "@/components/shop/product-info-accordion";
 import { FreeShippingBar } from "@/components/shop/free-shipping-bar";
 import { NotifyMeForm } from "@/components/shop/notify-me-form";
-import { Truck, Leaf, Ruler } from "lucide-react";
+import { Truck, Leaf, Ruler, Sparkles } from "lucide-react";
 import { parseProductImages, parseMeasurements, hasMeasurements } from "@/lib/images";
 import type { Metadata } from "next";
 
@@ -548,14 +548,22 @@ export default async function ProductDetailPage({ params }: Props) {
             }}
           />
 
-          {/* Stock info */}
-          <p className="mt-4 text-xs text-muted-foreground">
-            {isReservedByOther
-              ? "Tento kousek si právě někdo prohlíží"
-              : product.stock > 0
-                ? "Poslední kus — unikátní kousek"
-                : "Momentálně nedostupné"}
-          </p>
+          {/* Stock info — authentic scarcity: every second-hand item is unique (qty=1) */}
+          {isReservedByOther ? (
+            <p className="mt-4 flex items-center gap-1.5 text-xs font-medium text-violet-600 dark:text-violet-400">
+              <Sparkles className="size-3.5" />
+              Tento kousek si právě někdo prohlíží
+            </p>
+          ) : product.stock > 0 ? (
+            <p className="mt-4 flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400">
+              <Sparkles className="size-3.5" />
+              Jediný kus — tento kousek existuje jen jednou
+            </p>
+          ) : (
+            <p className="mt-4 text-xs text-muted-foreground">
+              Momentálně nedostupné
+            </p>
+          )}
 
           {/* Estimated delivery */}
           {product.stock > 0 && !isReservedByOther && (() => {
