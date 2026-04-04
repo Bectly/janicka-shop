@@ -56,6 +56,8 @@ export default async function EditProductPage({ params }: Props) {
     featured: product.featured,
     active: product.active,
     images: product.images,
+    measurements: product.measurements,
+    fitNote: product.fitNote,
   };
 
   async function action(formData: FormData) {

@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { formatPrice } from "@/lib/format";
 import { CONDITION_LABELS, CONDITION_COLORS, COLOR_MAP, FREE_SHIPPING_THRESHOLD } from "@/lib/constants";
+import { getImageUrls } from "@/lib/images";
 import { WishlistButton } from "./wishlist-button";
 import { QuickViewButton } from "./quick-view-modal";
 
@@ -43,12 +44,7 @@ export function ProductCard({
     ? Math.round(((compareAt - price) / compareAt) * 100)
     : 0;
 
-  let parsedImages: string[] = [];
-  try {
-    parsedImages = JSON.parse(images);
-  } catch {
-    /* corrupted data fallback */
-  }
+  const parsedImages = getImageUrls(images);
   const mainImage = parsedImages[0];
   const secondImage = parsedImages[1];
 

@@ -26,20 +26,42 @@ const productSchema = z.object({
   { message: "Původní cena musí být vyšší než aktuální cena", path: ["compareAt"] },
 );
 
-const imagesSchema = z.array(
-  z.string().url().refine(
+const productImageSchema = z.object({
+  url: z.string().url().refine(
     (u) => u.startsWith("https://") || u.startsWith("http://"),
     "Pouze HTTP/HTTPS URL",
   ),
+  alt: z.string().max(200).default(""),
+});
+
+const imagesSchema = z.array(
+  z.union([
+    z.string().url(), // legacy string[] format
+    productImageSchema, // new {url, alt}[] format
+  ]),
 ).max(10);
 
 function parseImages(formData: FormData): string {
   try {
-    const parsed = imagesSchema.parse(JSON.parse((formData.get("images") as string) || "[]"));
-    return JSON.stringify(parsed);
+    const raw = JSON.parse((formData.get("images") as string) || "[]");
+    const parsed = imagesSchema.parse(raw);
+    // Normalize to {url, alt}[] format
+    const normalized = parsed.map((item) =>
+      typeof item === "string" ? { url: item, alt: "" } : item,
+    );
+    return JSON.stringify(normalized);
   } catch {
     return "[]";
   }
+}
+
+function parseMeasurementsInput(formData: FormData): string {
+  const measurements: Record<string, number> = {};
+  for (const key of ["chest", "waist", "hips", "length"] as const) {
+    const val = parseFloat(formData.get(`measurements_${key}`) as string);
+    if (!isNaN(val) && val > 0) measurements[key] = val;
+  }
+  return JSON.stringify(measurements);
 }
 
 function slugify(text: string): string {
@@ -89,6 +111,8 @@ export async function createProduct(formData: FormData) {
   }
 
   const validatedImages = parseImages(formData);
+  const measurements = parseMeasurementsInput(formData);
+  const fitNote = ((formData.get("fitNote") as string) || "").trim().slice(0, 120) || null;
 
   const product = await db.product.create({
     data: {
@@ -108,6 +132,8 @@ export async function createProduct(formData: FormData) {
         [...new Set(parsed.colors.split(",").map((s) => s.trim()).filter(Boolean))]
       ),
       images: validatedImages,
+      measurements,
+      fitNote,
       stock: 1,
       featured: parsed.featured,
       active: parsed.active,
@@ -160,6 +186,8 @@ export async function updateProduct(id: string, formData: FormData) {
   }
 
   const validatedImages = parseImages(formData);
+  const measurements = parseMeasurementsInput(formData);
+  const fitNote = ((formData.get("fitNote") as string) || "").trim().slice(0, 120) || null;
 
   // Check if price changed — log old price for 30-day price history (Czech fake discount law)
   const current = await db.product.findUnique({
@@ -191,6 +219,8 @@ export async function updateProduct(id: string, formData: FormData) {
         [...new Set(parsed.colors.split(",").map((s) => s.trim()).filter(Boolean))]
       ),
       images: validatedImages,
+      measurements,
+      fitNote,
       featured: parsed.featured,
       active: parsed.active,
     },
@@ -251,6 +281,8 @@ export async function quickCreateProduct(formData: FormData) {
   const sku = `JN-${Date.now().toString(36).toUpperCase()}`;
 
   const validatedImages = parseImages(formData);
+  const measurements = parseMeasurementsInput(formData);
+  const fitNote = ((formData.get("fitNote") as string) || "").trim().slice(0, 120) || null;
 
   // Default description if empty
   const description = parsed.description.trim()
@@ -274,6 +306,8 @@ export async function quickCreateProduct(formData: FormData) {
         [...new Set(parsed.colors.split(",").map((s) => s.trim()).filter(Boolean))]
       ),
       images: validatedImages,
+      measurements,
+      fitNote,
       stock: 1,
       featured: false,
       active: true,

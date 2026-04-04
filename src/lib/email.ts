@@ -703,6 +703,8 @@ interface AbandonedCartEmailData {
   customerName?: string | null;
   items: AbandonedCartItem[];
   cartTotal: number;
+  /** AbandonedCart.id — used as unsubscribe token in email footer. */
+  cartId: string;
 }
 
 function buildCartItemsHtml(items: AbandonedCartItem[]): string {
@@ -731,7 +733,14 @@ function buildCartItemsHtml(items: AbandonedCartItem[]): string {
     .join("");
 }
 
-function buildAbandonedCartEmailWrapper(content: string, ctaText: string, ctaUrl: string): string {
+function buildAbandonedCartEmailWrapper(
+  content: string,
+  ctaText: string,
+  ctaUrl: string,
+  cartId: string,
+): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const unsubscribeUrl = `${baseUrl}/api/unsubscribe/abandoned-cart/${encodeURIComponent(cartId)}`;
   return `<!DOCTYPE html>
 <html lang="cs">
 <head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/></head>
@@ -755,7 +764,10 @@ function buildAbandonedCartEmailWrapper(content: string, ctaText: string, ctaUrl
 
     <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
       <p style="margin: 0;">Janička Shop — Second hand móda</p>
-      <p style="margin: 4px 0 0;">Nechcete dostávat tyto emaily? Stačí dokončit nákup nebo košík vyprázdnit.</p>
+      <p style="margin: 4px 0 0;">
+        Nechcete dostávat tyto emaily?
+        <a href="${unsubscribeUrl}" style="color: #999; text-decoration: underline;">Odhlásit se</a>
+      </p>
     </div>
   </div>
 </body>
@@ -793,7 +805,8 @@ function buildAbandonedCartEmail1(data: AbandonedCartEmailData): string {
         </p>
       </div>`,
     "Dokončit objednávku",
-    `${baseUrl}/checkout`
+    `${baseUrl}/checkout`,
+    data.cartId,
   );
 }
 
@@ -835,7 +848,8 @@ function buildAbandonedCartEmail2(data: AbandonedCartEmailData, soldItemNames: s
       ${itemsHtml}
       ${availableItems.length > 0 ? `<div style="text-align: right; margin-top: 12px;"><p style="margin: 0; font-size: 16px; font-weight: 700; color: #1a1a1a;">Celkem: ${formatPriceCzk(availableItems.reduce((sum, i) => sum + i.price, 0))}</p></div>` : ""}`,
     ctaText,
-    ctaUrl
+    ctaUrl,
+    data.cartId,
   );
 }
 
@@ -878,7 +892,8 @@ function buildAbandonedCartEmail3(data: AbandonedCartEmailData, soldItemNames: s
       ${itemsHtml}
       ${availableItems.length > 0 ? `<div style="text-align: right; margin-top: 12px;"><p style="margin: 0; font-size: 16px; font-weight: 700; color: #1a1a1a;">Celkem: ${formatPriceCzk(availableItems.reduce((sum, i) => sum + i.price, 0))}</p></div>` : ""}`,
     ctaText,
-    ctaUrl
+    ctaUrl,
+    data.cartId,
   );
 }
 

@@ -14,10 +14,12 @@ import { sendAbandonedCartEmail } from "@/lib/email";
  *   Expire:  after 7 days
  */
 export async function GET(request: Request) {
-  // Verify cron secret — prevents unauthorized access
+  // Verify cron secret — prevents unauthorized access.
+  // Fail closed: if CRON_SECRET is not configured, deny all requests rather
+  // than leaving the endpoint open to unauthenticated callers.
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -63,6 +65,7 @@ export async function GET(request: Request) {
         customerName: cart.customerName,
         items,
         cartTotal: cart.cartTotal,
+        cartId: cart.id,
       });
 
       if (success) {
@@ -94,7 +97,7 @@ export async function GET(request: Request) {
 
       const success = await sendAbandonedCartEmail(
         2,
-        { email: cart.email, customerName: cart.customerName, items, cartTotal: cart.cartTotal },
+        { email: cart.email, customerName: cart.customerName, items, cartTotal: cart.cartTotal, cartId: cart.id },
         soldNames
       );
 
@@ -135,7 +138,7 @@ export async function GET(request: Request) {
 
       const success = await sendAbandonedCartEmail(
         3,
-        { email: cart.email, customerName: cart.customerName, items, cartTotal: cart.cartTotal },
+        { email: cart.email, customerName: cart.customerName, items, cartTotal: cart.cartTotal, cartId: cart.id },
         soldNames
       );
 

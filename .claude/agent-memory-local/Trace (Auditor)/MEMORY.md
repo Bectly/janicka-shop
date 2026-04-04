@@ -17,3 +17,4 @@
 - [project_cycle2290_audit.md](project_cycle2290_audit.md) — Cycle #2290 audit: cart ShippingPreview ordering wrong (fixed), FreeShippingBar duplicate note (fixed), instant-search confirmed wired. Build/lint clean.
 - [project_cycle2291_audit.md](project_cycle2291_audit.md) — Cycle #2291 audit: /objednavka + notify-me + admin email. Fixed 1 MEDIUM (null accessToken guard in /objednavka/actions.ts). Build/lint clean.
 - [project_cycle2293_audit.md](project_cycle2293_audit.md) — Cycle #2293 audit: same 3 features re-audited. Fixed 1 MEDIUM (rate-limit key collision /objednavka+/order/lookup sharing bucket), 2 LOW (wrong placeholder, missing toUpperCase in /order/lookup). Build/lint clean.
+- [project_cycle2295_audit.md](project_cycle2295_audit.md) — Cycle #2295 audit: abandoned cart system + sale section. Fixed 1 MEDIUM (CRON_SECRET fail-open), 1 MEDIUM (GDPR missing unsubscribe — added /api/unsubscribe/abandoned-cart/[id]). Build clean.

@@ -6,9 +6,23 @@ import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
 
 const SWIPE_THRESHOLD = 50;
 
+interface ProductImage {
+  url: string;
+  alt: string;
+}
+
 interface ProductGalleryProps {
-  images: string[];
+  images: (string | ProductImage)[];
   productName: string;
+}
+
+function getUrl(img: string | ProductImage): string {
+  return typeof img === "string" ? img : img.url;
+}
+
+function getAlt(img: string | ProductImage, productName: string, index: number): string {
+  if (typeof img !== "string" && img.alt) return img.alt;
+  return `${productName} — fotka ${index + 1}`;
 }
 
 export function ProductGallery({ images, productName }: ProductGalleryProps) {
@@ -211,8 +225,8 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
             </span>
           </button>
           <Image
-            src={images[activeIndex]}
-            alt={`${productName} — fotka ${activeIndex + 1}`}
+            src={getUrl(images[activeIndex])}
+            alt={getAlt(images[activeIndex], productName, activeIndex)}
             fill
             className="object-cover transition-transform duration-150 ease-out"
             style={swipeOffset !== 0 ? { transform: `translateX(${swipeOffset}px)` } : undefined}
@@ -277,9 +291,9 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
         {/* Thumbnails */}
         {images.length > 1 && (
           <div className="flex gap-2 overflow-x-auto pb-1">
-            {images.map((url, i) => (
+            {images.map((img, i) => (
               <button
-                key={url}
+                key={getUrl(img)}
                 type="button"
                 onClick={() => setActiveIndex(i)}
                 className={`relative size-16 shrink-0 overflow-hidden rounded-lg border-2 transition-all sm:size-20 ${
@@ -289,7 +303,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
                 }`}
               >
                 <Image
-                  src={url}
+                  src={getUrl(img)}
                   alt={`${productName} — náhled ${i + 1}`}
                   fill
                   className="object-cover"
@@ -367,8 +381,8 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
             onTouchEnd={!zoomed ? handleTouchEnd : undefined}
           >
             <Image
-              src={images[activeIndex]}
-              alt={`${productName} — fotka ${activeIndex + 1}`}
+              src={getUrl(images[activeIndex])}
+              alt={getAlt(images[activeIndex], productName, activeIndex)}
               fill
               className="object-contain transition-transform duration-200"
               style={{
@@ -386,9 +400,9 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
           {/* Thumbnail strip at bottom */}
           {images.length > 1 && (
             <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-2">
-              {images.map((url, i) => (
+              {images.map((img, i) => (
                 <button
-                  key={url}
+                  key={getUrl(img)}
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -403,7 +417,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
                   }`}
                 >
                   <Image
-                    src={url}
+                    src={getUrl(img)}
                     alt={`${productName} — náhled ${i + 1}`}
                     fill
                     className="object-cover"

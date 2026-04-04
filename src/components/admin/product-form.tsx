@@ -7,7 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CONDITION_LABELS } from "@/lib/constants";
 import { ImageUpload } from "@/components/admin/image-upload";
-import { Save } from "lucide-react";
+import { parseProductImages, parseMeasurements } from "@/lib/images";
+import type { ProductImage, ProductMeasurements } from "@/lib/images";
+import { Save, Ruler } from "lucide-react";
 
 interface Category {
   id: string;
@@ -29,6 +31,8 @@ interface ProductData {
   featured: boolean;
   active: boolean;
   images: string;
+  measurements?: string;
+  fitNote?: string | null;
 }
 
 interface ProductFormProps {
@@ -38,14 +42,42 @@ interface ProductFormProps {
 }
 
 export function ProductForm({ categories, product, action }: ProductFormProps) {
-  const [imageUrls, setImageUrls] = useState<string[]>(() => {
+  // Parse structured images from DB (backward-compat)
+  const [structuredImages, setStructuredImages] = useState<ProductImage[]>(() => {
     if (!product?.images) return [];
-    try {
-      return JSON.parse(product.images);
-    } catch {
-      return [];
-    }
+    return parseProductImages(product.images);
   });
+
+  // Measurements state
+  const [measurements, setMeasurements] = useState<ProductMeasurements>(() => {
+    if (!product?.measurements) return {};
+    return parseMeasurements(product.measurements);
+  });
+
+  // Derived URL array for ImageUpload component
+  const imageUrls = structuredImages.map((img) => img.url);
+
+  function handleImageUrlsChange(urls: string[]) {
+    // Sync structured images with new URL list (preserve captions for unchanged URLs)
+    const captionMap = new Map(structuredImages.map((img) => [img.url, img.alt]));
+    setStructuredImages(
+      urls.map((url) => ({ url, alt: captionMap.get(url) || "" })),
+    );
+  }
+
+  function handleCaptionChange(index: number, alt: string) {
+    setStructuredImages((prev) =>
+      prev.map((img, i) => (i === index ? { ...img, alt } : img)),
+    );
+  }
+
+  function handleMeasurementChange(key: keyof ProductMeasurements, value: string) {
+    const num = parseFloat(value);
+    setMeasurements((prev) => ({
+      ...prev,
+      [key]: isNaN(num) || num <= 0 ? undefined : num,
+    }));
+  }
 
   async function formAction(_prev: string | null, formData: FormData) {
     try {
@@ -72,9 +104,34 @@ export function ProductForm({ categories, product, action }: ProductFormProps) {
       {/* Images */}
       <div className="space-y-2">
         <Label>Fotky produktu</Label>
-        <ImageUpload value={imageUrls} onChange={setImageUrls} />
-        <input type="hidden" name="images" value={JSON.stringify(imageUrls)} />
+        <ImageUpload value={imageUrls} onChange={handleImageUrlsChange} />
+        <input type="hidden" name="images" value={JSON.stringify(structuredImages)} />
       </div>
+
+      {/* Image captions — shown when images exist */}
+      {structuredImages.length > 0 && (
+        <div className="space-y-2">
+          <Label>Popisky fotek (pro SEO a přístupnost)</Label>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {structuredImages.map((img, i) => (
+              <div key={img.url} className="flex items-center gap-2">
+                <span className="shrink-0 text-xs text-muted-foreground w-12">
+                  {i === 0 ? "Hlavní" : `#${i + 1}`}
+                </span>
+                <Input
+                  value={img.alt}
+                  onChange={(e) => handleCaptionChange(i, e.target.value)}
+                  placeholder={i === 0 ? "např. Šaty zepředu" : "např. Detail látky"}
+                  className="text-sm"
+                />
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Popište co je na fotce — pomáhá vyhledávačům i nevidomým
+          </p>
+        </div>
+      )}
 
       <div className="grid gap-6 sm:grid-cols-2">
         {/* Name */}
@@ -100,6 +157,21 @@ export function ProductForm({ categories, product, action }: ProductFormProps) {
             rows={3}
             placeholder="Stručný popis produktu, stav, materiál..."
           />
+        </div>
+
+        {/* Fit note */}
+        <div className="space-y-2 sm:col-span-2">
+          <Label htmlFor="fitNote">Poznámka ke střihu</Label>
+          <Input
+            id="fitNote"
+            name="fitNote"
+            defaultValue={product?.fitNote ?? ""}
+            maxLength={120}
+            placeholder="např. Padne rovným postavám, mírně volný v bocích"
+          />
+          <p className="text-xs text-muted-foreground">
+            Krátký popis střihu — jak kousek sedí (max 120 znaků)
+          </p>
         </div>
 
         {/* Price */}
@@ -223,6 +295,42 @@ export function ProductForm({ categories, product, action }: ProductFormProps) {
             Oddělte čárkou, např. Černá, Bílá
           </p>
         </div>
+      </div>
+
+      {/* Measurements */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Ruler className="size-4 text-muted-foreground" />
+          <Label>Rozměry (cm)</Label>
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {([
+            ["chest", "Prsa"],
+            ["waist", "Pas"],
+            ["hips", "Boky"],
+            ["length", "Délka"],
+          ] as const).map(([key, label]) => (
+            <div key={key} className="space-y-1">
+              <Label htmlFor={`measurements_${key}`} className="text-xs text-muted-foreground">
+                {label}
+              </Label>
+              <Input
+                id={`measurements_${key}`}
+                name={`measurements_${key}`}
+                type="number"
+                min={0}
+                step={0.5}
+                value={measurements[key] ?? ""}
+                onChange={(e) => handleMeasurementChange(key, e.target.value)}
+                placeholder="cm"
+                className="text-sm"
+              />
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Nepovinné — reálné rozměry kusu pomohou zákaznicím s výběrem velikosti
+        </p>
       </div>
 
       {/* Toggles */}

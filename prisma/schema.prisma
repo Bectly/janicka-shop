@@ -32,9 +32,11 @@ model Product {
   category    Category    @relation(fields: [categoryId], references: [id])
   brand       String?
   condition   String      @default("excellent") // new_with_tags | excellent | good | visible_wear
-  sizes       String      @default("[]")
-  colors      String      @default("[]")
-  images      String      @default("[]")
+  sizes        String      @default("[]")
+  colors       String      @default("[]")
+  images       String      @default("[]")
+  measurements String      @default("{}") // JSON: {chest?, waist?, hips?, length?} in cm
+  fitNote      String?                    // Human-readable fit note, max 120 chars
   stock       Int         @default(1) // second-hand: each piece is unique
   featured    Boolean     @default(false)
   active      Boolean     @default(true)

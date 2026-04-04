@@ -21,7 +21,8 @@ import {
 import { ProductInfoAccordion } from "@/components/shop/product-info-accordion";
 import { FreeShippingBar } from "@/components/shop/free-shipping-bar";
 import { NotifyMeForm } from "@/components/shop/notify-me-form";
-import { Truck, Leaf } from "lucide-react";
+import { Truck, Leaf, Ruler } from "lucide-react";
+import { parseProductImages, getImageUrls, parseMeasurements, hasMeasurements } from "@/lib/images";
 import type { Metadata } from "next";
 
 /**
@@ -86,8 +87,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!product) notFound();
 
-  let images: string[] = [];
-  try { images = JSON.parse(product.images); } catch { /* fallback */ }
+  const structuredImages = parseProductImages(product.images);
+  const imageUrls = structuredImages.map((img) => img.url);
 
   // Richer description with price + brand for social preview cards
   const priceText = `${product.price} Kč`;
@@ -96,9 +97,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const ogDescription = `${priceText}${brandText} | ${condLabel}. ${product.description}`.slice(0, 200);
 
   // Multiple OG images for carousel previews (up to 4)
-  const ogImages = images.slice(0, 4).map((url) => ({
-    url,
-    alt: product.name,
+  const ogImages = structuredImages.slice(0, 4).map((img) => ({
+    url: img.url,
+    alt: img.alt || product.name,
     width: 800,
     height: 800,
   }));
@@ -122,7 +123,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       card: "summary_large_image",
       title: `${product.name} — ${priceText}`,
       description: ogDescription,
-      ...(images.length > 0 && { images: [images[0]] }),
+      ...(imageUrls.length > 0 && { images: [imageUrls[0]] }),
     },
     other: {
       "product:price:amount": String(product.price),
@@ -230,8 +231,8 @@ export default async function ProductDetailPage({ params }: Props) {
     },
   ]);
 
-  let productImages: string[] = [];
-  try { productImages = JSON.parse(product.images); } catch { /* corrupted data fallback */ }
+  const productImages = parseProductImages(product.images);
+  const measurements = parseMeasurements(product.measurements);
 
   // --- SOLD PRODUCT VIEW ---
   if (product.sold) {
@@ -478,6 +479,49 @@ export default async function ProductDetailPage({ params }: Props) {
           <p className="mt-5 leading-relaxed text-muted-foreground">
             {product.description}
           </p>
+
+          {/* Fit note */}
+          {product.fitNote && (
+            <p className="mt-3 text-sm italic text-muted-foreground">
+              {product.fitNote}
+            </p>
+          )}
+
+          {/* Measurements table */}
+          {hasMeasurements(measurements) && (
+            <div className="mt-4 rounded-lg border bg-muted/30 p-3">
+              <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-foreground">
+                <Ruler className="size-3.5" />
+                Rozměry kusu
+              </div>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-4">
+                {measurements.chest && (
+                  <div className="flex justify-between sm:flex-col sm:gap-0.5">
+                    <span className="text-muted-foreground">Prsa</span>
+                    <span className="font-medium">{measurements.chest} cm</span>
+                  </div>
+                )}
+                {measurements.waist && (
+                  <div className="flex justify-between sm:flex-col sm:gap-0.5">
+                    <span className="text-muted-foreground">Pas</span>
+                    <span className="font-medium">{measurements.waist} cm</span>
+                  </div>
+                )}
+                {measurements.hips && (
+                  <div className="flex justify-between sm:flex-col sm:gap-0.5">
+                    <span className="text-muted-foreground">Boky</span>
+                    <span className="font-medium">{measurements.hips} cm</span>
+                  </div>
+                )}
+                {measurements.length && (
+                  <div className="flex justify-between sm:flex-col sm:gap-0.5">
+                    <span className="text-muted-foreground">Délka</span>
+                    <span className="font-medium">{measurements.length} cm</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Social sharing + wishlist */}
           <div className="mt-4 flex items-center gap-3">
