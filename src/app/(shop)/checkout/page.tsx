@@ -602,8 +602,28 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        {/* Mobile sticky summary bar — bottom padding to avoid overlap */}
-        <div className="h-16 lg:hidden" />
+        {/* Mobile submit button + bottom padding to avoid overlap with sticky bar */}
+        <div className="mt-6 lg:hidden">
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full"
+            disabled={isPending}
+          >
+            {isPending
+              ? "Zpracovávám..."
+              : isCod
+                ? "Objednat na dobírku"
+                : "Přejít k platbě"}
+          </Button>
+          <p className="mt-2 text-center text-xs text-muted-foreground">
+            {isCod
+              ? `Zaplatíte ${formatPrice(total)} při převzetí zásilky`
+              : "Budete přesměrováni na bezpečnou platební bránu"}
+          </p>
+          {/* Spacer for mobile sticky bar */}
+          <div className="h-16" />
+        </div>
       </form>
 
       {/* Mobile sticky summary bar */}

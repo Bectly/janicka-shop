@@ -6,6 +6,11 @@
  * "Golden Record" (99.9% attribute completion) = 3-4x higher AI visibility.
  */
 
+import {
+  FREE_SHIPPING_THRESHOLD as FREE_SHIPPING_CZK,
+  SHIPPING_PRICES,
+} from "@/lib/constants";
+
 const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://janicka-shop.vercel.app";
 
@@ -54,7 +59,7 @@ const DELIVERY_TIME = {
 /** Free shipping threshold — MonetaryAmount per Schema.org spec for freeShippingThreshold */
 const FREE_SHIPPING_THRESHOLD = {
   "@type": "MonetaryAmount" as const,
-  value: "1500",
+  value: String(FREE_SHIPPING_CZK),
   currency: "CZK",
 };
 
@@ -65,7 +70,7 @@ const ALL_SHIPPING_OPTIONS = [
     shippingLabel: "Zásilkovna — výdejní místo",
     shippingRate: {
       "@type": "DeliveryChargeSpecification" as const,
-      price: "69",
+      price: String(SHIPPING_PRICES.packeta_pickup),
       priceCurrency: "CZK",
     },
     freeShippingThreshold: FREE_SHIPPING_THRESHOLD,
@@ -77,7 +82,7 @@ const ALL_SHIPPING_OPTIONS = [
     shippingLabel: "Česká pošta",
     shippingRate: {
       "@type": "DeliveryChargeSpecification" as const,
-      price: "89",
+      price: String(SHIPPING_PRICES.czech_post),
       priceCurrency: "CZK",
     },
     freeShippingThreshold: FREE_SHIPPING_THRESHOLD,
@@ -89,7 +94,7 @@ const ALL_SHIPPING_OPTIONS = [
     shippingLabel: "Zásilkovna — na adresu",
     shippingRate: {
       "@type": "DeliveryChargeSpecification" as const,
-      price: "99",
+      price: String(SHIPPING_PRICES.packeta_home),
       priceCurrency: "CZK",
     },
     freeShippingThreshold: FREE_SHIPPING_THRESHOLD,
