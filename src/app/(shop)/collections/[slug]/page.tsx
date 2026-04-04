@@ -136,8 +136,8 @@ export default async function CollectionPage({ params }: Props) {
           Domů
         </Link>
         <span className="mx-2">/</span>
-        <Link href="/products" className="hover:text-foreground">
-          Katalog
+        <Link href="/collections" className="hover:text-foreground">
+          Kolekce
         </Link>
         <span className="mx-2">/</span>
         <span className="text-foreground">{collection.title}</span>

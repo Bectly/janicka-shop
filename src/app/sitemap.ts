@@ -64,7 +64,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         select: { slug: true, updatedAt: true },
       }),
       db.collection.findMany({
-        where: { active: true },
+        where: {
+          active: true,
+          // Only include collections currently visible to users (respecting startDate/endDate)
+          OR: [{ startDate: null }, { startDate: { lte: new Date() } }],
+          AND: [{ OR: [{ endDate: null }, { endDate: { gte: new Date() } }] }],
+        },
         select: { slug: true, updatedAt: true },
       }),
     ]);

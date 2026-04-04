@@ -74,7 +74,7 @@ export default async function HomePage() {
         featured: true,
         OR: [
           { startDate: null },
-          { startDate: { lte: sevenDaysAgo } },
+          { startDate: { lte: new Date() } },
         ],
       },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],

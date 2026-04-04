@@ -125,6 +125,9 @@ export async function updateCollection(
 
   const db = await getDb();
 
+  // Fetch current collection to get the old slug for cache revalidation
+  const current = await db.collection.findUnique({ where: { id }, select: { slug: true } });
+
   // Check slug uniqueness (exclude self)
   const existing = await db.collection.findFirst({
     where: { slug, NOT: { id } },
@@ -150,7 +153,12 @@ export async function updateCollection(
   });
 
   revalidatePath("/admin/collections");
+  // Revalidate new slug page
   revalidatePath(`/collections/${slug}`);
+  // Also revalidate old slug page if slug changed, so stale cache is cleared
+  if (current && current.slug !== slug) {
+    revalidatePath(`/collections/${current.slug}`);
+  }
   revalidatePath("/");
   redirect("/admin/collections");
 }

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Janičko, vyber si logo 💕</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@300;400;500&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:linear-gradient(160deg,#fdf2f8,#fce7f3 30%,#fff1f2 60%,#fff);min-height:100dvh;color:#1a1a2e;display:flex;flex-direction:column}
+.header{text-align:center;padding:24px 16px 12px}
+.header h1{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:400;color:#be185d}
+.header .sub{color:#9ca3af;font-size:.85rem;margin-top:4px}
+.progress{display:flex;gap:3px;max-width:300px;margin:12px auto 0;padding:0 16px}
+.progress .dot{height:4px;flex:1;border-radius:4px;background:#fce7f3;transition:background .3s}
+.progress .dot.done{background:#ec4899}
+.progress .dot.current{background:#f9a8d4}
+.match{flex:1;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:12px;padding:12px 16px}
+@media(max-width:640px){.match{flex-direction:column;gap:8px}}
+.card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,.04);cursor:pointer;transition:all .3s;flex:1;max-width:340px;width:100%}
+.card:hover{box-shadow:0 8px 24px rgba(190,24,93,.12)}
+.card:active{transform:scale(.97)}
+.card.picked{transform:scale(1.03);ring:3px solid #ec4899;box-shadow:0 12px 32px rgba(190,24,93,.2);outline:3px solid #ec4899;outline-offset:2px}
+.card.eliminated{transform:scale(.9);opacity:.2;pointer-events:none}
+.card img{width:100%;aspect-ratio:1;object-fit:contain;padding:16px;background:#fafafa}
+.card .name{padding:10px 14px;font-size:.85rem;font-weight:500;text-align:center;border-top:1px solid #fce7f3}
+.footer{text-align:center;padding:8px 16px 16px}
+.footer p{color:#d1d5db;font-size:.75rem}
+.winner-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:32px 16px;text-align:center}
+.winner-screen .bounce{font-size:3rem;animation:bounce 1s infinite}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.winner-screen h1{font-family:'Playfair Display',serif;font-size:2.2rem;color:#be185d;margin-top:16px}
+.winner-screen .logo{margin:24px 0;background:#fff;border-radius:20px;padding:24px;box-shadow:0 8px 32px rgba(190,24,93,.12);outline:3px solid #fce7f3;outline-offset:4px}
+.winner-screen .logo img{width:280px;height:280px;object-fit:contain}
+.winner-screen .name{font-size:1.2rem;color:#ec4899;font-weight:500}
+.winner-screen .stats{color:#9ca3af;font-size:.85rem;margin-top:8px}
+.winner-screen .retry{margin-top:24px;background:#fce7f3;border:none;padding:10px 24px;border-radius:99px;color:#be185d;font-size:.9rem;cursor:pointer;font-weight:500}
+.winner-screen .jarvis{color:#ec4899;font-style:italic;font-size:.8rem;margin-top:32px}
+.vs{font-family:'Playfair Display',serif;font-size:1.2rem;color:#f9a8d4;font-weight:600}
+@media(max-width:640px){.vs{display:none}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const ALL=[
+{id:"v1",src:"logo_v1_elegant.png",name:"Rose Gold Serif"},
+{id:"v2",src:"logo_v2_modern.png",name:"Bold Modern"},
+{id:"v3",src:"logo_v3_boutique.png",name:"Boutique s Ramínkem"},
+{id:"r2_v1",src:"logo_r2_v1.png",name:"Dark Elegance"},
+{id:"r2_v2",src:"logo_r2_v2.png",name:"Vzdušný Dvojkruh"},
+{id:"r2_v3",src:"logo_r2_v3.png",name:"Pivoňka Two-Tone"},
+{id:"r3_v1",src:"logo_r3_v1.png",name:"Hairline Serif"},
+{id:"r3_v2",src:"logo_r3_v2.png",name:"Brush & Blossom"},
+{id:"r3_v3",src:"logo_r3_v3.png",name:"Art Deco Glam"},
+{id:"r3_v4",src:"logo_r3_v4.png",name:"Romantic Copperplate"},
+{id:"r3_v5",src:"logo_r3_v5.png",name:"Sans Meets Script"},
+{id:"r3_v6",src:"logo_r3_v6.png",name:"Watercolor Dream"},
+{id:"r3_v7",src:"logo_r3_v7.png",name:"Didot Editorial"},
+{id:"r3_v8",src:"logo_r3_v8.png",name:"Hravý Podpis"},
+{id:"r3_v9",src:"logo_r3_v9.png",name:"Plynulé Tažení"},
+{id:"r3_v10",src:"logo_r3_v10.png",name:"Heritage & Bloom"},
+{id:"r4_v1",src:"logo_r4_v1.png",name:"Pivoňka v Akvarelu"},
+{id:"r4_v2",src:"logo_r4_v2.png",name:"Srdíčko & Pivoňka"},
+{id:"r4_v3",src:"logo_r4_v3.png",name:"Růže & Levandule"},
+{id:"r4_v4",src:"logo_r4_v4.png",name:"Třešňový Sen"},
+{id:"r4_v5",src:"logo_r4_v5.png",name:"Luční Kytice"},
+{id:"r4_v6",src:"logo_r4_v6.png",name:"Rose Gold Dream"},
+{id:"r5_v1",src:"logo_r5_v1.png",name:"Sakura Gold"},
+{id:"r5_v2",src:"logo_r5_v2.png",name:"Čistá Elegance"},
+{id:"r5_v3",src:"logo_r5_v3.png",name:"Třešňové Sny"},
+{id:"r5_v4",src:"logo_r5_v4.png",name:"Dvojitý Rose Gold"},
+{id:"r6_v1",src:"logo_r6_v1.png",name:"Odvážná Pivoňka"},
+{id:"r6_v2",src:"logo_r6_v2.png",name:"Pivoňka v Kruhu"},
+{id:"r6_v3",src:"logo_r6_v3.png",name:"Mokrý Papír"},
+{id:"r6_v4",src:"logo_r6_v4.png",name:"Čistý Šepot"},
+{id:"r7_v1",src:"logo_r7_v1.png",name:"Prorostlá Zahrada"},
+{id:"r7_v2",src:"logo_r7_v2.png",name:"Sedmikrásky v Kruhu"},
+{id:"r7_v3",src:"logo_r7_v3.png",name:"Květinový Rám"},
+{id:"r7_v4",src:"logo_r7_v4.png",name:"Věrný Originál"},
+{id:"r8_v1",src:"logo_r8_v1.png",name:"Třešňová Větvička"},
+{id:"r8_v2",src:"logo_r8_v2.png",name:"Tři Tulipánky"},
+{id:"r8_v3",src:"logo_r8_v3.png",name:"Jedna Větvička"},
+{id:"f_v1",src:"logo_final_v1.png",name:"Květinový Oblouk"},
+{id:"f_v2",src:"logo_final_v2.png",name:"Růžový Kruh"},
+{id:"f_v3",src:"logo_final_v3.png",name:"Třešňový Šepot"},
+{id:"f_v4",src:"logo_final_v4.png",name:"Dva Tulipány 🌷"},
+{id:"f_v5",src:"logo_final_v5.png",name:"Samotná Pivoňka"},
+{id:"f_v6",src:"logo_final_v6.png",name:"Levandulový Sen"},
+{id:"f_v7",src:"logo_final_v7.png",name:"Kresba Růže"},
+{id:"f_v8",src:"logo_final_v8.png",name:"Sakura na Kruhu"},
+{id:"f_v9",src:"logo_final_v9.png",name:"Křížené Kvítky"},
+{id:"f_v10",src:"logo_final_v10.png",name:"Pomněnky"},
+];
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
+let remaining=shuffle(ALL),nextRound=[],round=1,matchIdx=0,eliminated=0;
+function totalMatches(){return Math.floor(remaining.length/2)}
+function render(){
+const app=document.getElementById('app');
+if(remaining.length<=1){
+app.innerHTML=`<div class="winner-screen">
+<div class="bounce">🎉</div>
+<h1>Máme vítěze!</h1>
+<p style="color:#9ca3af;margin-top:8px">Janičko, tohle je tvoje logo 💕</p>
+<div class="logo"><img src="${remaining[0].src}" alt="${remaining[0].name}"></div>
+<div class="name">${remaining[0].name}</div>
+<div class="stats">Vyřadila jsi ${eliminated} variant v ${round} kolech</div>
+<button class="retry" onclick="remaining=shuffle(ALL);nextRound=[];round=1;matchIdx=0;eliminated=0;render()">Zkusit znovu?</button>
+<p class="jarvis">S láskou od JARVIS 🐱</p>
+</div>`;return}
+const tm=totalMatches();const left=remaining[matchIdx*2];const right=remaining[matchIdx*2+1];
+if(!left||!right){remaining=shuffle(nextRound.concat(remaining.length%2?[remaining[remaining.length-1]]:[]));nextRound=[];matchIdx=0;round++;render();return}
+let dots='';for(let i=0;i<tm;i++)dots+=`<div class="dot ${i<matchIdx?'done':i===matchIdx?'current':''}"></div>`;
+app.innerHTML=`<div class="header"><h1>Vyber si logo 💕</h1><p class="sub">Kolo ${round} · Zbývá ${remaining.length} variant</p><div class="progress">${dots}</div></div>
+<div class="match">
+<div class="card" id="left" onclick="pick('left')"><img src="${left.src}" alt="${left.name}"><div class="name">${left.name}</div></div>
+<div class="vs">nebo</div>
+<div class="card" id="right" onclick="pick('right')"><img src="${right.src}" alt="${right.name}"><div class="name">${right.name}</div></div>
+</div>
+<div class="footer"><p>Klikni na to, které se ti líbí víc · JARVIS 🐱</p></div>`;
+}
+function pick(side){
+const tm=totalMatches();const left=remaining[matchIdx*2];const right=remaining[matchIdx*2+1];
+const winner=side==='left'?left:right;
+const loser=side==='left'?right:left;
+document.getElementById(side).classList.add('picked');
+document.getElementById(side==='left'?'right':'left').classList.add('eliminated');
+eliminated++;
+setTimeout(()=>{
+nextRound.push(winner);
+matchIdx++;
+if(matchIdx>=tm){
+const leftover=remaining.length%2?[remaining[remaining.length-1]]:[];
+remaining=shuffle(nextRound.concat(leftover));
+nextRound=[];matchIdx=0;round++;
+}
+render();
+},500);
+}
+render();
+</script>
+</body>
+</html>

@@ -203,10 +203,14 @@ export function CollectionForm({ collection, allProducts }: CollectionFormProps)
       {/* Toggles */}
       <div className="flex flex-wrap gap-6">
         <label className="flex items-center gap-2 cursor-pointer">
+          {/* Hidden fallback: disabled when checkbox is checked so only one value is submitted */}
           <input
             type="hidden"
             name="featured"
             value={String(false)}
+            defaultValue={String(false)}
+            // Disable on initial render if defaultChecked is true — avoids double submission
+            ref={(el) => { if (el) el.disabled = collection?.featured ?? false; }}
           />
           <input
             type="checkbox"
@@ -226,6 +230,9 @@ export function CollectionForm({ collection, allProducts }: CollectionFormProps)
             type="hidden"
             name="active"
             value="false"
+            defaultValue="false"
+            // Disable on initial render if defaultChecked is true
+            ref={(el) => { if (el) el.disabled = collection?.active ?? true; }}
           />
           <input
             type="checkbox"
