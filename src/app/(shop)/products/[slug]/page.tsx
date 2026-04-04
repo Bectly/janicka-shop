@@ -16,6 +16,7 @@ import {
   TrackProductView,
   RecentlyViewedSection,
 } from "@/components/shop/recently-viewed";
+import { ProductInfoAccordion } from "@/components/shop/product-info-accordion";
 import type { Metadata } from "next";
 
 const BASE_URL =
@@ -336,6 +337,9 @@ export default async function ProductDetailPage({ params }: Props) {
                 ? "Poslední kus — unikátní kousek"
                 : "Momentálně nedostupné"}
           </p>
+
+          {/* Shipping, returns & quality guarantee info */}
+          <ProductInfoAccordion />
         </div>
       </div>
 

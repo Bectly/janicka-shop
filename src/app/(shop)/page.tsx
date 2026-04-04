@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { ProductCard } from "@/components/shop/product-card";
 import { CategoryCard } from "@/components/shop/category-card";
 import { NewsletterForm } from "@/components/shop/newsletter-form";
+import { TrustBadges } from "@/components/shop/trust-badges";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { getVisitorId } from "@/lib/visitor";
@@ -226,6 +227,9 @@ export default async function HomePage() {
           </Button>
         </div>
       </section>
+
+      {/* Trust badges */}
+      <TrustBadges />
 
       {/* Newsletter */}
       <section className="bg-primary/5">

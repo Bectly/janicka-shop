@@ -2,6 +2,7 @@ import { Header } from "@/components/shop/header";
 import { Footer } from "@/components/shop/footer";
 import { CookieConsentBanner } from "@/components/shop/cookie-consent";
 import { BackToTop } from "@/components/shop/back-to-top";
+import { AnnouncementBar } from "@/components/shop/announcement-bar";
 
 export default function ShopLayout({
   children,
@@ -10,6 +11,7 @@ export default function ShopLayout({
 }) {
   return (
     <>
+      <AnnouncementBar />
       <Header />
       <main id="main-content" className="flex-1">{children}</main>
       <Footer />
