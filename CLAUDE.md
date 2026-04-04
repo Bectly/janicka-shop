@@ -83,26 +83,29 @@ Toto je **second hand eshop** s oblečením. Klíčové rozdíly oproti běžné
 - SEO optimalizované — meta tagy, structured data, sitemap
 - Second hand fashion — sustainability messaging, unique pieces
 
-## Competitive Landscape (Lead Research C19, UPDATED C34, C37)
-- **Brumla.cz**: Largest CZ online second-hand. 8500 new items Mon+Thu. 99% Heureka. Kids + women + men. No UX/AI innovations detected (C34).
-- **MegaSecondHand.cz**: Closest competitor — women-focused, 3500+ curated pieces. Good Heureka reviews. **NEW C34**: launched "Body visualization" (on-body product photos) for select items, gradually expanding. Also diversifying into men's basics.
-- **Vinted CZ**: 75M+ members, ~EUR 8B valuation (BlackRock secondary deal Q1 2026). **IPO ruled out** "for now." Launched "Collections" (user-curated themed groupings). Expanding to US (NYC Jan 2026) + electronics. Vinted Pay wallet rolling out in smaller EU markets (NOT CZ yet). CZ trust issues: bots, scams, no human support (Trustpilot). UK sizing disaster reversed Jan 2026. Weakness: no curation, inconsistent quality.
-- **Janicka differentiator**: Premium curation, Instagram-aesthetic UX, pro photos, **on-body photography from day one** (ahead of MegaSecondHand), guaranteed condition, single-warehouse fast shipping. Message: "My jsme to už zkontrolovali, aby ses nemusela."
-- **Market gap**: Nobody in CZ does a visually beautiful, curated second-hand experience for women 18-35 well. No new CZ competitors detected as of April 2026. Physical vintage thrives in Prague (Kuzmarkt, 1981) — demand exists but not online.
-- **Market size**: Global secondhand apparel $393B (ThredUp 2026), ~10% of total apparel spend. Growing 2-3x faster than first-hand (2025-2027). Gen Z adopts resale 2.5x faster, 40% of closet is pre-owned. **Europe second-hand clothing market (C37)**: $35.33B in 2026, projected $75.57B by 2034 (CAGR ~10%). CZ online fashion dominated by Zalando (42%) and About You (40%), Zoot third (26%). Czech consumers prefer hand-me-downs, repairs, refitting — sustainability is cultural, not just trend.
-- **Conversion benchmarks (C37)**: Fashion e-commerce average 3.01% CR. Mobile: ~1.8% vs desktop ~3.9% (gap narrowing). On-model photography: +33% conversion. Studio + lifestyle combined: +30%. Products with 50+ reviews: 4.6x better conversion. Personalization: 150% average conversion uplift. Sizing uncertainty = #1 return driver in fashion.
-- **Global tech trends (C34)**: ThredUp AI image search (81% satisfaction), Vestiaire AI+blockchain digital passports, Zara virtual try-on (+40% conversion, -50% returns, launched Jan 2026), live commerce (30% vs 2-3% conversion).
-- **Mobile**: 62% of Czech e-commerce is mobile. Mobile-first strategy validated.
+## Competitive Landscape (Lead Research C19, UPDATED C34, C37, C1478)
+- **Brumla.cz**: Largest CZ online second-hand. **57,888 items in stock** (C1478, up from 8500), 15k new pieces/week. 98% Heureka (7,000+ reviews). Kids + women + men. **No mobile app, no AI, no personalization** — purely volume-based. Has reservation system (hold items 2 weeks, ship together). THREAT: LOW for our curated women's segment.
+- **MegaSecondHand.cz**: Closest competitor — women-focused, ~3,500 curated pieces. Body visualization still "gradually expanding" on select items (slow pace). **NEW C1478**: now surveying users about uploading own photos for virtual try-on — signals VTO exploration but not shipped. No AI features, no app.
+- **Vinted CZ**: 75M+ members, ~EUR 8B valuation. IPO still ruled out. Vinted Pay got UK EMI licence, wallet live in 8 EU countries — **CZ still NOT included**. Collections now a **paid promotional tool** (sellers pay for homepage placement). **AI SCAM CRISIS DEEPENING (C1478)**: AI-generated fake listing photos (Vintylook tool), AI-generated "damage" photos for refund scams. Vinted provided NO response to researchers, has no AI image detection. Algorithm crackdown: duplicate detection penalizes reposted listings, sellers report 80% visibility drops. **Trust problems structural and worsening.** GDPR fine (Lithuania, €2.4M, 2024). Air Bank CZ published phishing warning.
+- **Depop (NEW C1478)**: **eBay acquiring for $1.2B** (announced Feb 2026, closing Q2). 7M active buyers (90% under 34), $1B GMS. AI listing from photo (one photo → full listing). "Outfits" feature (daily engagement). US fees eliminated. RELEVANCE for CZ: LOW directly, but eBay could expand Depop to EU post-acquisition.
+- **Janicka differentiator**: Premium curation, Instagram-aesthetic UX, pro photos, **on-body photography from day one** (ahead of MegaSecondHand), guaranteed condition, single-warehouse fast shipping. Message: "My jsme to už zkontrolovali, aby ses nemusela." **NEW C1478**: Vinted trust crisis = strongest-ever messaging opportunity: "Na Vintedu nevíš, co kupuješ. U nás ano."
+- **Market gap**: Nobody in CZ does a visually beautiful, curated second-hand experience for women 18-35 well. **No new CZ competitors detected** (4th consecutive scan confirming gap). Odkarla.cz exists (C2C, generic). Shein/Temu gaining CZ fast-fashion share but actually pushes consumers toward second-hand as counter-narrative.
+- **Market size (UPDATED C1478 — ThredUp 14th Report, April 2, 2026)**: Global secondhand apparel grew **13% YoY** (new apparel nearly flat). $393B by 2030. **34% of consumers' clothing budget now goes to secondhand.** 60% factor resale value when buying NEW clothes. **46% browse resale BEFORE buying new** — resale becoming default. Supply is now the constraint, not demand. Gen Z + millennials = 70%+ of market growth through 2030. **Europe second-hand clothing market (C37)**: $35.33B in 2026, projected $75.57B by 2034 (CAGR ~10%).
+- **AI in fashion shopping (NEW C1478)**: **48% of shoppers use AI shopping tools** during secondhand journey. **63% comfortable with agentic buying** (AI shopping on their behalf). ThredUp: AI tools drove +30% active buyers, +27% orders. **66% would let AI manage their digital closet.** 46% of secondhand discovery happens through social feeds, livestreams, creator curation (not search).
+- **Product video data (NEW C1478)**: Pages with video achieve **4.8% CR vs 2.9% without** (65% uplift). Add-to-cart **+144%** after watching video. Returns **-35%**. Even 15-30s phone clips showing fabric movement/fit deliver 20-35% lift. UGC video on product pages: up to **74% higher conversion**.
+- **Conversion benchmarks (C37, UPDATED C1478)**: Fashion avg 3.01% CR. Mobile: ~1.8% vs desktop ~3.9%. On-model photography: +33% conversion. **Product video: +65% conversion.** Products with 11-30 reviews: +68% conversion. Express checkout (Apple/Google Pay): +8-12% conversion. Trust signals at payment: +18% completion. BNPL: +15-20% AOV. Average checkout has 14.88 fields vs 6-8 necessary. Sizing uncertainty = #1 return driver. **62% of mobile fashion sites have "mediocre or worse" PDP UX** (Baymard 2026).
+- **Mobile**: 62% of Czech e-commerce is mobile. Global m-commerce: $3.4T in 2026 (22% annual growth, 3x desktop rate). Mobile = 73% of traffic but only 58% of revenue — conversion gap is THE opportunity.
 
-## CZ Payment Preferences 2026 (Updated — Lead Research C25)
-- **Bank transfer: 33% (#1!)** — higher than cards. QR code on order confirmation is critical.
-- Cards (Visa/MC): 25%. Apple Pay: 20% of ALL online card payments (doubled since 2023). Google Pay: 6%.
+## CZ Payment Preferences 2026 (Updated — Lead Research C25, C1478)
+- **Bank transfer: 33% (#1!)** — higher than cards. QR code on order confirmation is critical. **Instant payments: 43% of all interbank transfers** (2.03M/day, Dec 2025) — QR SPAYD auto-fills recipient+amount in banking apps.
+- Cards (Visa/MC): 25% (Mastercard 55% / Visa 45%). **Apple Pay: 20% of ALL online card payments** (confirmed, 28% YoY growth — accelerating). Google Pay: ~6%.
 - E-wallets: 22%. Cash on delivery: still 15% (declining but expected).
+- **BNPL: ~7% of e-commerce** (up from 2% in 2021, projected 15%). Twisto (now owned by Param/Turkey) + Klarna + Skip Pay active in CZ. Comgate offers native pay-in-3. **BNPL increases AOV 15-20%**, 30-50% of BNPL purchases wouldn't happen without it.
 - QR payments: 74% of Czechs have used.
 - **45% of CZ shoppers abandon if preferred payment method unavailable.**
 - MUST-HAVE before launch: Cards, Apple Pay, Google Pay, bank transfer, QR payment code.
-- SHOULD-HAVE: Dobírka (declining but 15% still expect it).
-- NICE-TO-HAVE: BNPL/installments via Comgate (native pay-in-3) for higher-priced brand items.
+- SHOULD-HAVE: Dobírka (declining but 15% still expect it). BNPL for items >1000 CZK.
+- NICE-TO-HAVE: Vinted Pay-style wallet (not yet in CZ).
 
 ## Agents
 - **Lead**: Tech lead — strategie, prioritizace, web research (trendy, UX, konkurence)
@@ -172,7 +175,7 @@ sqlite3 ~/.claude/jarvis-gym/jarvis.db "SELECT name, service, key_value, endpoin
 - **Pricing**: 2.2% + 3 CZK/tx + 190 CZK/mo (<50k CZK/mo). ~25-30 CZK on 1000 CZK sale.
 - **COST ALERT**: GoPay is 2.5x more expensive than Comgate. See Comgate comparison below.
 
-### Comgate Payment Gateway — PRIMARY (Updated — Lead Research C31, verified C37)
+### Comgate Payment Gateway — PRIMARY (Updated — Lead Research C31, verified C37, C1478)
 - **Decision**: Comgate selected over GoPay. CZ market #1, official JS SDK, fees locked through Dec 31, 2026.
 - **Pricing (verified C31)**:
   - **Start plan** (recommended): 0% card fees for first 6 months (up to 50K CZK/mo), then auto-switches to Easy. Monthly fee: FREE. Bank transfers: 1% + 0 CZK.
@@ -181,10 +184,11 @@ sqlite3 ~/.claude/jarvis-gym/jarvis.db "SELECT name, service, key_value, endpoin
   - **Common**: Refund: 5 CZK. Chargeback: 990 CZK. Currency conversion: 0.15%. Gateway activation: FREE.
   - ~10 CZK on 1000 CZK sale (Easy plan).
 - **Payment methods**: Visa, MC, Apple Pay, Google Pay (inline via SDK — no redirect), bank transfers, BNPL/installments (pay-in-3).
-- **IMPORTANT (C31, verified C37, RE-VERIFIED C52)**: Checkout SDK currently supports Apple Pay + Google Pay inline only. Direct card number entry in SDK is STILL "being prepared" by Comgate — no change as of April 2026. Card payments continue to use redirect flow to Comgate gateway. @comgate/checkout-js is actively maintained and correct package. No timeline given for direct card entry.
-- **INLINE GATE ALTERNATIVE (NEW C52)**: Comgate offers an **inline iframe** integration method (separate from SDK) that displays the full payment gateway INSIDE the e-shop page (nested iframe or popup). This supports ALL payment methods including direct card entry — no redirect needed. Implementation requires iframe embedding. Two variants: (1) nested iframe fills cart area, (2) popup overlay. Both keep customer on-site during payment. **Recommendation**: Use Checkout SDK for Apple Pay + Google Pay (best UX), use inline iframe for card payments (avoids redirect), fall back to redirect for bank transfers/BNPL. This hybrid approach gives best-of-both-worlds UX.
+- **IMPORTANT (C31, verified C37, RE-VERIFIED C52, C1478)**: Checkout SDK currently supports Apple Pay + Google Pay inline only. Direct card number entry in SDK is STILL "being prepared" by Comgate — no change as of April 2026. Card payments continue to use redirect flow to Comgate gateway.
+- **⚠️ CRITICAL SDK WARNING (NEW C1478)**: Comgate has published a warning on their docs: *"We apologize for the delay in development of the Checkout SDK and are working on a new, significantly improved version with clearer documentation. Unfortunately, the exact release date is not yet known. The current version of the SDK will be replaced in the future and will stop functioning, so implementation is recommended to be postponed."* **Strategy impact**: Current @comgate/checkout-js v2.0.15 (Nov 2025) still works for Apple Pay + Google Pay. We should proceed but **abstract SDK calls behind a wrapper** so we can swap to the new version when it ships. For card payments, use inline iframe method instead.
+- **INLINE GATE ALTERNATIVE (C52)**: Comgate offers an **inline iframe** integration method (separate from SDK) that displays the full payment gateway INSIDE the e-shop page (nested iframe or popup). This supports ALL payment methods including direct card entry — no redirect needed. Implementation requires iframe embedding. Two variants: (1) nested iframe fills cart area, (2) popup overlay. Both keep customer on-site during payment. **Recommendation**: Use Checkout SDK for Apple Pay + Google Pay (best UX), use inline iframe for card payments (avoids redirect), fall back to redirect for bank transfers/BNPL. This hybrid approach gives best-of-both-worlds UX.
 - **API**: REST. Docs: `apidoc.comgate.cz`. Endpoints: create payment, check status, refund, void.
-- **Client SDK**: `@comgate/checkout-js` (npm) — replaces old `@comgate/checkout`. TypeScript with bundled types, promise-based API, framework-agnostic (React/Vue/Svelte/vanilla). Handles script injection + caching.
+- **Client SDK**: `@comgate/checkout-js` v2.0.15 (npm, last published Nov 2025) — replaces old `@comgate/checkout`. TypeScript with bundled types, promise-based API, framework-agnostic. ⚠️ Will be replaced by new version (no ETA). Wrap calls for easy migration.
 - **Server**: Direct `fetch` to REST API (simple create/status/refund). `comgate-node` community SDK is stale — raw REST is simpler.
 - **Webhook**: POST callback to `notification_url`. Always verify via GET status check — never trust webhook payload alone.
 - **Architecture**: `src/lib/payments/comgate.ts` (REST client), `src/lib/payments/types.ts`, `POST /api/payments/webhook` route.

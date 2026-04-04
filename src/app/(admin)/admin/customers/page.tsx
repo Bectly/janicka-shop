@@ -12,6 +12,7 @@ export const metadata: Metadata = {
 export default async function AdminCustomersPage() {
   const customers = await prisma.customer.findMany({
     orderBy: { createdAt: "desc" },
+    take: 200,
     include: {
       orders: {
         select: {
@@ -22,6 +23,7 @@ export default async function AdminCustomersPage() {
           createdAt: true,
         },
         orderBy: { createdAt: "desc" },
+        take: 20,
       },
     },
   });

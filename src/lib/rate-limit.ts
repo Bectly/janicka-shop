@@ -12,15 +12,18 @@ interface RateLimitEntry {
 
 const store = new Map<string, RateLimitEntry>();
 
-// Periodic cleanup to prevent memory leaks
+// Periodic cleanup to prevent memory leaks.
+// Uses the largest configured window (login = 15 min) so cleanup never
+// prunes timestamps that are still valid for longer-window endpoints.
 const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
+const MAX_WINDOW_MS = 15 * 60 * 1000;
 let lastCleanup = Date.now();
 
-function cleanup(windowMs: number) {
+function cleanup() {
   const now = Date.now();
   if (now - lastCleanup < CLEANUP_INTERVAL_MS) return;
   lastCleanup = now;
-  const cutoff = now - windowMs;
+  const cutoff = now - MAX_WINDOW_MS;
   for (const [key, entry] of store) {
     entry.timestamps = entry.timestamps.filter((t) => t > cutoff);
     if (entry.timestamps.length === 0) store.delete(key);
@@ -41,7 +44,7 @@ export function checkRateLimit(
   limit: number,
   windowMs: number,
 ): RateLimitResult {
-  cleanup(windowMs);
+  cleanup();
 
   const now = Date.now();
   const cutoff = now - windowMs;
@@ -73,7 +76,7 @@ export function checkRateLimitOnly(
   limit: number,
   windowMs: number,
 ): RateLimitResult {
-  cleanup(windowMs);
+  cleanup();
 
   const cutoff = Date.now() - windowMs;
 
