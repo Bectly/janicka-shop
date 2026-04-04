@@ -445,8 +445,16 @@ export async function createOrder(
     console.error(`[Checkout] Admin notification email failed for ${order.orderNumber}:`, err);
   });
 
-  // For cash on delivery — go straight to order confirmation
+  // For cash on delivery — mark abandoned carts recovered, then go to confirmation
   if (isCod) {
+    db.abandonedCart
+      .updateMany({
+        where: { email: data.email, status: "pending" },
+        data: { status: "recovered", recoveredOrderId: order.id },
+      })
+      .catch((err: unknown) => {
+        console.error("[Checkout] Failed to mark abandoned carts as recovered:", err);
+      });
     redirect(`/order/${order.orderNumber}?token=${order.accessToken}`);
   }
 
@@ -497,5 +505,103 @@ export async function createOrder(
     };
   }
 
+  // Mark any abandoned carts for this email as recovered (fire-and-forget)
+  db.abandonedCart
+    .updateMany({
+      where: { email: data.email, status: "pending" },
+      data: { status: "recovered", recoveredOrderId: order.id },
+    })
+    .catch((err: unknown) => {
+      console.error("[Checkout] Failed to mark abandoned carts as recovered:", err);
+    });
+
   redirect(paymentRedirectUrl);
+}
+
+// ---------------------------------------------------------------------------
+// Abandoned cart capture — called on email blur during checkout
+// ---------------------------------------------------------------------------
+
+const abandonedCartSchema = z.object({
+  email: z.string().email().max(254),
+  customerName: z.string().max(200).optional(),
+  cartItems: z
+    .array(
+      z.object({
+        productId: z.string().max(128),
+        name: z.string().max(300),
+        price: z.number().finite().nonnegative(),
+        size: z.string().max(50).optional(),
+        color: z.string().max(50).optional(),
+        image: z.string().max(2000).optional(),
+        slug: z.string().max(300).optional(),
+      })
+    )
+    .min(1)
+    .max(50),
+  cartTotal: z.number().finite().nonnegative(),
+});
+
+/**
+ * Capture cart state server-side when customer enters their email at checkout.
+ * Used to power abandoned cart recovery emails (30-60min, 12-24h, 48-72h).
+ * Deduplicates by email — updates existing pending record instead of creating duplicates.
+ */
+export async function captureAbandonedCart(input: {
+  email: string;
+  customerName?: string;
+  cartItems: {
+    productId: string;
+    name: string;
+    price: number;
+    size?: string;
+    color?: string;
+    image?: string;
+    slug?: string;
+  }[];
+  cartTotal: number;
+}): Promise<void> {
+  const parsed = abandonedCartSchema.safeParse(input);
+  if (!parsed.success) return; // silently ignore invalid data
+
+  const { email, customerName, cartItems, cartTotal } = parsed.data;
+
+  try {
+    const db = await getDb();
+    const visitorId = await getOrCreateVisitorId();
+
+    // Dedup: find existing pending abandoned cart for this email
+    const existing = await db.abandonedCart.findFirst({
+      where: { email, status: "pending" },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (existing) {
+      // Update existing record with latest cart state
+      await db.abandonedCart.update({
+        where: { id: existing.id },
+        data: {
+          customerName: customerName ?? existing.customerName,
+          cartItems: JSON.stringify(cartItems),
+          cartTotal,
+          visitorId,
+          pageUrl: "/checkout",
+        },
+      });
+    } else {
+      await db.abandonedCart.create({
+        data: {
+          email,
+          customerName,
+          cartItems: JSON.stringify(cartItems),
+          cartTotal,
+          visitorId,
+          pageUrl: "/checkout",
+        },
+      });
+    }
+  } catch (err) {
+    // Never block checkout flow — log and move on
+    console.error("[AbandonedCart] Capture failed:", err);
+  }
 }

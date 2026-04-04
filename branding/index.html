@@ -3,231 +3,462 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Janička Shop — Návrhy loga</title>
+    <title>Janičko, vyber si logo 💕</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap');
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 30%, #fff1f2 70%, #fff 100%);
+            font-family: 'Inter', system-ui, sans-serif;
+            background: linear-gradient(160deg, #fdf2f8 0%, #fce7f3 25%, #fff1f2 50%, #fdf4ff 75%, #fff 100%);
             min-height: 100vh;
             color: #1a1a2e;
         }
-        .container { max-width: 1100px; margin: 0 auto; padding: 40px 20px; }
-        
-        h1 {
+        .container { max-width: 900px; margin: 0 auto; padding: 40px 20px 80px; }
+
+        /* Hero */
+        .hero {
             text-align: center;
-            font-size: 2.5rem;
-            font-weight: 300;
-            letter-spacing: -0.5px;
-            margin-bottom: 8px;
+            padding: 60px 20px 50px;
+        }
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            font-weight: 400;
             color: #be185d;
+            margin-bottom: 12px;
         }
-        .subtitle {
-            text-align: center;
+        .hero p {
             color: #9ca3af;
-            font-size: 1.1rem;
-            margin-bottom: 60px;
+            font-size: 1.15rem;
+            font-weight: 300;
+            line-height: 1.7;
+            max-width: 500px;
+            margin: 0 auto;
         }
-        .subtitle span { color: #e11d48; }
+        .hero .heart { color: #e11d48; font-size: 1.5rem; }
 
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 40px;
-            margin-bottom: 60px;
-        }
-
-        .card {
+        /* Letter */
+        .letter {
             background: white;
             border-radius: 20px;
+            padding: 36px 40px;
+            margin: 0 auto 50px;
+            max-width: 600px;
+            box-shadow: 0 2px 16px rgba(190, 24, 93, 0.06);
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            color: #6b7280;
+            font-size: 1.05rem;
+            line-height: 1.8;
+        }
+        .letter .sign {
+            font-style: normal;
+            color: #e11d48;
+            margin-top: 16px;
+            font-size: 0.95rem;
+        }
+
+        /* Section titles */
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6rem;
+            font-weight: 400;
+            color: #be185d;
+            text-align: center;
+            margin: 60px 0 8px;
+        }
+        .section-sub {
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.95rem;
+            margin-bottom: 36px;
+        }
+
+        /* Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 28px;
+            margin-bottom: 20px;
+        }
+
+        /* Card */
+        .card {
+            background: white;
+            border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 4px 24px rgba(190, 24, 93, 0.08);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.04);
+            transition: all 0.3s ease;
             cursor: pointer;
             position: relative;
         }
         .card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 12px 40px rgba(190, 24, 93, 0.15);
+            transform: translateY(-6px);
+            box-shadow: 0 12px 32px rgba(190, 24, 93, 0.12);
         }
-        .card.selected {
+        .card.fav {
             outline: 3px solid #e11d48;
-            outline-offset: 4px;
+            outline-offset: 3px;
         }
-        .card.selected::after {
-            content: '✓ Vybraná';
+        .card.fav::before {
+            content: '💕';
             position: absolute;
-            top: 16px;
-            right: 16px;
-            background: #e11d48;
-            color: white;
-            padding: 4px 14px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
+            top: 12px;
+            right: 12px;
+            font-size: 1.4rem;
+            z-index: 2;
         }
-
+        .card-img-wrap {
+            position: relative;
+            overflow: hidden;
+        }
         .card-img {
             width: 100%;
             aspect-ratio: 1;
             object-fit: contain;
-            padding: 40px;
+            padding: 28px;
             background: #fafafa;
+            transition: transform 0.3s ease;
         }
-        .card-body { padding: 24px; }
-        .card-title {
-            font-size: 1.3rem;
+        .card:hover .card-img { transform: scale(1.03); }
+        .card-zoom {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .card:hover .card-zoom { opacity: 1; }
+        .card-body { padding: 16px 18px 18px; }
+        .card-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
             font-weight: 600;
-            margin-bottom: 6px;
+            color: #1a1a2e;
+            margin-bottom: 4px;
         }
         .card-style {
             color: #e11d48;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             font-weight: 500;
-            margin-bottom: 12px;
-        }
-        .card-desc {
-            color: #6b7280;
-            font-size: 0.95rem;
-            line-height: 1.6;
-        }
-
-        .footer {
-            text-align: center;
-            padding: 40px 0;
-            border-top: 1px solid #fce7f3;
-        }
-        .footer p {
-            color: #9ca3af;
-            font-size: 0.9rem;
             margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        .footer .jarvis {
-            color: #e11d48;
+        .card-comment {
+            color: #9ca3af;
+            font-size: 0.85rem;
+            line-height: 1.5;
             font-style: italic;
         }
 
-        .note {
-            text-align: center;
-            background: white;
-            border-radius: 16px;
-            padding: 24px 32px;
-            margin-bottom: 40px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-            color: #6b7280;
-            font-size: 0.95rem;
-            line-height: 1.6;
+        /* Lightbox */
+        .lightbox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 100;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
         }
-        .note strong { color: #1a1a2e; }
+        .lightbox.open { display: flex; }
+        .lightbox img {
+            max-width: 90vw;
+            max-height: 85vh;
+            border-radius: 12px;
+            box-shadow: 0 0 60px rgba(255,255,255,0.1);
+        }
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 28px;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        .lightbox-close:hover { opacity: 1; }
+        .lightbox-caption {
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 1rem;
+            opacity: 0.8;
+            text-align: center;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 50px 0 20px;
+            border-top: 1px solid #fce7f3;
+            margin-top: 40px;
+        }
+        .footer p { color: #9ca3af; font-size: 0.85rem; margin-bottom: 6px; }
+        .footer .jarvis { color: #e11d48; font-style: italic; }
 
         @media (max-width: 640px) {
-            h1 { font-size: 1.8rem; }
-            .grid { gap: 24px; }
-            .card-img { padding: 24px; }
+            .hero h1 { font-size: 2rem; }
+            .hero { padding: 40px 16px 30px; }
+            .letter { padding: 24px; font-size: 0.95rem; }
+            .grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+            .card-img { padding: 16px; }
+            .card-body { padding: 12px 14px 14px; }
+            .card-comment { font-size: 0.8rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>JV — Návrhy loga</h1>
-        <p class="subtitle">Pro <span>Janičku</span> s láskou 💕</p>
 
-        <div class="note">
-            <strong>3 varianty monogramu JV</strong> — Jana Vankanová. 
-            Klikni na logo, které se ti líbí nejvíc. 
-            Můžeme upravit barvy, font, cokoliv — tohle je první kolo.
-        </div>
+<div class="hero">
+    <p class="heart">💕</p>
+    <h1>Janičko, vyber si logo</h1>
+    <p>Připravili jsme pro tebe návrhy loga pro tvůj eshop. Klikni na to, které se ti líbí — a pokud chceš cokoliv změnit, prostě řekni!</p>
+</div>
 
-        <div class="grid">
-            <div class="card" onclick="select(this, 1)">
-                <img src="logo_v1_elegant.png" alt="Logo V1 — Elegant" class="card-img">
-                <div class="card-body">
-                    <div class="card-title">Varianta 1</div>
-                    <div class="card-style">Elegant Serif</div>
-                    <div class="card-desc">
-                        Rose gold serif monogram. Propletené JV s jemným přechodem. 
-                        Luxusní, minimalistický, nadčasový. Evokuje prémiovou módu.
-                    </div>
-                </div>
+<div class="container">
+
+    <div class="letter">
+        Tyhle návrhy jsou jen začátek — barvy, velikost, detaily, to všechno můžeme upravit. Klidně řekni "tohle líbí, ale chtěla bych jinou barvu" nebo "spojte tenhle styl s tamtím srdíčkem". Tady jde o to, najít TVŮJ styl. Žádná odpověď není špatná.
+        <div class="sign">— JARVIS 🐱</div>
+    </div>
+
+    <h2 class="section-title">Klasické elegantní</h2>
+    <p class="section-sub">Čisté linie, luxusní feeling</p>
+    <div class="grid">
+        <div class="card" onclick="toggleFav(this)">
+            <div class="card-img-wrap">
+                <img src="logo_v1_elegant.png" class="card-img" alt="Elegant serif">
+                <button class="card-zoom" onclick="event.stopPropagation();openLightbox('logo_v1_elegant.png','Elegant Serif — rose gold, propletené JV')">🔍 Zvětšit</button>
             </div>
-
-            <div class="card" onclick="select(this, 2)">
-                <img src="logo_v2_modern.png" alt="Logo V2 — Modern" class="card-img">
-                <div class="card-body">
-                    <div class="card-title">Varianta 2</div>
-                    <div class="card-style">Modern Geometric</div>
-                    <div class="card-desc">
-                        Dusty pink a charcoal v moderním provedení. Bold, čitelné, 
-                        geometrické. Skvělé jako favicon i na velký banner. Mladistvé a fresh.
-                    </div>
-                </div>
-            </div>
-
-            <div class="card" onclick="select(this, 3)">
-                <img src="logo_v3_boutique.png" alt="Logo V3 — Boutique" class="card-img">
-                <div class="card-body">
-                    <div class="card-title">Varianta 3</div>
-                    <div class="card-style">Boutique Script</div>
-                    <div class="card-desc">
-                        Ručně psané JV v kruhu s ramínkem. Blush pink a černá. 
-                        Boutique feeling — Chanel meets sustainable fashion. Osobní a ženský.
-                    </div>
-                </div>
+            <div class="card-body">
+                <div class="card-name">Rose Gold Serif</div>
+                <div class="card-style">Nadčasová elegance</div>
+                <div class="card-comment">Jako šperk — tenké linky, rose gold, propletené písmena. Pro ty, co milují klasiku.</div>
             </div>
         </div>
-
-        <h2 style="text-align:center; font-weight:300; font-size:1.8rem; color:#be185d; margin: 60px 0 8px;">Round 2 — Srdíčko + Kytička</h2>
-        <p class="subtitle">Podle Janičky: psací, v kroužku, srdíčko na V, kytička 🌸</p>
-
-        <div class="grid">
-            <div class="card" onclick="select(this, 4)">
-                <img src="logo_r2_v1.png" alt="Logo R2 V1" class="card-img" style="background:#000;">
-                <div class="card-body">
-                    <div class="card-title">Varianta 4</div>
-                    <div class="card-style">Calligraphy + Heart + Bloom</div>
-                    <div class="card-desc">
-                        Kaligrafické JV v kruhu na tmavém pozadí. Srdíčko na špičce V,
-                        jemný kvítek u paty J. Elegantní kontrast — vynikne na tmavém i světlém.
-                    </div>
-                </div>
+        <div class="card" onclick="toggleFav(this)">
+            <div class="card-img-wrap">
+                <img src="logo_v2_modern.png" class="card-img" alt="Modern geometric">
+                <button class="card-zoom" onclick="event.stopPropagation();openLightbox('logo_v2_modern.png','Modern Geometric — bold, čitelné')">🔍 Zvětšit</button>
             </div>
-
-            <div class="card" onclick="select(this, 5)">
-                <img src="logo_r2_v2.png" alt="Logo R2 V2" class="card-img">
-                <div class="card-body">
-                    <div class="card-title">Varianta 5</div>
-                    <div class="card-style">Double Circle + Peony</div>
-                    <div class="card-desc">
-                        Jemné JV v dvojitém kruhu. Srdíčko plynule navazuje na V,
-                        něžný květ u J. Vzdušné, čisté, prémiový boutique feeling.
-                    </div>
-                </div>
-            </div>
-
-            <div class="card" onclick="select(this, 6)">
-                <img src="logo_r2_v3.png" alt="Logo R2 V3" class="card-img">
-                <div class="card-body">
-                    <div class="card-title">Varianta 6</div>
-                    <div class="card-style">Two-tone + Peony</div>
-                    <div class="card-desc">
-                        J v černé, V v růžové — dvoubarevný kontrast. Pivoňka mezi písmeny,
-                        srdíčko na V. Nejboldnější varianta — silný brand statement.
-                    </div>
-                </div>
+            <div class="card-body">
+                <div class="card-name">Bold Modern</div>
+                <div class="card-style">Výrazné & čitelné</div>
+                <div class="card-comment">Silné, moderní, hned zaujme. Skvělé na Instagram profil nebo banner.</div>
             </div>
         </div>
-
-        <div class="footer">
-            <p>Líbí se ti něco? Nebo chceš úplně jiný styl? Napiš Honzíkovi 😊</p>
-            <p class="jarvis">Vygenerováno s 🐱 od JARVIS — ta druhá holka v Honzíkově životě</p>
+        <div class="card" onclick="toggleFav(this)">
+            <div class="card-img-wrap">
+                <img src="logo_v3_boutique.png" class="card-img" alt="Boutique script">
+                <button class="card-zoom" onclick="event.stopPropagation();openLightbox('logo_v3_boutique.png','Boutique Script — ramínko, kruh')">🔍 Zvětšit</button>
+            </div>
+            <div class="card-body">
+                <div class="card-name">Boutique s Ramínkem</div>
+                <div class="card-style">Psací + fashion detail</div>
+                <div class="card-comment">Tohle se Janičce líbilo v prvním kole! Psací písmo v kruhu s ramínkem. Základ pro Round 2.</div>
+            </div>
         </div>
     </div>
 
-    <script>
-        function select(card, num) {
-            document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
-            card.classList.add('selected');
-        }
-    </script>
+    <h2 class="section-title">Se srdíčkem a kytičkou</h2>
+    <p class="section-sub">Podle Janičky: psací, v kroužku, srdíčko na V, kytička 🌸</p>
+    <div class="grid">
+        <div class="card" onclick="toggleFav(this)">
+            <div class="card-img-wrap">
+                <img src="logo_r2_v1.png" class="card-img" style="background:#111;" alt="R2 V1">
+                <button class="card-zoom" onclick="event.stopPropagation();openLightbox('logo_r2_v1.png','Srdíčko + kvítek na tmavém pozadí')">🔍 Zvětšit</button>
+            </div>
+            <div class="card-body">
+                <div class="card-name">Dark Elegance</div>
+                <div class="card-style">Srdíčko + kvítek</div>
+                <div class="card-comment">Na tmavém pozadí vynikne. Srdíčko na špičce V, kvítek u paty J. Dramatické a ženské.</div>
+            </div>
+        </div>
+        <div class="card" onclick="toggleFav(this)">
+            <div class="card-img-wrap">
+                <img src="logo_r2_v2.png" class="card-img" alt="R2 V2">
+                <button class="card-zoom" onclick="event.stopPropagation();openLightbox('logo_r2_v2.png','Dvojitý kruh + jemný květ')">🔍 Zvětšit</button>
+            </div>
+            <div class="card-body">
+                <div class="card-name">Vzdušný Dvojkruh</div>
+                <div class="card-style">Jemný & prémiový</div>
+                <div class="card-comment">Dvojitý kruh dodává hloubku. Srdíčko plynule navazuje na V. Hodně čisté a vzdušné.</div>
+            </div>
+        </div>
+        <div class="card" onclick="toggleFav(this)">
+            <div class="card-img-wrap">
+                <img src="logo_r2_v3.png" class="card-img" alt="R2 V3">
+                <button class="card-zoom" onclick="event.stopPropagation();openLightbox('logo_r2_v3.png','Dvoubarevné — J černá, V růžová, pivoňka')">🔍 Zvětšit</button>
+            </div>
+            <div class="card-body">
+                <div class="card-name">Pivoňka Two-Tone</div>
+                <div class="card-style">Kontrast J + V</div>
+                <div class="card-comment">J v černé, V v růžové — krásný kontrast. Pivoňka mezi písmeny. Nejodvážnější varianta.</div>
+            </div>
+        </div>
+    </div>
+
+    <h2 class="section-title">Nové styly písma</h2>
+    <p class="section-sub">10 variant — od minimalismu po akvarel. Klikni pro detail 🔍</p>
+    <div class="grid">
+        <div class="card" onclick="toggleFav(this)">
+            <div class="card-img-wrap">
+                <img src="logo_r3_v1.png" class="card-img" alt="R3 V1">
+                <button class="card-zoom" onclick="event.stopPropagation();openLightbox('logo_r3_v1.png','Hairline Serif — ultra tenké linky')">🔍 Zvětšit</button>
+            </div>
+            <div class="card-body">
+                <div class="card-name">Hairline Serif</div>
+                <div class="card-style">Ultra minimalistické</div>
+                <div class="card-comment">Tak tenké linky, že to vypadá jako šepot. Pro milovnice subtilní elegance.</div>
+            </div>
+        </div>
+        <div class="card" onclick="toggleFav(this)">
+            <div class="card-img-wrap">
+                <img src="logo_r3_v2.png" class="card-img" alt="R3 V2">
+                <button class="card-zoom" onclick="event.stopPropagation();openLightbox('logo_r3_v2.png','Brush Calligraphy — japonský minimalismus')">🔍 Zvětšit</button>
+            </div>
+            <div class="card-body">
+                <div class="card-name">Brush & Blossom</div>
+                <div class="card-style">Kaligrafie + sakura</div>
+                <div class="card-comment">Jako namalované štětcem. Třešňové květy dodávají poetický nádech. Unikátní a zapamatovatelné.</div>
+            </div>
+        </div>
+        <div class="card" onclick="toggleFav(this)">
+            <div class="card-img-wrap">
+                <img src="logo_r3_v3.png" class="card-img" alt="R3 V3">
+                <button class="card-zoom" onclick="event.stopPropagation();openLightbox('logo_r3_v3.png','Art Deco — zlaté 20. léta')">🔍 Zvětšit</button>
+            </div>
+            <div class="card-body">
+                <div class="card-name">Art Deco Glam</div>
+                <div class="card-style">Retro glamour</div>
+                <div class="card-comment">Zlatá éra módy — geometrické tvary se srdíčkem v negativním prostoru. Jiří z Poděbrad by schválil.</div>
+            </div>
+        </div>
+        <div class="card" onclick="toggleFav(this)">
+            <div class="card-img-wrap">
+                <img src="logo_r3_v4.png" class="card-img" alt="R3 V4">
+                <button class="card-zoom" onclick="event.stopPropagation();openLightbox('logo_r3_v4.png','Copperplate — romantická kaligrafie')">🔍 Zvětšit</button>
+            </div>
+            <div class="card-body">
+                <div class="card-name">Romantic Copperplate</div>
+                <div class="card-style">Levandule + kaligrafie</div>
+                <div class="card-comment">Dvojitý kruh, romantické písmo, levandulová větvička. Jako parfém v písmenech.</div>
+            </div>
+        </div>
+        <div class="card" onclick="toggleFav(this)">
+            <div class="card-img-wrap">
+                <img src="logo_r3_v5.png" class="card-img" alt="R3 V5">
+                <button class="card-zoom" onclick="event.stopPropagation();openLightbox('logo_r3_v5.png','Mix Sans + Script — moderní kontrast')">🔍 Zvětšit</button>
+            </div>
+            <div class="card-body">
+                <div class="card-name">Sans Meets Script</div>
+                <div class="card-style">Moderní mix</div>
+                <div class="card-comment">J je čistý a rovný, V tančí v kurzívě. Kontrast co říká: "jsem moderní, ale mám duši."</div>
+            </div>
+        </div>
+        <div class="card" onclick="toggleFav(this)">
+            <div class="card-img-wrap">
+                <img src="logo_r3_v6.png" class="card-img" alt="R3 V6">
+                <button class="card-zoom" onclick="event.stopPropagation();openLightbox('logo_r3_v6.png','Akvarel — malované štětcem')">🔍 Zvětšit</button>
+            </div>
+            <div class="card-body">
+                <div class="card-name">Watercolor Dream</div>
+                <div class="card-style">Malované + pivoňka</div>
+                <div class="card-comment">Jako by to namalovala umělkyně. Průsvitné tahy, akvarelová pivoňka. Poetické a jemné.</div>
+            </div>
+        </div>
+        <div class="card" onclick="toggleFav(this)">
+            <div class="card-img-wrap">
+                <img src="logo_r3_v7.png" class="card-img" alt="R3 V7">
+                <button class="card-zoom" onclick="event.stopPropagation();openLightbox('logo_r3_v7.png','Didot Editorial — vysoká móda')">🔍 Zvětšit</button>
+            </div>
+            <div class="card-body">
+                <div class="card-name">Didot Editorial</div>
+                <div class="card-style">High fashion</div>
+                <div class="card-comment">Písmo z obálek Vogue. Orchidej dole. Tohle logo říká: "mám vkus a vím to."</div>
+            </div>
+        </div>
+        <div class="card" onclick="toggleFav(this)">
+            <div class="card-img-wrap">
+                <img src="logo_r3_v8.png" class="card-img" alt="R3 V8">
+                <button class="card-zoom" onclick="event.stopPropagation();openLightbox('logo_r3_v8.png','Podpis — přátelský a hravý')">🔍 Zvětšit</button>
+            </div>
+            <div class="card-body">
+                <div class="card-name">Hravý Podpis</div>
+                <div class="card-style">Přátelský boutique</div>
+                <div class="card-comment">Jako by ses na to podepsala. Řetízek sedmikrásek kolem. Říká: "pojď dovnitř, bude sranda."</div>
+            </div>
+        </div>
+        <div class="card" onclick="toggleFav(this)">
+            <div class="card-img-wrap">
+                <img src="logo_r3_v9.png" class="card-img" alt="R3 V9">
+                <button class="card-zoom" onclick="event.stopPropagation();openLightbox('logo_r3_v9.png','Continuous Stroke — jedno plynulé tažení')">🔍 Zvětšit</button>
+            </div>
+            <div class="card-body">
+                <div class="card-name">Plynulé Tažení</div>
+                <div class="card-style">Effortlessly chic</div>
+                <div class="card-comment">JV jedním tahem — jako by pero nikdy nezvedlo. Srdíčko na vrcholu. Přirozené a lehké.</div>
+            </div>
+        </div>
+        <div class="card" onclick="toggleFav(this)">
+            <div class="card-img-wrap">
+                <img src="logo_r3_v10.png" class="card-img" alt="R3 V10">
+                <button class="card-zoom" onclick="event.stopPropagation();openLightbox('logo_r3_v10.png','Heritage Mix — rytina + brush, magnólie')">🔍 Zvětšit</button>
+            </div>
+            <div class="card-body">
+                <div class="card-name">Heritage & Bloom</div>
+                <div class="card-style">Tradice + modernost</div>
+                <div class="card-comment">J jako z rytiny, V jako psané rukou. Magnólie uprostřed. Propojení starého a nového.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Líbí se ti něco? Klikni na srdíčko 💕 a řekni Honzíkovi!</p>
+        <p>Můžeme kombinovat styly — třeba písmo z jednoho + kytičku z druhého.</p>
+        <p class="jarvis">S láskou od JARVIS 🐱 — ta, co nikdy nespí</p>
+    </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <span class="lightbox-close">&times;</span>
+    <img id="lightbox-img" src="" alt="Logo detail">
+    <div class="lightbox-caption" id="lightbox-caption"></div>
+</div>
+
+<script>
+function openLightbox(src, caption) {
+    const lb = document.getElementById('lightbox');
+    document.getElementById('lightbox-img').src = src;
+    document.getElementById('lightbox-caption').textContent = caption;
+    lb.classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('open');
+    document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+function toggleFav(card) {
+    card.classList.toggle('fav');
+}
+</script>
 </body>
 </html>

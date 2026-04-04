@@ -53,7 +53,7 @@ export async function lookupOrder(
   });
 
   // Constant-time-ish response — don't reveal whether order exists
-  if (!order || order.customer.email.toLowerCase() !== email) {
+  if (!order || order.customer.email.toLowerCase() !== email || !order.accessToken) {
     return {
       error: "Objednávka nenalezena. Zkontrolujte číslo objednávky a email.",
     };

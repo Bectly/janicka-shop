@@ -300,6 +300,58 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Sale / discounted products */}
+      {saleProducts.length > 0 && (
+        <section className="bg-rose-50/50">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+            <div className="flex items-end justify-between">
+              <div>
+                <h2 className="font-heading text-2xl font-bold text-foreground">
+                  Výprodej
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Skvělé kousky za ještě lepší ceny
+                </p>
+              </div>
+              <Link
+                href="/products?sale=true"
+                className="hidden text-sm font-medium text-primary hover:underline sm:block"
+              >
+                Zobrazit vše &rarr;
+              </Link>
+            </div>
+            <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+              {saleProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  id={product.id}
+                  name={product.name}
+                  slug={product.slug}
+                  price={product.price}
+                  compareAt={product.compareAt}
+                  images={product.images}
+                  categoryName={product.category.name}
+                  brand={product.brand}
+                  condition={product.condition}
+                  sizes={product.sizes}
+                  colors={product.colors}
+                  isReserved={isReservedByOther(product)}
+                  lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
+                />
+              ))}
+            </div>
+            <div className="mt-8 text-center sm:hidden">
+              <Button
+                variant="outline"
+                render={<Link href="/products?sale=true" />}
+              >
+                Zobrazit celý výprodej
+              </Button>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Popular brands */}
       {popularBrands.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">

@@ -21,7 +21,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCartStore } from "@/lib/cart-store";
 import { formatPrice } from "@/lib/format";
-import { createOrder, type CheckoutState } from "./actions";
+import { createOrder, captureAbandonedCart, type CheckoutState } from "./actions";
 import { useSyncExternalStore } from "react";
 import {
   PacketaWidget,
@@ -106,6 +106,32 @@ export default function CheckoutPage() {
       setPacketaPoint(point);
     },
     []
+  );
+
+  // Capture abandoned cart when email field loses focus (for recovery emails)
+  const handleEmailBlur = useCallback(
+    (e: React.FocusEvent<HTMLInputElement>) => {
+      const email = e.target.value.trim();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+      if (items.length === 0) return;
+
+      captureAbandonedCart({
+        email,
+        cartItems: items.map((i) => ({
+          productId: i.productId,
+          name: i.name,
+          price: i.price,
+          size: i.size,
+          color: i.color,
+          image: i.image,
+          slug: i.slug,
+        })),
+        cartTotal: totalPrice(),
+      }).catch(() => {
+        // Silently ignore — never disrupt checkout
+      });
+    },
+    [items, totalPrice]
   );
 
   const isCod = paymentMethod === "cod";
@@ -258,6 +284,7 @@ export default function CheckoutPage() {
                     required
                     placeholder="jana@email.cz"
                     autoComplete="email"
+                    onBlur={handleEmailBlur}
                     aria-invalid={!!state.fieldErrors.email}
                     aria-describedby={state.fieldErrors.email ? "email-error" : undefined}
                   />

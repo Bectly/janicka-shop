@@ -171,6 +171,27 @@ model ProductNotifyRequest {
   @@index([notified])
 }
 
+model AbandonedCart {
+  id              String    @id @default(cuid())
+  email           String
+  customerName    String?
+  cartItems       String    @default("[]") // JSON: [{productId, name, price, size, color, image, slug}]
+  cartTotal       Float     @default(0)
+  pageUrl         String?                  // page where cart was abandoned (checkout, cart, etc.)
+  visitorId       String?                  // visitor ID for dedup
+  email1SentAt    DateTime?                // 30-60 min reminder
+  email2SentAt    DateTime?                // 12-24h follow-up
+  email3SentAt    DateTime?                // 48-72h final
+  recoveredOrderId String?                 // set when customer completes order
+  status          String    @default("pending") // pending | recovered | expired
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([email])
+  @@index([status])
+  @@index([createdAt])
+}
+
 model ShopSettings {
   id            String  @id @default("singleton")
   shopName      String  @default("Janička")

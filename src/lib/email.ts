@@ -684,3 +684,248 @@ export async function sendNewsletterWelcomeEmail(email: string): Promise<void> {
     console.error(`[Email] Failed to send newsletter welcome email to ${email}:`, error);
   }
 }
+
+// ---------------------------------------------------------------------------
+// Abandoned cart recovery emails (3-email sequence)
+// ---------------------------------------------------------------------------
+
+interface AbandonedCartItem {
+  name: string;
+  price: number;
+  image?: string;
+  slug?: string;
+  size?: string;
+  color?: string;
+}
+
+interface AbandonedCartEmailData {
+  email: string;
+  customerName?: string | null;
+  items: AbandonedCartItem[];
+  cartTotal: number;
+}
+
+function buildCartItemsHtml(items: AbandonedCartItem[]): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  return items
+    .map((item) => {
+      const productUrl = item.slug ? `${baseUrl}/products/${item.slug}` : baseUrl;
+      const imageHtml = item.image
+        ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #f0f0f0;" />`
+        : `<div style="width: 80px; height: 80px; background: #f5f5f5; border-radius: 8px;"></div>`;
+      const detailParts = [item.size, item.color].filter(Boolean).join(" · ");
+      return `
+        <tr>
+          <td style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; vertical-align: top; width: 80px;">
+            <a href="${productUrl}">${imageHtml}</a>
+          </td>
+          <td style="padding: 12px 0 12px 12px; border-bottom: 1px solid #f0f0f0; vertical-align: top;">
+            <a href="${productUrl}" style="color: #1a1a1a; text-decoration: none; font-weight: 500; font-size: 14px;">${escapeHtml(item.name)}</a>
+            ${detailParts ? `<br/><span style="color: #666; font-size: 13px;">${escapeHtml(detailParts)}</span>` : ""}
+          </td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; text-align: right; vertical-align: top; white-space: nowrap; font-weight: 500;">
+            ${formatPriceCzk(item.price)}
+          </td>
+        </tr>`;
+    })
+    .join("");
+}
+
+function buildAbandonedCartEmailWrapper(content: string, ctaText: string, ctaUrl: string): string {
+  return `<!DOCTYPE html>
+<html lang="cs">
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/></head>
+<body style="margin: 0; padding: 0; background-color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
+
+    <div style="text-align: center; padding: 24px 0;">
+      <h1 style="margin: 0; font-size: 24px; color: #1a1a1a;">Janička Shop</h1>
+      <p style="margin: 4px 0 0; font-size: 13px; color: #999;">Second hand móda pro tebe</p>
+    </div>
+
+    <div style="background: #fff; border-radius: 12px; padding: 32px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+      ${content}
+
+      <div style="text-align: center; margin-top: 28px;">
+        <a href="${ctaUrl}" style="display: inline-block; background: #1a1a1a; color: #fff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 15px; font-weight: 600;">
+          ${escapeHtml(ctaText)}
+        </a>
+      </div>
+    </div>
+
+    <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
+      <p style="margin: 0;">Janička Shop — Second hand móda</p>
+      <p style="margin: 4px 0 0;">Nechcete dostávat tyto emaily? Stačí dokončit nákup nebo košík vyprázdnit.</p>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+/**
+ * Email 1: Sent 30-60 minutes after abandonment.
+ * "Zapomněla jsi na svůj kousek?" — gentle reminder with product images.
+ */
+function buildAbandonedCartEmail1(data: AbandonedCartEmailData): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const greeting = data.customerName ? escapeHtml(data.customerName) : "Ahoj";
+
+  return buildAbandonedCartEmailWrapper(
+    `
+      <h2 style="margin: 0 0 8px; font-size: 20px; color: #1a1a1a;">Zapomněla jsi na svůj kousek?</h2>
+      <p style="margin: 0 0 16px; color: #666; font-size: 15px; line-height: 1.6;">
+        ${greeting}, všimly jsme si, že máš v košíku pár krásných kousků. Každý z nich je unikát — jakmile ho někdo koupí, je pryč.
+      </p>
+
+      <div style="background: #fffbeb; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px;">
+        <p style="margin: 0; color: #92400e; font-size: 14px;">
+          Tento kousek je unikát — kdokoliv ho může koupit.
+        </p>
+      </div>
+
+      <table style="width: 100%; border-collapse: collapse;">
+        ${buildCartItemsHtml(data.items)}
+      </table>
+
+      <div style="text-align: right; margin-top: 12px;">
+        <p style="margin: 0; font-size: 16px; font-weight: 700; color: #1a1a1a;">
+          Celkem: ${formatPriceCzk(data.cartTotal)}
+        </p>
+      </div>`,
+    "Dokončit objednávku",
+    `${baseUrl}/checkout`
+  );
+}
+
+/**
+ * Email 2: Sent 12-24 hours after abandonment.
+ * "Stále na tebe čeká..." — follow-up, mentions if item was sold.
+ */
+function buildAbandonedCartEmail2(data: AbandonedCartEmailData, soldItemNames: string[]): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const greeting = data.customerName ? escapeHtml(data.customerName) : "Ahoj";
+  const availableItems = data.items.filter((i) => !soldItemNames.includes(i.name));
+
+  let soldNotice = "";
+  if (soldItemNames.length > 0) {
+    soldNotice = `
+      <div style="background: #fef2f2; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px;">
+        <p style="margin: 0; color: #991b1b; font-size: 14px;">
+          Bohužel, ${soldItemNames.map((n) => `<strong>${escapeHtml(n)}</strong>`).join(", ")} už ${soldItemNames.length === 1 ? "našel" : "našly"} novou majitelku.
+          ${availableItems.length > 0 ? "Ale ostatní kousky stále čekají!" : ""}
+        </p>
+      </div>`;
+  }
+
+  const itemsHtml = availableItems.length > 0
+    ? `<table style="width: 100%; border-collapse: collapse;">${buildCartItemsHtml(availableItems)}</table>`
+    : "";
+
+  const ctaText = availableItems.length > 0 ? "Dokončit objednávku" : "Prohlédnout podobné kousky";
+  const ctaUrl = availableItems.length > 0 ? `${baseUrl}/checkout` : `${baseUrl}/products?sort=newest`;
+
+  return buildAbandonedCartEmailWrapper(
+    `
+      <h2 style="margin: 0 0 8px; font-size: 20px; color: #1a1a1a;">Stále na tebe čeká...</h2>
+      <p style="margin: 0 0 16px; color: #666; font-size: 15px; line-height: 1.6;">
+        ${greeting}, tvůj košík se tu na tebe stále drží. U second handu ale nikdy nevíš — každý kousek je tu jen jednou.
+      </p>
+
+      ${soldNotice}
+      ${itemsHtml}
+      ${availableItems.length > 0 ? `<div style="text-align: right; margin-top: 12px;"><p style="margin: 0; font-size: 16px; font-weight: 700; color: #1a1a1a;">Celkem: ${formatPriceCzk(availableItems.reduce((sum, i) => sum + i.price, 0))}</p></div>` : ""}`,
+    ctaText,
+    ctaUrl
+  );
+}
+
+/**
+ * Email 3: Sent 48-72 hours after abandonment.
+ * "Poslední upozornění" — final reminder with urgency.
+ */
+function buildAbandonedCartEmail3(data: AbandonedCartEmailData, soldItemNames: string[]): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const greeting = data.customerName ? escapeHtml(data.customerName) : "Ahoj";
+  const availableItems = data.items.filter((i) => !soldItemNames.includes(i.name));
+
+  let soldNotice = "";
+  if (soldItemNames.length > 0) {
+    soldNotice = `
+      <div style="background: #fef2f2; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px;">
+        <p style="margin: 0; color: #991b1b; font-size: 14px;">
+          ${soldItemNames.map((n) => `<strong>${escapeHtml(n)}</strong>`).join(", ")} — ${soldItemNames.length === 1 ? "bohužel prodáno" : "bohužel prodány"}.
+          <a href="${baseUrl}/products?sort=newest" style="color: #991b1b; text-decoration: underline;">Podívej se na podobné kousky &rarr;</a>
+        </p>
+      </div>`;
+  }
+
+  const itemsHtml = availableItems.length > 0
+    ? `<table style="width: 100%; border-collapse: collapse;">${buildCartItemsHtml(availableItems)}</table>`
+    : "";
+
+  const ctaText = availableItems.length > 0 ? "Naposledy — dokončit objednávku" : "Prohlédnout novinky";
+  const ctaUrl = availableItems.length > 0 ? `${baseUrl}/checkout` : `${baseUrl}/products?sort=newest`;
+
+  return buildAbandonedCartEmailWrapper(
+    `
+      <h2 style="margin: 0 0 8px; font-size: 20px; color: #1a1a1a;">Poslední upozornění</h2>
+      <p style="margin: 0 0 16px; color: #666; font-size: 15px; line-height: 1.6;">
+        ${greeting}, tohle je poslední připomenutí — pak tvůj košík vyprší.
+        ${availableItems.length > 0 ? "Tyto kousky jsou stále dostupné, ale u second handu nikdy nevíš, jak dlouho vydrží." : ""}
+      </p>
+
+      ${soldNotice}
+      ${itemsHtml}
+      ${availableItems.length > 0 ? `<div style="text-align: right; margin-top: 12px;"><p style="margin: 0; font-size: 16px; font-weight: 700; color: #1a1a1a;">Celkem: ${formatPriceCzk(availableItems.reduce((sum, i) => sum + i.price, 0))}</p></div>` : ""}`,
+    ctaText,
+    ctaUrl
+  );
+}
+
+/**
+ * Send abandoned cart recovery email (stage 1, 2, or 3).
+ * Returns true if email was sent, false if skipped.
+ */
+export async function sendAbandonedCartEmail(
+  stage: 1 | 2 | 3,
+  data: AbandonedCartEmailData,
+  soldItemNames?: string[]
+): Promise<boolean> {
+  const resend = getResendClient();
+  if (!resend) {
+    console.warn("[Email] RESEND_API_KEY not set — skipping abandoned cart email");
+    return false;
+  }
+
+  const subjects: Record<number, string> = {
+    1: "Zapomněla jsi na svůj košík — Janička Shop",
+    2: "Tvůj košík stále čeká — Janička Shop",
+    3: "Poslední upozornění — Janička Shop",
+  };
+
+  let html: string;
+  switch (stage) {
+    case 1:
+      html = buildAbandonedCartEmail1(data);
+      break;
+    case 2:
+      html = buildAbandonedCartEmail2(data, soldItemNames ?? []);
+      break;
+    case 3:
+      html = buildAbandonedCartEmail3(data, soldItemNames ?? []);
+      break;
+  }
+
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: data.email,
+      subject: subjects[stage],
+      html,
+    });
+    return true;
+  } catch (error) {
+    console.error(`[Email] Failed to send abandoned cart email #${stage} to ${data.email}:`, error);
+    return false;
+  }
+}
