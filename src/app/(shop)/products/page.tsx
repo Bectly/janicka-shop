@@ -6,7 +6,7 @@ import { ProductFilters } from "@/components/shop/product-filters";
 import { Pagination } from "@/components/shop/pagination";
 import { getVisitorId } from "@/lib/visitor";
 import { getLowestPrices30d } from "@/lib/price-history";
-import { buildItemListSchema, jsonLdString } from "@/lib/structured-data";
+import { buildItemListSchema, buildBreadcrumbSchema, jsonLdString } from "@/lib/structured-data";
 import type { Metadata } from "next";
 
 type ProductWithCategory = Prisma.ProductGetPayload<{
@@ -271,11 +271,24 @@ export default async function ProductsPage({
     `/products${params.category ? `?category=${params.category}` : ""}`,
   );
 
+  const breadcrumbItems = [{ name: "Katalog", url: "/products" }];
+  if (params.category) {
+    breadcrumbItems.push({
+      name: categoryName,
+      url: `/products?category=${params.category}`,
+    });
+  }
+  const breadcrumbJsonLd = buildBreadcrumbSchema(breadcrumbItems);
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLdString(itemListJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdString(breadcrumbJsonLd) }}
       />
       {/* Page heading */}
       <div className="mb-6">

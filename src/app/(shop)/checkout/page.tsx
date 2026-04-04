@@ -30,6 +30,7 @@ import {
   FREE_SHIPPING_THRESHOLD,
   COD_SURCHARGE,
 } from "@/lib/constants";
+import { MobileCheckoutSummary } from "@/components/shop/mobile-checkout-summary";
 
 const emptySubscribe = () => () => {};
 
@@ -525,8 +526,8 @@ export default function CheckoutPage() {
             </section>
           </div>
 
-          {/* Order summary sidebar */}
-          <div className="lg:col-span-1">
+          {/* Order summary sidebar — hidden on mobile, shown on desktop */}
+          <div className="hidden lg:col-span-1 lg:block">
             <div className="sticky top-24 space-y-4 rounded-xl border bg-card p-6 shadow-sm">
               <h2 className="font-heading text-lg font-semibold">
                 Shrnutí objednávky
@@ -600,7 +601,26 @@ export default function CheckoutPage() {
             </div>
           </div>
         </div>
+
+        {/* Mobile sticky summary bar — bottom padding to avoid overlap */}
+        <div className="h-16 lg:hidden" />
       </form>
+
+      {/* Mobile sticky summary bar */}
+      <MobileCheckoutSummary
+        items={items.map((i) => ({
+          productId: i.productId,
+          name: i.name,
+          price: i.price,
+          size: i.size,
+          color: i.color,
+        }))}
+        subtotal={subtotal}
+        shippingCost={shippingCost}
+        codFee={codFee}
+        total={total}
+        freeShipping={shippingCost === 0}
+      />
     </div>
   );
 }

@@ -9,7 +9,7 @@ import { ProductGallery } from "@/components/shop/product-gallery";
 import { AddToCartButton } from "@/components/shop/add-to-cart-button";
 import { getVisitorId } from "@/lib/visitor";
 import { getLowestPrices30d } from "@/lib/price-history";
-import { buildProductSchema, jsonLdString } from "@/lib/structured-data";
+import { buildProductSchema, buildBreadcrumbSchema, jsonLdString } from "@/lib/structured-data";
 import { ShareButtons } from "@/components/shop/share-buttons";
 import { WishlistButton } from "@/components/shop/wishlist-button";
 import {
@@ -99,6 +99,12 @@ export default async function ProductDetailPage({ params }: Props) {
     }),
   };
 
+  const breadcrumbJsonLd = buildBreadcrumbSchema([
+    { name: "Katalog", url: "/products" },
+    { name: product.category.name, url: `/products?category=${product.category.slug}` },
+    { name: product.name, url: `/products/${product.slug}` },
+  ]);
+
   let productImages: string[] = [];
   try { productImages = JSON.parse(product.images); } catch { /* corrupted data fallback */ }
 
@@ -109,6 +115,10 @@ export default async function ProductDetailPage({ params }: Props) {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: jsonLdString(jsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLdString(breadcrumbJsonLd) }}
         />
         <nav className="mb-6 text-sm text-muted-foreground">
           <Link href="/products" className="hover:text-foreground">
@@ -232,6 +242,10 @@ export default async function ProductDetailPage({ params }: Props) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLdString(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdString(breadcrumbJsonLd) }}
       />
       {/* Breadcrumb */}
       <nav className="mb-6 text-sm text-muted-foreground">

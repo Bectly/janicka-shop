@@ -141,6 +141,22 @@ export function buildItemListSchema(
   };
 }
 
+/** Build a BreadcrumbList JSON-LD schema for navigation breadcrumbs. */
+export function buildBreadcrumbSchema(
+  items: { name: string; url: string }[],
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      item: item.url.startsWith("http") ? item.url : `${BASE_URL}${item.url}`,
+    })),
+  };
+}
+
 /** Render a JSON-LD script tag string (safe for dangerouslySetInnerHTML). */
 export function jsonLdString(data: Record<string, unknown>): string {
   return JSON.stringify(data).replace(/</g, "\\u003c");
