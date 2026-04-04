@@ -440,7 +440,7 @@ export async function createOrder(
         await tx.orderItem.deleteMany({ where: { orderId: order.id } });
         await tx.order.delete({ where: { id: order.id } });
         await tx.product.updateMany({
-          where: { id: { in: productIds }, sold: true },
+          where: { id: { in: productIds }, active: true, sold: true },
           data: { sold: false, stock: 1 },
         });
       });
