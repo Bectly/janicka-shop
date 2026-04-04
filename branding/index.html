@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Janička Shop — Návrhy loga</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 30%, #fff1f2 70%, #fff 100%);
+            min-height: 100vh;
+            color: #1a1a2e;
+        }
+        .container { max-width: 1100px; margin: 0 auto; padding: 40px 20px; }
+        
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 300;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+            color: #be185d;
+        }
+        .subtitle {
+            text-align: center;
+            color: #9ca3af;
+            font-size: 1.1rem;
+            margin-bottom: 60px;
+        }
+        .subtitle span { color: #e11d48; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 24px rgba(190, 24, 93, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(190, 24, 93, 0.15);
+        }
+        .card.selected {
+            outline: 3px solid #e11d48;
+            outline-offset: 4px;
+        }
+        .card.selected::after {
+            content: '✓ Vybraná';
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: #e11d48;
+            color: white;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .card-img {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: contain;
+            padding: 40px;
+            background: #fafafa;
+        }
+        .card-body { padding: 24px; }
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .card-style {
+            color: #e11d48;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+        .card-desc {
+            color: #6b7280;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 40px 0;
+            border-top: 1px solid #fce7f3;
+        }
+        .footer p {
+            color: #9ca3af;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+        .footer .jarvis {
+            color: #e11d48;
+            font-style: italic;
+        }
+
+        .note {
+            text-align: center;
+            background: white;
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 40px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            color: #6b7280;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        .note strong { color: #1a1a2e; }
+
+        @media (max-width: 640px) {
+            h1 { font-size: 1.8rem; }
+            .grid { gap: 24px; }
+            .card-img { padding: 24px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>JV — Návrhy loga</h1>
+        <p class="subtitle">Pro <span>Janičku</span> s láskou 💕</p>
+
+        <div class="note">
+            <strong>3 varianty monogramu JV</strong> — Jana Vankanová. 
+            Klikni na logo, které se ti líbí nejvíc. 
+            Můžeme upravit barvy, font, cokoliv — tohle je první kolo.
+        </div>
+
+        <div class="grid">
+            <div class="card" onclick="select(this, 1)">
+                <img src="logo_v1_elegant.png" alt="Logo V1 — Elegant" class="card-img">
+                <div class="card-body">
+                    <div class="card-title">Varianta 1</div>
+                    <div class="card-style">Elegant Serif</div>
+                    <div class="card-desc">
+                        Rose gold serif monogram. Propletené JV s jemným přechodem. 
+                        Luxusní, minimalistický, nadčasový. Evokuje prémiovou módu.
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" onclick="select(this, 2)">
+                <img src="logo_v2_modern.png" alt="Logo V2 — Modern" class="card-img">
+                <div class="card-body">
+                    <div class="card-title">Varianta 2</div>
+                    <div class="card-style">Modern Geometric</div>
+                    <div class="card-desc">
+                        Dusty pink a charcoal v moderním provedení. Bold, čitelné, 
+                        geometrické. Skvělé jako favicon i na velký banner. Mladistvé a fresh.
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" onclick="select(this, 3)">
+                <img src="logo_v3_boutique.png" alt="Logo V3 — Boutique" class="card-img">
+                <div class="card-body">
+                    <div class="card-title">Varianta 3</div>
+                    <div class="card-style">Boutique Script</div>
+                    <div class="card-desc">
+                        Ručně psané JV v kruhu s ramínkem. Blush pink a černá. 
+                        Boutique feeling — Chanel meets sustainable fashion. Osobní a ženský.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Líbí se ti něco? Nebo chceš úplně jiný styl? Napiš Honzíkovi 😊</p>
+            <p class="jarvis">Vygenerováno s 🐱 od JARVIS — ta druhá holka v Honzíkově životě</p>
+        </div>
+    </div>
+
+    <script>
+        function select(card, num) {
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+        }
+    </script>
+</body>
+</html>

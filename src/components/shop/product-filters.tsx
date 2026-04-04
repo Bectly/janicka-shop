@@ -408,7 +408,7 @@ export function ProductFilters({
       {topSizes.length > 0 && (
         <div className="flex items-center gap-2">
           <span className="shrink-0 text-xs font-medium text-muted-foreground">Velikost:</span>
-          <div className="flex gap-1.5 overflow-x-auto scrollbar-none pb-0.5" role="group" aria-label="Rychlý filtr velikostí">
+          <div className="min-w-0 flex gap-1.5 overflow-x-auto scrollbar-none pb-0.5" role="group" aria-label="Rychlý filtr velikostí">
             {topSizes.map((size) => {
               const isActive = activeSizes.includes(size);
               return (
@@ -433,7 +433,7 @@ export function ProductFilters({
       {topColors.length > 0 && (
         <div className="flex items-center gap-2">
           <span className="shrink-0 text-xs font-medium text-muted-foreground">Barva:</span>
-          <div className="flex gap-1.5 overflow-x-auto scrollbar-none pb-0.5" role="group" aria-label="Rychlý filtr barev">
+          <div className="min-w-0 flex gap-1.5 overflow-x-auto scrollbar-none pb-0.5" role="group" aria-label="Rychlý filtr barev">
             {topColors.map((color) => {
               const isActive = activeColors.includes(color);
               const hex = COLOR_MAP[color] ?? "#9CA3AF";

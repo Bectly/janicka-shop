@@ -157,6 +157,20 @@ model PriceHistory {
   @@index([changedAt])
 }
 
+model ProductNotifyRequest {
+  id         String   @id @default(cuid())
+  email      String
+  categoryId String
+  sizes      String   @default("[]") // JSON array of preferred sizes
+  brand      String?                  // optional brand preference
+  notified   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([categoryId])
+  @@index([email])
+  @@index([notified])
+}
+
 model ShopSettings {
   id            String  @id @default("singleton")
   shopName      String  @default("Janička")

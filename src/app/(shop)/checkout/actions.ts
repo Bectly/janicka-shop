@@ -6,7 +6,7 @@ import { z } from "zod";
 import { getOrCreateVisitorId } from "@/lib/visitor";
 import { createComgatePayment } from "@/lib/payments/comgate";
 import { rateLimitCheckout } from "@/lib/rate-limit";
-import { sendOrderConfirmationEmail } from "@/lib/email";
+import { sendOrderConfirmationEmail, sendAdminNewOrderEmail } from "@/lib/email";
 import {
   PAYMENT_METHODS,
   SHIPPING_METHODS,
@@ -427,6 +427,22 @@ export async function createOrder(
     isCod,
   }).catch((err: unknown) => {
     console.error(`[Checkout] Order confirmation email failed for ${order.orderNumber}:`, err);
+  });
+
+  // Notify admin about new order (fire-and-forget)
+  sendAdminNewOrderEmail({
+    orderNumber: order.orderNumber,
+    customerName: `${data.firstName} ${data.lastName}`,
+    customerEmail: order.customerEmail,
+    items: data.items.map((item) => {
+      const dbPrice = order.dbPrices.get(item.productId);
+      return { name: item.name, price: dbPrice ?? item.price, size: item.size, color: item.color };
+    }),
+    total: order.total,
+    paymentMethod: data.paymentMethod,
+    shippingMethod: data.shippingMethod,
+  }).catch((err: unknown) => {
+    console.error(`[Checkout] Admin notification email failed for ${order.orderNumber}:`, err);
   });
 
   // For cash on delivery — go straight to order confirmation

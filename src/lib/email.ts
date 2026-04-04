@@ -553,6 +553,119 @@ function buildNewsletterWelcomeHtml(email: string): string {
  * Send newsletter welcome email after subscription.
  * Non-blocking: logs errors instead of throwing.
  */
+// ---------------------------------------------------------------------------
+// Admin new order notification
+// ---------------------------------------------------------------------------
+
+interface AdminOrderNotificationData {
+  orderNumber: string;
+  customerName: string;
+  customerEmail: string;
+  items: OrderItem[];
+  total: number;
+  paymentMethod: string;
+  shippingMethod: string;
+}
+
+function buildAdminNewOrderHtml(data: AdminOrderNotificationData): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const adminUrl = `${baseUrl}/admin/orders`;
+
+  const itemsHtml = data.items
+    .map(
+      (item) => `
+        <tr>
+          <td style="padding: 6px 0; font-size: 14px; color: #333;">${escapeHtml(item.name)}</td>
+          <td style="padding: 6px 0; font-size: 14px; color: #333; text-align: right; white-space: nowrap;">${formatPriceCzk(item.price)}</td>
+        </tr>`
+    )
+    .join("");
+
+  return `<!DOCTYPE html>
+<html lang="cs">
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/></head>
+<body style="margin: 0; padding: 0; background-color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
+    <div style="text-align: center; padding: 16px 0;">
+      <h1 style="margin: 0; font-size: 20px; color: #1a1a1a;">Nová objednávka!</h1>
+    </div>
+    <div style="background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="padding: 4px 0; font-size: 13px; color: #666;">Objednávka</td>
+          <td style="padding: 4px 0; font-size: 13px; font-weight: 600; color: #1a1a1a; text-align: right;">${escapeHtml(data.orderNumber)}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; font-size: 13px; color: #666;">Zákazník</td>
+          <td style="padding: 4px 0; font-size: 13px; color: #1a1a1a; text-align: right;">${escapeHtml(data.customerName)}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; font-size: 13px; color: #666;">Email</td>
+          <td style="padding: 4px 0; font-size: 13px; color: #1a1a1a; text-align: right;">${escapeHtml(data.customerEmail)}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; font-size: 13px; color: #666;">Platba</td>
+          <td style="padding: 4px 0; font-size: 13px; color: #1a1a1a; text-align: right;">${PAYMENT_LABELS[data.paymentMethod] ?? data.paymentMethod}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; font-size: 13px; color: #666;">Doprava</td>
+          <td style="padding: 4px 0; font-size: 13px; color: #1a1a1a; text-align: right;">${SHIPPING_LABELS[data.shippingMethod] ?? data.shippingMethod}</td>
+        </tr>
+      </table>
+
+      <hr style="border: none; border-top: 1px solid #eee; margin: 16px 0;" />
+
+      <table style="width: 100%; border-collapse: collapse;">
+        ${itemsHtml}
+      </table>
+
+      <hr style="border: none; border-top: 1px solid #eee; margin: 16px 0;" />
+
+      <p style="margin: 0; font-size: 18px; font-weight: 700; color: #1a1a1a; text-align: right;">
+        Celkem: ${formatPriceCzk(data.total)}
+      </p>
+
+      <div style="text-align: center; margin-top: 20px;">
+        <a href="${adminUrl}" style="display: inline-block; background: #1a1a1a; color: #fff; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
+          Zobrazit v adminu
+        </a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+/**
+ * Send notification email to admin when a new order is placed.
+ * Non-blocking: logs errors instead of throwing.
+ */
+export async function sendAdminNewOrderEmail(data: AdminOrderNotificationData): Promise<void> {
+  const resend = getResendClient();
+  if (!resend) {
+    console.warn("[Email] RESEND_API_KEY not set — skipping admin order notification");
+    return;
+  }
+
+  // Admin email from env, with shop settings contact email as fallback
+  const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL;
+  if (!adminEmail) {
+    console.warn("[Email] ADMIN_NOTIFICATION_EMAIL not set — skipping admin order notification");
+    return;
+  }
+
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: adminEmail,
+      subject: `Nová objednávka ${data.orderNumber} — ${formatPriceCzk(data.total)}`,
+      html: buildAdminNewOrderHtml(data),
+    });
+  } catch (error) {
+    console.error(`[Email] Failed to send admin notification for ${data.orderNumber}:`, error);
+  }
+}
+
 export async function sendNewsletterWelcomeEmail(email: string): Promise<void> {
   const resend = getResendClient();
   if (!resend) {
