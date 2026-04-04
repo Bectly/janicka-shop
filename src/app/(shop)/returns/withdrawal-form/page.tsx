@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { Printer } from "lucide-react";
 import Link from "next/link";
+import { PrintButton } from "@/components/shop/print-button";
 
 export const metadata: Metadata = {
   title: "Formulář pro odstoupení od smlouvy | Janička",
@@ -8,31 +8,9 @@ export const metadata: Metadata = {
     "Vzorový formulář pro odstoupení od kupní smlouvy do 14 dnů. Stáhněte, vyplňte a odešlete.",
 };
 
-function PrintButton() {
-  return (
-    <button
-      // Using onClick via inline script since this is a server component
-      // The button calls window.print() via the script below
-      id="print-btn"
-      type="button"
-      className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 print:hidden"
-    >
-      <Printer className="size-4" />
-      Vytisknout formulář
-    </button>
-  );
-}
-
 export default function WithdrawalFormPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
-      {/* Print script */}
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `document.addEventListener('click',function(e){if(e.target.closest('#print-btn'))window.print()})`,
-        }}
-      />
-
       {/* Navigation (hidden in print) */}
       <div className="mb-8 flex items-center justify-between print:hidden">
         <Link

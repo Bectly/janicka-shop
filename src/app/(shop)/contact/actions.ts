@@ -52,9 +52,8 @@ export async function submitContactForm(
     const { Resend } = await import("resend");
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) {
-      console.warn("[contact] RESEND_API_KEY not configured, logging message instead");
-      console.log(`[contact] From: ${name} <${email}> | Subject: ${subjectLabel} | Message: ${message}`);
-      return { success: true };
+      console.warn("[contact] RESEND_API_KEY not configured — message not sent");
+      return { success: false, error: "E-mailová služba není dostupná. Kontaktujte nás prosím přímo na info@janicka.cz." };
     }
 
     const resend = new Resend(apiKey);

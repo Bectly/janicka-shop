@@ -1,5 +1,18 @@
 # Janička Shop — TODO
 
+## 🚨 CRITICAL: Vercel/Turso Production Deploy
+Turso DB is created, env vars set on Vercel, `@libsql/client` + `@prisma/adapter-libsql` installed, `db.ts` uses Proxy with lazy init + dynamic import. Schema + seed data pushed to Turso.
+
+**Problem**: Any page that imports `prisma` and is SSG (prerendered at build time) crashes with `TypeError: Invalid URL` because the Proxy triggers `createClient({url: "libsql://..."})` during Vercel build. Locally builds fine because `DATABASE_URL=file:./dev.db`.
+
+**Fix needed** (pick ONE approach):
+1. **Mark all DB-using pages as `dynamic`**: Add `export const dynamic = "force-dynamic"` to every page/layout that imports prisma. Already done for `not-found.tsx`, need to do for `order/lookup`, and any other SSG page importing prisma.
+2. **OR** — Guard the Proxy: detect build-time environment (`process.env.NEXT_PHASE === 'phase-production-build'`) and skip libsql init, return empty/mock data during prerender.
+3. **OR** — Split: keep `prisma` export for dev (direct PrismaClient), add `getDb()` async export for prod, migrate all server code to use `await getDb()`.
+
+- [ ] [BOLT] **FIX Vercel deploy** — approach 1 recommended (quickest). Add `export const dynamic = "force-dynamic"` to ALL pages that query DB. Test with `vercel deploy --prod`.
+- [ ] [BOLT] After deploy works: verify Turso connection, test CRUD, run seed if needed.
+
 ## Phase 1: Foundation [DONE]
 - [x] [BOLT] Fix html lang="cs", use Inter font, all metadata in Czech
 - [x] [BOLT] Install core dependencies: prisma, @prisma/client, next-auth@5, zustand, zod, react-hook-form, @hookform/resolvers
