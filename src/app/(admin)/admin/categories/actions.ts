@@ -7,10 +7,10 @@ import { z } from "zod";
 import { rateLimitAdmin } from "@/lib/rate-limit";
 
 const categorySchema = z.object({
-  name: z.string().min(1, "Název je povinný"),
-  slug: z.string().min(1, "Slug je povinný"),
-  description: z.string().nullable(),
-  image: z.string().nullable(),
+  name: z.string().min(1, "Název je povinný").max(200, "Název je příliš dlouhý"),
+  slug: z.string().min(1, "Slug je povinný").max(250, "Slug je příliš dlouhý"),
+  description: z.string().max(2000, "Popis je příliš dlouhý").nullable(),
+  image: z.string().url().max(2048, "URL obrázku je příliš dlouhé").nullable(),
   sortOrder: z.coerce.number().int().default(0),
 });
 

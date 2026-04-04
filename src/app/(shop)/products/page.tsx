@@ -9,15 +9,65 @@ import { getLowestPrices30d } from "@/lib/price-history";
 import { buildItemListSchema, buildBreadcrumbSchema, jsonLdString } from "@/lib/structured-data";
 import type { Metadata } from "next";
 
+const BASE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://janicka-shop.vercel.app";
+
 type ProductWithCategory = Prisma.ProductGetPayload<{
   include: { category: { select: { name: true } } };
 }>;
 
-export const metadata: Metadata = {
-  title: "Katalog",
-  description:
-    "Prohlédněte si naši kolekci stylového oblečení pro moderní ženy.",
-};
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}): Promise<Metadata> {
+  const params = await searchParams;
+
+  if (params.category) {
+    const category = await prisma.category.findUnique({
+      where: { slug: params.category },
+      select: { name: true, description: true },
+    });
+
+    if (category) {
+      const title = `${category.name} — Katalog`;
+      const description =
+        category.description ??
+        `Prohlédněte si naši kolekci ${category.name.toLowerCase()}. Unikátní second hand kousky za zlomek ceny.`;
+      const canonicalUrl = `${BASE_URL}/products?category=${params.category}`;
+
+      return {
+        title,
+        description,
+        alternates: { canonical: canonicalUrl },
+        openGraph: {
+          title,
+          description,
+          url: canonicalUrl,
+          type: "website",
+          siteName: "Janička",
+          locale: "cs_CZ",
+        },
+      };
+    }
+  }
+
+  return {
+    title: "Katalog",
+    description:
+      "Prohlédněte si naši kolekci stylového oblečení pro moderní ženy. Unikátní second hand kousky za zlomek ceny.",
+    alternates: { canonical: `${BASE_URL}/products` },
+    openGraph: {
+      title: "Katalog",
+      description:
+        "Prohlédněte si naši kolekci stylového oblečení pro moderní ženy. Unikátní second hand kousky za zlomek ceny.",
+      url: `${BASE_URL}/products`,
+      type: "website",
+      siteName: "Janička",
+      locale: "cs_CZ",
+    },
+  };
+}
 
 const PRODUCTS_PER_PAGE = 12;
 

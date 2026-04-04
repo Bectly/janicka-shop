@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { getVisitorId } from "@/lib/visitor";
 import { getLowestPrices30d } from "@/lib/price-history";
-import { buildItemListSchema, jsonLdString } from "@/lib/structured-data";
+import { buildItemListSchema, buildWebSiteSchema, buildOrganizationSchema, jsonLdString } from "@/lib/structured-data";
 
 export default async function HomePage() {
   const sevenDaysAgo = new Date();
@@ -74,11 +74,22 @@ export default async function HomePage() {
     "/",
   );
 
+  const webSiteJsonLd = buildWebSiteSchema();
+  const organizationJsonLd = buildOrganizationSchema();
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLdString(itemListJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdString(webSiteJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdString(organizationJsonLd) }}
       />
       {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/30">

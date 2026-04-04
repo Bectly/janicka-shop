@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { getVisitorId } from "@/lib/visitor";
 
 export async function getProductQuickView(productId: string) {
-  if (!productId || typeof productId !== "string") return null;
+  if (!productId || typeof productId !== "string" || productId.length > 128) return null;
 
   const product = await prisma.product.findUnique({
     where: { id: productId },

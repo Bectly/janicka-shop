@@ -72,7 +72,7 @@ export async function updateOrderStatus(orderId: string, status: string) {
       // Only release active products — soft-deleted products (active=false)
       // were explicitly removed by admin and should stay deleted
       await tx.product.updateMany({
-        where: { id: { in: productIds }, active: true },
+        where: { id: { in: productIds }, active: true, sold: true },
         data: { sold: false, stock: 1 },
       });
     });

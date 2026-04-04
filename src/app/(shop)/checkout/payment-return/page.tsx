@@ -96,7 +96,7 @@ export default async function PaymentReturnPage({ searchParams }: Props) {
             select: { productId: true },
           });
           await tx.product.updateMany({
-            where: { id: { in: items.map((i) => i.productId) }, active: true },
+            where: { id: { in: items.map((i) => i.productId) }, active: true, sold: true },
             data: { sold: false, stock: 1 },
           });
         });

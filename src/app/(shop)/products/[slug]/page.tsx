@@ -9,7 +9,7 @@ import { ProductGallery } from "@/components/shop/product-gallery";
 import { AddToCartButton } from "@/components/shop/add-to-cart-button";
 import { getVisitorId } from "@/lib/visitor";
 import { getLowestPrices30d } from "@/lib/price-history";
-import { buildProductSchema, buildBreadcrumbSchema, jsonLdString } from "@/lib/structured-data";
+import { buildProductSchema, buildBreadcrumbSchema, buildFaqSchema, jsonLdString } from "@/lib/structured-data";
 import { ShareButtons } from "@/components/shop/share-buttons";
 import { WishlistButton } from "@/components/shop/wishlist-button";
 import {
@@ -105,6 +105,25 @@ export default async function ProductDetailPage({ params }: Props) {
     { name: product.name, url: `/products/${product.slug}` },
   ]);
 
+  // FAQ structured data — mirrors the product info accordion (shipping, returns, quality)
+  const faqJsonLd = buildFaqSchema([
+    {
+      question: "Jaké jsou možnosti dopravy a ceny?",
+      answer:
+        "Zásilkovna — výdejní místo: 69 Kč. Zásilkovna — na adresu: 99 Kč. Česká pošta: 89 Kč. Doprava zdarma od 1 500 Kč. Objednávky odesíláme do 1–2 pracovních dnů.",
+    },
+    {
+      question: "Jaké jsou podmínky vrácení a reklamace?",
+      answer:
+        "Máte 14 dní na vrácení zboží bez udání důvodu od převzetí zásilky. Zboží musí být nepoškozené, neprané a v původním stavu. Záruční doba na použité zboží je 12 měsíců. Reklamace vyřídíme do 30 dnů.",
+    },
+    {
+      question: "Jak zajišťujete kvalitu second hand oblečení?",
+      answer:
+        "Každý kousek pečlivě kontrolujeme a fotografujeme. Stav je vždy přesně popsán — žádná nepříjemná překvapení. Na rozdíl od Vintedu u nás přesně víte, co kupujete.",
+    },
+  ]);
+
   let productImages: string[] = [];
   try { productImages = JSON.parse(product.images); } catch { /* corrupted data fallback */ }
 
@@ -119,6 +138,10 @@ export default async function ProductDetailPage({ params }: Props) {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: jsonLdString(breadcrumbJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLdString(faqJsonLd) }}
         />
         <nav className="mb-6 text-sm text-muted-foreground">
           <Link href="/products" className="hover:text-foreground">
@@ -246,6 +269,10 @@ export default async function ProductDetailPage({ params }: Props) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLdString(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdString(faqJsonLd) }}
       />
       {/* Breadcrumb */}
       <nav className="mb-6 text-sm text-muted-foreground">

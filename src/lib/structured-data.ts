@@ -157,6 +157,56 @@ export function buildBreadcrumbSchema(
   };
 }
 
+/** Build a WebSite schema with SearchAction for sitelinks search box. */
+export function buildWebSiteSchema() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Janička",
+    url: BASE_URL,
+    description:
+      "Second hand oblečení pro moderní ženy. Unikátní kousky za zlomek ceny.",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${BASE_URL}/search?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
+  };
+}
+
+/** Build an Organization schema for Google Knowledge Panel. */
+export function buildOrganizationSchema() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Janička",
+    url: BASE_URL,
+    description:
+      "Second hand eshop s oblečením pro moderní ženy. Ověřená kvalita, rychlé doručení, 14denní vrácení.",
+  };
+}
+
+/** Build a FAQPage schema from question/answer pairs. */
+export function buildFaqSchema(
+  items: { question: string; answer: string }[],
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
+  };
+}
+
 /** Render a JSON-LD script tag string (safe for dangerouslySetInnerHTML). */
 export function jsonLdString(data: Record<string, unknown>): string {
   return JSON.stringify(data).replace(/</g, "\\u003c");

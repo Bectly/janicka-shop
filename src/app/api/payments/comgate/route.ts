@@ -151,7 +151,7 @@ async function processPaymentStatus(
           });
           const productIds = items.map((i) => i.productId);
           await tx.product.updateMany({
-            where: { id: { in: productIds }, active: true },
+            where: { id: { in: productIds }, active: true, sold: true },
             data: { sold: false, stock: 1 },
           });
         });
