@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { Header } from "@/components/shop/header";
 import { Footer } from "@/components/shop/footer";
 import { CookieConsentBanner } from "@/components/shop/cookie-consent";
