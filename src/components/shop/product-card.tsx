@@ -163,27 +163,29 @@ export function ProductCard({
                 )}
               </div>
             )}
-            {parsedColors.length > 0 && (
-              <div className="flex gap-0.5">
-                {parsedColors.slice(0, 5).map((c) => {
-                  const hex = COLOR_MAP[c];
-                  if (!hex) return null;
-                  return (
+            {parsedColors.length > 0 && (() => {
+              const mappedColors = parsedColors.filter((c) => COLOR_MAP[c]);
+              if (mappedColors.length === 0) return null;
+              return (
+                <div className="flex gap-0.5" role="list" aria-label="Barvy">
+                  {mappedColors.slice(0, 5).map((c) => (
                     <span
                       key={c}
+                      role="listitem"
                       className="size-3 rounded-full border border-foreground/10"
-                      style={{ backgroundColor: hex }}
+                      style={{ backgroundColor: COLOR_MAP[c] }}
                       title={c}
+                      aria-label={c}
                     />
-                  );
-                })}
-                {parsedColors.length > 5 && (
-                  <span className="flex size-3 items-center justify-center rounded-full bg-muted text-[7px] text-muted-foreground">
-                    +{parsedColors.length - 5}
-                  </span>
-                )}
-              </div>
-            )}
+                  ))}
+                  {mappedColors.length > 5 && (
+                    <span className="flex size-3 items-center justify-center rounded-full bg-muted text-[7px] text-muted-foreground">
+                      +{mappedColors.length - 5}
+                    </span>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         )}
       </div>

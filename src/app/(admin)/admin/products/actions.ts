@@ -95,16 +95,10 @@ export async function createProduct(formData: FormData) {
       brand: parsed.brand,
       condition: parsed.condition,
       sizes: JSON.stringify(
-        parsed.sizes
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
+        [...new Set(parsed.sizes.split(",").map((s) => s.trim()).filter(Boolean))]
       ),
       colors: JSON.stringify(
-        parsed.colors
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
+        [...new Set(parsed.colors.split(",").map((s) => s.trim()).filter(Boolean))]
       ),
       images: validatedImages,
       stock: 1,
@@ -182,16 +176,10 @@ export async function updateProduct(id: string, formData: FormData) {
       brand: parsed.brand,
       condition: parsed.condition,
       sizes: JSON.stringify(
-        parsed.sizes
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
+        [...new Set(parsed.sizes.split(",").map((s) => s.trim()).filter(Boolean))]
       ),
       colors: JSON.stringify(
-        parsed.colors
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
+        [...new Set(parsed.colors.split(",").map((s) => s.trim()).filter(Boolean))]
       ),
       images: validatedImages,
       featured: parsed.featured,
@@ -269,16 +257,10 @@ export async function quickCreateProduct(formData: FormData) {
       brand: parsed.brand,
       condition: parsed.condition,
       sizes: JSON.stringify(
-        parsed.sizes
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
+        [...new Set(parsed.sizes.split(",").map((s) => s.trim()).filter(Boolean))]
       ),
       colors: JSON.stringify(
-        parsed.colors
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
+        [...new Set(parsed.colors.split(",").map((s) => s.trim()).filter(Boolean))]
       ),
       images: validatedImages,
       stock: 1,
