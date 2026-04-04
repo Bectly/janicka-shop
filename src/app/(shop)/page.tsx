@@ -5,6 +5,7 @@ import { CategoryCard } from "@/components/shop/category-card";
 import { NewsletterForm } from "@/components/shop/newsletter-form";
 import { TrustBadges } from "@/components/shop/trust-badges";
 import { RecentlySoldFeed } from "@/components/shop/recently-sold-feed";
+import { RecentlyViewedSection } from "@/components/shop/recently-viewed";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { getVisitorId } from "@/lib/visitor";
@@ -316,6 +317,11 @@ export default async function HomePage() {
 
       {/* Recently sold — social proof */}
       <RecentlySoldFeed products={soldFeedProducts} />
+
+      {/* Recently viewed — personalization for returning visitors */}
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <RecentlyViewedSection />
+      </section>
 
       {/* Newsletter */}
       <section className="bg-primary/5">

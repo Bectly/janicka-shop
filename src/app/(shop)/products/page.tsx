@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
 import { ProductCard } from "@/components/shop/product-card";
@@ -345,6 +346,25 @@ export default async function ProductsPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLdString(breadcrumbJsonLd) }}
       />
+      {/* Breadcrumb */}
+      <nav className="mb-4 text-sm text-muted-foreground" aria-label="Navigace">
+        <Link href="/" className="hover:text-foreground">
+          Domů
+        </Link>
+        <span className="mx-2">/</span>
+        {params.category ? (
+          <>
+            <Link href="/products" className="hover:text-foreground">
+              Katalog
+            </Link>
+            <span className="mx-2">/</span>
+            <span className="text-foreground">{categoryName}</span>
+          </>
+        ) : (
+          <span className="text-foreground">Katalog</span>
+        )}
+      </nav>
+
       {/* Page heading */}
       <div className="mb-6">
         <h1 className="font-heading text-3xl font-bold text-foreground">

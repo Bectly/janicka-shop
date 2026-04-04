@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { formatPrice } from "@/lib/format";
-import { CONDITION_LABELS, CONDITION_COLORS, COLOR_MAP } from "@/lib/constants";
+import { CONDITION_LABELS, CONDITION_COLORS, COLOR_MAP, FREE_SHIPPING_THRESHOLD } from "@/lib/constants";
 import { WishlistButton } from "./wishlist-button";
 import { QuickViewButton } from "./quick-view-modal";
 
@@ -141,6 +141,11 @@ export function ProductCard({
         {hasDiscount && lowestPrice30d != null && (
           <p className="text-[10px] leading-tight text-muted-foreground">
             Nejnižší cena za 30 dní: {formatPrice(lowestPrice30d)}
+          </p>
+        )}
+        {price >= FREE_SHIPPING_THRESHOLD && (
+          <p className="text-[10px] font-medium leading-tight text-emerald-600 dark:text-emerald-400">
+            Doprava zdarma
           </p>
         )}
         {/* Size & color indicators */}

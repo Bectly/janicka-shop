@@ -33,11 +33,11 @@ export function TrackProductView({ product }: TrackViewProps) {
   return null;
 }
 
-/** Displays recently viewed products, excluding a given product ID. */
+/** Displays recently viewed products, optionally excluding a given product ID. */
 export function RecentlyViewedSection({
   excludeProductId,
 }: {
-  excludeProductId: string;
+  excludeProductId?: string;
 }) {
   const getRecent = useRecentlyViewedStore((s) => s.getRecent);
   const [items, setItems] = useState<ReturnType<typeof getRecent>>([]);
