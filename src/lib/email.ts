@@ -333,6 +333,7 @@ interface StatusEmailData {
   customerEmail: string;
   total: number;
   accessToken: string;
+  trackingNumber?: string | null;
 }
 
 function buildStatusEmailWrapper(content: string, data: Pick<StatusEmailData, "orderNumber" | "accessToken">): string {

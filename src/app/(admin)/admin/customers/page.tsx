@@ -103,9 +103,12 @@ export default async function AdminCustomersPage() {
                     className="border-b last:border-0 transition-colors hover:bg-muted/30"
                   >
                     <td className="px-4 py-3">
-                      <p className="font-medium text-foreground">
+                      <Link
+                        href={`/admin/customers/${customer.id}`}
+                        className="font-medium text-primary hover:underline"
+                      >
                         {customer.firstName} {customer.lastName}
-                      </p>
+                      </Link>
                       {customer.city && (
                         <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
                           <MapPin className="size-3" />

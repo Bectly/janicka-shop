@@ -124,6 +124,8 @@ async function processPaymentStatus(
               customerEmail: order.customer.email,
               total: order.total,
               accessToken: order.accessToken ?? "",
+            }).catch((err) => {
+              console.error(`[Webhook] Failed to send payment confirmation email for ${order.orderNumber}:`, err);
             });
           }
         }

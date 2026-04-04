@@ -48,7 +48,9 @@ export async function subscribeNewsletter(
 
     // Send welcome email only for new subscribers (fire-and-forget)
     if (isNew) {
-      sendNewsletterWelcomeEmail(email);
+      sendNewsletterWelcomeEmail(email).catch((err) => {
+        console.error(`[Newsletter] Welcome email failed for ${email}:`, err);
+      });
     }
 
     return {

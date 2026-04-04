@@ -73,6 +73,8 @@ export default async function PaymentReturnPage({ searchParams }: Props) {
               customerEmail: fullOrder.customer.email,
               total: fullOrder.total,
               accessToken: fullOrder.accessToken ?? "",
+            }).catch((err) => {
+              console.error(`[Payment] Failed to send confirmation email for ${fullOrder.orderNumber}:`, err);
             });
           }
         }

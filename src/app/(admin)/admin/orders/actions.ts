@@ -124,6 +124,7 @@ export async function updateOrderStatus(orderId: string, status: string) {
         orderNumber: true,
         accessToken: true,
         total: true,
+        trackingNumber: true,
         customer: { select: { firstName: true, lastName: true, email: true } },
       },
     })
@@ -135,6 +136,7 @@ export async function updateOrderStatus(orderId: string, status: string) {
         customerEmail: o.customer.email,
         total: o.total,
         accessToken: o.accessToken ?? "",
+        trackingNumber: o.trackingNumber,
       });
     })
     .catch((err) => {

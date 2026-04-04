@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/db";
 import { z } from "zod";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 const lookupSchema = z.object({
   orderNumber: z.string().trim().min(1, "Zadejte číslo objednávky"),
@@ -18,6 +19,16 @@ export async function lookupOrder(
   _prev: LookupResult | null,
   formData: FormData,
 ): Promise<LookupResult> {
+  // Rate limit: 10 lookups per 5 minutes per IP (prevents email enumeration)
+  const ip = await getClientIp();
+  const rl = checkRateLimit(`order-lookup:${ip}`, 10, 5 * 60 * 1000);
+  if (!rl.success) {
+    return {
+      success: false,
+      message: "Příliš mnoho pokusů. Zkuste to prosím za chvíli.",
+    };
+  }
+
   const parsed = lookupSchema.safeParse({
     orderNumber: formData.get("orderNumber"),
     email: formData.get("email"),
