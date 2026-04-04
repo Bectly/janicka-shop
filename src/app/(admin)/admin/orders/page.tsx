@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { formatPrice, formatDate } from "@/lib/format";
@@ -6,7 +7,9 @@ import {
   ORDER_STATUS_COLORS,
   PAYMENT_METHOD_LABELS,
 } from "@/lib/constants";
+import { OrderSearch } from "@/components/admin/order-search";
 import type { Metadata } from "next";
+import type { Prisma } from "@prisma/client";
 
 export const metadata: Metadata = {
   title: "Objednávky",
@@ -15,15 +18,26 @@ export const metadata: Metadata = {
 export default async function AdminOrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; q?: string }>;
 }) {
   const params = await searchParams;
+  const query = params.q?.trim() ?? "";
 
   const VALID_STATUSES = ["pending", "confirmed", "paid", "shipped", "delivered", "cancelled"];
 
-  const where: Record<string, unknown> = {};
+  const where: Prisma.OrderWhereInput = {};
   if (params.status && params.status !== "all" && VALID_STATUSES.includes(params.status)) {
     where.status = params.status;
+  }
+
+  // Search by order number, customer name, or customer email
+  if (query) {
+    where.OR = [
+      { orderNumber: { contains: query } },
+      { customer: { firstName: { contains: query } } },
+      { customer: { lastName: { contains: query } } },
+      { customer: { email: { contains: query } } },
+    ];
   }
 
   const orders = await prisma.order.findMany({
@@ -49,6 +63,7 @@ export default async function AdminOrdersPage({
   ];
 
   const activeStatus = params.status || "all";
+  const isFiltered = query || (params.status && params.status !== "all");
 
   return (
     <>
@@ -63,28 +78,38 @@ export default async function AdminOrdersPage({
             : orders.length >= 2 && orders.length <= 4
               ? "objednávky"
               : "objednávek"}
+          {isFiltered && " (filtrováno)"}
         </p>
+      </div>
+
+      {/* Search */}
+      <div className="mt-4 max-w-md">
+        <Suspense fallback={null}>
+          <OrderSearch />
+        </Suspense>
       </div>
 
       {/* Status filter */}
       <div className="mt-4 flex flex-wrap gap-2">
-        {statusFilters.map((filter) => (
-          <Link
-            key={filter.value}
-            href={
-              filter.value === "all"
-                ? "/admin/orders"
-                : `/admin/orders?status=${filter.value}`
-            }
-            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-              activeStatus === filter.value
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
-            }`}
-          >
-            {filter.label}
-          </Link>
-        ))}
+        {statusFilters.map((filter) => {
+          const href = new URLSearchParams();
+          if (filter.value !== "all") href.set("status", filter.value);
+          if (query) href.set("q", query);
+          const hrefStr = href.toString();
+          return (
+            <Link
+              key={filter.value}
+              href={`/admin/orders${hrefStr ? `?${hrefStr}` : ""}`}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                activeStatus === filter.value
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              {filter.label}
+            </Link>
+          );
+        })}
       </div>
 
       {/* Orders table */}

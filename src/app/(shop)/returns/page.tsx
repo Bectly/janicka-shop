@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { FileText } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Reklamace a vrácení | Janička",
@@ -23,6 +25,13 @@ export default function ReturnsPage() {
             bez udání důvodu. Zboží musí být vráceno v nepoškozeném stavu,
             ideálně v původním obalu.
           </p>
+          <Link
+            href="/returns/withdrawal-form"
+            className="mt-3 inline-flex items-center gap-2 rounded-lg border bg-card px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted/50"
+          >
+            <FileText className="size-4 text-primary" />
+            Stáhnout formulář pro odstoupení od smlouvy
+          </Link>
         </section>
 
         <section>
