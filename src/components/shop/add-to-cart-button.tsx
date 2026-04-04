@@ -5,6 +5,7 @@ import { ShoppingBag, Check, Clock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/lib/cart-store";
 import { reserveProduct } from "@/lib/actions/reservation";
+import { SizeGuide } from "@/components/shop/size-guide";
 
 interface AddToCartProps {
   product: {
@@ -61,9 +62,12 @@ export function AddToCartButton({ product }: AddToCartProps) {
   return (
     <div className="mt-6 space-y-4">
       {/* Size selector */}
-      {product.sizes.length > 1 && (
+      {product.sizes.length > 0 && (
         <div>
-          <p className="mb-2 text-sm font-medium" id="size-label">Velikost</p>
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-sm font-medium" id="size-label">Velikost</p>
+            <SizeGuide />
+          </div>
           <div className="flex flex-wrap gap-2" role="group" aria-labelledby="size-label">
             {product.sizes.map((size) => (
               <button

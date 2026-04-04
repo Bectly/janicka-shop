@@ -30,7 +30,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https://*.ufs.sh https://utfs.io",
               "font-src 'self' data:",
-              "connect-src 'self' https://*.ufs.sh https://utfs.io https://uploadthing.com https://api.comgate.cz https://widget.packeta.com",
+              "connect-src 'self' https://*.ufs.sh https://utfs.io https://uploadthing.com https://payments.comgate.cz https://widget.packeta.com",
               "frame-src 'self' https://payments.comgate.cz https://widget.packeta.com",
               "object-src 'none'",
               "base-uri 'self'",

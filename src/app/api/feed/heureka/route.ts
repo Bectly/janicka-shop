@@ -41,6 +41,7 @@ export async function GET() {
       where: { active: true, sold: false },
       include: { category: { select: { slug: true, name: true } } },
       orderBy: { createdAt: "desc" },
+      take: 10000,
     });
 
     let xml = '<?xml version="1.0" encoding="utf-8"?>\n<SHOP>\n';
