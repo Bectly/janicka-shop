@@ -182,6 +182,8 @@ export default async function HomePage() {
                 categoryName={product.category.name}
                 brand={product.brand}
                 condition={product.condition}
+                sizes={product.sizes}
+                colors={product.colors}
                 isNew
                 isReserved={isReservedByOther(product)}
                 lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
@@ -230,6 +232,8 @@ export default async function HomePage() {
               categoryName={product.category.name}
               brand={product.brand}
               condition={product.condition}
+              sizes={product.sizes}
+              colors={product.colors}
               isReserved={isReservedByOther(product)}
               lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
             />

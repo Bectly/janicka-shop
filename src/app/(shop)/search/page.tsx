@@ -163,6 +163,8 @@ export default async function SearchPage({
                     categoryName={product.category.name}
                     brand={product.brand}
                     condition={product.condition}
+                    sizes={product.sizes}
+                    colors={product.colors}
                     lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
                   />
                 ))}

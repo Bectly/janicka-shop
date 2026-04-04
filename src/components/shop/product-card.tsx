@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { formatPrice } from "@/lib/format";
-import { CONDITION_LABELS, CONDITION_COLORS } from "@/lib/constants";
+import { CONDITION_LABELS, CONDITION_COLORS, COLOR_MAP } from "@/lib/constants";
 import { WishlistButton } from "./wishlist-button";
 import { QuickViewButton } from "./quick-view-modal";
 
@@ -15,6 +15,8 @@ interface ProductCardProps {
   categoryName: string;
   brand?: string | null;
   condition?: string;
+  sizes?: string;
+  colors?: string;
   isNew?: boolean;
   isReserved?: boolean;
   lowestPrice30d?: number | null;
@@ -30,6 +32,8 @@ export function ProductCard({
   categoryName,
   brand,
   condition,
+  sizes,
+  colors,
   isNew,
   isReserved,
   lowestPrice30d,
@@ -47,6 +51,11 @@ export function ProductCard({
   }
   const mainImage = parsedImages[0];
   const secondImage = parsedImages[1];
+
+  let parsedSizes: string[] = [];
+  let parsedColors: string[] = [];
+  try { if (sizes) parsedSizes = JSON.parse(sizes); } catch { /* */ }
+  try { if (colors) parsedColors = JSON.parse(colors); } catch { /* */ }
 
   return (
     <Link href={`/products/${slug}`} className="group block">
@@ -133,6 +142,49 @@ export function ProductCard({
           <p className="text-[10px] leading-tight text-muted-foreground">
             Nejnižší cena za 30 dní: {formatPrice(lowestPrice30d)}
           </p>
+        )}
+        {/* Size & color indicators */}
+        {(parsedSizes.length > 0 || parsedColors.length > 0) && (
+          <div className="flex items-center gap-2">
+            {parsedSizes.length > 0 && (
+              <div className="flex flex-wrap gap-0.5">
+                {parsedSizes.slice(0, 4).map((s) => (
+                  <span
+                    key={s}
+                    className="rounded bg-muted px-1 py-px text-[10px] leading-tight text-muted-foreground"
+                  >
+                    {s}
+                  </span>
+                ))}
+                {parsedSizes.length > 4 && (
+                  <span className="rounded bg-muted px-1 py-px text-[10px] leading-tight text-muted-foreground">
+                    +{parsedSizes.length - 4}
+                  </span>
+                )}
+              </div>
+            )}
+            {parsedColors.length > 0 && (
+              <div className="flex gap-0.5">
+                {parsedColors.slice(0, 5).map((c) => {
+                  const hex = COLOR_MAP[c];
+                  if (!hex) return null;
+                  return (
+                    <span
+                      key={c}
+                      className="size-3 rounded-full border border-foreground/10"
+                      style={{ backgroundColor: hex }}
+                      title={c}
+                    />
+                  );
+                })}
+                {parsedColors.length > 5 && (
+                  <span className="flex size-3 items-center justify-center rounded-full bg-muted text-[7px] text-muted-foreground">
+                    +{parsedColors.length - 5}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
         )}
       </div>
     </Link>

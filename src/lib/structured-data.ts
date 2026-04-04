@@ -51,15 +51,11 @@ const DELIVERY_TIME = {
   },
 };
 
+/** Free shipping threshold — price is the ORDER minimum above which shipping is free */
 const FREE_SHIPPING_THRESHOLD = {
   "@type": "DeliveryChargeSpecification" as const,
-  price: "0",
+  price: "1500",
   priceCurrency: "CZK",
-  eligibleTransactionVolume: {
-    "@type": "PriceSpecification" as const,
-    price: "1500",
-    priceCurrency: "CZK",
-  },
 };
 
 /** All 3 shipping methods — Google Shopping needs each listed separately */

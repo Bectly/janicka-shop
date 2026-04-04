@@ -290,6 +290,8 @@ export default async function ProductDetailPage({ params }: Props) {
                   categoryName={p.category.name}
                   brand={p.brand}
                   condition={p.condition}
+                  sizes={p.sizes}
+                  colors={p.colors}
                   lowestPrice30d={lowestPricesMap.get(p.id) ?? null}
                 />
               ))}

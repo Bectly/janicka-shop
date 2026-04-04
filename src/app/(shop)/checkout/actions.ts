@@ -105,7 +105,7 @@ function generateOrderNumber(): string {
   const y = now.getFullYear().toString().slice(-2);
   const m = (now.getMonth() + 1).toString().padStart(2, "0");
   const d = now.getDate().toString().padStart(2, "0");
-  // 8 random chars for ~2.8 trillion combinations — prevents order URL enumeration
+  // 8 base-36 chars (4 bytes effective entropy, ~4.3 billion combinations) — prevents order URL enumeration
   const rand = Array.from(crypto.getRandomValues(new Uint8Array(5)))
     .map((b) => b.toString(36).padStart(2, "0"))
     .join("")

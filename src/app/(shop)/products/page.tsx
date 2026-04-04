@@ -399,6 +399,8 @@ export default async function ProductsPage({
                   categoryName={product.category.name}
                   brand={product.brand}
                   condition={product.condition}
+                  sizes={product.sizes}
+                  colors={product.colors}
                   isNew={product.createdAt > sevenDaysAgo}
                   isReserved={isReserved}
                   lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
