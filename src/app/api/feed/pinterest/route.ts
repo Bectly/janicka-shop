@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
+import { getImageUrls } from "@/lib/images";
 import {
   SHIPPING_PRICES,
   FREE_SHIPPING_THRESHOLD,
@@ -66,18 +67,6 @@ function escapeTsv(value: string): string {
   return cleaned;
 }
 
-function safeJsonParse(value: string): string[] {
-  try {
-    const parsed = JSON.parse(value);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.map((item: string | { url: string }) =>
-      typeof item === "string" ? item : item.url,
-    );
-  } catch {
-    return [];
-  }
-}
-
 function safeJsonParseStrings(value: string): string[] {
   try {
     const parsed = JSON.parse(value);
@@ -120,7 +109,7 @@ export async function GET() {
     );
 
     for (const product of products) {
-      const images = safeJsonParse(product.images);
+      const images = getImageUrls(product.images);
       const sizes = safeJsonParseStrings(product.sizes);
       const colors = safeJsonParseStrings(product.colors);
 
