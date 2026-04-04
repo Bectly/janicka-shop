@@ -4,6 +4,12 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { rateLimitAdmin } from "@/lib/rate-limit";
+
+async function requireAdmin() {
+  const session = await auth();
+  if (!session?.user) throw new Error("Unauthorized");
+}
 
 const settingsSchema = z.object({
   shopName: z.string().trim().min(1, "Název obchodu je povinný").max(100),
@@ -25,6 +31,8 @@ export type SettingsResult = {
 };
 
 export async function getShopSettings() {
+  await requireAdmin();
+
   const settings = await prisma.shopSettings.findUnique({
     where: { id: "singleton" },
   });
@@ -42,9 +50,10 @@ export async function updateShopSettings(
   _prev: SettingsResult | null,
   formData: FormData,
 ): Promise<SettingsResult> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, message: "Neautorizováno" };
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) {
+    return { success: false, message: "Příliš mnoho požadavků. Zkuste to za chvíli." };
   }
 
   const raw = {
