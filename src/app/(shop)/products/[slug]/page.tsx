@@ -22,7 +22,7 @@ import { ProductInfoAccordion } from "@/components/shop/product-info-accordion";
 import { FreeShippingBar } from "@/components/shop/free-shipping-bar";
 import { NotifyMeForm } from "@/components/shop/notify-me-form";
 import { Truck, Leaf, Ruler } from "lucide-react";
-import { parseProductImages, getImageUrls, parseMeasurements, hasMeasurements } from "@/lib/images";
+import { parseProductImages, parseMeasurements, hasMeasurements } from "@/lib/images";
 import type { Metadata } from "next";
 
 /**

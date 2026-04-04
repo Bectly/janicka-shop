@@ -33,8 +33,11 @@ export async function GET() {
   const items = products.map((p) => {
     let firstImage = "";
     try {
-      const imgs: string[] = JSON.parse(p.images);
-      firstImage = imgs[0] ?? "";
+      const parsed = JSON.parse(p.images);
+      if (Array.isArray(parsed)) {
+        const first = parsed[0];
+        firstImage = typeof first === "string" ? first : first?.url ?? "";
+      }
     } catch { /* fallback */ }
 
     return {

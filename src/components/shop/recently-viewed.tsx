@@ -57,7 +57,12 @@ export function RecentlyViewedSection({
         {items.slice(0, 8).map((item) => {
           let parsedImages: string[] = [];
           try {
-            parsedImages = JSON.parse(item.images);
+            const parsed = JSON.parse(item.images);
+            if (Array.isArray(parsed)) {
+              parsedImages = parsed.map((it: string | { url: string }) =>
+                typeof it === "string" ? it : it.url,
+              );
+            }
           } catch {
             /* fallback */
           }

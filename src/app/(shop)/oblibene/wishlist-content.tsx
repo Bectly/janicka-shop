@@ -77,7 +77,12 @@ export function WishlistContent() {
       {products.map((product) => {
         let parsedImages: string[] = [];
         try {
-          parsedImages = JSON.parse(product.images);
+          const parsed = JSON.parse(product.images);
+          if (Array.isArray(parsed)) {
+            parsedImages = parsed.map((item: string | { url: string }) =>
+              typeof item === "string" ? item : item.url,
+            );
+          }
         } catch {
           /* corrupted data fallback */
         }

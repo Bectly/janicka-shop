@@ -150,7 +150,10 @@ export async function GET() {
 function safeJsonParse(value: string): string[] {
   try {
     const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((item: string | { url: string }) =>
+      typeof item === "string" ? item : item.url,
+    );
   } catch {
     return [];
   }

@@ -133,7 +133,12 @@ export interface ProductForSchema {
 export function buildProductSchema(product: ProductForSchema) {
   let productImages: string[] = [];
   try {
-    productImages = JSON.parse(product.images);
+    const parsed = JSON.parse(product.images);
+    if (Array.isArray(parsed)) {
+      productImages = parsed.map((item: string | { url: string }) =>
+        typeof item === "string" ? item : item.url,
+      );
+    }
   } catch {
     /* corrupted data fallback */
   }

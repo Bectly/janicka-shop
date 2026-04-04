@@ -34,7 +34,14 @@ export function AddToCartButton({ product }: AddToCartProps) {
   const isInCart = items.some((i) => i.productId === product.id);
 
   let imageList: string[] = [];
-  try { imageList = JSON.parse(product.images); } catch { /* corrupted data fallback */ }
+  try {
+    const parsed = JSON.parse(product.images);
+    if (Array.isArray(parsed)) {
+      imageList = parsed.map((item: string | { url: string }) =>
+        typeof item === "string" ? item : item.url,
+      );
+    }
+  } catch { /* corrupted data fallback */ }
 
   function handleAdd() {
     setError(null);

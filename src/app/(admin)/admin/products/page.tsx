@@ -245,7 +245,11 @@ export default async function AdminProductsPage({
                 products.map((product) => {
                   const images: string[] = (() => {
                     try {
-                      return JSON.parse(product.images);
+                      const parsed = JSON.parse(product.images);
+                      if (!Array.isArray(parsed)) return [];
+                      return parsed.map((item: string | { url: string }) =>
+                        typeof item === "string" ? item : item.url,
+                      );
                     } catch {
                       return [];
                     }

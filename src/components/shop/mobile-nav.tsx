@@ -10,6 +10,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { InstantSearch } from "./instant-search";
 
 const categories = [
   { name: "Šaty", href: "/products?category=saty" },
@@ -38,6 +39,11 @@ export function MobileNav() {
             </Link>
           </SheetTitle>
         </SheetHeader>
+        {/* Search trigger in mobile nav */}
+        <div className="px-4 pb-2">
+          <InstantSearch />
+        </div>
+
         <nav aria-label="Hlavní navigace" className="flex flex-col gap-1 px-4">
           <Link
             href="/products"

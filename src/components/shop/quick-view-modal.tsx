@@ -51,7 +51,12 @@ export function QuickViewButton({ productId }: QuickViewButtonProps) {
   let images: string[] = [];
   if (product) {
     try {
-      images = JSON.parse(product.images);
+      const parsed = JSON.parse(product.images);
+      if (Array.isArray(parsed)) {
+        images = parsed.map((item: string | { url: string }) =>
+          typeof item === "string" ? item : item.url,
+        );
+      }
     } catch {
       /* fallback */
     }

@@ -690,6 +690,7 @@ export async function sendNewsletterWelcomeEmail(email: string): Promise<void> {
 // ---------------------------------------------------------------------------
 
 interface AbandonedCartItem {
+  productId: string;
   name: string;
   price: number;
   image?: string;
@@ -813,18 +814,21 @@ function buildAbandonedCartEmail1(data: AbandonedCartEmailData): string {
 /**
  * Email 2: Sent 12-24 hours after abandonment.
  * "Stále na tebe čeká..." — follow-up, mentions if item was sold.
+ * @param soldProductIds - productIds of items that have been sold (matched by ID, not name).
  */
-function buildAbandonedCartEmail2(data: AbandonedCartEmailData, soldItemNames: string[]): string {
+function buildAbandonedCartEmail2(data: AbandonedCartEmailData, soldProductIds: string[]): string {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
   const greeting = data.customerName ? escapeHtml(data.customerName) : "Ahoj";
-  const availableItems = data.items.filter((i) => !soldItemNames.includes(i.name));
+  const soldIdSet = new Set(soldProductIds);
+  const soldItems = data.items.filter((i) => soldIdSet.has(i.productId));
+  const availableItems = data.items.filter((i) => !soldIdSet.has(i.productId));
 
   let soldNotice = "";
-  if (soldItemNames.length > 0) {
+  if (soldItems.length > 0) {
     soldNotice = `
       <div style="background: #fef2f2; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px;">
         <p style="margin: 0; color: #991b1b; font-size: 14px;">
-          Bohužel, ${soldItemNames.map((n) => `<strong>${escapeHtml(n)}</strong>`).join(", ")} už ${soldItemNames.length === 1 ? "našel" : "našly"} novou majitelku.
+          Bohužel, ${soldItems.map((i) => `<strong>${escapeHtml(i.name)}</strong>`).join(", ")} už ${soldItems.length === 1 ? "našel" : "našly"} novou majitelku.
           ${availableItems.length > 0 ? "Ale ostatní kousky stále čekají!" : ""}
         </p>
       </div>`;
@@ -856,18 +860,21 @@ function buildAbandonedCartEmail2(data: AbandonedCartEmailData, soldItemNames: s
 /**
  * Email 3: Sent 48-72 hours after abandonment.
  * "Poslední upozornění" — final reminder with urgency.
+ * @param soldProductIds - productIds of items confirmed sold (matched by ID, not name).
  */
-function buildAbandonedCartEmail3(data: AbandonedCartEmailData, soldItemNames: string[]): string {
+function buildAbandonedCartEmail3(data: AbandonedCartEmailData, soldProductIds: string[]): string {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
   const greeting = data.customerName ? escapeHtml(data.customerName) : "Ahoj";
-  const availableItems = data.items.filter((i) => !soldItemNames.includes(i.name));
+  const soldIdSet = new Set(soldProductIds);
+  const soldItems = data.items.filter((i) => soldIdSet.has(i.productId));
+  const availableItems = data.items.filter((i) => !soldIdSet.has(i.productId));
 
   let soldNotice = "";
-  if (soldItemNames.length > 0) {
+  if (soldItems.length > 0) {
     soldNotice = `
       <div style="background: #fef2f2; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px;">
         <p style="margin: 0; color: #991b1b; font-size: 14px;">
-          ${soldItemNames.map((n) => `<strong>${escapeHtml(n)}</strong>`).join(", ")} — ${soldItemNames.length === 1 ? "bohužel prodáno" : "bohužel prodány"}.
+          ${soldItems.map((i) => `<strong>${escapeHtml(i.name)}</strong>`).join(", ")} — ${soldItems.length === 1 ? "bohužel prodáno" : "bohužel prodány"}.
           <a href="${baseUrl}/products?sort=newest" style="color: #991b1b; text-decoration: underline;">Podívej se na podobné kousky &rarr;</a>
         </p>
       </div>`;
@@ -899,12 +906,15 @@ function buildAbandonedCartEmail3(data: AbandonedCartEmailData, soldItemNames: s
 
 /**
  * Send abandoned cart recovery email (stage 1, 2, or 3).
+ * @param soldProductIds - productIds of items confirmed sold since cart capture.
+ *   Using IDs (not names) prevents false-positive matches when multiple items
+ *   share the same display name.
  * Returns true if email was sent, false if skipped.
  */
 export async function sendAbandonedCartEmail(
   stage: 1 | 2 | 3,
   data: AbandonedCartEmailData,
-  soldItemNames?: string[]
+  soldProductIds?: string[]
 ): Promise<boolean> {
   const resend = getResendClient();
   if (!resend) {
@@ -924,10 +934,10 @@ export async function sendAbandonedCartEmail(
       html = buildAbandonedCartEmail1(data);
       break;
     case 2:
-      html = buildAbandonedCartEmail2(data, soldItemNames ?? []);
+      html = buildAbandonedCartEmail2(data, soldProductIds ?? []);
       break;
     case 3:
-      html = buildAbandonedCartEmail3(data, soldItemNames ?? []);
+      html = buildAbandonedCartEmail3(data, soldProductIds ?? []);
       break;
   }
 

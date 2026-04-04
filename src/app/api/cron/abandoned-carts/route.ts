@@ -77,11 +77,14 @@ export async function GET(request: Request) {
       }
     }
 
-    // 3. Find carts ready for Email 2 (created > 18h ago, email1 sent, email2 not sent)
+    // 3. Find carts ready for Email 2 (created > 18h ago, email1 sent > 6h ago, email2 not sent)
+    // Guard: require email1SentAt < 6h ago so email 2 is never sent immediately after email 1
+    // on the same cron run where a cart crosses BOTH the email1 and email2 age thresholds.
+    const email2MinGapAfterEmail1 = new Date(now.getTime() - 6 * 60 * 60 * 1000);
     const readyForEmail2 = await db.abandonedCart.findMany({
       where: {
         status: "pending",
-        email1SentAt: { not: null },
+        email1SentAt: { not: null, lt: email2MinGapAfterEmail1 },
         email2SentAt: null,
         createdAt: { lt: email2After },
       },
@@ -92,13 +95,13 @@ export async function GET(request: Request) {
       const items = parseCartItems(cart.cartItems);
       if (items.length === 0) continue;
 
-      // Check which items have been sold since capture
-      const soldNames = await getSoldItemNames(db, items);
+      // Check which items have been sold since capture (by ID to avoid name collisions)
+      const soldProductIds = await getSoldProductIds(db, items);
 
       const success = await sendAbandonedCartEmail(
         2,
         { email: cart.email, customerName: cart.customerName, items, cartTotal: cart.cartTotal, cartId: cart.id },
-        soldNames
+        soldProductIds
       );
 
       if (success) {
@@ -110,11 +113,13 @@ export async function GET(request: Request) {
       }
     }
 
-    // 4. Find carts ready for Email 3 (created > 60h ago, email2 sent, email3 not sent)
+    // 4. Find carts ready for Email 3 (created > 60h ago, email2 sent > 12h ago, email3 not sent)
+    // Guard: require email2SentAt < 12h ago to ensure minimum spacing between email 2 and 3.
+    const email3MinGapAfterEmail2 = new Date(now.getTime() - 12 * 60 * 60 * 1000);
     const readyForEmail3 = await db.abandonedCart.findMany({
       where: {
         status: "pending",
-        email2SentAt: { not: null },
+        email2SentAt: { not: null, lt: email3MinGapAfterEmail2 },
         email3SentAt: null,
         createdAt: { lt: email3After },
       },
@@ -125,10 +130,11 @@ export async function GET(request: Request) {
       const items = parseCartItems(cart.cartItems);
       if (items.length === 0) continue;
 
-      const soldNames = await getSoldItemNames(db, items);
+      // Check sold status by productId to avoid false positives from name collisions
+      const soldProductIds = await getSoldProductIds(db, items);
 
       // If ALL items are sold, skip email 3 (no value for the customer)
-      if (soldNames.length >= items.length) {
+      if (soldProductIds.length >= items.length) {
         await db.abandonedCart.update({
           where: { id: cart.id },
           data: { email3SentAt: now, status: "expired" },
@@ -139,7 +145,7 @@ export async function GET(request: Request) {
       const success = await sendAbandonedCartEmail(
         3,
         { email: cart.email, customerName: cart.customerName, items, cartTotal: cart.cartTotal, cartId: cart.id },
-        soldNames
+        soldProductIds
       );
 
       if (success) {
@@ -187,8 +193,12 @@ function parseCartItems(json: string): CartItem[] {
   }
 }
 
-/** Check which cart items have been sold since the cart was captured. */
-async function getSoldItemNames(
+/**
+ * Return the productIds of items that have been sold since the cart was captured.
+ * Using IDs (not names) avoids false-positive matches when two cart items share
+ * the same display name.
+ */
+async function getSoldProductIds(
   db: Awaited<ReturnType<typeof getDb>>,
   items: CartItem[]
 ): Promise<string[]> {
@@ -198,5 +208,5 @@ async function getSoldItemNames(
     select: { id: true, sold: true },
   });
   const soldIds = new Set(products.filter((p) => p.sold).map((p) => p.id));
-  return items.filter((i) => soldIds.has(i.productId)).map((i) => i.name);
+  return items.filter((i) => soldIds.has(i.productId)).map((i) => i.productId);
 }
