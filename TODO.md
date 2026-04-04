@@ -43,7 +43,7 @@
 - [ ] [BOLT] Payment gateway: **Comgate** (Lead C25+C31 research). Server-side: REST API via `fetch` (create/status/refund at `apidoc.comgate.cz`). Client-side: `@comgate/checkout-js` (replaces old `@comgate/checkout` — TypeScript, promise-based, framework-agnostic). Currently supports Apple Pay + Google Pay inline (card number direct entry "being prepared" by Comgate). Architecture: `src/lib/payments/comgate.ts` (REST client), `src/lib/payments/types.ts`, `POST /api/payments/webhook` route. Sandbox first. **Start Plan pricing (C31 verified)**: 0% card fees for 6 months (up to 50K CZK/mo), then Easy plan auto-applies (1% + 0 CZK for standard EU cards, 2% for other EU cards). Bank transfers: 1% + 0 CZK. Monthly fee: FREE on Start. Refund: 5 CZK. Chargeback: 990 CZK. Fees locked until Dec 31, 2026. **Note**: Until Comgate enables direct card entry in SDK, card payments will use redirect flow — Apple Pay + Google Pay are inline via SDK.
 - [ ] [BOLT] Stripe payment integration (international fallback)
 - [ ] [BOLT] Payment webhook handler: POST /api/payments/webhook (notification_url callback). Verify payment status via GET after receiving notification — never trust webhook payload alone.
-- [ ] [BOLT] Accordion single-page checkout UI (Lead C31+C34+C1496 research: accordion outperforms multi-step by 11-14% in completion rate, ASOS saw 50% abandonment reduction with single-page). **Mobile layout**: Apple Pay / Google Pay express buttons at VERY TOP (above form — **C1496 Stripe data: 2x mobile conversion** when express at top vs bottom, Apple Pay: **+22.3% conversion**). Then accordion: 1) Kontakt, 2) Doprava (Packeta widget), 3) Platba, 4) Shrnutí — each collapses when completed, shows green checkmark. Auto-advance to next section when current is valid. Guest checkout ONLY (no registration — **26% abandon at forced signup**, guest checkout = **+45% conversion** per PayPal data, 70% prefer no account). Trust badges + security lock icon **INLINE with payment form** (not footer — trust anxiety peaks at payment step, **inline placement = 40-60% better** than footer per A/B tests, reduces abandonment by up to **32%**). "Zobrazit shrnutí" sticky bar on mobile showing total + item count. Desktop: sticky order summary sidebar. **BNPL**: Comgate has native pay-in-3 installments — consider for items above 500 CZK (C1478 data). **C1496 target**: ≤7-8 form fields (average is 14.88 — each extra field beyond 8 drops completion by **4-6%**). Use **address autocomplete** (Google Places API) to reduce 3-4 address fields to 1 selection — ASOS: +12% transactions.
+- [ ] [BOLT] Accordion single-page checkout UI (Lead C31+C34+C1496+C1505 research: accordion outperforms multi-step by 11-14% in completion rate, ASOS saw 50% abandonment reduction with single-page). **Mobile layout**: Apple Pay / Google Pay express buttons at VERY TOP (above form — **C1496 Stripe data: 2x mobile conversion** when express at top vs bottom, Apple Pay: **+22.3% conversion**). Then accordion: 1) Kontakt, 2) Doprava (Packeta widget), 3) Platba, 4) Shrnutí — each collapses when completed, shows green checkmark. Auto-advance to next section when current is valid (300ms delay for visual feedback). **C1505 CRITICAL**: Collapsed sections MUST show visible inline summaries (Baymard confirmed as established web convention) — e.g., "Jana Nováková, jana@email.cz" for Kontakt, "Zásilkovna — Výdejna Praha 1" for Doprava. Bad: only section header. "Upravit" link to re-expand. Guest checkout ONLY (no registration — **26% abandon at forced signup**, guest checkout = **+45% conversion**). **Trust badges**: max 3 inline with payment form (Lock + "Zabezpečená platba", Comgate logo, "Partner Zásilkovny") — **more than 3-4 types DECREASES conversion by 5-8%** (C1505 finding). Trust badges for unfamiliar brands: **+15-30% conversion**. **Single name field**: "Celé jméno" instead of Jméno + Příjmení — parse server-side. **Phone conditional**: show only for home delivery. **Target 6-7 fields**: email, full name, phone (conditional), street (autocomplete), city (auto-fill), ZIP (auto-fill), payment. **BNPL**: Comgate native pay-in-3 for items above 500 CZK. Use shadcn Accordion component (`npx shadcn add accordion`). react-hook-form `useFormContext` for shared state.
 - [x] [LEAD] Show shipping cost estimate in cart summary — DONE Cycle #1489 (free shipping progress bar with animated fill, "Doprava od 69 Kč" hint, green "Doprava zdarma!" when threshold met)
 - [ ] [LEAD] Server-side cart validation at checkout initiation (NEW C1484) — **Never trust client-side prices or availability.** When checkout begins, re-fetch ALL item prices, stock status, and reservation status from DB server-side. Compare with client cart — if any mismatch (price changed, item sold, reservation expired), show clear error and update cart. This prevents: (1) price manipulation, (2) ordering sold-out items, (3) stale cart data. Use Server Action `validateCart()` that returns validated items + totals. Checkout form should ONLY render after server validation passes. Security + UX — catches edge cases before payment.
 - [ ] [LEAD] PWA manifest + service worker for mobile (NEW C1484) — Fashion PWAs show **70% higher conversion** vs mobile web. Kaporal (French fashion): 60% lower bounce, 15% higher desktop conversion, 40% longer visits. Butcher of Blue (Dutch fashion): **169% conversion increase**, 154% more MAU. Implementation: (1) `manifest.json` with Janicka branding (name, icons, theme_color: rose), (2) `next-pwa` or Serwist for Next.js 15 service worker, (3) cache product images + static assets for offline-capable browsing, (4) contextual install prompt AFTER engagement (3rd visit or add-to-cart — NOT immediate popup, achieves 15-25% install rates). Post-launch priority but high ROI for mobile-dominant audience (62% of CZ e-commerce is mobile).
@@ -243,18 +243,19 @@ Czech Act No. 424/2023 Coll. — in force since June 28, 2025. **⚠️ C40 UPDA
 - ~~Order tracking lookup~~ (C1500) — /order/lookup
 - ~~Admin newsletter management~~ (C1500) — subscriber table + CSV export
 
-### NEXT SPRINT — Phase 2 Polish + Phase 3 Checkout (UPDATED C1499)
-1. **Mobile filter drawer** (Phase 2, UPDATED C34, C1484) — full-screen overlay on mobile. Sticky "Filtry" at bottom. Accordion inside. "Zobrazit X produktů" footer. Touch targets min 48x48px. Size/color/price MUST be first 3 facets. Swipe-down gesture to dismiss.
-2. **`nuqs` adoption** (Phase 2) — type-safe URL params, debounced price input, server cache. Eliminates ~50 lines of manual parsing.
-3. **Color filter + filter counts** (Phase 2) — color swatches + product count per option + grey out zero-result options.
-4. **Instant search with autocomplete** (Phase 10d, **NEW C1499 — HIGH IMPACT**) — site search users convert **2-3x higher**, can drive **41% of revenue**. Current search is basic page redirect with no instant results. See Phase 10d spec.
-5. **Server-side cart validation** (Phase 3) — `validateCart()` Server Action at checkout initiation. Never trust client cart.
-6. **Accordion checkout + Packeta** (Phase 3+6, UPDATED C1496) — single-page accordion. Express payments at top on mobile (2x CR). Guest checkout only. ≤7-8 fields. Address autocomplete.
-7. **Comgate payment** (Phase 3) — wrap SDK in abstraction layer. Apple/Google Pay inline, card via iframe, bank/BNPL redirect.
-8. **QR code payment** (Phase 3+9) — `spayd` + `qrcode` npm. Bank transfer = #1 CZ payment (33%). Ship alongside Comgate.
-9. **Email marketing foundation** (Phase 10d, **NEW C1499 — HUGE UNTAPPED**) — 5 core flows = 80% of email revenue. Welcome, cart abandonment, browse abandonment, post-purchase, win-back. See Phase 10d spec.
-10. **Abandoned cart recovery emails** (Phase 9) — 3-email sequence. Fashion = 84.61% abandonment. 6.5x revenue vs single email.
-11. **Browse abandonment email** (Phase 10d, **NEW C1499**) — higher-funnel recovery for product viewers who didn't add to cart. See Phase 10d spec.
+### NEXT SPRINT — Phase 2 Polish + Phase 3 Checkout (UPDATED C1505)
+1. **Mobile filter drawer** (Phase 2, UPDATED C1505) — full-screen overlay (100dvh). Facet order: Size → Price → Color → Brand → Condition. Consider Vaul for gesture dismissal. Debounce count updates 200-300ms. Auto-close on "Zobrazit X produktů" tap.
+2. **Promoted quick filters** (Phase 2, **NEW C1505 — EASY WIN**) — horizontally scrollable chip bar above product grid (size pills + color swatches). 61% of sites don't promote filters (Baymard). Reduces round-trips to filter drawer.
+3. **`nuqs` adoption** (Phase 2) — type-safe URL params, debounced price input, server cache. Eliminates ~50 lines of manual parsing.
+4. **Color filter + filter counts** (Phase 2) — color swatches + product count per option + grey out zero-result options.
+5. **Instant search with autocomplete** (Phase 10d, UPDATED C1505) — **MiniSearch** library (client-side inverted index, Czech diacritics via NFD). shadcn **Command** component for UI. Full-screen overlay on mobile. Site search users convert **2-3x higher**.
+6. **Server-side cart validation** (Phase 3) — `validateCart()` Server Action at checkout initiation. Never trust client cart.
+7. **Accordion checkout + Packeta** (Phase 3+6, UPDATED C1505) — single-page accordion with collapsed summaries (Baymard-validated). Single name field. 6-7 fields max. Express payments at top (2x CR). Max 3 trust badges (more = -5-8% CR). Guest checkout only.
+8. **Comgate payment** (Phase 3) — wrap SDK in abstraction layer. Apple/Google Pay inline, card via iframe, bank/BNPL redirect. **Easy plan now 0.9%** (price drop).
+9. **QR code payment** (Phase 3+9) — `spayd` + `qrcode` npm. Bank transfer = #1 CZ payment (33%). **CZ instant payments now 50%** of interbank.
+10. **Email marketing foundation** (Phase 10d, **C1499 — HUGE UNTAPPED**) — 5 core flows = 80% of email revenue. Welcome, cart abandonment, browse abandonment, post-purchase, win-back.
+11. **Abandoned cart recovery emails** (Phase 9) — 3-email sequence. Fashion = 84.61% abandonment. 6.5x revenue vs single email.
+12. **Browse abandonment email** (Phase 10d, **C1499**) — higher-funnel recovery for product viewers who didn't add to cart.
 
 ### LAUNCH BLOCKERS
 12. ~~Cookie consent~~ ✅ DONE
@@ -262,7 +263,7 @@ Czech Act No. 424/2023 Coll. — in force since June 28, 2025. **⚠️ C40 UPDA
 14. **Rate limiting** (Phase 8) — @upstash/ratelimit for checkout + login. Flagged every Trace cycle since C19.
 15. ~~EAA accessibility~~ **EXEMPT** (micro-enterprise)
 
-### POST-LAUNCH (UPDATED C1499)
+### POST-LAUNCH (UPDATED C1505)
 16. **Email notifications** (Phase 6) — ✅ MOSTLY DONE. Remaining: PDF invoice, abandoned cart sequence.
 17. **Product video** (Phase 10, #1 conversion lever) — +65% CR. Phone clips work. Add `videoUrl` to Product model.
 18. **Heureka.cz verification** (Phase 9) — XML feed ✅ DONE. Register for free Start tier. Add GPSR tags when manufacturer data available.
@@ -278,9 +279,10 @@ Czech Act No. 424/2023 Coll. — in force since June 28, 2025. **⚠️ C40 UPDA
 28. **Loyalty/store credit** (Phase 9) — 67% more spend from repeat customers.
 29. **Accessibility incremental** (Phase 7c) — competitive advantage, not legal requirement.
 30. **Social commerce** (Phase 10) — share buttons, UGC video reviews, "Právě koupila" feed.
-31. **Instagram Shopping** (Phase 9) — product feed + micro-influencer partnerships.
+31. **Instagram Shopping** (Phase 9) — product feed + micro-influencer partnerships. **54% of Gen Z say social better than search for discovery** (C1505).
 32. **Saved search alerts** (Phase 9) — biggest differentiator vs Vinted.
 33. **Admin AI listing assist** (Phase 10b) — photo-to-listing AI. Critical for scaling.
+34. **Zalando Pre-Owned monitoring** (NEW C1505) — live in CZ, 50% sells within 24h. Monitor pricing overlap with our target segment. Consider competitive messaging page.
 34. **Google UCP preparation** (Phase 10) — monitor for small merchant adoption.
 35. **middleware.ts → proxy.ts migration** (Phase 8) — Next.js 16 deprecated middleware. Codemod: `npx @next/codemod@latest middleware-to-proxy`. Low effort.
 

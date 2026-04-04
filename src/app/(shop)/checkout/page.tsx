@@ -549,9 +549,20 @@ export default function CheckoutPage() {
                 {items.map((item) => (
                   <div
                     key={`${item.productId}-${item.size}-${item.color}`}
-                    className="flex justify-between gap-2 py-3"
+                    className="flex items-center gap-3 py-3"
                   >
-                    <div className="min-w-0">
+                    {item.image && (
+                      <div className="relative size-12 shrink-0 overflow-hidden rounded-md border bg-muted">
+                        <Image
+                          src={item.image}
+                          alt={item.name}
+                          fill
+                          sizes="48px"
+                          className="object-cover"
+                        />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">
                         {item.name}
                       </p>
@@ -646,6 +657,7 @@ export default function CheckoutPage() {
           price: i.price,
           size: i.size,
           color: i.color,
+          image: i.image,
         }))}
         subtotal={subtotal}
         shippingCost={shippingCost}

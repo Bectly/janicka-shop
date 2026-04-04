@@ -67,6 +67,14 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+/** OG condition label for product meta */
+const OG_CONDITION: Record<string, string> = {
+  new_with_tags: "new",
+  excellent: "used",
+  good: "used",
+  visible_wear: "used",
+};
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const product = await getProduct(slug);
@@ -76,6 +84,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   let images: string[] = [];
   try { images = JSON.parse(product.images); } catch { /* fallback */ }
 
+  // Richer description with price + brand for social preview cards
+  const priceText = `${product.price} Kč`;
+  const brandText = product.brand ? ` | ${product.brand}` : "";
+  const condLabel = CONDITION_LABELS[product.condition] ?? "";
+  const ogDescription = `${priceText}${brandText} | ${condLabel}. ${product.description}`.slice(0, 200);
+
+  // Multiple OG images for carousel previews (up to 4)
+  const ogImages = images.slice(0, 4).map((url) => ({
+    url,
+    alt: product.name,
+    width: 800,
+    height: 800,
+  }));
+
   return {
     title: product.name,
     description: product.description,
@@ -83,13 +105,26 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       canonical: `${BASE_URL}/products/${product.slug}`,
     },
     openGraph: {
-      title: product.name,
-      description: product.description,
+      title: `${product.name} — ${priceText}`,
+      description: ogDescription,
       url: `${BASE_URL}/products/${product.slug}`,
       type: "website",
       siteName: "Janička",
       locale: "cs_CZ",
-      ...(images.length > 0 && { images: [{ url: images[0], alt: product.name }] }),
+      ...(ogImages.length > 0 && { images: ogImages }),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${product.name} — ${priceText}`,
+      description: ogDescription,
+      ...(images.length > 0 && { images: [images[0]] }),
+    },
+    other: {
+      "product:price:amount": String(product.price),
+      "product:price:currency": "CZK",
+      "product:condition": OG_CONDITION[product.condition] ?? "used",
+      ...(product.brand ? { "product:brand": product.brand } : {}),
+      "product:availability": product.sold ? "out of stock" : "in stock",
     },
   };
 }
