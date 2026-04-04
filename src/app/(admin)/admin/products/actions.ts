@@ -206,6 +206,98 @@ export async function updateProduct(id: string, formData: FormData) {
   redirect("/admin/products");
 }
 
+/** Quick-add: minimal fields for fast mobile product creation */
+const quickProductSchema = z.object({
+  name: z.string().min(1, "Název je povinný").max(200),
+  price: z.coerce.number().positive("Cena musí být kladná"),
+  compareAt: z.coerce.number().positive().nullable(),
+  categoryId: z.string().min(1, "Kategorie je povinná"),
+  brand: z.string().max(100).nullable(),
+  condition: z.enum(["new_with_tags", "excellent", "good", "visible_wear"]),
+  sizes: z.string().min(1, "Velikost je povinná").max(500),
+  colors: z.string().max(500),
+  description: z.string().max(5000),
+}).refine(
+  (data) => !data.compareAt || data.compareAt > data.price,
+  { message: "Původní cena musí být vyšší než aktuální cena", path: ["compareAt"] },
+);
+
+export async function quickCreateProduct(formData: FormData) {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
+
+  const raw = {
+    name: formData.get("name") as string,
+    price: formData.get("price"),
+    compareAt: formData.get("compareAt") || null,
+    categoryId: formData.get("categoryId") as string,
+    brand: (formData.get("brand") as string) || null,
+    condition: (formData.get("condition") as string) || "excellent",
+    sizes: (formData.get("sizes") as string) || "",
+    colors: (formData.get("colors") as string) || "",
+    description: (formData.get("description") as string) || "",
+  };
+
+  const parsed = quickProductSchema.parse(raw);
+
+  // Auto-generate slug from name
+  let slug = slugify(parsed.name);
+  const existingSlug = await prisma.product.findUnique({ where: { slug } });
+  if (existingSlug) {
+    slug = `${slug}-${Date.now().toString(36)}`;
+  }
+
+  // Auto-generate SKU: JN-<timestamp_base36>
+  const sku = `JN-${Date.now().toString(36).toUpperCase()}`;
+
+  const validatedImages = parseImages(formData);
+
+  // Default description if empty
+  const description = parsed.description.trim()
+    || `${parsed.name}${parsed.brand ? ` od značky ${parsed.brand}` : ""}. Stav: ${parsed.condition === "new_with_tags" ? "nové s visačkou" : parsed.condition === "excellent" ? "výborný" : parsed.condition === "good" ? "dobrý" : "viditelné opotřebení"}.`;
+
+  const product = await prisma.product.create({
+    data: {
+      name: parsed.name,
+      slug,
+      description,
+      price: parsed.price,
+      compareAt: parsed.compareAt,
+      sku,
+      categoryId: parsed.categoryId,
+      brand: parsed.brand,
+      condition: parsed.condition,
+      sizes: JSON.stringify(
+        parsed.sizes
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      ),
+      colors: JSON.stringify(
+        parsed.colors
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      ),
+      images: validatedImages,
+      stock: 1,
+      featured: false,
+      active: true,
+    },
+  });
+
+  // Log initial price for 30-day price history (Czech fake discount law)
+  await prisma.priceHistory.create({
+    data: { productId: product.id, price: parsed.price },
+  });
+
+  revalidatePath("/admin/products");
+  revalidatePath("/products");
+  revalidatePath("/");
+  redirect("/admin/products");
+}
+
 export async function deleteProduct(id: string) {
   await requireAdmin();
   const rl = await rateLimitAdmin();

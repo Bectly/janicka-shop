@@ -4,6 +4,8 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
 
+const SWIPE_THRESHOLD = 50;
+
 interface ProductGalleryProps {
   images: string[];
   productName: string;
@@ -14,6 +16,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [zoomed, setZoomed] = useState(false);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [swipeOffset, setSwipeOffset] = useState(0);
   const imgContainerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{
     dragging: boolean;
@@ -22,6 +25,12 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
     startOffsetX: number;
     startOffsetY: number;
   }>({ dragging: false, startX: 0, startY: 0, startOffsetX: 0, startOffsetY: 0 });
+  const touchRef = useRef<{
+    startX: number;
+    startY: number;
+    swiping: boolean;
+    directionLocked: boolean;
+  }>({ startX: 0, startY: 0, swiping: false, directionLocked: false });
 
   const openLightbox = useCallback(
     (index: number) => {
@@ -57,6 +66,54 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
       return !z;
     });
   }, []);
+
+  // Touch swipe handlers for mobile gallery navigation
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (images.length <= 1) return;
+    const touch = e.touches[0];
+    touchRef.current = {
+      startX: touch.clientX,
+      startY: touch.clientY,
+      swiping: false,
+      directionLocked: false,
+    };
+  }, [images.length]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (images.length <= 1) return;
+    const touch = e.touches[0];
+    const dx = touch.clientX - touchRef.current.startX;
+    const dy = touch.clientY - touchRef.current.startY;
+
+    // Lock direction on first significant movement to avoid hijacking vertical scroll
+    if (!touchRef.current.directionLocked) {
+      if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+        touchRef.current.directionLocked = true;
+        touchRef.current.swiping = Math.abs(dx) > Math.abs(dy);
+      }
+      return;
+    }
+
+    if (!touchRef.current.swiping) return;
+
+    // Prevent vertical scroll while swiping horizontally
+    e.preventDefault();
+    setSwipeOffset(dx);
+  }, [images.length]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (!touchRef.current.swiping) {
+      setSwipeOffset(0);
+      return;
+    }
+    if (swipeOffset < -SWIPE_THRESHOLD) {
+      goNext();
+    } else if (swipeOffset > SWIPE_THRESHOLD) {
+      goPrev();
+    }
+    setSwipeOffset(0);
+    touchRef.current.swiping = false;
+  }, [swipeOffset, goNext, goPrev]);
 
   // Keyboard navigation for lightbox
   useEffect(() => {
@@ -123,8 +180,13 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
   return (
     <>
       <div className="space-y-3">
-        {/* Main image */}
-        <div className="group relative aspect-[3/4] overflow-hidden rounded-2xl bg-muted">
+        {/* Main image — swipeable on touch devices */}
+        <div
+          className="group relative aspect-[3/4] overflow-hidden rounded-2xl bg-muted touch-pan-y"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           <button
             type="button"
             onClick={() => openLightbox(activeIndex)}
@@ -140,12 +202,14 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
             src={images[activeIndex]}
             alt={`${productName} — fotka ${activeIndex + 1}`}
             fill
-            className="object-cover"
+            className="object-cover transition-transform duration-150 ease-out"
+            style={swipeOffset !== 0 ? { transform: `translateX(${swipeOffset}px)` } : undefined}
             sizes="(max-width: 1024px) 100vw, 50vw"
             priority
           />
           {images.length > 1 && (
             <>
+              {/* Desktop-only nav arrows (hidden on touch via hover) */}
               <button
                 type="button"
                 onClick={(e) => {
@@ -172,6 +236,10 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
               >
                 <ChevronRight className="size-5" />
               </button>
+              {/* Image counter + dot indicators */}
+              <div className="absolute right-3 top-3 z-20 rounded-full bg-black/50 px-2.5 py-1 text-xs font-medium text-white lg:hidden">
+                {activeIndex + 1} / {images.length}
+              </div>
               <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 gap-1.5">
                 {images.map((_, i) => (
                   <button
@@ -268,7 +336,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
             </>
           )}
 
-          {/* Main lightbox image */}
+          {/* Main lightbox image — swipeable */}
           <div
             ref={imgContainerRef}
             className={`relative h-[85vh] w-[90vw] max-w-5xl select-none ${
@@ -281,6 +349,9 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
+            onTouchStart={!zoomed ? handleTouchStart : undefined}
+            onTouchMove={!zoomed ? handleTouchMove : undefined}
+            onTouchEnd={!zoomed ? handleTouchEnd : undefined}
           >
             <Image
               src={images[activeIndex]}
@@ -290,7 +361,9 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
               style={{
                 transform: zoomed
                   ? `scale(2) translate(${panOffset.x / 2}px, ${panOffset.y / 2}px)`
-                  : "scale(1)",
+                  : swipeOffset !== 0
+                    ? `translateX(${swipeOffset}px)`
+                    : "scale(1)",
               }}
               sizes="90vw"
               quality={90}

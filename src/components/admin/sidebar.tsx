@@ -12,10 +12,12 @@ import {
   LogOut,
   Store,
   Tags,
+  Zap,
 } from "lucide-react";
 
 const navItems = [
   { href: "/admin/dashboard", label: "Přehled", icon: LayoutDashboard },
+  { href: "/admin/products/quick-add", label: "Rychlé přidání", icon: Zap },
   { href: "/admin/products", label: "Produkty", icon: Package },
   { href: "/admin/categories", label: "Kategorie", icon: Tags },
   { href: "/admin/orders", label: "Objednávky", icon: ShoppingCart },

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { formatPrice } from "@/lib/format";
 import { CONDITION_LABELS, CONDITION_COLORS } from "@/lib/constants";
-import { Plus } from "lucide-react";
+import { Plus, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DeleteProductButton } from "@/components/admin/delete-product-button";
 import { Pagination } from "@/components/shop/pagination";
@@ -50,10 +50,18 @@ export default async function AdminProductsPage({
             celkem
           </p>
         </div>
-        <Button render={<Link href="/admin/products/new" />}>
-          <Plus className="size-4" />
-          Přidat produkt
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" render={<Link href="/admin/products/quick-add" />}>
+            <Zap className="size-4" />
+            <span className="hidden sm:inline">Rychlé přidání</span>
+            <span className="sm:hidden">Rychle</span>
+          </Button>
+          <Button render={<Link href="/admin/products/new" />}>
+            <Plus className="size-4" />
+            <span className="hidden sm:inline">Přidat produkt</span>
+            <span className="sm:hidden">Přidat</span>
+          </Button>
+        </div>
       </div>
 
       <div className="mt-6 overflow-hidden rounded-xl border bg-card shadow-sm">
