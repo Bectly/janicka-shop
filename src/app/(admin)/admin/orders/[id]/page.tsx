@@ -11,6 +11,7 @@ import {
 } from "@/lib/constants";
 import { ArrowLeft } from "lucide-react";
 import { OrderStatusSelect } from "./order-status-select";
+import { TrackingNumberForm } from "./tracking-number-form";
 import type { Metadata } from "next";
 
 interface Props {
@@ -199,6 +200,12 @@ export default async function AdminOrderDetailPage({ params }: Props) {
                   Cena dopravy: {formatPrice(order.shipping)}
                 </p>
               )}
+            </div>
+            <div className="mt-4 border-t pt-4">
+              <TrackingNumberForm
+                orderId={order.id}
+                currentTrackingNumber={order.trackingNumber}
+              />
             </div>
           </div>
 

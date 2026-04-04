@@ -388,8 +388,11 @@ export async function createOrder(
     customerName: `${data.firstName} ${data.lastName}`,
     customerEmail: order.customerEmail,
     items: data.items.map((item) => {
-      const dbPrice = order.dbPrices.get(item.productId) ?? item.price;
-      return { name: item.name, price: dbPrice, size: item.size, color: item.color };
+      const dbPrice = order.dbPrices.get(item.productId);
+      if (dbPrice === undefined) {
+        console.error(`[Checkout] Missing DB price for product ${item.productId} in email — using order subtotal as fallback`);
+      }
+      return { name: item.name, price: dbPrice ?? item.price, size: item.size, color: item.color };
     }),
     subtotal: order.subtotal,
     shipping: order.shipping,

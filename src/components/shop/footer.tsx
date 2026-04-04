@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CookieSettingsButton } from "@/components/shop/cookie-settings-button";
 import { NewsletterForm } from "@/components/shop/newsletter-form";
+import { prisma } from "@/lib/db";
 
 const footerLinks = {
   nakupovani: {
@@ -30,7 +31,34 @@ const footerLinks = {
   },
 };
 
-export function Footer() {
+function InstagramIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+    </svg>
+  );
+}
+
+function FacebookIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+    </svg>
+  );
+}
+
+export async function Footer() {
+  const settings = await prisma.shopSettings.findUnique({
+    where: { id: "singleton" },
+    select: { instagram: true, facebook: true },
+  });
+
+  const instagram = settings?.instagram || "";
+  const facebook = settings?.facebook || "";
+  const hasSocial = instagram || facebook;
+
   return (
     <footer className="mt-auto border-t bg-muted/30" role="contentinfo">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -56,6 +84,32 @@ export function Footer() {
               </p>
               <NewsletterForm />
             </div>
+            {hasSocial && (
+              <div className="mt-4 flex gap-3">
+                {instagram && (
+                  <a
+                    href={instagram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-muted-foreground transition-colors hover:text-primary"
+                    aria-label="Instagram"
+                  >
+                    <InstagramIcon className="size-5" />
+                  </a>
+                )}
+                {facebook && (
+                  <a
+                    href={facebook}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-muted-foreground transition-colors hover:text-primary"
+                    aria-label="Facebook"
+                  >
+                    <FacebookIcon className="size-5" />
+                  </a>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Link columns */}

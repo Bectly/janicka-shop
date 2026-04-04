@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { formatPrice } from "@/lib/format";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Clock, ArrowRight, MapPin } from "lucide-react";
+import { CheckCircle2, Clock, ArrowRight, MapPin, Truck } from "lucide-react";
 import type { Metadata } from "next";
 import { ClearCartOnMount } from "./clear-cart";
 import { generateOrderQrPayment, orderNumberToVariableSymbol } from "@/lib/payments/qr-platba";
@@ -210,6 +210,20 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
             </p>
           )}
         </div>
+
+        {order.trackingNumber && (
+          <div className="mt-4 border-t pt-4">
+            <h3 className="text-sm font-semibold text-foreground">
+              Sledování zásilky
+            </h3>
+            <div className="mt-2 flex items-center gap-2 rounded-lg bg-primary/5 p-3">
+              <Truck className="size-4 shrink-0 text-primary" />
+              <span className="text-sm font-medium text-foreground">
+                {order.trackingNumber}
+              </span>
+            </div>
+          </div>
+        )}
 
         {order.note && (
           <div className="mt-4 border-t pt-4">

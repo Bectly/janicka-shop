@@ -88,6 +88,7 @@ model Order {
   shippingCountry String    @default("CZ")
   shippingMethod String?
   shippingPointId String?
+  trackingNumber String?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   items         OrderItem[]
@@ -153,4 +154,20 @@ model PriceHistory {
 
   @@index([productId])
   @@index([changedAt])
+}
+
+model ShopSettings {
+  id            String  @id @default("singleton")
+  shopName      String  @default("Janička")
+  description   String  @default("")
+  contactEmail  String  @default("")
+  contactPhone  String  @default("")
+  street        String  @default("")
+  city          String  @default("")
+  zip           String  @default("")
+  ico           String  @default("")
+  dic           String  @default("")
+  instagram     String  @default("")
+  facebook      String  @default("")
+  updatedAt     DateTime @updatedAt
 }

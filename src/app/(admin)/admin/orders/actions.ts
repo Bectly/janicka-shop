@@ -146,3 +146,19 @@ export async function updateOrderStatus(orderId: string, status: string) {
   revalidatePath("/products");
   revalidatePath("/");
 }
+
+export async function updateTrackingNumber(orderId: string, trackingNumber: string) {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
+
+  const trimmed = trackingNumber.trim();
+
+  await prisma.order.update({
+    where: { id: orderId },
+    data: { trackingNumber: trimmed || null },
+  });
+
+  revalidatePath("/admin/orders");
+  revalidatePath(`/admin/orders/${orderId}`);
+}
