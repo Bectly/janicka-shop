@@ -29,7 +29,7 @@ export function OrderLookupForm() {
           id="orderNumber"
           name="orderNumber"
           type="text"
-          placeholder="např. JAN-240401-ABCD"
+          placeholder="např. JN-260404-XXXXXXXX"
           required
           className="mt-1.5"
           autoComplete="off"

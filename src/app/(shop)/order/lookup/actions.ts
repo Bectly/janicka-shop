@@ -5,7 +5,11 @@ import { z } from "zod";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 const lookupSchema = z.object({
-  orderNumber: z.string().trim().min(1, "Zadejte číslo objednávky"),
+  orderNumber: z
+    .string()
+    .min(1, "Zadejte číslo objednávky")
+    .max(30, "Neplatné číslo objednávky")
+    .transform((v) => v.trim().toUpperCase()),
   email: z.string().trim().email("Zadejte platný e-mail").max(254),
 });
 
@@ -21,7 +25,7 @@ export async function lookupOrder(
 ): Promise<LookupResult> {
   // Rate limit: 10 lookups per 5 minutes per IP (prevents email enumeration)
   const ip = await getClientIp();
-  const rl = checkRateLimit(`order-lookup:${ip}`, 10, 5 * 60 * 1000);
+  const rl = checkRateLimit(`order-lookup-legacy:${ip}`, 10, 5 * 60 * 1000);
   if (!rl.success) {
     return {
       success: false,

@@ -28,7 +28,7 @@ export async function lookupOrder(
 ): Promise<LookupState> {
   // Rate limit: 10 lookups per minute per IP
   const ip = await getClientIp();
-  const rl = checkRateLimit(`order-lookup:${ip}`, 10, 60_000);
+  const rl = checkRateLimit(`objednavka-lookup:${ip}`, 10, 60_000);
   if (!rl.success) {
     return { error: "Příliš mnoho pokusů. Zkuste to prosím za chvíli." };
   }
