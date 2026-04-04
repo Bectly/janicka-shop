@@ -1,17 +1,25 @@
 # Janička Shop — TODO
 
-## 🚨 CRITICAL: Vercel/Turso Production Deploy
-Turso DB is created, env vars set on Vercel, `@libsql/client` + `@prisma/adapter-libsql` installed, `db.ts` uses Proxy with lazy init + dynamic import. Schema + seed data pushed to Turso.
+## 🚨 CRITICAL: Vercel/Turso Runtime 500 Error
 
-**Problem**: Any page that imports `prisma` and is SSG (prerendered at build time) crashes with `TypeError: Invalid URL` because the Proxy triggers `createClient({url: "libsql://..."})` during Vercel build. Locally builds fine because `DATABASE_URL=file:./dev.db`.
+**Status**: Build passes on Vercel ✅, but runtime returns 500 on all shop pages.
 
-**Fix needed** (pick ONE approach):
-1. **Mark all DB-using pages as `dynamic`**: Add `export const dynamic = "force-dynamic"` to every page/layout that imports prisma. Already done for `not-found.tsx`, need to do for `order/lookup`, and any other SSG page importing prisma.
-2. **OR** — Guard the Proxy: detect build-time environment (`process.env.NEXT_PHASE === 'phase-production-build'`) and skip libsql init, return empty/mock data during prerender.
-3. **OR** — Split: keep `prisma` export for dev (direct PrismaClient), add `getDb()` async export for prod, migrate all server code to use `await getDb()`.
+**What's done**:
+- Turso DB created (`janicka-shop-bectly.aws-eu-west-1.turso.io`), schema + seed data pushed
+- Vercel env vars set: `DATABASE_URL` (libsql://...), `TURSO_AUTH_TOKEN`, `AUTH_SECRET`
+- `@libsql/client` + `@prisma/adapter-libsql` installed, Prisma `previewFeatures = ["driverAdapters"]`
+- `auth-config.ts` split from `auth.ts` — middleware uses Edge-safe config without Prisma
+- `force-dynamic` on all layouts and pages
+- `db.ts` uses async Proxy with `getDb()` + dynamic import of libsql
 
-- [ ] [BOLT] **FIX Vercel deploy** — approach 1 recommended (quickest). Add `export const dynamic = "force-dynamic"` to ALL pages that query DB. Test with `vercel deploy --prod`.
-- [ ] [BOLT] After deploy works: verify Turso connection, test CRUD, run seed if needed.
+**Problem**: Runtime 500 — the async Proxy pattern in `db.ts` doesn't work correctly with server components. When code does `await prisma.product.findMany()`, the Proxy returns a nested Promise that RSC can't unwrap properly.
+
+**Fix needed**: 
+- [ ] [BOLT] Replace Proxy with direct `getDb()` pattern. Migrate ALL server code to use `const db = await getDb(); const products = await db.product.findMany(...)` instead of `prisma.product.findMany()`. This is the only reliable way to handle async Turso init.
+- [ ] [BOLT] Search all files: `grep -rn "prisma\." src/app/ src/lib/ --include="*.ts" --include="*.tsx"` and replace every `prisma.xxx` with `const db = await getDb(); db.xxx`
+- [ ] [BOLT] Test locally with Turso URL: `DATABASE_URL="libsql://janicka-shop-bectly.aws-eu-west-1.turso.io" TURSO_AUTH_TOKEN="..." npm run dev`
+- [ ] [BOLT] After runtime works: `vercel deploy --prod --token $(sqlite3 ~/.claude/jarvis-gym/jarvis.db "SELECT key_value FROM api_keys WHERE name='vercel'")`
+- [ ] [BOLT] Verify: `curl -s -o /dev/null -w "%{http_code}" https://janicka-shop.vercel.app` must return 200
 
 ## Phase 1: Foundation [DONE]
 - [x] [BOLT] Fix html lang="cs", use Inter font, all metadata in Czech
