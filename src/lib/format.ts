@@ -29,6 +29,7 @@ export function formatRelativeTime(date: Date): string {
   if (diffH < 24) return `Před ${diffH} h`;
   if (diffD === 1) return "Včera";
   if (diffD < 7) return `Před ${diffD} dny`;
-  if (diffD < 30) return `Před ${Math.floor(diffD / 7)} týd.`;
+  const weeks = Math.floor(diffD / 7);
+  if (diffD < 30) return weeks === 1 ? "Před týdnem" : `Před ${weeks} týd.`;
   return new Intl.DateTimeFormat("cs-CZ", { day: "numeric", month: "numeric" }).format(date);
 }

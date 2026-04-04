@@ -10,7 +10,7 @@ function getResendClient(): Resend | null {
 }
 
 const FROM_EMAIL = process.env.EMAIL_FROM ?? "Janička Shop <objednavky@janicka-shop.cz>";
-const NEWSLETTER_FROM_EMAIL = process.env.EMAIL_FROM ?? "Janička Shop <novinky@janicka-shop.cz>";
+const NEWSLETTER_FROM_EMAIL = process.env.NEWSLETTER_EMAIL_FROM ?? "Janička Shop <novinky@janicka-shop.cz>";
 
 interface OrderItem {
   name: string;
@@ -511,7 +511,7 @@ function buildNewsletterWelcomeHtml(email: string): string {
 
       <h2 style="margin: 0 0 8px; font-size: 20px; color: #1a1a1a;">Vítej v Janičce!</h2>
       <p style="margin: 0 0 16px; color: #666; font-size: 15px; line-height: 1.6;">
-        Díky za přihlášení k odběru novinek. Jako první se dozvíš o nových kuscích, slevách a exkluzivních nabídkách.
+        Díky za přihlášení k odběru novinek. Jako první se dozvíš o nových kouscích, slevách a exkluzivních nabídkách.
       </p>
 
       <div style="background: #fdf4ff; border-radius: 8px; padding: 16px 20px; margin: 20px 0; text-align: left;">

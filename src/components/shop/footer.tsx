@@ -25,6 +25,7 @@ const footerLinks = {
     links: [
       { name: "Kontaktujte nás", href: "/contact" },
       { name: "Reklamace", href: "/returns" },
+      { name: "Sledování objednávky", href: "/order/lookup" },
     ],
   },
 };

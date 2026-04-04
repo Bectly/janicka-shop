@@ -8,6 +8,7 @@ import { useCartStore, type CartItem } from "@/lib/cart-store";
 import { formatPrice } from "@/lib/format";
 import { releaseReservation, extendReservations } from "@/lib/actions/reservation";
 import { FREE_SHIPPING_THRESHOLD, SHIPPING_PRICES } from "@/lib/constants";
+import { CartRecommendations } from "@/components/shop/cart-recommendations";
 import { useSyncExternalStore, useState, useEffect, useCallback, useTransition } from "react";
 
 const emptySubscribe = () => () => {};
@@ -115,6 +116,9 @@ export default function CartPage() {
           Pokračovat v nákupu
         </Link>
       </div>
+
+      {/* Cross-sell recommendations from same categories */}
+      <CartRecommendations />
     </div>
   );
 }

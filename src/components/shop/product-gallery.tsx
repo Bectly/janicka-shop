@@ -20,17 +20,19 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
   const imgContainerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{
     dragging: boolean;
+    didDrag: boolean;
     startX: number;
     startY: number;
     startOffsetX: number;
     startOffsetY: number;
-  }>({ dragging: false, startX: 0, startY: 0, startOffsetX: 0, startOffsetY: 0 });
+  }>({ dragging: false, didDrag: false, startX: 0, startY: 0, startOffsetX: 0, startOffsetY: 0 });
   const touchRef = useRef<{
     startX: number;
     startY: number;
+    currentOffset: number;
     swiping: boolean;
     directionLocked: boolean;
-  }>({ startX: 0, startY: 0, swiping: false, directionLocked: false });
+  }>({ startX: 0, startY: 0, currentOffset: 0, swiping: false, directionLocked: false });
 
   const openLightbox = useCallback(
     (index: number) => {
@@ -74,6 +76,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
     touchRef.current = {
       startX: touch.clientX,
       startY: touch.clientY,
+      currentOffset: 0,
       swiping: false,
       directionLocked: false,
     };
@@ -98,6 +101,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
 
     // Prevent vertical scroll while swiping horizontally
     e.preventDefault();
+    touchRef.current.currentOffset = dx;
     setSwipeOffset(dx);
   }, [images.length]);
 
@@ -106,14 +110,17 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
       setSwipeOffset(0);
       return;
     }
-    if (swipeOffset < -SWIPE_THRESHOLD) {
+    // Read offset from ref to avoid stale closure when touchEnd fires
+    // in the same frame as the last touchMove before React re-renders
+    const offset = touchRef.current.currentOffset;
+    if (offset < -SWIPE_THRESHOLD) {
       goNext();
-    } else if (swipeOffset > SWIPE_THRESHOLD) {
+    } else if (offset > SWIPE_THRESHOLD) {
       goPrev();
     }
     setSwipeOffset(0);
     touchRef.current.swiping = false;
-  }, [swipeOffset, goNext, goPrev]);
+  }, [goNext, goPrev]);
 
   // Keyboard navigation for lightbox
   useEffect(() => {
@@ -138,6 +145,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
       e.preventDefault();
       dragRef.current = {
         dragging: true,
+        didDrag: false,
         startX: e.clientX,
         startY: e.clientY,
         startOffsetX: panOffset.x,
@@ -153,6 +161,10 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
       if (!dragRef.current.dragging) return;
       const dx = e.clientX - dragRef.current.startX;
       const dy = e.clientY - dragRef.current.startY;
+      // Mark as actual drag if moved beyond a small threshold
+      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+        dragRef.current.didDrag = true;
+      }
       setPanOffset({
         x: dragRef.current.startOffsetX + dx,
         y: dragRef.current.startOffsetY + dy,
@@ -343,7 +355,8 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
               zoomed ? "cursor-grab active:cursor-grabbing" : "cursor-zoom-in"
             }`}
             onClick={(e) => {
-              if (!dragRef.current.dragging) toggleZoom();
+              if (!dragRef.current.didDrag) toggleZoom();
+              dragRef.current.didDrag = false;
               e.stopPropagation();
             }}
             onPointerDown={handlePointerDown}
