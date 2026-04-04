@@ -185,7 +185,7 @@ export async function createOrder(
     email: formData.get("email") as string,
     firstName: formData.get("firstName") as string,
     lastName: formData.get("lastName") as string,
-    phone: formData.get("phone") as string,
+    phone: (formData.get("phone") as string) || undefined,
     street: (formData.get("street") as string) || undefined,
     city: (formData.get("city") as string) || undefined,
     zip: (formData.get("zip") as string) || undefined,
@@ -284,7 +284,8 @@ export async function createOrder(
           data: {
             firstName: data.firstName,
             lastName: data.lastName,
-            phone: data.phone,
+            // Only update phone if provided (optional for Packeta pickup)
+            ...(data.phone ? { phone: data.phone } : {}),
             // Only update address if it was provided (home delivery)
             ...(data.street
               ? {
@@ -301,7 +302,7 @@ export async function createOrder(
             email: data.email,
             firstName: data.firstName,
             lastName: data.lastName,
-            phone: data.phone,
+            phone: data.phone ?? null,
             street: data.street ?? null,
             city: data.city ?? null,
             zip: data.zip ?? null,

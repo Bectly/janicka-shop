@@ -267,24 +267,27 @@ export default function CheckoutPage() {
                     </p>
                   )}
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Telefon</Label>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    required
-                    placeholder="+420 123 456 789"
-                    autoComplete="tel"
-                    aria-invalid={!!state.fieldErrors.phone}
-                    aria-describedby={state.fieldErrors.phone ? "phone-error" : undefined}
-                  />
-                  {state.fieldErrors.phone && (
-                    <p id="phone-error" role="alert" className="text-xs text-destructive">
-                      {state.fieldErrors.phone}
-                    </p>
-                  )}
-                </div>
+                {/* Phone: required for home delivery (courier contact), optional for Packeta pickup */}
+                {!isPacketaPickup && (
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Telefon</Label>
+                    <Input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      required
+                      placeholder="+420 123 456 789"
+                      autoComplete="tel"
+                      aria-invalid={!!state.fieldErrors.phone}
+                      aria-describedby={state.fieldErrors.phone ? "phone-error" : undefined}
+                    />
+                    {state.fieldErrors.phone && (
+                      <p id="phone-error" role="alert" className="text-xs text-destructive">
+                        {state.fieldErrors.phone}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             </section>
 

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useCartStore, type CartItem } from "@/lib/cart-store";
 import { formatPrice } from "@/lib/format";
 import { releaseReservation, extendReservations } from "@/lib/actions/reservation";
-import { FREE_SHIPPING_THRESHOLD, SHIPPING_PRICES } from "@/lib/constants";
+import { FREE_SHIPPING_THRESHOLD, SHIPPING_PRICES, SHIPPING_METHOD_LABELS } from "@/lib/constants";
 import { CartRecommendations } from "@/components/shop/cart-recommendations";
 import { CartExitIntent } from "@/components/shop/cart-exit-intent";
 import { useSyncExternalStore, useState, useEffect, useCallback, useTransition } from "react";
@@ -97,10 +97,21 @@ export default function CartPage() {
 
       {/* Summary */}
       <div className="mt-8 rounded-xl border bg-card p-6">
-        <div className="flex items-center justify-between text-lg font-semibold">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">Mezisoučet</span>
+          <span className="font-medium">{formatPrice(totalPrice())}</span>
+        </div>
+
+        {/* Shipping cost preview — 48% abandon due to unexpected costs (Baymard) */}
+        <ShippingPreview total={totalPrice()} />
+
+        <div className="mt-3 flex items-center justify-between border-t pt-3 text-lg font-bold">
           <span>Celkem</span>
           <span>{formatPrice(totalPrice())}</span>
         </div>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          + doprava dle zvoleného způsobu
+        </p>
 
         {/* Free shipping progress bar */}
         <FreeShippingBar total={totalPrice()} />
@@ -227,6 +238,26 @@ function CartItemRow({
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function ShippingPreview({ total }: { total: number }) {
+  const isFree = total >= FREE_SHIPPING_THRESHOLD;
+
+  return (
+    <div className="mt-2 space-y-1">
+      <p className="text-xs font-medium text-muted-foreground">Doprava:</p>
+      {Object.entries(SHIPPING_PRICES).map(([method, price]) => (
+        <div key={method} className="flex items-center justify-between text-xs">
+          <span className="text-muted-foreground">
+            {SHIPPING_METHOD_LABELS[method] ?? method}
+          </span>
+          <span className={isFree ? "font-medium text-emerald-600" : "text-foreground"}>
+            {isFree ? "Zdarma" : formatPrice(price)}
+          </span>
+        </div>
+      ))}
     </div>
   );
 }
