@@ -2,142 +2,185 @@
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Janičko, vyber si logo 💕</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@300;400;500&display=swap');
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',system-ui,sans-serif;background:linear-gradient(160deg,#fdf2f8,#fce7f3 30%,#fff1f2 60%,#fff);min-height:100dvh;color:#1a1a2e;display:flex;flex-direction:column}
-.header{text-align:center;padding:24px 16px 12px}
-.header h1{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:400;color:#be185d}
-.header .sub{color:#9ca3af;font-size:.85rem;margin-top:4px}
-.progress{display:flex;gap:3px;max-width:300px;margin:12px auto 0;padding:0 16px}
-.progress .dot{height:4px;flex:1;border-radius:4px;background:#fce7f3;transition:background .3s}
-.progress .dot.done{background:#ec4899}
-.progress .dot.current{background:#f9a8d4}
-.match{flex:1;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:12px;padding:12px 16px}
-@media(max-width:640px){.match{flex-direction:column;gap:8px}}
-.card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,.04);cursor:pointer;transition:all .3s;flex:1;max-width:340px;width:100%}
-.card:hover{box-shadow:0 8px 24px rgba(190,24,93,.12)}
-.card:active{transform:scale(.97)}
-.card.picked{transform:scale(1.03);ring:3px solid #ec4899;box-shadow:0 12px 32px rgba(190,24,93,.2);outline:3px solid #ec4899;outline-offset:2px}
-.card.eliminated{transform:scale(.9);opacity:.2;pointer-events:none}
-.card img{width:100%;aspect-ratio:1;object-fit:contain;padding:16px;background:#fafafa}
-.card .name{padding:10px 14px;font-size:.85rem;font-weight:500;text-align:center;border-top:1px solid #fce7f3}
-.footer{text-align:center;padding:8px 16px 16px}
-.footer p{color:#d1d5db;font-size:.75rem}
-.winner-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:32px 16px;text-align:center}
-.winner-screen .bounce{font-size:3rem;animation:bounce 1s infinite}
-@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
-.winner-screen h1{font-family:'Playfair Display',serif;font-size:2.2rem;color:#be185d;margin-top:16px}
-.winner-screen .logo{margin:24px 0;background:#fff;border-radius:20px;padding:24px;box-shadow:0 8px 32px rgba(190,24,93,.12);outline:3px solid #fce7f3;outline-offset:4px}
-.winner-screen .logo img{width:280px;height:280px;object-fit:contain}
-.winner-screen .name{font-size:1.2rem;color:#ec4899;font-weight:500}
-.winner-screen .stats{color:#9ca3af;font-size:.85rem;margin-top:8px}
-.winner-screen .retry{margin-top:24px;background:#fce7f3;border:none;padding:10px 24px;border-radius:99px;color:#be185d;font-size:.9rem;cursor:pointer;font-weight:500}
-.winner-screen .jarvis{color:#ec4899;font-style:italic;font-size:.8rem;margin-top:32px}
-.vs{font-family:'Playfair Display',serif;font-size:1.2rem;color:#f9a8d4;font-weight:600}
-@media(max-width:640px){.vs{display:none}}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Inter',system-ui,sans-serif;background:linear-gradient(160deg,#fdf2f8,#fce7f3 30%,#fff1f2 60%,#fff);min-height:100dvh;color:#1a1a2e}
+
+/* Header */
+.hdr{text-align:center;padding:20px 16px 8px}
+.hdr h1{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:400;color:#be185d}
+.hdr .inst{color:#ec4899;font-size:.9rem;font-weight:500;margin-top:6px}
+.hdr .info{color:#9ca3af;font-size:.8rem;margin-top:4px}
+
+/* Progress */
+.prog{display:flex;gap:2px;max-width:280px;margin:10px auto;padding:0 20px}
+.prog span{height:3px;flex:1;border-radius:3px;background:#fce7f3;transition:background .3s}
+.prog span.done{background:#ec4899}
+.prog span.now{background:#f9a8d4}
+
+/* Match area — two cards side by side on mobile */
+.match{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 12px;flex:1;align-content:center;max-width:700px;margin:0 auto;width:100%}
+
+/* Card */
+.card{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.05);cursor:pointer;transition:all .35s ease;position:relative;-webkit-user-select:none;user-select:none}
+.card:active{transform:scale(.96)}
+.card.win{outline:3px solid #ec4899;outline-offset:2px;transform:scale(1.02);box-shadow:0 8px 24px rgba(236,72,153,.2)}
+.card.win::after{content:'💕';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:2.5rem;z-index:2}
+.card.lose{opacity:.15;transform:scale(.92);pointer-events:none}
+.card img{width:100%;aspect-ratio:1;object-fit:contain;padding:10px;background:#fafafa;display:block}
+.card .nm{padding:8px 10px;font-size:.75rem;font-weight:500;text-align:center;color:#6b7280;border-top:1px solid #fce7f3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Wrapper */
+.wrap{display:flex;flex-direction:column;min-height:100dvh}
+.foot{text-align:center;padding:8px 16px 16px}
+.foot p{color:#d1d5db;font-size:.7rem}
+
+/* Winner */
+.win-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:32px 20px;text-align:center}
+.win-screen .emoji{font-size:3rem;animation:bounce .8s infinite alternate}
+@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-10px)}}
+.win-screen h1{font-family:'Playfair Display',serif;font-size:2rem;color:#be185d;margin-top:12px}
+.win-screen .sub{color:#9ca3af;font-size:.9rem;margin-top:6px}
+.win-screen .logo-wrap{margin:20px 0;background:#fff;border-radius:20px;padding:20px;box-shadow:0 8px 32px rgba(236,72,153,.1);outline:3px solid #fce7f3;outline-offset:4px}
+.win-screen .logo-wrap img{width:250px;height:250px;object-fit:contain;display:block}
+.win-screen .name{font-size:1.1rem;color:#ec4899;font-weight:500;margin-top:4px}
+.win-screen .stats{color:#9ca3af;font-size:.8rem;margin-top:6px}
+.win-screen .btn{margin-top:20px;background:#fce7f3;border:none;padding:10px 28px;border-radius:99px;color:#be185d;font-size:.85rem;cursor:pointer;font-weight:500}
+.win-screen .sig{color:#ec4899;font-style:italic;font-size:.75rem;margin-top:28px}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <script>
+const BASE="https://pub-5652e5e0857941e69e29ee64c66905dd.r2.dev/janicka-logo/";
 const ALL=[
-{id:"v1",src:"logo_v1_elegant.png",name:"Rose Gold Serif"},
-{id:"v2",src:"logo_v2_modern.png",name:"Bold Modern"},
-{id:"v3",src:"logo_v3_boutique.png",name:"Boutique s Ramínkem"},
-{id:"r2_v1",src:"logo_r2_v1.png",name:"Dark Elegance"},
-{id:"r2_v2",src:"logo_r2_v2.png",name:"Vzdušný Dvojkruh"},
-{id:"r2_v3",src:"logo_r2_v3.png",name:"Pivoňka Two-Tone"},
-{id:"r3_v1",src:"logo_r3_v1.png",name:"Hairline Serif"},
-{id:"r3_v2",src:"logo_r3_v2.png",name:"Brush & Blossom"},
-{id:"r3_v3",src:"logo_r3_v3.png",name:"Art Deco Glam"},
-{id:"r3_v4",src:"logo_r3_v4.png",name:"Romantic Copperplate"},
-{id:"r3_v5",src:"logo_r3_v5.png",name:"Sans Meets Script"},
-{id:"r3_v6",src:"logo_r3_v6.png",name:"Watercolor Dream"},
-{id:"r3_v7",src:"logo_r3_v7.png",name:"Didot Editorial"},
-{id:"r3_v8",src:"logo_r3_v8.png",name:"Hravý Podpis"},
-{id:"r3_v9",src:"logo_r3_v9.png",name:"Plynulé Tažení"},
-{id:"r3_v10",src:"logo_r3_v10.png",name:"Heritage & Bloom"},
-{id:"r4_v1",src:"logo_r4_v1.png",name:"Pivoňka v Akvarelu"},
-{id:"r4_v2",src:"logo_r4_v2.png",name:"Srdíčko & Pivoňka"},
-{id:"r4_v3",src:"logo_r4_v3.png",name:"Růže & Levandule"},
-{id:"r4_v4",src:"logo_r4_v4.png",name:"Třešňový Sen"},
-{id:"r4_v5",src:"logo_r4_v5.png",name:"Luční Kytice"},
-{id:"r4_v6",src:"logo_r4_v6.png",name:"Rose Gold Dream"},
-{id:"r5_v1",src:"logo_r5_v1.png",name:"Sakura Gold"},
-{id:"r5_v2",src:"logo_r5_v2.png",name:"Čistá Elegance"},
-{id:"r5_v3",src:"logo_r5_v3.png",name:"Třešňové Sny"},
-{id:"r5_v4",src:"logo_r5_v4.png",name:"Dvojitý Rose Gold"},
-{id:"r6_v1",src:"logo_r6_v1.png",name:"Odvážná Pivoňka"},
-{id:"r6_v2",src:"logo_r6_v2.png",name:"Pivoňka v Kruhu"},
-{id:"r6_v3",src:"logo_r6_v3.png",name:"Mokrý Papír"},
-{id:"r6_v4",src:"logo_r6_v4.png",name:"Čistý Šepot"},
-{id:"r7_v1",src:"logo_r7_v1.png",name:"Prorostlá Zahrada"},
-{id:"r7_v2",src:"logo_r7_v2.png",name:"Sedmikrásky v Kruhu"},
-{id:"r7_v3",src:"logo_r7_v3.png",name:"Květinový Rám"},
-{id:"r7_v4",src:"logo_r7_v4.png",name:"Věrný Originál"},
-{id:"r8_v1",src:"logo_r8_v1.png",name:"Třešňová Větvička"},
-{id:"r8_v2",src:"logo_r8_v2.png",name:"Tři Tulipánky"},
-{id:"r8_v3",src:"logo_r8_v3.png",name:"Jedna Větvička"},
-{id:"f_v1",src:"logo_final_v1.png",name:"Květinový Oblouk"},
-{id:"f_v2",src:"logo_final_v2.png",name:"Růžový Kruh"},
-{id:"f_v3",src:"logo_final_v3.png",name:"Třešňový Šepot"},
-{id:"f_v4",src:"logo_final_v4.png",name:"Dva Tulipány 🌷"},
-{id:"f_v5",src:"logo_final_v5.png",name:"Samotná Pivoňka"},
-{id:"f_v6",src:"logo_final_v6.png",name:"Levandulový Sen"},
-{id:"f_v7",src:"logo_final_v7.png",name:"Kresba Růže"},
-{id:"f_v8",src:"logo_final_v8.png",name:"Sakura na Kruhu"},
-{id:"f_v9",src:"logo_final_v9.png",name:"Křížené Kvítky"},
-{id:"f_v10",src:"logo_final_v10.png",name:"Pomněnky"},
+{id:"v1",src:"logo_v1_elegant.png",n:"Rose Gold Serif"},
+{id:"v2",src:"logo_v2_modern.png",n:"Bold Modern"},
+{id:"v3",src:"logo_v3_boutique.png",n:"Boutique s Ramínkem"},
+{id:"r2_1",src:"logo_r2_v1.png",n:"Dark Elegance"},
+{id:"r2_2",src:"logo_r2_v2.png",n:"Vzdušný Dvojkruh"},
+{id:"r2_3",src:"logo_r2_v3.png",n:"Pivoňka Two-Tone"},
+{id:"r3_1",src:"logo_r3_v1.png",n:"Hairline Serif"},
+{id:"r3_2",src:"logo_r3_v2.png",n:"Brush & Blossom"},
+{id:"r3_3",src:"logo_r3_v3.png",n:"Art Deco Glam"},
+{id:"r3_4",src:"logo_r3_v4.png",n:"Romantic Copperplate"},
+{id:"r3_5",src:"logo_r3_v5.png",n:"Sans Meets Script"},
+{id:"r3_6",src:"logo_r3_v6.png",n:"Watercolor Dream"},
+{id:"r3_7",src:"logo_r3_v7.png",n:"Didot Editorial"},
+{id:"r3_8",src:"logo_r3_v8.png",n:"Hravý Podpis"},
+{id:"r3_9",src:"logo_r3_v9.png",n:"Plynulé Tažení"},
+{id:"r3_10",src:"logo_r3_v10.png",n:"Heritage & Bloom"},
+{id:"r4_1",src:"logo_r4_v1.png",n:"Pivoňka v Akvarelu"},
+{id:"r4_2",src:"logo_r4_v2.png",n:"Srdíčko & Pivoňka"},
+{id:"r4_3",src:"logo_r4_v3.png",n:"Růže & Levandule"},
+{id:"r4_4",src:"logo_r4_v4.png",n:"Třešňový Sen"},
+{id:"r4_5",src:"logo_r4_v5.png",n:"Luční Kytice"},
+{id:"r4_6",src:"logo_r4_v6.png",n:"Rose Gold Dream"},
+{id:"r5_1",src:"logo_r5_v1.png",n:"Sakura Gold"},
+{id:"r5_2",src:"logo_r5_v2.png",n:"Čistá Elegance"},
+{id:"r5_3",src:"logo_r5_v3.png",n:"Třešňové Sny"},
+{id:"r5_4",src:"logo_r5_v4.png",n:"Dvojitý Rose Gold"},
+{id:"r6_1",src:"logo_r6_v1.png",n:"Odvážná Pivoňka"},
+{id:"r6_2",src:"logo_r6_v2.png",n:"Pivoňka v Kruhu"},
+{id:"r6_3",src:"logo_r6_v3.png",n:"Mokrý Papír"},
+{id:"r6_4",src:"logo_r6_v4.png",n:"Čistý Šepot"},
+{id:"r7_1",src:"logo_r7_v1.png",n:"Prorostlá Zahrada"},
+{id:"r7_2",src:"logo_r7_v2.png",n:"Sedmikrásky v Kruhu"},
+{id:"r7_3",src:"logo_r7_v3.png",n:"Květinový Rám"},
+{id:"r7_4",src:"logo_r7_v4.png",n:"Věrný Originál"},
+{id:"r8_1",src:"logo_r8_v1.png",n:"Třešňová Větvička"},
+{id:"r8_2",src:"logo_r8_v2.png",n:"Tři Tulipánky"},
+{id:"r8_3",src:"logo_r8_v3.png",n:"Jedna Větvička"},
+{id:"f1",src:"logo_final_v1.png",n:"Květinový Oblouk"},
+{id:"f2",src:"logo_final_v2.png",n:"Růžový Kruh"},
+{id:"f3",src:"logo_final_v3.png",n:"Třešňový Šepot"},
+{id:"f4",src:"logo_final_v4.png",n:"Dva Tulipány 🌷"},
+{id:"f5",src:"logo_final_v5.png",n:"Samotná Pivoňka"},
+{id:"f6",src:"logo_final_v6.png",n:"Levandulový Sen"},
+{id:"f7",src:"logo_final_v7.png",n:"Kresba Růže"},
+{id:"f8",src:"logo_final_v8.png",n:"Sakura na Kruhu"},
+{id:"f9",src:"logo_final_v9.png",n:"Křížené Kvítky"},
+{id:"f10",src:"logo_final_v10.png",n:"Pomněnky"},
 ];
+
 function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
-let remaining=shuffle(ALL),nextRound=[],round=1,matchIdx=0,eliminated=0;
-function totalMatches(){return Math.floor(remaining.length/2)}
-function render(){
-const app=document.getElementById('app');
-if(remaining.length<=1){
-app.innerHTML=`<div class="winner-screen">
-<div class="bounce">🎉</div>
-<h1>Máme vítěze!</h1>
-<p style="color:#9ca3af;margin-top:8px">Janičko, tohle je tvoje logo 💕</p>
-<div class="logo"><img src="${remaining[0].src}" alt="${remaining[0].name}"></div>
-<div class="name">${remaining[0].name}</div>
-<div class="stats">Vyřadila jsi ${eliminated} variant v ${round} kolech</div>
-<button class="retry" onclick="remaining=shuffle(ALL);nextRound=[];round=1;matchIdx=0;eliminated=0;render()">Zkusit znovu?</button>
-<p class="jarvis">S láskou od JARVIS 🐱</p>
-</div>`;return}
-const tm=totalMatches();const left=remaining[matchIdx*2];const right=remaining[matchIdx*2+1];
-if(!left||!right){remaining=shuffle(nextRound.concat(remaining.length%2?[remaining[remaining.length-1]]:[]));nextRound=[];matchIdx=0;round++;render();return}
-let dots='';for(let i=0;i<tm;i++)dots+=`<div class="dot ${i<matchIdx?'done':i===matchIdx?'current':''}"></div>`;
-app.innerHTML=`<div class="header"><h1>Vyber si logo 💕</h1><p class="sub">Kolo ${round} · Zbývá ${remaining.length} variant</p><div class="progress">${dots}</div></div>
-<div class="match">
-<div class="card" id="left" onclick="pick('left')"><img src="${left.src}" alt="${left.name}"><div class="name">${left.name}</div></div>
-<div class="vs">nebo</div>
-<div class="card" id="right" onclick="pick('right')"><img src="${right.src}" alt="${right.name}"><div class="name">${right.name}</div></div>
-</div>
-<div class="footer"><p>Klikni na to, které se ti líbí víc · JARVIS 🐱</p></div>`;
+
+let rem,nxt,rd,mi,elim,busy;
+function init(){rem=shuffle(ALL);nxt=[];rd=1;mi=0;elim=0;busy=false;draw()}
+
+function tm(){return Math.floor(rem.length/2)}
+
+function draw(){
+  const app=document.getElementById('app');
+  if(rem.length<=1){
+    app.innerHTML=`<div class="win-screen">
+      <div class="emoji">🎉</div>
+      <h1>Tohle je tvoje logo!</h1>
+      <p class="sub">Janičko, vybrala sis 💕</p>
+      <div class="logo-wrap"><img src="${BASE}${rem[0].src}"></div>
+      <div class="name">${rem[0].n}</div>
+      <div class="stats">${elim} vyřazených · ${rd} kol</div>
+      <p style="margin-top:20px;background:#fce7f3;padding:14px 20px;border-radius:12px;font-size:.85rem;color:#be185d;max-width:320px">
+        📸 Udělej screenshot a pošli Honzíkovi!<br>
+        Nebo si zapamatuj název: <strong>${rem[0].n}</strong>
+      </p>
+      <button class="btn" onclick="init()">Zkusit znovu</button>
+      <p class="sig">S láskou od JARVIS 🐱 & Honzíka ❤️</p>
+    </div>`;
+    return;
+  }
+  const t=tm();
+  const L=rem[mi*2], R=rem[mi*2+1];
+  if(!L||!R){
+    const lo=rem.length%2?[rem[rem.length-1]]:[];
+    rem=shuffle(nxt.concat(lo));nxt=[];mi=0;rd++;draw();return;
+  }
+  let dots='';for(let i=0;i<t;i++)dots+=`<span class="${i<mi?'done':i===mi?'now':''}"></span>`;
+  app.innerHTML=`<div class="wrap">
+    <div class="hdr">
+      <h1>Které se ti líbí víc?</h1>
+      <p class="inst">Klikni na to lepší — druhé vypadne</p>
+      <p class="info">Kolo ${rd} · zbývá ${rem.length} z ${ALL.length}</p>
+      <div class="prog">${dots}</div>
+    </div>
+    <div class="match">
+      <div class="card" id="L" onclick="pick('L')">
+        <img src="${BASE}${L.src}" loading="lazy">
+        <div class="nm">${L.n}</div>
+      </div>
+      <div class="card" id="R" onclick="pick('R')">
+        <img src="${BASE}${R.src}" loading="lazy">
+        <div class="nm">${R.n}</div>
+      </div>
+    </div>
+    <div class="foot"><p>JARVIS 🐱 pro Janičku</p></div>
+  </div>`;
 }
+
 function pick(side){
-const tm=totalMatches();const left=remaining[matchIdx*2];const right=remaining[matchIdx*2+1];
-const winner=side==='left'?left:right;
-const loser=side==='left'?right:left;
-document.getElementById(side).classList.add('picked');
-document.getElementById(side==='left'?'right':'left').classList.add('eliminated');
-eliminated++;
-setTimeout(()=>{
-nextRound.push(winner);
-matchIdx++;
-if(matchIdx>=tm){
-const leftover=remaining.length%2?[remaining[remaining.length-1]]:[];
-remaining=shuffle(nextRound.concat(leftover));
-nextRound=[];matchIdx=0;round++;
+  if(busy)return;
+  busy=true;
+  const t=tm();
+  const L=rem[mi*2], R=rem[mi*2+1];
+  const w=side==='L'?L:R;
+  document.getElementById(side).classList.add('win');
+  document.getElementById(side==='L'?'R':'L').classList.add('lose');
+  elim++;
+  setTimeout(()=>{
+    nxt.push(w);mi++;
+    if(mi>=t){
+      const lo=rem.length%2?[rem[rem.length-1]]:[];
+      rem=shuffle(nxt.concat(lo));nxt=[];mi=0;rd++;
+    }
+    busy=false;
+    draw();
+  },600);
 }
-render();
-},500);
-}
-render();
+
+init();
 </script>
 </body>
 </html>
