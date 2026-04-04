@@ -60,7 +60,7 @@ export async function createComgatePayment(
     country: "CZ",
     price: Math.round(params.priceCzk * 100).toString(), // CZK → hellers
     curr: "CZK",
-    label: params.label.slice(0, 16),
+    label: `Obj ${params.refId.slice(-10)}`.slice(0, 16),
     refId: params.refId,
     method: params.method ?? "ALL",
     email: params.email,

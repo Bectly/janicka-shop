@@ -51,11 +51,11 @@ const DELIVERY_TIME = {
   },
 };
 
-/** Free shipping threshold — price is the ORDER minimum above which shipping is free */
+/** Free shipping threshold — MonetaryAmount per Schema.org spec for freeShippingThreshold */
 const FREE_SHIPPING_THRESHOLD = {
-  "@type": "DeliveryChargeSpecification" as const,
-  price: "1500",
-  priceCurrency: "CZK",
+  "@type": "MonetaryAmount" as const,
+  value: "1500",
+  currency: "CZK",
 };
 
 /** All 3 shipping methods — Google Shopping needs each listed separately */
@@ -105,7 +105,7 @@ const RETURN_POLICY = {
     "https://schema.org/MerchantReturnFiniteReturnWindow",
   merchantReturnDays: 14,
   returnMethod: "https://schema.org/ReturnByMail",
-  returnFees: "https://schema.org/ReturnShippingFees",
+  returnFees: "https://schema.org/ReturnFeesCustomerResponsibility",
 };
 
 export interface ProductForSchema {
@@ -180,15 +180,15 @@ export function buildProductSchema(product: ProductForSchema) {
     category: product.categoryName,
     color: colors.length > 0 ? colors.join(", ") : undefined,
     size: sizes.length > 0 ? sizes.join(", ") : undefined,
-    itemCondition:
-      CONDITION_TO_SCHEMA[product.condition] ??
-      "https://schema.org/UsedCondition",
     additionalProperty:
       additionalProperty.length > 0 ? additionalProperty : undefined,
     offers: {
       "@type": "Offer",
       url: `${BASE_URL}/products/${product.slug}`,
       priceCurrency: "CZK",
+      itemCondition:
+        CONDITION_TO_SCHEMA[product.condition] ??
+        "https://schema.org/UsedCondition",
       price: product.price,
       ...(product.compareAt && product.compareAt > product.price
         ? { priceValidUntil: new Date(Date.now() + 90 * 86400000).toISOString().split("T")[0] }

@@ -19,7 +19,7 @@ const HEUREKA_CATEGORIES: Record<string, string> = {
   saty: "Oblečení a móda | Dámské oblečení | Šaty",
   "topy-halenky":
     "Oblečení a móda | Dámské oblečení | Topy, trička a halenky",
-  "kalhoty-sukne": "Oblečení a móda | Dámské oblečení",
+  "kalhoty-sukne": "Oblečení a móda | Dámské oblečení | Kalhoty",
   "bundy-kabaty": "Oblečení a móda | Dámské oblečení | Bundy a kabáty",
   doplnky: "Oblečení a móda | Módní doplňky",
 };
@@ -74,7 +74,7 @@ export async function GET() {
 
       xml += `    <CATEGORYTEXT>${escapeXml(categoryPath)}</CATEGORYTEXT>\n`;
       xml += `    <PRODUCTNO>${escapeXml(product.sku)}</PRODUCTNO>\n`;
-      xml += `    <DELIVERY_DATE>3</DELIVERY_DATE>\n`;
+      xml += `    <DELIVERY_DATE>5</DELIVERY_DATE>\n`;
       xml += `    <ITEM_TYPE>bazaar</ITEM_TYPE>\n`;
 
       // Condition parameter

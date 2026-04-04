@@ -8,22 +8,32 @@ import { Button } from "@/components/ui/button";
 import { getLowestPrices30d } from "@/lib/price-history";
 
 export default async function NotFound() {
-  const [categories, latestProducts] = await Promise.all([
-    prisma.category.findMany({
-      orderBy: { sortOrder: "asc" },
-      select: { name: true, slug: true },
-    }),
-    prisma.product.findMany({
-      where: { active: true, sold: false },
-      include: { category: { select: { name: true } } },
-      orderBy: { createdAt: "desc" },
-      take: 4,
-    }),
-  ]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let categories: { name: string; slug: string }[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let latestProducts: any[] = [];
+  let lowestPricesMap = new Map<string, number>();
 
-  const lowestPricesMap = await getLowestPrices30d(
-    latestProducts.map((p) => p.id),
-  );
+  try {
+    [categories, latestProducts] = await Promise.all([
+      prisma.category.findMany({
+        orderBy: { sortOrder: "asc" },
+        select: { name: true, slug: true },
+      }),
+      prisma.product.findMany({
+        where: { active: true, sold: false },
+        include: { category: { select: { name: true } } },
+        orderBy: { createdAt: "desc" },
+        take: 4,
+      }),
+    ]);
+
+    lowestPricesMap = await getLowestPrices30d(
+      latestProducts.map((p: { id: string }) => p.id),
+    );
+  } catch {
+    // DB unavailable — render 404 without product suggestions
+  }
 
   return (
     <>

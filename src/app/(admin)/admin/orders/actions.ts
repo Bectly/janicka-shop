@@ -99,10 +99,15 @@ export async function updateOrderStatus(orderId: string, status: string) {
         where: { id: orderId },
         data: { status },
       });
-      await tx.product.updateMany({
-        where: { id: { in: productIds } },
+      const updated = await tx.product.updateMany({
+        where: { id: { in: productIds }, sold: false },
         data: { sold: true, stock: 0 },
       });
+      if (updated.count !== productIds.length) {
+        throw new Error(
+          "Některé produkty byly mezitím prodány — obnovení objednávky selhalo.",
+        );
+      }
     });
   } else {
     await prisma.order.update({
