@@ -388,6 +388,7 @@ export function ProductFilters({
           <option value="newest">Nejnovější</option>
           <option value="price-asc">Cena: od nejnižší</option>
           <option value="price-desc">Cena: od nejvyšší</option>
+          <option value="discount">Největší sleva</option>
         </select>
         <ChevronDown className="pointer-events-none absolute right-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
       </div>

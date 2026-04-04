@@ -129,6 +129,7 @@ export default async function ProductsPage({
     where.price = priceFilter;
   }
 
+  const isDiscountSort = params.sort === "discount";
   const orderBy: Record<string, string> =
     params.sort === "price-asc"
       ? { price: "asc" }
@@ -136,7 +137,7 @@ export default async function ProductsPage({
         ? { price: "desc" }
         : { createdAt: "desc" };
 
-  const hasJsFilter = sizeFilter.length > 0 || colorFilter.length > 0;
+  const hasJsFilter = sizeFilter.length > 0 || colorFilter.length > 0 || isDiscountSort;
 
   // Fetch categories + all products for filter facets in parallel
   const [categories, countingProducts] = await Promise.all([
@@ -196,7 +197,7 @@ export default async function ProductsPage({
       include: { category: { select: { name: true } } },
       orderBy,
     });
-    const filteredProducts = allProducts.filter((p) => {
+    let filteredProducts = allProducts.filter((p) => {
       if (sizeFilter.length > 0) {
         const pSizes = parseJsonArray(p.sizes);
         if (!sizeFilter.some((s) => pSizes.includes(s))) return false;
@@ -207,6 +208,14 @@ export default async function ProductsPage({
       }
       return true;
     });
+    // Sort by discount % (products with discounts first, then by % descending)
+    if (isDiscountSort) {
+      filteredProducts = filteredProducts.sort((a, b) => {
+        const dA = a.compareAt && a.compareAt > a.price ? (a.compareAt - a.price) / a.compareAt : 0;
+        const dB = b.compareAt && b.compareAt > b.price ? (b.compareAt - b.price) / b.compareAt : 0;
+        return dB - dA;
+      });
+    }
     totalItems = filteredProducts.length;
     const totalPages = Math.max(1, Math.ceil(totalItems / PRODUCTS_PER_PAGE));
     const safePage = Math.min(currentPage, totalPages);

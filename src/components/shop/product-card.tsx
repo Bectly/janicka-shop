@@ -3,6 +3,7 @@ import Image from "next/image";
 import { formatPrice } from "@/lib/format";
 import { CONDITION_LABELS, CONDITION_COLORS } from "@/lib/constants";
 import { WishlistButton } from "./wishlist-button";
+import { QuickViewButton } from "./quick-view-modal";
 
 interface ProductCardProps {
   id: string;
@@ -45,18 +46,30 @@ export function ProductCard({
     /* corrupted data fallback */
   }
   const mainImage = parsedImages[0];
+  const secondImage = parsedImages[1];
 
   return (
     <Link href={`/products/${slug}`} className="group block">
       <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-muted">
         {mainImage ? (
-          <Image
-            src={mainImage}
-            alt={name}
-            fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          />
+          <>
+            <Image
+              src={mainImage}
+              alt={name}
+              fill
+              className="object-cover transition-all duration-500 group-hover:scale-105"
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            />
+            {secondImage && (
+              <Image
+                src={secondImage}
+                alt={`${name} — detail`}
+                fill
+                className="object-cover opacity-0 transition-all duration-500 group-hover:opacity-100 group-hover:scale-105"
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              />
+            )}
+          </>
         ) : (
           <div className="flex size-full items-center justify-center bg-gradient-to-br from-muted to-muted/50 transition-transform duration-300 group-hover:scale-105">
             <span className="text-3xl text-muted-foreground/30">
@@ -64,8 +77,9 @@ export function ProductCard({
             </span>
           </div>
         )}
-        <div className="absolute top-2 right-2 z-10">
+        <div className="absolute top-2 right-2 z-10 flex flex-col gap-1.5">
           <WishlistButton productId={id} />
+          <QuickViewButton productId={id} />
         </div>
         <div className="absolute top-2 left-2 flex flex-col gap-1">
           {isNew && (
