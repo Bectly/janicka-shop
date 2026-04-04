@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Trash2, ShoppingBag, ArrowLeft, Clock } from "lucide-react";
+import { Trash2, ShoppingBag, ArrowLeft, Clock, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCartStore, type CartItem } from "@/lib/cart-store";
 import { formatPrice } from "@/lib/format";
 import { releaseReservation, extendReservations } from "@/lib/actions/reservation";
+import { FREE_SHIPPING_THRESHOLD, SHIPPING_PRICES } from "@/lib/constants";
 import { useSyncExternalStore, useState, useEffect, useCallback, useTransition } from "react";
 
 const emptySubscribe = () => () => {};
@@ -96,9 +97,10 @@ export default function CartPage() {
           <span>Celkem</span>
           <span>{formatPrice(totalPrice())}</span>
         </div>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Doprava se vypočítá v dalším kroku
-        </p>
+
+        {/* Free shipping progress bar */}
+        <FreeShippingBar total={totalPrice()} />
+
         <Button size="lg" className="mt-4 w-full" render={<Link href="/checkout" />}>
           Pokračovat k objednávce
         </Button>
@@ -215,6 +217,39 @@ function CartItemRow({
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function FreeShippingBar({ total }: { total: number }) {
+  const isFree = total >= FREE_SHIPPING_THRESHOLD;
+  const remaining = FREE_SHIPPING_THRESHOLD - total;
+  const progress = Math.min((total / FREE_SHIPPING_THRESHOLD) * 100, 100);
+  const minShipping = Math.min(...Object.values(SHIPPING_PRICES));
+
+  return (
+    <div className="mt-3">
+      {isFree ? (
+        <div className="flex items-center gap-2 text-sm font-medium text-emerald-700">
+          <Truck className="size-4" />
+          <span>Doprava zdarma!</span>
+        </div>
+      ) : (
+        <>
+          <p className="text-sm text-muted-foreground">
+            Ještě <span className="font-semibold text-foreground">{formatPrice(remaining)}</span> do dopravy zdarma
+          </p>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-500"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            Doprava od {formatPrice(minShipping)}
+          </p>
+        </>
+      )}
     </div>
   );
 }

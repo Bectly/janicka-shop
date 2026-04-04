@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/lib/cart-store";
 import { reserveProduct } from "@/lib/actions/reservation";
 import { SizeGuide } from "@/components/shop/size-guide";
+import { MobileStickyAtc } from "@/components/shop/mobile-sticky-atc";
 
 interface AddToCartProps {
   product: {
@@ -60,102 +61,115 @@ export function AddToCartButton({ product }: AddToCartProps) {
   }
 
   return (
-    <div className="mt-6 space-y-4">
-      {/* Size selector */}
-      {product.sizes.length > 0 && (
-        <div>
-          <div className="mb-2 flex items-center justify-between">
-            <p className="text-sm font-medium" id="size-label">Velikost</p>
-            <SizeGuide />
+    <>
+      <div id="atc-sentinel" className="mt-6 space-y-4">
+        {/* Size selector */}
+        {product.sizes.length > 0 && (
+          <div>
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-sm font-medium" id="size-label">Velikost</p>
+              <SizeGuide />
+            </div>
+            <div className="flex flex-wrap gap-2" role="group" aria-labelledby="size-label">
+              {product.sizes.map((size) => (
+                <button
+                  key={size}
+                  onClick={() => setSelectedSize(size)}
+                  aria-pressed={selectedSize === size}
+                  className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+                    selectedSize === size
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border text-muted-foreground hover:border-foreground/30"
+                  }`}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2" role="group" aria-labelledby="size-label">
-            {product.sizes.map((size) => (
-              <button
-                key={size}
-                onClick={() => setSelectedSize(size)}
-                aria-pressed={selectedSize === size}
-                className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
-                  selectedSize === size
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border text-muted-foreground hover:border-foreground/30"
-                }`}
-              >
-                {size}
-              </button>
-            ))}
+        )}
+
+        {/* Color selector */}
+        {product.colors.length > 1 && (
+          <div>
+            <p className="mb-2 text-sm font-medium" id="color-label">Barva</p>
+            <div className="flex flex-wrap gap-2" role="group" aria-labelledby="color-label">
+              {product.colors.map((color) => (
+                <button
+                  key={color}
+                  onClick={() => setSelectedColor(color)}
+                  aria-pressed={selectedColor === color}
+                  className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+                    selectedColor === color
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border text-muted-foreground hover:border-foreground/30"
+                  }`}
+                >
+                  {color}
+                </button>
+              ))}
+            </div>
           </div>
+        )}
+
+        {/* Error message */}
+        {error && (
+          <p role="alert" className="text-sm text-destructive">{error}</p>
+        )}
+
+        {/* Screen reader announcement for cart actions */}
+        <div role="status" aria-live="polite" className="sr-only">
+          {added ? "Produkt přidán do košíku" : ""}
         </div>
-      )}
 
-      {/* Color selector */}
-      {product.colors.length > 1 && (
-        <div>
-          <p className="mb-2 text-sm font-medium" id="color-label">Barva</p>
-          <div className="flex flex-wrap gap-2" role="group" aria-labelledby="color-label">
-            {product.colors.map((color) => (
-              <button
-                key={color}
-                onClick={() => setSelectedColor(color)}
-                aria-pressed={selectedColor === color}
-                className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
-                  selectedColor === color
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border text-muted-foreground hover:border-foreground/30"
-                }`}
-              >
-                {color}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Error message */}
-      {error && (
-        <p role="alert" className="text-sm text-destructive">{error}</p>
-      )}
-
-      {/* Screen reader announcement for cart actions */}
-      <div role="status" aria-live="polite" className="sr-only">
-        {added ? "Produkt přidán do košíku" : ""}
+        {/* Add to cart button */}
+        <Button
+          size="lg"
+          className="w-full"
+          onClick={handleAdd}
+          disabled={product.stock === 0 || isPending || isInCart || product.reservedByOther}
+        >
+          {isPending ? (
+            <>
+              <Loader2 data-icon="inline-start" className="size-4 animate-spin" />
+              Rezervuji...
+            </>
+          ) : added ? (
+            <>
+              <Check data-icon="inline-start" className="size-4" />
+              Přidáno do košíku
+            </>
+          ) : isInCart ? (
+            <>
+              <Check data-icon="inline-start" className="size-4" />
+              Již v košíku
+            </>
+          ) : product.reservedByOther ? (
+            <>
+              <Clock data-icon="inline-start" className="size-4" />
+              Rezervováno
+            </>
+          ) : product.stock === 0 ? (
+            "Nedostupné"
+          ) : (
+            <>
+              <ShoppingBag data-icon="inline-start" className="size-4" />
+              Přidat do košíku
+            </>
+          )}
+        </Button>
       </div>
 
-      {/* Add to cart button */}
-      <Button
-        size="lg"
-        className="w-full"
-        onClick={handleAdd}
-        disabled={product.stock === 0 || isPending || isInCart || product.reservedByOther}
-      >
-        {isPending ? (
-          <>
-            <Loader2 data-icon="inline-start" className="size-4 animate-spin" />
-            Rezervuji...
-          </>
-        ) : added ? (
-          <>
-            <Check data-icon="inline-start" className="size-4" />
-            Přidáno do košíku
-          </>
-        ) : isInCart ? (
-          <>
-            <Check data-icon="inline-start" className="size-4" />
-            Již v košíku
-          </>
-        ) : product.reservedByOther ? (
-          <>
-            <Clock data-icon="inline-start" className="size-4" />
-            Rezervováno
-          </>
-        ) : product.stock === 0 ? (
-          "Nedostupné"
-        ) : (
-          <>
-            <ShoppingBag data-icon="inline-start" className="size-4" />
-            Přidat do košíku
-          </>
-        )}
-      </Button>
-    </div>
+      {/* Mobile sticky add-to-cart bar — appears when main button scrolls away */}
+      <MobileStickyAtc
+        productName={product.name}
+        price={product.price}
+        isInCart={isInCart}
+        isReservedByOther={!!product.reservedByOther}
+        stock={product.stock}
+        isPending={isPending}
+        onAdd={handleAdd}
+      />
+    </>
   );
 }

@@ -17,7 +17,41 @@ import {
   RecentlyViewedSection,
 } from "@/components/shop/recently-viewed";
 import { ProductInfoAccordion } from "@/components/shop/product-info-accordion";
+import { Truck } from "lucide-react";
 import type { Metadata } from "next";
+
+/**
+ * Calculate estimated delivery date range.
+ * Handling: 1-2 business days, Transit: 1-3 business days.
+ * Skips weekends.
+ */
+function getEstimatedDelivery(): { from: Date; to: Date } {
+  const now = new Date();
+  const addBusinessDays = (start: Date, days: number): Date => {
+    const result = new Date(start);
+    let added = 0;
+    while (added < days) {
+      result.setDate(result.getDate() + 1);
+      const dow = result.getDay();
+      if (dow !== 0 && dow !== 6) added++;
+    }
+    return result;
+  };
+  // Min: 1 handling + 1 transit = 2 business days
+  // Max: 2 handling + 3 transit = 5 business days
+  return {
+    from: addBusinessDays(now, 2),
+    to: addBusinessDays(now, 5),
+  };
+}
+
+function formatDeliveryDate(date: Date): string {
+  return new Intl.DateTimeFormat("cs-CZ", {
+    weekday: "short",
+    day: "numeric",
+    month: "numeric",
+  }).format(date);
+}
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://janicka-shop.vercel.app";
@@ -378,6 +412,22 @@ export default async function ProductDetailPage({ params }: Props) {
                 ? "Poslední kus — unikátní kousek"
                 : "Momentálně nedostupné"}
           </p>
+
+          {/* Estimated delivery */}
+          {product.stock > 0 && !isReservedByOther && (() => {
+            const { from, to } = getEstimatedDelivery();
+            return (
+              <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+                <Truck className="size-3.5 shrink-0" />
+                <span>
+                  Objednáte dnes — doručíme{" "}
+                  <span className="font-medium text-foreground">
+                    {formatDeliveryDate(from)} – {formatDeliveryDate(to)}
+                  </span>
+                </span>
+              </div>
+            );
+          })()}
 
           {/* Shipping, returns & quality guarantee info */}
           <ProductInfoAccordion />
