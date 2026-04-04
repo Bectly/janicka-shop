@@ -20,6 +20,7 @@ import {
 } from "@/components/shop/recently-viewed";
 import { ProductInfoAccordion } from "@/components/shop/product-info-accordion";
 import { FreeShippingBar } from "@/components/shop/free-shipping-bar";
+import { NotifyMeForm } from "@/components/shop/notify-me-form";
 import { Truck, Leaf } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -305,6 +306,14 @@ export default async function ProductDetailPage({ params }: Props) {
                 Prohlédnout {product.category.name.toLowerCase()}
               </Link>
             </div>
+
+            {/* Notify me — email capture for warm leads */}
+            <NotifyMeForm
+              categoryId={product.categoryId}
+              sizes={product.sizes}
+              brand={product.brand}
+              categoryName={product.category.name}
+            />
           </div>
         </div>
 
