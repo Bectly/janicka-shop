@@ -8,6 +8,7 @@ const footerLinks = {
     title: "Nakupování",
     links: [
       { name: "Všechny produkty", href: "/products" },
+      { name: "Kolekce", href: "/collections" },
       { name: "Novinky", href: "/products?sort=newest" },
       { name: "Výprodej", href: "/products?sale=true" },
     ],

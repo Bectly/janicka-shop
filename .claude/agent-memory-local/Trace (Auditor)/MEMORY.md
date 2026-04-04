@@ -21,3 +21,4 @@
 - [project_cycle2297_audit.md](project_cycle2297_audit.md) — Cycle #2297 focused audit: abandoned cart cron/unsubscribe/capture/emails. Fixed 2 MEDIUM (name-collision sold filter, email sequence timing race). Build clean.
 - [project_cycle2298_audit.md](project_cycle2298_audit.md) — Cycle #2298 audit: measurements/fitNote/image-captions/mobile-InstantSearch. New: 1 MEDIUM (scroll-lock conflict), 3 LOW.
 - [project_cycle2300_audit.md](project_cycle2300_audit.md) — Cycle #2300 audit: Pinterest feed/analytics/scarcity/abandoned-cart C2296-C2300. New: 2 MEDIUM (dead safeJsonParseStrings pattern, scarcity badge on unavailable products), 3 LOW.
+- [project_cycle2301b_audit.md](project_cycle2301b_audit.md) — Cycle #2301b second pass: fixed 1 MEDIUM (quick-view "Jediný kus" ignores reservedByOther), 1 MEDIUM (safeJsonParseStrings replaced with canonical parseJsonStringArray), 2 LOW (PDP related-cards missing isReserved, Pinterest price decimal). Build clean.
