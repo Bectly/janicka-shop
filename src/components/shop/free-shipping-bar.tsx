@@ -17,9 +17,12 @@ import { useCartStore } from "@/lib/cart-store";
 export function FreeShippingBar({
   total: externalTotal,
   productPrice,
+  hideMinLabel = false,
 }: {
   total?: number;
   productPrice?: number;
+  /** Set true when a separate shipping preview already shows the minimum price */
+  hideMinLabel?: boolean;
 }) {
   const cartTotal = useCartStore((s) => s.totalPrice());
   const total = externalTotal ?? (cartTotal + (productPrice ?? 0));
@@ -51,9 +54,11 @@ export function FreeShippingBar({
               style={{ width: `${progress}%` }}
             />
           </div>
-          <p className="mt-1.5 text-xs text-muted-foreground">
-            Doprava od {formatPrice(minShipping)}
-          </p>
+          {!hideMinLabel && (
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Doprava od {formatPrice(minShipping)}
+            </p>
+          )}
         </>
       )}
     </div>

@@ -98,19 +98,16 @@ export default function CartPage() {
 
       {/* Summary */}
       <div className="mt-8 rounded-xl border bg-card p-6">
-        {/* Shipping cost preview — 48% abandon due to unexpected costs (Baymard) */}
-        <ShippingPreview total={totalPrice()} />
-
-        <div className="mt-3 flex items-center justify-between border-t pt-3 text-lg font-bold">
+        <div className="flex items-center justify-between text-base font-semibold">
           <span>Mezisoučet</span>
           <span>{formatPrice(totalPrice())}</span>
         </div>
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          Doprava bude upřesněna v objednávce
-        </p>
+
+        {/* Shipping cost preview — 48% abandon due to unexpected costs (Baymard) */}
+        <ShippingPreview total={totalPrice()} />
 
         {/* Free shipping progress bar */}
-        <FreeShippingBar total={totalPrice()} />
+        <FreeShippingBar total={totalPrice()} hideMinLabel />
 
         <Button size="lg" className="mt-4 w-full" render={<Link href="/checkout" />}>
           Pokračovat k objednávce

@@ -14,3 +14,4 @@
 - [project_seo_structured_data_audit.md](project_seo_structured_data_audit.md) — Deep SEO audit: structured-data.ts, JSON-LD schemas, sitemap, Heureka feed. New: 1 HIGH, 3 MEDIUM, 5 LOW.
 - [project_middleware_getdb_audit.md](project_middleware_getdb_audit.md) — Middleware/getDb() audit: cookie-only middleware is safe (layout+actions dual guard). getDb() migration complete. New: 1 MEDIUM (db.ts init retry), 2 LOW. Cumulative: 1 HIGH, 4 MEDIUM, 7 LOW.
 - [project_cycle2286_features_audit.md](project_cycle2286_features_audit.md) — Cycle #2286 audit: quick filters, phone field, cart shipping preview. Fixed 2 bugs (cart redundant Celkem + scroll min-w-0). Pre-existing untracked objednavka/ route.
+- [project_cycle2290_audit.md](project_cycle2290_audit.md) — Cycle #2290 audit: cart ShippingPreview ordering wrong (fixed), FreeShippingBar duplicate note (fixed), instant-search confirmed wired. Build/lint clean.
