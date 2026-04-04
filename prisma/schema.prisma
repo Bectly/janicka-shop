@@ -174,24 +174,45 @@ model ProductNotifyRequest {
 }
 
 model AbandonedCart {
-  id              String    @id @default(cuid())
-  email           String
-  customerName    String?
-  cartItems       String    @default("[]") // JSON: [{productId, name, price, size, color, image, slug}]
-  cartTotal       Float     @default(0)
-  pageUrl         String?                  // page where cart was abandoned (checkout, cart, etc.)
-  visitorId       String?                  // visitor ID for dedup
-  email1SentAt    DateTime?                // 30-60 min reminder
-  email2SentAt    DateTime?                // 12-24h follow-up
-  email3SentAt    DateTime?                // 48-72h final
-  recoveredOrderId String?                 // set when customer completes order
-  status          String    @default("pending") // pending | recovered | expired
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id               String    @id @default(cuid())
+  email            String
+  customerName     String?
+  cartItems        String    @default("[]") // JSON: [{productId, name, price, size, color, image, slug}]
+  cartTotal        Float     @default(0)
+  pageUrl          String?                  // page where cart was abandoned (checkout, cart, etc.)
+  visitorId        String?                  // visitor ID for dedup
+  marketingConsent Boolean   @default(false) // GDPR: opt-in for recovery emails (Czech law requires explicit consent for marketing)
+  email1SentAt     DateTime?                // 30-60 min reminder
+  email2SentAt     DateTime?                // 12-24h follow-up
+  email3SentAt     DateTime?                // 48-72h final
+  recoveredOrderId String?                  // set when customer completes order
+  status           String    @default("pending") // pending | recovered | expired
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   @@index([email])
   @@index([status])
   @@index([createdAt])
+}
+
+model Collection {
+  id          String    @id @default(cuid())
+  title       String
+  description String    @default("")
+  slug        String    @unique
+  image       String?                   // featured image URL
+  productIds  String    @default("[]")  // JSON array of product IDs
+  featured    Boolean   @default(false) // show on homepage
+  sortOrder   Int       @default(0)
+  active      Boolean   @default(true)
+  startDate   DateTime?                 // optional: collection visibility start
+  endDate     DateTime?                 // optional: collection visibility end
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([slug])
+  @@index([featured])
+  @@index([active])
 }
 
 model ShopSettings {

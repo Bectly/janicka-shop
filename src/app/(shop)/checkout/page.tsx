@@ -91,6 +91,7 @@ export default function CheckoutPage() {
   const [shippingMethod, setShippingMethod] =
     useState<ShippingMethod>("packeta_pickup");
   const [packetaPoint, setPacketaPoint] = useState<PacketaPoint | null>(null);
+  const [marketingConsent, setMarketingConsent] = useState(false);
   const mounted = useSyncExternalStore(
     emptySubscribe,
     () => true,
@@ -128,11 +129,12 @@ export default function CheckoutPage() {
           slug: i.slug,
         })),
         cartTotal: totalPrice(),
+        marketingConsent,
       }).catch(() => {
         // Silently ignore — never disrupt checkout
       });
     },
-    [items, totalPrice]
+    [items, totalPrice, marketingConsent]
   );
 
   // Fire begin_checkout analytics event once on mount
@@ -328,6 +330,20 @@ export default function CheckoutPage() {
                   </div>
                 )}
               </div>
+
+              {/* GDPR marketing consent — required for abandoned cart recovery emails */}
+              <label className="mt-4 flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={marketingConsent}
+                  onChange={(e) => setMarketingConsent(e.target.checked)}
+                  className="mt-0.5 size-4 shrink-0 rounded border-gray-300 text-primary accent-primary"
+                />
+                <span className="text-xs text-muted-foreground leading-relaxed">
+                  Upozornit mě, pokud zboží v košíku nákoupí někdo jiný. Každý kousek
+                  je unikát — kdokoliv ho může koupit.
+                </span>
+              </label>
             </section>
 
             {/* Shipping method selection */}

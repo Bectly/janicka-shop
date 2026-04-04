@@ -145,10 +145,12 @@ export function ProductCard({
             Doprava zdarma
           </p>
         )}
-        <p className="flex items-center gap-1 text-[10px] font-medium leading-tight text-amber-600 dark:text-amber-400">
-          <Sparkles className="size-2.5" />
-          Jediný kus
-        </p>
+        {!isReserved && (
+          <p className="flex items-center gap-1 text-[10px] font-medium leading-tight text-amber-600 dark:text-amber-400">
+            <Sparkles className="size-2.5" />
+            Jediný kus
+          </p>
+        )}
         {/* Size & color indicators */}
         {(parsedSizes.length > 0 || parsedColors.length > 0) && (
           <div className="flex items-center gap-2">

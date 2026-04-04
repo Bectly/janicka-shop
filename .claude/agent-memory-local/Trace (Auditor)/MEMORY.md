@@ -20,3 +20,4 @@
 - [project_cycle2295_audit.md](project_cycle2295_audit.md) — Cycle #2295 audit: abandoned cart system + sale section. Fixed 1 MEDIUM (CRON_SECRET fail-open), 1 MEDIUM (GDPR missing unsubscribe — added /api/unsubscribe/abandoned-cart/[id]). Build clean.
 - [project_cycle2297_audit.md](project_cycle2297_audit.md) — Cycle #2297 focused audit: abandoned cart cron/unsubscribe/capture/emails. Fixed 2 MEDIUM (name-collision sold filter, email sequence timing race). Build clean.
 - [project_cycle2298_audit.md](project_cycle2298_audit.md) — Cycle #2298 audit: measurements/fitNote/image-captions/mobile-InstantSearch. New: 1 MEDIUM (scroll-lock conflict), 3 LOW.
+- [project_cycle2300_audit.md](project_cycle2300_audit.md) — Cycle #2300 audit: Pinterest feed/analytics/scarcity/abandoned-cart C2296-C2300. New: 2 MEDIUM (dead safeJsonParseStrings pattern, scarcity badge on unavailable products), 3 LOW.

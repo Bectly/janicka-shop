@@ -46,10 +46,12 @@ export async function GET(request: Request) {
     });
     expired = expiredResult.count;
 
-    // 2. Find carts ready for Email 1 (created > 45min ago, email1 not sent)
+    // 2. Find carts ready for Email 1 (created > 45min ago, email1 not sent, consent given)
+    // GDPR: only send recovery emails when customer explicitly opted in
     const readyForEmail1 = await db.abandonedCart.findMany({
       where: {
         status: "pending",
+        marketingConsent: true,
         email1SentAt: null,
         createdAt: { lt: email1After },
       },
@@ -84,6 +86,7 @@ export async function GET(request: Request) {
     const readyForEmail2 = await db.abandonedCart.findMany({
       where: {
         status: "pending",
+        marketingConsent: true,
         email1SentAt: { not: null, lt: email2MinGapAfterEmail1 },
         email2SentAt: null,
         createdAt: { lt: email2After },
@@ -119,6 +122,7 @@ export async function GET(request: Request) {
     const readyForEmail3 = await db.abandonedCart.findMany({
       where: {
         status: "pending",
+        marketingConsent: true,
         email2SentAt: { not: null, lt: email3MinGapAfterEmail2 },
         email3SentAt: null,
         createdAt: { lt: email3After },

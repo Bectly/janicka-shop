@@ -540,6 +540,7 @@ const abandonedCartSchema = z.object({
     .min(1)
     .max(50),
   cartTotal: z.number().finite().nonnegative(),
+  marketingConsent: z.boolean().default(false),
 });
 
 /**
@@ -560,11 +561,12 @@ export async function captureAbandonedCart(input: {
     slug?: string;
   }[];
   cartTotal: number;
+  marketingConsent?: boolean;
 }): Promise<void> {
   const parsed = abandonedCartSchema.safeParse(input);
   if (!parsed.success) return; // silently ignore invalid data
 
-  const { email, customerName, cartItems, cartTotal } = parsed.data;
+  const { email, customerName, cartItems, cartTotal, marketingConsent } = parsed.data;
 
   try {
     const db = await getDb();
@@ -586,6 +588,7 @@ export async function captureAbandonedCart(input: {
           cartTotal,
           visitorId,
           pageUrl: "/checkout",
+          marketingConsent,
         },
       });
     } else {
@@ -597,6 +600,7 @@ export async function captureAbandonedCart(input: {
           cartTotal,
           visitorId,
           pageUrl: "/checkout",
+          marketingConsent,
         },
       });
     }
