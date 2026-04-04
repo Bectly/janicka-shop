@@ -36,13 +36,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.3,
     },
+    {
+      url: `${BASE_URL}/collections`,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
   ];
 
   // Graceful degradation: if DB is unavailable (Turso cold start, network error),
   // return static pages only so crawlers don't get a 500 on /sitemap.xml
   try {
     const db = await getDb();
-    const [activeProducts, soldProducts, categories] = await Promise.all([
+    const [activeProducts, soldProducts, categories, collections] = await Promise.all([
       db.product.findMany({
         where: { active: true, sold: false },
         select: { slug: true, updatedAt: true },
@@ -56,6 +61,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         orderBy: { updatedAt: "desc" },
       }),
       db.category.findMany({
+        select: { slug: true, updatedAt: true },
+      }),
+      db.collection.findMany({
+        where: { active: true },
         select: { slug: true, updatedAt: true },
       }),
     ]);
@@ -81,7 +90,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.3,
     }));
 
-    return [...staticPages, ...categoryPages, ...activeProductPages, ...soldProductPages];
+    const collectionPages: MetadataRoute.Sitemap = collections.map((c) => ({
+      url: `${BASE_URL}/collections/${c.slug}`,
+      lastModified: c.updatedAt,
+      changeFrequency: "weekly" as const,
+      priority: 0.6,
+    }));
+
+    return [...staticPages, ...categoryPages, ...collectionPages, ...activeProductPages, ...soldProductPages];
   } catch {
     console.error("[Sitemap] DB query failed, returning static pages only");
     return staticPages;

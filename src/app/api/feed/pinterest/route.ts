@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
-import { getImageUrls } from "@/lib/images";
+import { getImageUrls, parseJsonStringArray } from "@/lib/images";
 import {
   SHIPPING_PRICES,
   FREE_SHIPPING_THRESHOLD,
@@ -66,16 +66,6 @@ function escapeTsv(value: string): string {
   return cleaned;
 }
 
-function safeJsonParseStrings(value: string): string[] {
-  try {
-    const parsed = JSON.parse(value);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter((item: unknown): item is string => typeof item === "string");
-  } catch {
-    return [];
-  }
-}
-
 /**
  * Pinterest Catalog Feed — TSV format
  *
@@ -109,14 +99,14 @@ export async function GET() {
 
     for (const product of products) {
       const images = getImageUrls(product.images);
-      const sizes = safeJsonParseStrings(product.sizes);
-      const colors = safeJsonParseStrings(product.colors);
+      const sizes = parseJsonStringArray(product.sizes);
+      const colors = parseJsonStringArray(product.colors);
 
       const googleCategory =
         GOOGLE_CATEGORY_MAP[product.category.slug] ?? FALLBACK_CATEGORY;
 
-      // Pinterest price format: "450 CZK"
-      const priceStr = `${product.price} CZK`;
+      // Pinterest price format requires decimal notation: "450.00 CZK"
+      const priceStr = `${product.price.toFixed(2)} CZK`;
 
       // Shipping: free above threshold, otherwise cheapest option
       const shippingStr =

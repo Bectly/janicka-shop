@@ -176,10 +176,17 @@ export function QuickViewButton({ productId }: QuickViewButtonProps) {
                   >
                     {CONDITION_LABELS[product.condition] ?? product.condition}
                   </span>
-                  <span className="flex items-center gap-1 text-[10px] font-medium text-amber-600 dark:text-amber-400">
-                    <Sparkles className="size-2.5" />
-                    Jediný kus
-                  </span>
+                  {product.reservedByOther ? (
+                    <span className="flex items-center gap-1 text-[10px] font-medium text-violet-600 dark:text-violet-400">
+                      <Sparkles className="size-2.5" />
+                      Rezervováno
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-[10px] font-medium text-amber-600 dark:text-amber-400">
+                      <Sparkles className="size-2.5" />
+                      Jediný kus
+                    </span>
+                  )}
                 </div>
 
                 {/* Description (truncated) */}

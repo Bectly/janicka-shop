@@ -19,7 +19,7 @@ export default async function HomePage() {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  const [featuredProducts, categories, newProducts, recentlySold, brandProducts, saleProducts] = await Promise.all([
+  const [featuredProducts, categories, newProducts, recentlySold, brandProducts, saleProducts, featuredCollections] = await Promise.all([
     db.product.findMany({
       where: { featured: true, active: true, sold: false },
       include: { category: { select: { name: true } } },
@@ -67,6 +67,18 @@ export default async function HomePage() {
       include: { category: { select: { name: true } } },
       take: 8,
       orderBy: { createdAt: "desc" },
+    }),
+    db.collection.findMany({
+      where: {
+        active: true,
+        featured: true,
+        OR: [
+          { startDate: null },
+          { startDate: { lte: sevenDaysAgo } },
+        ],
+      },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+      take: 6,
     }),
   ]);
 
@@ -374,6 +386,70 @@ export default async function HomePage() {
                 <span className="text-xs text-muted-foreground">({count})</span>
               </Link>
             ))}
+          </div>
+        </section>
+      )}
+
+      {/* Featured collections */}
+      {featuredCollections.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+          <div className="flex items-end justify-between">
+            <div>
+              <h2 className="font-heading text-2xl font-bold text-foreground">
+                Kolekce
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Kurátorské výběry podle stylu a sezóny
+              </p>
+            </div>
+            <Link
+              href="/collections"
+              className="hidden text-sm font-medium text-primary hover:underline sm:block"
+            >
+              Všechny kolekce &rarr;
+            </Link>
+          </div>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {featuredCollections
+              .filter((c) => !c.endDate || c.endDate >= now)
+              .map((collection) => (
+                <Link
+                  key={collection.id}
+                  href={`/collections/${collection.slug}`}
+                  className="group overflow-hidden rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md"
+                >
+                  {collection.image ? (
+                    <div className="aspect-[16/9] overflow-hidden bg-muted">
+                      <img
+                        src={collection.image}
+                        alt={collection.title}
+                        className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex aspect-[16/9] items-center justify-center bg-gradient-to-br from-primary/5 to-accent/10">
+                      <span className="font-heading text-xl font-bold text-primary/40">
+                        {collection.title}
+                      </span>
+                    </div>
+                  )}
+                  <div className="p-4">
+                    <h3 className="font-heading text-base font-semibold text-foreground group-hover:text-primary transition-colors">
+                      {collection.title}
+                    </h3>
+                    {collection.description && (
+                      <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                        {collection.description}
+                      </p>
+                    )}
+                  </div>
+                </Link>
+              ))}
+          </div>
+          <div className="mt-6 text-center sm:hidden">
+            <Button variant="outline" render={<Link href="/collections" />}>
+              Všechny kolekce
+            </Button>
           </div>
         </section>
       )}

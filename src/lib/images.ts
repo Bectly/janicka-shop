@@ -36,6 +36,22 @@ export function getImageUrls(imagesJson: string): string[] {
   return parseProductImages(imagesJson).map((img) => img.url);
 }
 
+/**
+ * Parse a JSON field that stores a string array (e.g. sizes, colors).
+ * Returns an empty array on parse failure or if the result is not an array of strings.
+ * Use this instead of inline JSON.parse + filter in feed/feed-adjacent code
+ * so format changes are handled in one place.
+ */
+export function parseJsonStringArray(json: string): string[] {
+  try {
+    const parsed = JSON.parse(json);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((item: unknown): item is string => typeof item === "string");
+  } catch {
+    return [];
+  }
+}
+
 /** Measurements in centimeters */
 export interface ProductMeasurements {
   chest?: number;

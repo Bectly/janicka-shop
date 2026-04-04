@@ -11,10 +11,11 @@ export default function robots(): MetadataRoute.Robots {
         allow: ["/", "/api/feed/"],
         disallow: ["/admin/", "/api/", "/checkout/", "/order/", "/cart/", "/search/"],
       },
-      // Pinterest crawler — explicit access to catalog feed
+      // Pinterest crawler — explicit access to catalog feed; disallow admin/sensitive paths
       {
         userAgent: "Pinterest",
         allow: ["/", "/api/feed/pinterest"],
+        disallow: ["/admin/", "/api/", "/checkout/", "/order/", "/cart/"],
       },
     ],
     sitemap: `${BASE_URL}/sitemap.xml`,

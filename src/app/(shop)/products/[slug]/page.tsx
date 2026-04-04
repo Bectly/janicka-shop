@@ -151,7 +151,21 @@ export default async function ProductDetailPage({ params }: Props) {
       active: true,
       sold: false,
     },
-    include: { category: { select: { name: true } } },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      price: true,
+      compareAt: true,
+      images: true,
+      brand: true,
+      condition: true,
+      sizes: true,
+      colors: true,
+      reservedUntil: true,
+      reservedBy: true,
+      category: { select: { name: true } },
+    },
   } as const;
 
   const relatedProducts = product.sold
@@ -184,6 +198,11 @@ export default async function ProductDetailPage({ params }: Props) {
 
   const allIds = [product.id, ...relatedProducts.map((p) => p.id)];
   const lowestPricesMap = await getLowestPrices30d(allIds);
+
+  // visitorId and now must be declared before the sold-product early return
+  // so they're in scope for related product reservation checks in both branches.
+  const visitorId = await getVisitorId();
+  const now = new Date();
 
   // JSON-LD structured data for SEO (Google Shopping + AI search visibility)
   // "Golden Record" — complete attributes for 3-4x higher AI visibility
@@ -328,23 +347,30 @@ export default async function ProductDetailPage({ params }: Props) {
               Vybrali jsme kousky podobné velikosti, ceny a stylu
             </p>
             <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
-              {relatedProducts.map((p) => (
-                <ProductCard
-                  key={p.id}
-                  id={p.id}
-                  name={p.name}
-                  slug={p.slug}
-                  price={p.price}
-                  compareAt={p.compareAt}
-                  images={p.images}
-                  categoryName={p.category.name}
-                  brand={p.brand}
-                  condition={p.condition}
-                  sizes={p.sizes}
-                  colors={p.colors}
-                  lowestPrice30d={lowestPricesMap.get(p.id) ?? null}
-                />
-              ))}
+              {relatedProducts.map((p) => {
+                const isRelatedReserved =
+                  !!p.reservedUntil &&
+                  p.reservedUntil > now &&
+                  p.reservedBy !== visitorId;
+                return (
+                  <ProductCard
+                    key={p.id}
+                    id={p.id}
+                    name={p.name}
+                    slug={p.slug}
+                    price={p.price}
+                    compareAt={p.compareAt}
+                    images={p.images}
+                    categoryName={p.category.name}
+                    brand={p.brand}
+                    condition={p.condition}
+                    sizes={p.sizes}
+                    colors={p.colors}
+                    isReserved={isRelatedReserved}
+                    lowestPrice30d={lowestPricesMap.get(p.id) ?? null}
+                  />
+                );
+              })}
             </div>
           </section>
         )}
@@ -365,8 +391,6 @@ export default async function ProductDetailPage({ params }: Props) {
     condition: product.condition,
   };
 
-  const visitorId = await getVisitorId();
-  const now = new Date();
   const isReservedByOther =
     !!product.reservedUntil &&
     product.reservedUntil > now &&
@@ -598,23 +622,30 @@ export default async function ProductDetailPage({ params }: Props) {
             Mohlo by se vám líbit
           </h2>
           <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
-            {relatedProducts.map((p) => (
-              <ProductCard
-                key={p.id}
-                id={p.id}
-                name={p.name}
-                slug={p.slug}
-                price={p.price}
-                compareAt={p.compareAt}
-                images={p.images}
-                categoryName={p.category.name}
-                brand={p.brand}
-                condition={p.condition}
-                sizes={p.sizes}
-                colors={p.colors}
-                lowestPrice30d={lowestPricesMap.get(p.id) ?? null}
-              />
-            ))}
+            {relatedProducts.map((p) => {
+              const isRelatedReserved =
+                !!p.reservedUntil &&
+                p.reservedUntil > now &&
+                p.reservedBy !== visitorId;
+              return (
+                <ProductCard
+                  key={p.id}
+                  id={p.id}
+                  name={p.name}
+                  slug={p.slug}
+                  price={p.price}
+                  compareAt={p.compareAt}
+                  images={p.images}
+                  categoryName={p.category.name}
+                  brand={p.brand}
+                  condition={p.condition}
+                  sizes={p.sizes}
+                  colors={p.colors}
+                  isReserved={isRelatedReserved}
+                  lowestPrice30d={lowestPricesMap.get(p.id) ?? null}
+                />
+              );
+            })}
           </div>
         </section>
       )}
