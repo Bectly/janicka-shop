@@ -25,6 +25,7 @@ export function WishlistContent() {
     if (!mounted) return;
 
     if (wishlistIds.length === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset when wishlist clears
       setProducts([]);
       setLoading(false);
       return;

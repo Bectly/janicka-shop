@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { getLowestPrices30d } from "@/lib/price-history";
 
 export default async function NotFound() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let categories: { name: string; slug: string }[] = [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let latestProducts: any[] = [];

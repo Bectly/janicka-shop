@@ -15,6 +15,7 @@ async function createClient(): Promise<PrismaClient> {
       url: tursoUrl.trim(),
       authToken: tursoToken.trim(),
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma constructor types don't expose `adapter` without bundler resolution
     return new PrismaClient({ adapter } as any);
   }
   return new PrismaClient();

@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { Search } from "lucide-react";
 import { CartButton } from "./cart-button";
 import { WishlistHeaderButton } from "./wishlist-header-button";
 import { MobileNav } from "./mobile-nav";
+import { InstantSearch } from "./instant-search";
 
 const navLinks = [
   { name: "Novinky", href: "/products?sort=newest" },
@@ -43,13 +43,7 @@ export function Header() {
 
         {/* Right side: search + cart */}
         <div className="ml-auto flex items-center gap-1">
-          <Link
-            href="/search"
-            className="inline-flex items-center justify-center rounded-lg p-2 text-foreground/80 transition-colors hover:bg-muted hover:text-foreground"
-            aria-label="Hledat"
-          >
-            <Search className="size-5" />
-          </Link>
+          <InstantSearch />
           <WishlistHeaderButton />
           <CartButton />
         </div>

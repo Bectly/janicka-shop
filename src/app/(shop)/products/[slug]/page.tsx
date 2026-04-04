@@ -19,6 +19,7 @@ import {
   RecentlyViewedSection,
 } from "@/components/shop/recently-viewed";
 import { ProductInfoAccordion } from "@/components/shop/product-info-accordion";
+import { FreeShippingBar } from "@/components/shop/free-shipping-bar";
 import { Truck, Leaf } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -518,6 +519,11 @@ export default async function ProductDetailPage({ params }: Props) {
               </div>
             );
           })()}
+
+          {/* Free shipping progress bar */}
+          {product.stock > 0 && !isReservedByOther && (
+            <FreeShippingBar productPrice={product.price} />
+          )}
 
           {/* Shipping, returns & quality guarantee info */}
           <ProductInfoAccordion />

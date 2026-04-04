@@ -31,17 +31,17 @@ function saveConsent(consent: CookieConsent) {
 }
 
 export function CookieConsentBanner() {
-  const [visible, setVisible] = useState(false);
+  // Lazy initializer: SSR returns false, client checks localStorage on mount.
+  // Avoids extra render from useEffect + setState pattern.
+  const [visible, setVisible] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return !getSavedConsent();
+  });
   const [showDetails, setShowDetails] = useState(false);
   const [analytics, setAnalytics] = useState(false);
   const [marketing, setMarketing] = useState(false);
 
   useEffect(() => {
-    const saved = getSavedConsent();
-    if (!saved) {
-      setVisible(true);
-    }
-
     // Allow re-opening the banner (e.g. from footer "Nastavení cookies" link)
     function handleReopen() {
       const saved = getSavedConsent();

@@ -12,15 +12,13 @@ const messages = [
 ];
 
 export function AnnouncementBar() {
-  const [dismissed, setDismissed] = useState(true);
+  // Lazy initializer: SSR returns true (hidden), client reads localStorage on mount.
+  // Avoids extra render from useEffect + setState pattern.
+  const [dismissed, setDismissed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return !!localStorage.getItem(STORAGE_KEY);
+  });
   const [currentIndex, setCurrentIndex] = useState(0);
-
-  useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) {
-      setDismissed(false);
-    }
-  }, []);
 
   useEffect(() => {
     if (dismissed) return;

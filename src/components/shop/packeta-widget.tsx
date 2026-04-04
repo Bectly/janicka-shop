@@ -44,6 +44,7 @@ export function PacketaWidget({
 
   // Check if script is already loaded (e.g. from cache)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- sync browser state on mount, no async alternative
     if (window.Packeta) setScriptLoaded(true);
   }, []);
 

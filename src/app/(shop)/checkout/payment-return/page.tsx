@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 import { getComgatePaymentStatus } from "@/lib/payments/comgate";
 import { sendPaymentConfirmedEmail } from "@/lib/email";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, XCircle, Clock, ArrowRight } from "lucide-react";
+import { XCircle, Clock, ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {

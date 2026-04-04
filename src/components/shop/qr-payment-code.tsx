@@ -14,7 +14,6 @@ interface QrPaymentCodeProps {
 
 export function QrPaymentCode({
   qrDataUrl,
-  spaydString,
   totalCzk,
   variableSymbol,
 }: QrPaymentCodeProps) {

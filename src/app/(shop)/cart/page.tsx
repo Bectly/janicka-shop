@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Trash2, ShoppingBag, ArrowLeft, Clock, Truck } from "lucide-react";
+import { Trash2, ShoppingBag, ArrowLeft, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCartStore, type CartItem } from "@/lib/cart-store";
 import { formatPrice } from "@/lib/format";
@@ -10,6 +10,7 @@ import { releaseReservation, extendReservations } from "@/lib/actions/reservatio
 import { FREE_SHIPPING_THRESHOLD, SHIPPING_PRICES, SHIPPING_METHOD_LABELS } from "@/lib/constants";
 import { CartRecommendations } from "@/components/shop/cart-recommendations";
 import { CartExitIntent } from "@/components/shop/cart-exit-intent";
+import { FreeShippingBar } from "@/components/shop/free-shipping-bar";
 import { useSyncExternalStore, useState, useEffect, useCallback, useTransition } from "react";
 
 const emptySubscribe = () => () => {};
@@ -145,6 +146,7 @@ function useCountdown(expiresAt: string | undefined): string {
   const [remaining, setRemaining] = useState("");
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- clears countdown when expiresAt changes to undefined
     if (!expiresAt) { setRemaining(""); return; }
 
     function tick() {
@@ -262,35 +264,3 @@ function ShippingPreview({ total }: { total: number }) {
   );
 }
 
-function FreeShippingBar({ total }: { total: number }) {
-  const isFree = total >= FREE_SHIPPING_THRESHOLD;
-  const remaining = FREE_SHIPPING_THRESHOLD - total;
-  const progress = Math.min((total / FREE_SHIPPING_THRESHOLD) * 100, 100);
-  const minShipping = Math.min(...Object.values(SHIPPING_PRICES));
-
-  return (
-    <div className="mt-3">
-      {isFree ? (
-        <div className="flex items-center gap-2 text-sm font-medium text-emerald-700">
-          <Truck className="size-4" />
-          <span>Doprava zdarma!</span>
-        </div>
-      ) : (
-        <>
-          <p className="text-sm text-muted-foreground">
-            Ještě <span className="font-semibold text-foreground">{formatPrice(remaining)}</span> do dopravy zdarma
-          </p>
-          <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-full rounded-full bg-primary transition-all duration-500"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <p className="mt-1.5 text-xs text-muted-foreground">
-            Doprava od {formatPrice(minShipping)}
-          </p>
-        </>
-      )}
-    </div>
-  );
-}

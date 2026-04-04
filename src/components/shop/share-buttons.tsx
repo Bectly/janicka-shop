@@ -14,7 +14,8 @@ export function ShareButtons({ url, title, description }: ShareButtonsProps) {
   const [canShare, setCanShare] = useState(false);
 
   useEffect(() => {
-    setCanShare(typeof navigator !== "undefined" && !!navigator.share);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- SSR-safe hydration: start false, correct after mount
+    setCanShare(!!navigator.share);
   }, []);
 
   const encodedUrl = encodeURIComponent(url);
