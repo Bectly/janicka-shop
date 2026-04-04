@@ -158,3 +158,9 @@ export async function rateLimitAdmin(): Promise<RateLimitResult> {
   const ip = await getClientIp();
   return checkRateLimit(`admin:${ip}`, 30, MINUTE);
 }
+
+/** Reservation: 20 reserve/extend operations per minute per IP */
+export async function rateLimitReservation(): Promise<RateLimitResult> {
+  const ip = await getClientIp();
+  return checkRateLimit(`reservation:${ip}`, 20, MINUTE);
+}

@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/db";
 import { getVisitorId, RESERVATION_MS } from "@/lib/visitor";
+import { rateLimitReservation } from "@/lib/rate-limit";
 
 export type ReservationResult = {
   success: boolean;
@@ -16,6 +17,11 @@ export type ReservationResult = {
 export async function reserveProduct(
   productId: string
 ): Promise<ReservationResult> {
+  const rl = await rateLimitReservation();
+  if (!rl.success) {
+    return { success: false, error: "Příliš mnoho požadavků, zkuste to za chvíli" };
+  }
+
   const visitorId = await getVisitorId();
   const now = new Date();
   const reservedUntil = new Date(now.getTime() + RESERVATION_MS);
@@ -78,6 +84,9 @@ export async function extendReservations(
   productIds: string[]
 ): Promise<Record<string, string | null>> {
   if (productIds.length === 0) return {};
+
+  const rl = await rateLimitReservation();
+  if (!rl.success) return {};
   // Cap array size to prevent abuse via crafted requests
   if (productIds.length > 50) productIds = productIds.slice(0, 50);
 

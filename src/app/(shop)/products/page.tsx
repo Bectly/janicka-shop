@@ -153,6 +153,7 @@ export default async function ProductsPage({
         compareAt: true,
         category: { select: { slug: true } },
       },
+      take: 10000,
     }),
   ]);
 
@@ -196,6 +197,7 @@ export default async function ProductsPage({
       where,
       include: { category: { select: { name: true } } },
       orderBy,
+      take: 5000,
     });
     let filteredProducts = allProducts.filter((p) => {
       if (sizeFilter.length > 0) {
