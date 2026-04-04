@@ -13,6 +13,7 @@ import {
   Store,
   Tags,
   Zap,
+  Mail,
 } from "lucide-react";
 
 const navItems = [
@@ -22,6 +23,7 @@ const navItems = [
   { href: "/admin/categories", label: "Kategorie", icon: Tags },
   { href: "/admin/orders", label: "Objednávky", icon: ShoppingCart },
   { href: "/admin/customers", label: "Zákazníci", icon: Users },
+  { href: "/admin/subscribers", label: "Newsletter", icon: Mail },
   { href: "/admin/settings", label: "Nastavení", icon: Settings },
 ];
 
