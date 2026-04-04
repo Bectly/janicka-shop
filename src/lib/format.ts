@@ -16,3 +16,19 @@ export function formatDate(date: Date): string {
     minute: "2-digit",
   }).format(date);
 }
+
+export function formatRelativeTime(date: Date): string {
+  const now = Date.now();
+  const diffMs = now - date.getTime();
+  const diffMin = Math.floor(diffMs / 60_000);
+  const diffH = Math.floor(diffMs / 3_600_000);
+  const diffD = Math.floor(diffMs / 86_400_000);
+
+  if (diffMin < 1) return "Právě teď";
+  if (diffMin < 60) return `Před ${diffMin} min`;
+  if (diffH < 24) return `Před ${diffH} h`;
+  if (diffD === 1) return "Včera";
+  if (diffD < 7) return `Před ${diffD} dny`;
+  if (diffD < 30) return `Před ${Math.floor(diffD / 7)} týd.`;
+  return new Intl.DateTimeFormat("cs-CZ", { day: "numeric", month: "numeric" }).format(date);
+}

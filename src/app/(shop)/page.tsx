@@ -4,6 +4,7 @@ import { ProductCard } from "@/components/shop/product-card";
 import { CategoryCard } from "@/components/shop/category-card";
 import { NewsletterForm } from "@/components/shop/newsletter-form";
 import { TrustBadges } from "@/components/shop/trust-badges";
+import { RecentlySoldFeed } from "@/components/shop/recently-sold-feed";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { getVisitorId } from "@/lib/visitor";
@@ -14,7 +15,7 @@ export default async function HomePage() {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  const [featuredProducts, categories, newProducts] = await Promise.all([
+  const [featuredProducts, categories, newProducts, recentlySold, brandProducts] = await Promise.all([
     prisma.product.findMany({
       where: { featured: true, active: true, sold: false },
       include: { category: { select: { name: true } } },
@@ -35,6 +36,24 @@ export default async function HomePage() {
       take: 8,
       orderBy: { createdAt: "desc" },
     }),
+    prisma.product.findMany({
+      where: { sold: true, active: true },
+      select: {
+        name: true,
+        slug: true,
+        price: true,
+        images: true,
+        brand: true,
+        updatedAt: true,
+        category: { select: { name: true } },
+      },
+      take: 8,
+      orderBy: { updatedAt: "desc" },
+    }),
+    prisma.product.findMany({
+      where: { active: true, sold: false, brand: { not: null } },
+      select: { brand: true },
+    }),
   ]);
 
   const visitorId = await getVisitorId();
@@ -50,6 +69,26 @@ export default async function HomePage() {
   function isReservedByOther(p: { reservedUntil: Date | null; reservedBy: string | null }) {
     return !!p.reservedUntil && p.reservedUntil > now && p.reservedBy !== visitorId;
   }
+
+  // Compute popular brands sorted by product count
+  const brandCounts = new Map<string, number>();
+  for (const p of brandProducts) {
+    if (p.brand) brandCounts.set(p.brand, (brandCounts.get(p.brand) ?? 0) + 1);
+  }
+  const popularBrands = [...brandCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 12);
+
+  // Map recently sold products for the feed component
+  const soldFeedProducts = recentlySold.map((p) => ({
+    name: p.name,
+    slug: p.slug,
+    price: p.price,
+    images: p.images,
+    categoryName: p.category.name,
+    brand: p.brand,
+    updatedAt: p.updatedAt,
+  }));
 
   // Build JSON-LD structured data for product listings (SEO + AI search visibility)
   const allDisplayedProducts = [...newProducts, ...featuredProducts];
@@ -246,8 +285,37 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Popular brands */}
+      {popularBrands.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="font-heading text-2xl font-bold text-foreground">
+              Populární značky
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Oblíbené značky v naší nabídce
+            </p>
+          </div>
+          <div className="mt-8 flex flex-wrap justify-center gap-2.5">
+            {popularBrands.map(([brand, count]) => (
+              <Link
+                key={brand}
+                href={`/products?brand=${encodeURIComponent(brand)}`}
+                className="inline-flex items-center gap-1.5 rounded-full border bg-card px-4 py-2 text-sm font-medium text-foreground transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
+              >
+                {brand}
+                <span className="text-xs text-muted-foreground">({count})</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Trust badges */}
       <TrustBadges />
+
+      {/* Recently sold — social proof */}
+      <RecentlySoldFeed products={soldFeedProducts} />
 
       {/* Newsletter */}
       <section className="bg-primary/5">

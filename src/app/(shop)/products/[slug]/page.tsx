@@ -17,7 +17,7 @@ import {
   RecentlyViewedSection,
 } from "@/components/shop/recently-viewed";
 import { ProductInfoAccordion } from "@/components/shop/product-info-accordion";
-import { Truck } from "lucide-react";
+import { Truck, Leaf } from "lucide-react";
 import type { Metadata } from "next";
 
 /**
@@ -399,6 +399,21 @@ export default async function ProductDetailPage({ params }: Props) {
             <p className="mt-1 text-xs text-muted-foreground">
               Nejnižší cena za posledních 30 dní: {formatPrice(lowestPrice30d)}
             </p>
+          )}
+
+          {/* Sustainability savings callout */}
+          {hasDiscount && (
+            <div className="mt-3 flex items-center gap-2.5 rounded-lg bg-emerald-50 px-3.5 py-2.5 dark:bg-emerald-950/30">
+              <Leaf className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+              <div>
+                <p className="text-sm font-medium text-emerald-800 dark:text-emerald-300">
+                  Ušetříte {formatPrice(product.compareAt! - product.price)} oproti nové ceně
+                </p>
+                <p className="text-xs text-emerald-600/80 dark:text-emerald-400/70">
+                  Udržitelná volba — dáváte oblečení druhý život
+                </p>
+              </div>
+            </div>
           )}
 
           {/* Condition badge */}
