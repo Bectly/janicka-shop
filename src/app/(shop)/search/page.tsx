@@ -61,6 +61,7 @@ export default async function SearchPage({
       where: { active: true, sold: false },
       include: { category: { select: { name: true } } },
       orderBy: { createdAt: "desc" },
+      take: 1000,
     });
     const norm = (s: string) =>
       s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");

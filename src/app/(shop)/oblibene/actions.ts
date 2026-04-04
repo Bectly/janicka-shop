@@ -20,8 +20,11 @@ export async function getWishlistProducts(
 ): Promise<WishlistProduct[]> {
   if (productIds.length === 0) return [];
 
+  // Cap input to prevent oversized IN queries from malicious clients
+  const ids = productIds.slice(0, 100);
+
   const products = await prisma.product.findMany({
-    where: { id: { in: productIds }, active: true },
+    where: { id: { in: ids }, active: true },
     include: { category: { select: { name: true } } },
     orderBy: { createdAt: "desc" },
   });

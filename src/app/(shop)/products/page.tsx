@@ -102,8 +102,10 @@ export default async function ProductsPage({
   const sizeFilter = toArray(params.size);
   const conditionFilter = toArray(params.condition);
   const colorFilter = toArray(params.color);
-  const minPrice = params.minPrice ? parseFloat(params.minPrice) : null;
-  const maxPrice = params.maxPrice ? parseFloat(params.maxPrice) : null;
+  const rawMinPrice = params.minPrice ? parseFloat(params.minPrice) : null;
+  const rawMaxPrice = params.maxPrice ? parseFloat(params.maxPrice) : null;
+  const minPrice = rawMinPrice !== null && !isNaN(rawMinPrice) ? Math.max(0, Math.min(999999, rawMinPrice)) : null;
+  const maxPrice = rawMaxPrice !== null && !isNaN(rawMaxPrice) ? Math.max(0, Math.min(999999, rawMaxPrice)) : null;
 
   // Build Prisma where clause
   const where: Record<string, unknown> = { active: true, sold: false };
@@ -122,8 +124,8 @@ export default async function ProductsPage({
   }
   if (minPrice !== null || maxPrice !== null) {
     const priceFilter: Record<string, number> = {};
-    if (minPrice !== null && !isNaN(minPrice)) priceFilter.gte = minPrice;
-    if (maxPrice !== null && !isNaN(maxPrice)) priceFilter.lte = maxPrice;
+    if (minPrice !== null) priceFilter.gte = minPrice;
+    if (maxPrice !== null) priceFilter.lte = maxPrice;
     where.price = priceFilter;
   }
 

@@ -296,6 +296,8 @@ export function ProductFilters({
         <input
           id="filter-minPrice"
           type="number"
+          min="0"
+          max="999999"
           placeholder="od"
           defaultValue={minPrice}
           onBlur={(e) => updateParams({ minPrice: e.target.value || null })}
@@ -312,6 +314,8 @@ export function ProductFilters({
         <input
           id="filter-maxPrice"
           type="number"
+          min="0"
+          max="999999"
           placeholder="do"
           defaultValue={maxPrice}
           onBlur={(e) => updateParams({ maxPrice: e.target.value || null })}

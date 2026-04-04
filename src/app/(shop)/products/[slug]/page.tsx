@@ -12,6 +12,10 @@ import { getLowestPrices30d } from "@/lib/price-history";
 import { buildProductSchema, jsonLdString } from "@/lib/structured-data";
 import { ShareButtons } from "@/components/shop/share-buttons";
 import { WishlistButton } from "@/components/shop/wishlist-button";
+import {
+  TrackProductView,
+  RecentlyViewedSection,
+} from "@/components/shop/recently-viewed";
 import type { Metadata } from "next";
 
 const BASE_URL =
@@ -195,6 +199,18 @@ export default async function ProductDetailPage({ params }: Props) {
   }
 
   // --- REGULAR PRODUCT VIEW ---
+  const trackData = {
+    id: product.id,
+    slug: product.slug,
+    name: product.name,
+    price: product.price,
+    compareAt: product.compareAt,
+    images: product.images,
+    categoryName: product.category.name,
+    brand: product.brand,
+    condition: product.condition,
+  };
+
   const visitorId = await getVisitorId();
   const now = new Date();
   const isReservedByOther =
@@ -211,6 +227,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <TrackProductView product={trackData} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLdString(jsonLd) }}
@@ -347,6 +364,9 @@ export default async function ProductDetailPage({ params }: Props) {
           </div>
         </section>
       )}
+
+      {/* Recently viewed */}
+      <RecentlyViewedSection excludeProductId={product.id} />
     </div>
   );
 }
