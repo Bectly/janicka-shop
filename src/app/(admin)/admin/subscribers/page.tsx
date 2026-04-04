@@ -11,6 +11,15 @@ export const metadata: Metadata = {
   title: "Newsletter odběratelé",
 };
 
+function safeJsonParseArray(json: string): string[] {
+  try {
+    const parsed = JSON.parse(json);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 export default async function AdminSubscribersPage() {
   const db = await getDb();
   const subscribers = await db.newsletterSubscriber.findMany({
@@ -18,7 +27,18 @@ export default async function AdminSubscribersPage() {
     take: 500,
   });
 
+  const categories = await db.category.findMany({
+    select: { id: true, name: true },
+  });
+  const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
+
   const activeCount = subscribers.filter((s) => s.active).length;
+  const withPrefs = subscribers.filter(
+    (s) =>
+      s.preferredSizes !== "[]" ||
+      s.preferredCategories !== "[]" ||
+      s.preferredBrands !== "[]",
+  ).length;
 
   return (
     <>
@@ -29,6 +49,7 @@ export default async function AdminSubscribersPage() {
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {activeCount} aktivních z {subscribers.length} celkem
+            {withPrefs > 0 && ` · ${withPrefs} s preferencemi`}
           </p>
         </div>
         <ExportCsvButton />
@@ -53,6 +74,12 @@ export default async function AdminSubscribersPage() {
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">
                     E-mail
                   </th>
+                  <th className="hidden px-4 py-3 text-left font-medium text-muted-foreground md:table-cell">
+                    Preference
+                  </th>
+                  <th className="hidden px-4 py-3 text-left font-medium text-muted-foreground sm:table-cell">
+                    Zdroj
+                  </th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">
                     Přihlášen
                   </th>
@@ -62,24 +89,83 @@ export default async function AdminSubscribersPage() {
                 </tr>
               </thead>
               <tbody>
-                {subscribers.map((sub) => (
-                  <tr
-                    key={sub.id}
-                    className="border-b last:border-0 transition-colors hover:bg-muted/30"
-                  >
-                    <td className="px-4 py-3">
-                      <span className="font-medium text-foreground">
-                        {sub.email}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground">
-                      {formatDate(sub.createdAt)}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <SubscriberToggle id={sub.id} active={sub.active} />
-                    </td>
-                  </tr>
-                ))}
+                {subscribers.map((sub) => {
+                  const sizes = safeJsonParseArray(sub.preferredSizes);
+                  const catIds = safeJsonParseArray(sub.preferredCategories);
+                  const brands = safeJsonParseArray(sub.preferredBrands);
+                  const catNames = catIds
+                    .map((id) => categoryMap.get(id))
+                    .filter(Boolean);
+                  const hasPrefs =
+                    sizes.length > 0 ||
+                    catNames.length > 0 ||
+                    brands.length > 0;
+
+                  return (
+                    <tr
+                      key={sub.id}
+                      className="border-b last:border-0 transition-colors hover:bg-muted/30"
+                    >
+                      <td className="px-4 py-3">
+                        <span className="font-medium text-foreground">
+                          {sub.email}
+                        </span>
+                        {sub.firstName && (
+                          <p className="text-xs text-muted-foreground">
+                            {sub.firstName}
+                          </p>
+                        )}
+                      </td>
+                      <td className="hidden px-4 py-3 md:table-cell">
+                        {hasPrefs ? (
+                          <div className="flex flex-wrap gap-1">
+                            {sizes.map((s) => (
+                              <span
+                                key={s}
+                                className="rounded bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary"
+                              >
+                                {s}
+                              </span>
+                            ))}
+                            {catNames.map((c) => (
+                              <span
+                                key={c}
+                                className="rounded bg-sky-100 px-1.5 py-0.5 text-xs font-medium text-sky-700"
+                              >
+                                {c}
+                              </span>
+                            ))}
+                            {brands.map((b) => (
+                              <span
+                                key={b}
+                                className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700"
+                              >
+                                {b}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">
+                            —
+                          </span>
+                        )}
+                      </td>
+                      <td className="hidden px-4 py-3 text-xs text-muted-foreground sm:table-cell">
+                        {sub.source === "checkout"
+                          ? "Pokladna"
+                          : sub.source === "import"
+                            ? "Import"
+                            : "Web"}
+                      </td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground">
+                        {formatDate(sub.createdAt)}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <SubscriberToggle id={sub.id} active={sub.active} />
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

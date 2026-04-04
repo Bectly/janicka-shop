@@ -9,6 +9,7 @@ import { CONDITION_LABELS, CONDITION_COLORS } from "@/lib/constants";
 import { Plus, Zap, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DeleteProductButton } from "@/components/admin/delete-product-button";
+import { DuplicateProductButton } from "@/components/admin/duplicate-product-button";
 import { ProductSearch } from "@/components/admin/product-search";
 import { Pagination } from "@/components/shop/pagination";
 import { getImageUrls } from "@/lib/images";
@@ -314,6 +315,10 @@ export default async function AdminProductsPage({
                         >
                           Upravit
                         </Link>
+                        <DuplicateProductButton
+                          productId={product.id}
+                          productName={product.name}
+                        />
                         <DeleteProductButton
                           productId={product.id}
                           productName={product.name}

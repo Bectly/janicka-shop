@@ -33,8 +33,8 @@ const nextConfig: NextConfig = {
               "img-src 'self' data: blob: https://*.ufs.sh https://utfs.io https://www.facebook.com https://ct.pinterest.com",
               "font-src 'self' data:",
               // connect-src: GA4 data collection + Pinterest + Meta Pixel events
-              "connect-src 'self' https://*.ufs.sh https://utfs.io https://uploadthing.com https://payments.comgate.cz https://widget.packeta.com https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net https://ct.pinterest.com https://www.facebook.com",
-              "frame-src 'self' https://payments.comgate.cz https://widget.packeta.com",
+              "connect-src 'self' https://*.ufs.sh https://utfs.io https://uploadthing.com https://payments.comgate.cz https://payments.comgate.eu https://widget.packeta.com https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net https://ct.pinterest.com https://www.facebook.com",
+              "frame-src 'self' https://payments.comgate.cz https://payments.comgate.eu https://widget.packeta.com",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",

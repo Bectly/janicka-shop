@@ -325,6 +325,56 @@ export async function quickCreateProduct(formData: FormData) {
   redirect("/admin/products");
 }
 
+export async function duplicateProduct(id: string) {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
+
+  const db = await getDb();
+  const source = await db.product.findUnique({ where: { id } });
+  if (!source) throw new Error("Produkt nenalezen");
+
+  // Generate unique slug and SKU for the copy
+  const baseName = `${source.name} (kopie)`;
+  let slug = slugify(baseName);
+  const existingSlug = await db.product.findUnique({ where: { slug } });
+  if (existingSlug) {
+    slug = `${slug}-${Date.now().toString(36)}`;
+  }
+  const sku = `JN-${Date.now().toString(36).toUpperCase()}`;
+
+  const copy = await db.product.create({
+    data: {
+      name: baseName,
+      slug,
+      description: source.description,
+      price: source.price,
+      compareAt: source.compareAt,
+      sku,
+      categoryId: source.categoryId,
+      brand: source.brand,
+      condition: source.condition,
+      sizes: source.sizes,
+      colors: source.colors,
+      images: source.images,
+      measurements: source.measurements,
+      fitNote: source.fitNote,
+      stock: 1,
+      featured: false,
+      active: false, // Start hidden so admin can review before publishing
+      sold: false,
+    },
+  });
+
+  // Log initial price for 30-day price history
+  await db.priceHistory.create({
+    data: { productId: copy.id, price: copy.price },
+  });
+
+  revalidatePath("/admin/products");
+  redirect(`/admin/products/${copy.id}/edit`);
+}
+
 export async function deleteProduct(id: string) {
   await requireAdmin();
   const rl = await rateLimitAdmin();

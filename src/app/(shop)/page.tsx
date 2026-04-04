@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getDb } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -420,9 +421,11 @@ export default async function HomePage() {
                 >
                   {collection.image ? (
                     <div className="aspect-[16/9] overflow-hidden bg-muted">
-                      <img
+                      <Image
                         src={collection.image}
                         alt={collection.title}
+                        width={640}
+                        height={360}
                         className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
                     </div>

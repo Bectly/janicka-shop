@@ -32,6 +32,16 @@ body{font-family:'Inter',system-ui,sans-serif;background:linear-gradient(160deg,
 .card.lose{opacity:.15;transform:scale(.92);pointer-events:none}
 .card img{width:100%;aspect-ratio:1;object-fit:contain;padding:10px;background:#fafafa;display:block}
 .card .nm{padding:8px 10px;font-size:.75rem;font-weight:500;text-align:center;color:#6b7280;border-top:1px solid #fce7f3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .zoom{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.4);color:#fff;border:none;border-radius:8px;padding:4px 8px;font-size:.7rem;cursor:pointer;z-index:3;opacity:.7}
+.card .zoom:hover{opacity:1}
+
+/* Lightbox */
+.lb{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;align-items:center;justify-content:center;padding:20px;cursor:pointer}
+.lb.open{display:flex}
+.lb img{max-width:90vw;max-height:85vh;border-radius:12px}
+.lb .close{position:absolute;top:16px;right:20px;color:#fff;font-size:2rem;cursor:pointer;opacity:.7}
+.lb .close:hover{opacity:1}
+.lb .cap{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);color:#fff;font-size:.9rem;opacity:.7}
 
 /* Wrapper */
 .wrap{display:flex;flex-direction:column;min-height:100dvh}
@@ -54,6 +64,11 @@ body{font-family:'Inter',system-ui,sans-serif;background:linear-gradient(160deg,
 </head>
 <body>
 <div id="app"></div>
+<div class="lb" id="lb" onclick="closeLb()">
+  <span class="close">&times;</span>
+  <img id="lb-img" src="">
+  <div class="cap" id="lb-cap"></div>
+</div>
 <script>
 const BASE="https://pub-5652e5e0857941e69e29ee64c66905dd.r2.dev/janicka-logo/";
 const ALL=[
@@ -142,16 +157,18 @@ function draw(){
   app.innerHTML=`<div class="wrap">
     <div class="hdr">
       <h1>Které se ti líbí víc?</h1>
-      <p class="inst">Klikni na to lepší — druhé vypadne</p>
+      <p class="inst">Klikni na to lepší — druhé vypadne · 🔍 = zvětšit</p>
       <p class="info">Kolo ${rd} · zbývá ${rem.length} z ${ALL.length}</p>
       <div class="prog">${dots}</div>
     </div>
     <div class="match">
       <div class="card" id="L" onclick="pick('L')">
+        <button class="zoom" onclick="event.stopPropagation();zoom('${BASE}${L.src}','${L.n}')">🔍</button>
         <img src="${BASE}${L.src}" loading="lazy">
         <div class="nm">${L.n}</div>
       </div>
       <div class="card" id="R" onclick="pick('R')">
+        <button class="zoom" onclick="event.stopPropagation();zoom('${BASE}${R.src}','${R.n}')">🔍</button>
         <img src="${BASE}${R.src}" loading="lazy">
         <div class="nm">${R.n}</div>
       </div>
@@ -162,10 +179,22 @@ function draw(){
 
 function pick(side){
   if(busy)return;
+  const w=side==='L'?rem[mi*2]:rem[mi*2+1];
+  // Show confirm overlay on the picked card
+  const card=document.getElementById(side);
+  card.innerHTML+=`<div style="position:absolute;inset:0;background:rgba(255,255,255,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:5;border-radius:14px">
+    <p style="font-size:.85rem;color:#be185d;font-weight:500;margin-bottom:10px">Toto logo? 💕</p>
+    <div style="display:flex;gap:8px">
+      <button onclick="event.stopPropagation();confirmPick('${side}')" style="background:#ec4899;color:#fff;border:none;padding:8px 20px;border-radius:99px;font-size:.85rem;cursor:pointer;font-weight:500">Ano</button>
+      <button onclick="event.stopPropagation();cancelPick()" style="background:#f3f4f6;color:#6b7280;border:none;padding:8px 20px;border-radius:99px;font-size:.85rem;cursor:pointer">Ne</button>
+    </div>
+  </div>`;
+}
+
+function confirmPick(side){
   busy=true;
   const t=tm();
-  const L=rem[mi*2], R=rem[mi*2+1];
-  const w=side==='L'?L:R;
+  const w=side==='L'?rem[mi*2]:rem[mi*2+1];
   document.getElementById(side).classList.add('win');
   document.getElementById(side==='L'?'R':'L').classList.add('lose');
   elim++;
@@ -179,6 +208,12 @@ function pick(side){
     draw();
   },600);
 }
+
+function cancelPick(){draw()}
+
+function zoom(src,name){document.getElementById('lb-img').src=src;document.getElementById('lb-cap').textContent=name;document.getElementById('lb').classList.add('open')}
+function closeLb(){document.getElementById('lb').classList.remove('open')}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLb()});
 
 init();
 </script>

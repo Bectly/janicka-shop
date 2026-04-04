@@ -36,6 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const collection = await getCollection(slug);
   if (!collection) return { title: "Kolekce nenalezena" };
+  if (collection.endDate && collection.endDate < new Date()) return { title: "Kolekce nenalezena" };
 
   return {
     title: collection.title,

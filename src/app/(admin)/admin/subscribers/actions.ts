@@ -32,9 +32,10 @@ export async function getSubscribersCsv(): Promise<string> {
     orderBy: { createdAt: "desc" },
   });
 
-  const header = "email,subscribed_at";
+  const header = "email,first_name,preferred_sizes,preferred_categories,preferred_brands,source,subscribed_at";
   const rows = subscribers.map(
-    (s) => `${csvField(s.email)},${s.createdAt.toISOString()}`,
+    (s) =>
+      `${csvField(s.email)},${csvField(s.firstName ?? "")},${csvField(s.preferredSizes)},${csvField(s.preferredCategories)},${csvField(s.preferredBrands)},${csvField(s.source)},${s.createdAt.toISOString()}`,
   );
   // BOM for Excel UTF-8 recognition (matching orders CSV export)
   return "\uFEFF" + [header, ...rows].join("\n");

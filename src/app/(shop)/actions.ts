@@ -43,7 +43,7 @@ export async function subscribeNewsletter(
 
     await db.newsletterSubscriber.upsert({
       where: { email },
-      create: { email, active: true },
+      create: { email, active: true, source: "website" },
       update: { active: true },
     });
 
@@ -63,6 +63,49 @@ export async function subscribeNewsletter(
       success: false,
       message: "Něco se pokazilo. Zkuste to prosím znovu.",
     };
+  }
+}
+
+/**
+ * Update newsletter subscriber preferences (sizes, categories, brands).
+ * Used for progressive profiling — e.g., on 2nd visit or preference page.
+ */
+export async function updateSubscriberPreferences(input: {
+  email: string;
+  firstName?: string;
+  preferredSizes?: string[];
+  preferredCategories?: string[];
+  preferredBrands?: string[];
+}): Promise<{ success: boolean }> {
+  const emailParsed = z.string().email().max(254).safeParse(input.email);
+  if (!emailParsed.success) return { success: false };
+
+  try {
+    const db = await getDb();
+    const existing = await db.newsletterSubscriber.findUnique({
+      where: { email: emailParsed.data },
+    });
+    if (!existing) return { success: false };
+
+    await db.newsletterSubscriber.update({
+      where: { email: emailParsed.data },
+      data: {
+        ...(input.firstName ? { firstName: input.firstName } : {}),
+        ...(input.preferredSizes
+          ? { preferredSizes: JSON.stringify(input.preferredSizes) }
+          : {}),
+        ...(input.preferredCategories
+          ? { preferredCategories: JSON.stringify(input.preferredCategories) }
+          : {}),
+        ...(input.preferredBrands
+          ? { preferredBrands: JSON.stringify(input.preferredBrands) }
+          : {}),
+      },
+    });
+
+    return { success: true };
+  } catch {
+    return { success: false };
   }
 }
 
