@@ -3,6 +3,7 @@
  *
  * Google AI Mode uses Schema.org to find/compare/purchase products.
  * Pages with complete structured data get cited 3.1x more often by AI search.
+ * "Golden Record" (99.9% attribute completion) = 3-4x higher AI visibility.
  */
 
 const BASE_URL =
@@ -15,50 +16,91 @@ const CONDITION_TO_SCHEMA: Record<string, string> = {
   visible_wear: "https://schema.org/UsedCondition",
 };
 
+/** Czech condition labels for structured data descriptions */
+const CONDITION_DESCRIPTION: Record<string, string> = {
+  new_with_tags: "Nové s visačkou — nepoužité zboží v původním stavu",
+  excellent: "Výborný stav — minimální známky nošení",
+  good: "Dobrý stav — lehké známky nošení",
+  visible_wear: "Viditelné opotřebení — popsáno v detailu produktu",
+};
+
 const SELLER = {
   "@type": "Organization" as const,
   name: "Janička",
   url: BASE_URL,
 };
 
-const SHIPPING_DETAILS = {
-  "@type": "OfferShippingDetails" as const,
-  shippingRate: {
-    "@type": "DeliveryChargeSpecification" as const,
-    price: "69",
-    priceCurrency: "CZK",
+const SHIPPING_DESTINATION = {
+  "@type": "DefinedRegion" as const,
+  addressCountry: "CZ",
+};
+
+const DELIVERY_TIME = {
+  "@type": "ShippingDeliveryTime" as const,
+  handlingTime: {
+    "@type": "QuantitativeValue" as const,
+    minValue: 1,
+    maxValue: 2,
+    unitCode: "DAY",
   },
-  // freeShippingThreshold is a property of OfferShippingDetails, NOT DeliveryChargeSpecification
-  freeShippingThreshold: {
-    "@type": "DeliveryChargeSpecification" as const,
-    price: "0",
-    priceCurrency: "CZK",
-    eligibleTransactionVolume: {
-      "@type": "PriceSpecification" as const,
-      price: "1500",
-      priceCurrency: "CZK",
-    },
-  },
-  shippingDestination: {
-    "@type": "DefinedRegion" as const,
-    addressCountry: "CZ",
-  },
-  deliveryTime: {
-    "@type": "ShippingDeliveryTime" as const,
-    handlingTime: {
-      "@type": "QuantitativeValue" as const,
-      minValue: 1,
-      maxValue: 2,
-      unitCode: "DAY",
-    },
-    transitTime: {
-      "@type": "QuantitativeValue" as const,
-      minValue: 1,
-      maxValue: 3,
-      unitCode: "DAY",
-    },
+  transitTime: {
+    "@type": "QuantitativeValue" as const,
+    minValue: 1,
+    maxValue: 3,
+    unitCode: "DAY",
   },
 };
+
+const FREE_SHIPPING_THRESHOLD = {
+  "@type": "DeliveryChargeSpecification" as const,
+  price: "0",
+  priceCurrency: "CZK",
+  eligibleTransactionVolume: {
+    "@type": "PriceSpecification" as const,
+    price: "1500",
+    priceCurrency: "CZK",
+  },
+};
+
+/** All 3 shipping methods — Google Shopping needs each listed separately */
+const ALL_SHIPPING_OPTIONS = [
+  {
+    "@type": "OfferShippingDetails" as const,
+    shippingLabel: "Zásilkovna — výdejní místo",
+    shippingRate: {
+      "@type": "DeliveryChargeSpecification" as const,
+      price: "69",
+      priceCurrency: "CZK",
+    },
+    freeShippingThreshold: FREE_SHIPPING_THRESHOLD,
+    shippingDestination: SHIPPING_DESTINATION,
+    deliveryTime: DELIVERY_TIME,
+  },
+  {
+    "@type": "OfferShippingDetails" as const,
+    shippingLabel: "Česká pošta",
+    shippingRate: {
+      "@type": "DeliveryChargeSpecification" as const,
+      price: "89",
+      priceCurrency: "CZK",
+    },
+    freeShippingThreshold: FREE_SHIPPING_THRESHOLD,
+    shippingDestination: SHIPPING_DESTINATION,
+    deliveryTime: DELIVERY_TIME,
+  },
+  {
+    "@type": "OfferShippingDetails" as const,
+    shippingLabel: "Zásilkovna — na adresu",
+    shippingRate: {
+      "@type": "DeliveryChargeSpecification" as const,
+      price: "99",
+      priceCurrency: "CZK",
+    },
+    freeShippingThreshold: FREE_SHIPPING_THRESHOLD,
+    shippingDestination: SHIPPING_DESTINATION,
+    deliveryTime: DELIVERY_TIME,
+  },
+];
 
 const RETURN_POLICY = {
   "@type": "MerchantReturnPolicy" as const,
@@ -70,7 +112,7 @@ const RETURN_POLICY = {
   returnFees: "https://schema.org/ReturnShippingFees",
 };
 
-interface ProductForSchema {
+export interface ProductForSchema {
   slug: string;
   name: string;
   description: string;
@@ -81,6 +123,9 @@ interface ProductForSchema {
   price: number;
   sold: boolean;
   categoryName: string;
+  colors?: string;
+  sizes?: string;
+  compareAt?: number | null;
 }
 
 /** Build a single Product schema object (for use standalone or inside ItemList). */
@@ -90,6 +135,40 @@ export function buildProductSchema(product: ProductForSchema) {
     productImages = JSON.parse(product.images);
   } catch {
     /* corrupted data fallback */
+  }
+
+  // Parse colors and sizes for structured attributes
+  let colors: string[] = [];
+  let sizes: string[] = [];
+  try { if (product.colors) colors = JSON.parse(product.colors); } catch { /* */ }
+  try { if (product.sizes) sizes = JSON.parse(product.sizes); } catch { /* */ }
+
+  // Additional properties for AI search enrichment
+  const additionalProperty: Record<string, unknown>[] = [];
+  if (colors.length > 0) {
+    additionalProperty.push({
+      "@type": "PropertyValue",
+      propertyID: "color",
+      name: "Barva",
+      value: colors.join(", "),
+    });
+  }
+  if (sizes.length > 0) {
+    additionalProperty.push({
+      "@type": "PropertyValue",
+      propertyID: "size",
+      name: "Velikost",
+      value: sizes.join(", "),
+    });
+  }
+  const conditionDesc = CONDITION_DESCRIPTION[product.condition];
+  if (conditionDesc) {
+    additionalProperty.push({
+      "@type": "PropertyValue",
+      propertyID: "itemConditionDescription",
+      name: "Stav zboží",
+      value: conditionDesc,
+    });
   }
 
   return {
@@ -103,19 +182,26 @@ export function buildProductSchema(product: ProductForSchema) {
       ? { "@type": "Brand", name: product.brand }
       : undefined,
     category: product.categoryName,
+    color: colors.length > 0 ? colors.join(", ") : undefined,
+    size: sizes.length > 0 ? sizes.join(", ") : undefined,
     itemCondition:
       CONDITION_TO_SCHEMA[product.condition] ??
       "https://schema.org/UsedCondition",
+    additionalProperty:
+      additionalProperty.length > 0 ? additionalProperty : undefined,
     offers: {
       "@type": "Offer",
       url: `${BASE_URL}/products/${product.slug}`,
       priceCurrency: "CZK",
       price: product.price,
+      ...(product.compareAt && product.compareAt > product.price
+        ? { priceValidUntil: new Date(Date.now() + 90 * 86400000).toISOString().split("T")[0] }
+        : {}),
       availability: product.sold
         ? "https://schema.org/SoldOut"
         : "https://schema.org/InStock",
       seller: SELLER,
-      shippingDetails: SHIPPING_DETAILS,
+      shippingDetails: ALL_SHIPPING_OPTIONS,
       hasMerchantReturnPolicy: RETURN_POLICY,
     },
   };

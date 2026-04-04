@@ -101,8 +101,8 @@ export default async function ProductDetailPage({ params }: Props) {
 
   if (!product) notFound();
 
-  // Fetch related products (always useful — for sold page and regular page)
-  const relatedProducts = await prisma.product.findMany({
+  // Fetch related products — smart matching for sold pages, simple for regular
+  const relatedQuery = {
     where: {
       categoryId: product.categoryId,
       id: { not: product.id },
@@ -110,13 +110,41 @@ export default async function ProductDetailPage({ params }: Props) {
       sold: false,
     },
     include: { category: { select: { name: true } } },
-    take: 4,
-  });
+  } as const;
+
+  const relatedProducts = product.sold
+    ? await (async () => {
+        // Sold page: fetch more candidates and score by size/price/brand similarity
+        const candidates = await prisma.product.findMany({ ...relatedQuery, take: 20 });
+
+        let soldSizes: string[] = [];
+        try { soldSizes = JSON.parse(product.sizes); } catch { /* */ }
+
+        const scored = candidates.map((p) => {
+          let score = 0;
+          // Size match is most important — customer likely needs same size
+          try {
+            const pSizes: string[] = JSON.parse(p.sizes);
+            if (soldSizes.length > 0 && pSizes.some((s) => soldSizes.includes(s))) score += 10;
+          } catch { /* */ }
+          // Price proximity (within 200 CZK = full points, fades out)
+          const priceDiff = Math.abs(p.price - product.price);
+          score += Math.max(0, 5 - priceDiff / 100);
+          // Same brand bonus
+          if (p.brand && p.brand === product.brand) score += 3;
+          return { product: p, score };
+        });
+
+        scored.sort((a, b) => b.score - a.score);
+        return scored.slice(0, 8).map((s) => s.product);
+      })()
+    : await prisma.product.findMany({ ...relatedQuery, take: 4 });
 
   const allIds = [product.id, ...relatedProducts.map((p) => p.id)];
   const lowestPricesMap = await getLowestPrices30d(allIds);
 
   // JSON-LD structured data for SEO (Google Shopping + AI search visibility)
+  // "Golden Record" — complete attributes for 3-4x higher AI visibility
   const jsonLd = {
     "@context": "https://schema.org",
     ...buildProductSchema({
@@ -128,8 +156,11 @@ export default async function ProductDetailPage({ params }: Props) {
       brand: product.brand,
       condition: product.condition,
       price: product.price,
+      compareAt: product.compareAt,
       sold: product.sold,
       categoryName: product.category.name,
+      colors: product.colors,
+      sizes: product.sizes,
     }),
   };
 
@@ -237,12 +268,15 @@ export default async function ProductDetailPage({ params }: Props) {
           </div>
         </div>
 
-        {/* Related products */}
+        {/* Smart similar products — scored by size/price/brand match */}
         {relatedProducts.length > 0 && (
           <section className="mt-16">
             <h2 className="font-heading text-xl font-bold text-foreground">
-              Podobné kousky, které jsou ještě dostupné
+              Podobné dostupné kousky
             </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Vybrali jsme kousky podobné velikosti, ceny a stylu
+            </p>
             <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
               {relatedProducts.map((p) => (
                 <ProductCard
