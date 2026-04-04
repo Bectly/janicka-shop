@@ -9,6 +9,7 @@ import { formatPrice } from "@/lib/format";
 import { CONDITION_LABELS, CONDITION_COLORS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { getWishlistProducts, type WishlistProduct } from "./actions";
+import { getImageUrls } from "@/lib/images";
 
 const emptySubscribe = () => () => {};
 
@@ -75,17 +76,7 @@ export function WishlistContent() {
   return (
     <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
       {products.map((product) => {
-        let parsedImages: string[] = [];
-        try {
-          const parsed = JSON.parse(product.images);
-          if (Array.isArray(parsed)) {
-            parsedImages = parsed.map((item: string | { url: string }) =>
-              typeof item === "string" ? item : item.url,
-            );
-          }
-        } catch {
-          /* corrupted data fallback */
-        }
+        const parsedImages = getImageUrls(product.images);
         const mainImage = parsedImages[0];
         const hasDiscount =
           product.compareAt && product.compareAt > product.price;

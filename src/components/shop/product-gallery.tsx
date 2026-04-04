@@ -293,7 +293,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
           <div className="flex gap-2 overflow-x-auto pb-1">
             {images.map((img, i) => (
               <button
-                key={getUrl(img)}
+                key={`${getUrl(img)}-${i}`}
                 type="button"
                 onClick={() => setActiveIndex(i)}
                 className={`relative size-16 shrink-0 overflow-hidden rounded-lg border-2 transition-all sm:size-20 ${
@@ -402,7 +402,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
             <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-2">
               {images.map((img, i) => (
                 <button
-                  key={getUrl(img)}
+                  key={`${getUrl(img)}-${i}`}
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();

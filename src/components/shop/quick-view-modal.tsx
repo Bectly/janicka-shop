@@ -13,6 +13,7 @@ import {
 import { formatPrice } from "@/lib/format";
 import { CONDITION_LABELS, CONDITION_COLORS } from "@/lib/constants";
 import { AddToCartButton } from "./add-to-cart-button";
+import { getImageUrls } from "@/lib/images";
 import { WishlistButton } from "./wishlist-button";
 import { getProductQuickView } from "@/lib/actions/products";
 
@@ -48,19 +49,7 @@ export function QuickViewButton({ productId }: QuickViewButtonProps) {
     setOpen(false);
   }, []);
 
-  let images: string[] = [];
-  if (product) {
-    try {
-      const parsed = JSON.parse(product.images);
-      if (Array.isArray(parsed)) {
-        images = parsed.map((item: string | { url: string }) =>
-          typeof item === "string" ? item : item.url,
-        );
-      }
-    } catch {
-      /* fallback */
-    }
-  }
+  const images = product ? getImageUrls(product.images) : [];
 
   let sizes: string[] = [];
   let colors: string[] = [];

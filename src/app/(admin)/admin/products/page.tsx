@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { DeleteProductButton } from "@/components/admin/delete-product-button";
 import { ProductSearch } from "@/components/admin/product-search";
 import { Pagination } from "@/components/shop/pagination";
+import { getImageUrls } from "@/lib/images";
 import type { Metadata } from "next";
 import type { Prisma } from "@prisma/client";
 
@@ -243,17 +244,7 @@ export default async function AdminProductsPage({
                 </tr>
               ) : (
                 products.map((product) => {
-                  const images: string[] = (() => {
-                    try {
-                      const parsed = JSON.parse(product.images);
-                      if (!Array.isArray(parsed)) return [];
-                      return parsed.map((item: string | { url: string }) =>
-                        typeof item === "string" ? item : item.url,
-                      );
-                    } catch {
-                      return [];
-                    }
-                  })();
+                  const images = getImageUrls(product.images);
                   return (
                   <tr
                     key={product.id}

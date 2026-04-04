@@ -6,7 +6,9 @@ import Image from "next/image";
 import { useRecentlyViewedStore } from "@/lib/recently-viewed-store";
 import { formatPrice } from "@/lib/format";
 import { CONDITION_LABELS, CONDITION_COLORS } from "@/lib/constants";
+import { trackViewItem } from "@/lib/analytics";
 import { WishlistButton } from "./wishlist-button";
+import { getImageUrls } from "@/lib/images";
 
 interface TrackViewProps {
   product: {
@@ -28,6 +30,13 @@ export function TrackProductView({ product }: TrackViewProps) {
 
   useEffect(() => {
     add(product);
+    trackViewItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      brand: product.brand,
+      category: product.categoryName,
+    });
   }, [product.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return null;
@@ -55,17 +64,7 @@ export function RecentlyViewedSection({
       </h2>
       <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
         {items.slice(0, 8).map((item) => {
-          let parsedImages: string[] = [];
-          try {
-            const parsed = JSON.parse(item.images);
-            if (Array.isArray(parsed)) {
-              parsedImages = parsed.map((it: string | { url: string }) =>
-                typeof it === "string" ? it : it.url,
-              );
-            }
-          } catch {
-            /* fallback */
-          }
+          const parsedImages = getImageUrls(item.images);
           const mainImage = parsedImages[0];
           const hasDiscount =
             item.compareAt && item.compareAt > item.price;

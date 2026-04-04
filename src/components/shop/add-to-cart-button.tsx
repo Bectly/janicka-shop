@@ -5,8 +5,10 @@ import { ShoppingBag, Check, Clock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/lib/cart-store";
 import { reserveProduct } from "@/lib/actions/reservation";
+import { trackAddToCart } from "@/lib/analytics";
 import { SizeGuide } from "@/components/shop/size-guide";
 import { MobileStickyAtc } from "@/components/shop/mobile-sticky-atc";
+import { getImageUrls } from "@/lib/images";
 
 interface AddToCartProps {
   product: {
@@ -33,15 +35,7 @@ export function AddToCartButton({ product }: AddToCartProps) {
 
   const isInCart = items.some((i) => i.productId === product.id);
 
-  let imageList: string[] = [];
-  try {
-    const parsed = JSON.parse(product.images);
-    if (Array.isArray(parsed)) {
-      imageList = parsed.map((item: string | { url: string }) =>
-        typeof item === "string" ? item : item.url,
-      );
-    }
-  } catch { /* corrupted data fallback */ }
+  const imageList = getImageUrls(product.images);
 
   function handleAdd() {
     setError(null);
@@ -61,6 +55,12 @@ export function AddToCartButton({ product }: AddToCartProps) {
         quantity: 1,
         slug: product.slug,
         reservedUntil: result.reservedUntil,
+      });
+      trackAddToCart({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        variant: [selectedSize, selectedColor].filter(Boolean).join(" / ") || undefined,
       });
       setAdded(true);
       setTimeout(() => setAdded(false), 2000);

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { formatPrice, formatRelativeTime } from "@/lib/format";
+import { getImageUrls } from "@/lib/images";
 
 interface SoldProduct {
   name: string;
@@ -31,17 +32,7 @@ export function RecentlySoldFeed({ products }: RecentlySoldFeedProps) {
       </div>
       <div className="mt-8 flex gap-4 overflow-x-auto pb-4 scrollbar-none sm:grid sm:grid-cols-4 sm:overflow-visible sm:pb-0 lg:grid-cols-8">
         {products.map((product) => {
-          let images: string[] = [];
-          try {
-            const parsed = JSON.parse(product.images);
-            if (Array.isArray(parsed)) {
-              images = parsed.map((item: string | { url: string }) =>
-                typeof item === "string" ? item : item.url,
-              );
-            }
-          } catch {
-            /* fallback */
-          }
+          const images = getImageUrls(product.images);
 
           return (
             <Link

@@ -173,11 +173,13 @@ export function InstantSearch() {
     }
   }, [open]);
 
-  // Lock body scroll when open
+  // Lock body scroll when open — snapshot previous value so we don't clobber
+  // any outer scroll lock (e.g. base-ui Sheet/Dialog already active).
   useEffect(() => {
     if (open) {
+      const prev = document.body.style.overflow;
       document.body.style.overflow = "hidden";
-      return () => { document.body.style.overflow = ""; };
+      return () => { document.body.style.overflow = prev; };
     }
   }, [open]);
 

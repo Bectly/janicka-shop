@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock, ArrowRight, MapPin, Truck } from "lucide-react";
 import type { Metadata } from "next";
 import { ClearCartOnMount } from "./clear-cart";
+import { TrackPurchase } from "@/components/shop/track-purchase";
 import { generateOrderQrPayment, orderNumberToVariableSymbol } from "@/lib/payments/qr-platba";
 import { QrPaymentCode } from "@/components/shop/qr-payment-code";
 
@@ -72,6 +73,15 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
   return (
     <div className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6 lg:px-8">
       <ClearCartOnMount orderedProductIds={order.items.map((i) => i.productId)} />
+      <TrackPurchase
+        transactionId={order.orderNumber}
+        items={order.items.map((i) => ({
+          id: i.productId,
+          name: i.name,
+          price: i.price,
+        }))}
+        total={order.total}
+      />
 
       {isPending ? (
         <Clock className="mx-auto size-16 text-amber-500" />

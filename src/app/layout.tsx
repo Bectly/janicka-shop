@@ -4,6 +4,7 @@ import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
 import { extractRouterConfig } from "uploadthing/server";
 import { ourFileRouter } from "@/app/api/uploadthing/core";
 import { RouteAnnouncer } from "@/components/route-announcer";
+import { AnalyticsProvider } from "@/components/analytics-provider";
 import "./globals.css";
 
 const inter = Inter({
@@ -44,6 +45,7 @@ export default function RootLayout({
         </a>
         <NextSSRPlugin routerConfig={extractRouterConfig(ourFileRouter)} />
         <RouteAnnouncer />
+        <AnalyticsProvider />
         {children}
       </body>
     </html>

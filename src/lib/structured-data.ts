@@ -10,6 +10,7 @@ import {
   FREE_SHIPPING_THRESHOLD as FREE_SHIPPING_CZK,
   SHIPPING_PRICES,
 } from "@/lib/constants";
+import { getImageUrls } from "@/lib/images";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://janicka-shop.vercel.app";
@@ -131,17 +132,7 @@ export interface ProductForSchema {
 
 /** Build a single Product schema object (for use standalone or inside ItemList). */
 export function buildProductSchema(product: ProductForSchema) {
-  let productImages: string[] = [];
-  try {
-    const parsed = JSON.parse(product.images);
-    if (Array.isArray(parsed)) {
-      productImages = parsed.map((item: string | { url: string }) =>
-        typeof item === "string" ? item : item.url,
-      );
-    }
-  } catch {
-    /* corrupted data fallback */
-  }
+  const productImages = getImageUrls(product.images);
 
   // Parse colors and sizes for structured attributes
   let colors: string[] = [];

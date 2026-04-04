@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState, useCallback } from "react";
+import { useActionState, useState, useCallback, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -21,6 +21,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCartStore } from "@/lib/cart-store";
 import { formatPrice } from "@/lib/format";
+import { trackBeginCheckout } from "@/lib/analytics";
 import { createOrder, captureAbandonedCart, type CheckoutState } from "./actions";
 import { useSyncExternalStore } from "react";
 import {
@@ -133,6 +134,17 @@ export default function CheckoutPage() {
     },
     [items, totalPrice]
   );
+
+  // Fire begin_checkout analytics event once on mount
+  const checkoutTracked = useRef(false);
+  useEffect(() => {
+    if (checkoutTracked.current || !mounted || items.length === 0) return;
+    checkoutTracked.current = true;
+    trackBeginCheckout(
+      items.map((i) => ({ id: i.productId, name: i.name, price: i.price })),
+      totalPrice(),
+    );
+  }, [mounted, items, totalPrice]);
 
   const isCod = paymentMethod === "cod";
   const isPacketaPickup = shippingMethod === "packeta_pickup";

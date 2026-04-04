@@ -28,6 +28,8 @@ function saveConsent(consent: CookieConsent) {
   // Also set a cookie so server can read consent status
   const secure = window.location.protocol === "https:" ? "; Secure" : "";
   document.cookie = `cookie-consent=1; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax${secure}`;
+  // Notify AnalyticsProvider in the same tab (StorageEvent only fires cross-tab)
+  window.dispatchEvent(new Event("cookie-consent-changed"));
 }
 
 export function CookieConsentBanner() {

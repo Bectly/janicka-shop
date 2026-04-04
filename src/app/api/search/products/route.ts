@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
+import { getImageUrls } from "@/lib/images";
 
 export const dynamic = "force-dynamic";
 
@@ -31,14 +32,7 @@ export async function GET() {
   });
 
   const items = products.map((p) => {
-    let firstImage = "";
-    try {
-      const parsed = JSON.parse(p.images);
-      if (Array.isArray(parsed)) {
-        const first = parsed[0];
-        firstImage = typeof first === "string" ? first : first?.url ?? "";
-      }
-    } catch { /* fallback */ }
+    const firstImage = getImageUrls(p.images)[0] ?? "";
 
     return {
       id: p.id,
