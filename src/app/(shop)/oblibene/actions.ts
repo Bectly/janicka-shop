@@ -1,6 +1,6 @@
 "use server";
 
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 
 export interface WishlistProduct {
   id: string;
@@ -23,7 +23,8 @@ export async function getWishlistProducts(
   // Cap input to prevent oversized IN queries from malicious clients
   const ids = productIds.slice(0, 100);
 
-  const products = await prisma.product.findMany({
+  const db = await getDb();
+  const products = await db.product.findMany({
     where: { id: { in: ids }, active: true },
     include: { category: { select: { name: true } } },
     orderBy: { createdAt: "desc" },

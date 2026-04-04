@@ -1,19 +1,20 @@
 "use server";
 
-import { prisma } from "@/lib/db";
-import { getVisitorId } from "@/lib/visitor";
+import { getDb } from "@/lib/db";
+import { getOrCreateVisitorId } from "@/lib/visitor";
 
 export async function getProductQuickView(productId: string) {
   if (!productId || typeof productId !== "string" || productId.length > 128) return null;
 
-  const product = await prisma.product.findUnique({
+  const db = await getDb();
+  const product = await db.product.findUnique({
     where: { id: productId },
     include: { category: { select: { name: true, slug: true } } },
   });
 
   if (!product || !product.active) return null;
 
-  const visitorId = await getVisitorId();
+  const visitorId = await getOrCreateVisitorId();
   const now = new Date();
   const isReservedByOther =
     !!product.reservedUntil &&

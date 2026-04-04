@@ -1,7 +1,7 @@
 import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 import { formatPrice } from "@/lib/format";
@@ -59,7 +59,8 @@ const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://janicka-shop.vercel.app";
 
 const getProduct = cache(async (slug: string) => {
-  return prisma.product.findUnique({
+  const db = await getDb();
+  return db.product.findUnique({
     where: { slug, active: true },
     include: { category: true },
   });
@@ -138,6 +139,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
   if (!product) notFound();
 
+  const db = await getDb();
   // Fetch related products — smart matching for sold pages, simple for regular
   const relatedQuery = {
     where: {
@@ -152,7 +154,7 @@ export default async function ProductDetailPage({ params }: Props) {
   const relatedProducts = product.sold
     ? await (async () => {
         // Sold page: fetch more candidates and score by size/price/brand similarity
-        const candidates = await prisma.product.findMany({ ...relatedQuery, take: 20 });
+        const candidates = await db.product.findMany({ ...relatedQuery, take: 20 });
 
         let soldSizes: string[] = [];
         try { soldSizes = JSON.parse(product.sizes); } catch { /* */ }
@@ -175,7 +177,7 @@ export default async function ProductDetailPage({ params }: Props) {
         scored.sort((a, b) => b.score - a.score);
         return scored.slice(0, 8).map((s) => s.product);
       })()
-    : await prisma.product.findMany({ ...relatedQuery, take: 4 });
+    : await db.product.findMany({ ...relatedQuery, take: 4 });
 
   const allIds = [product.id, ...relatedProducts.map((p) => p.id)];
   const lowestPricesMap = await getLowestPrices30d(allIds);

@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 import { formatPrice, formatDate } from "@/lib/format";
@@ -23,6 +23,7 @@ export default async function AdminOrdersPage({
 }: {
   searchParams: Promise<{ status?: string; q?: string }>;
 }) {
+  const db = await getDb();
   const params = await searchParams;
   const query = params.q?.trim() ?? "";
 
@@ -43,7 +44,7 @@ export default async function AdminOrdersPage({
     ];
   }
 
-  const orders = await prisma.order.findMany({
+  const orders = await db.order.findMany({
     where,
     orderBy: { createdAt: "desc" },
     take: 200,

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 import { formatPrice, formatDate } from "@/lib/format";
@@ -26,7 +26,8 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const customer = await prisma.customer.findUnique({
+  const db = await getDb();
+  const customer = await db.customer.findUnique({
     where: { id },
     select: { firstName: true, lastName: true },
   });
@@ -43,8 +44,9 @@ export default async function CustomerDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const db = await getDb();
 
-  const customer = await prisma.customer.findUnique({
+  const customer = await db.customer.findUnique({
     where: { id },
     include: {
       orders: {

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CookieSettingsButton } from "@/components/shop/cookie-settings-button";
 import { NewsletterForm } from "@/components/shop/newsletter-form";
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 
 const footerLinks = {
   nakupovani: {
@@ -50,7 +50,8 @@ function FacebookIcon({ className }: { className?: string }) {
 }
 
 export async function Footer() {
-  const settings = await prisma.shopSettings.findUnique({
+  const db = await getDb();
+  const settings = await db.shopSettings.findUnique({
     where: { id: "singleton" },
     select: { instagram: true, facebook: true },
   });

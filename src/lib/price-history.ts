@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 
 /**
  * Get the lowest price from the last 30 days for the given product IDs.
@@ -16,16 +16,18 @@ export async function getLowestPrices30d(
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
+  const db = await getDb();
+
   // Fetch both price history and current product prices in parallel
   const [histories, products] = await Promise.all([
-    prisma.priceHistory.findMany({
+    db.priceHistory.findMany({
       where: {
         productId: { in: productIds },
         changedAt: { gte: thirtyDaysAgo },
       },
       select: { productId: true, price: true },
     }),
-    prisma.product.findMany({
+    db.product.findMany({
       where: { id: { in: productIds } },
       select: { id: true, price: true },
     }),

@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 import type { Prisma } from "@prisma/client";
@@ -27,7 +27,8 @@ export async function generateMetadata({
   const params = await searchParams;
 
   if (params.category) {
-    const category = await prisma.category.findUnique({
+    const db = await getDb();
+    const category = await db.category.findUnique({
       where: { slug: params.category },
       select: { name: true, description: true },
     });
@@ -148,6 +149,7 @@ export default async function ProductsPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
+  const db = await getDb();
   const params = await searchParams;
   const currentPage = Math.max(1, parseInt(params.page ?? "1") || 1);
 
@@ -194,8 +196,8 @@ export default async function ProductsPage({
 
   // Fetch categories + all products for filter facets in parallel
   const [categories, countingProducts] = await Promise.all([
-    prisma.category.findMany({ orderBy: { sortOrder: "asc" } }),
-    prisma.product.findMany({
+    db.category.findMany({ orderBy: { sortOrder: "asc" } }),
+    db.product.findMany({
       where: { active: true, sold: false },
       select: {
         brand: true,
@@ -246,7 +248,7 @@ export default async function ProductsPage({
   if (hasJsFilter) {
     // Size/color filters require JS-level filtering (JSON columns not queryable via Prisma/SQLite).
     // Fetch ALL matching products, filter in JS, then paginate.
-    const allProducts = await prisma.product.findMany({
+    const allProducts = await db.product.findMany({
       where,
       include: { category: { select: { name: true } } },
       orderBy,
@@ -279,8 +281,8 @@ export default async function ProductsPage({
   } else {
     // No size filter — use DB-level count + skip/take for efficient pagination
     const [count, products] = await Promise.all([
-      prisma.product.count({ where }),
-      prisma.product.findMany({
+      db.product.count({ where }),
+      db.product.findMany({
         where,
         include: { category: { select: { name: true } } },
         orderBy,

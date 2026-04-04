@@ -12,6 +12,20 @@ export async function getVisitorId(): Promise<string> {
   const existing = store.get(VISITOR_COOKIE)?.value;
   if (existing) return existing;
 
+  // Cannot set cookies during Server Component rendering — return a temporary ID.
+  // The actual cookie will be set on first Server Action (e.g., cart reservation).
+  return crypto.randomUUID();
+}
+
+/**
+ * Get or create a visitor ID, setting the cookie if missing.
+ * Only call from Server Actions or Route Handlers — NOT from Server Components.
+ */
+export async function getOrCreateVisitorId(): Promise<string> {
+  const store = await cookies();
+  const existing = store.get(VISITOR_COOKIE)?.value;
+  if (existing) return existing;
+
   const id = crypto.randomUUID();
   store.set(VISITOR_COOKIE, id, {
     httpOnly: true,

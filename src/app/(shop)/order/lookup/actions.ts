@@ -1,6 +1,6 @@
 "use server";
 
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { z } from "zod";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
@@ -41,7 +41,8 @@ export async function lookupOrder(
 
   const { orderNumber, email } = parsed.data;
 
-  const order = await prisma.order.findUnique({
+  const db = await getDb();
+  const order = await db.order.findUnique({
     where: { orderNumber },
     include: { customer: { select: { email: true } } },
   });

@@ -1,6 +1,6 @@
 "use server";
 
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { rateLimitAdmin } from "@/lib/rate-limit";
 
@@ -14,7 +14,8 @@ export async function toggleSubscriberActive(id: string, active: boolean) {
   const rl = await rateLimitAdmin();
   if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
 
-  await prisma.newsletterSubscriber.update({
+  const db = await getDb();
+  await db.newsletterSubscriber.update({
     where: { id },
     data: { active },
   });
@@ -25,7 +26,8 @@ export async function getSubscribersCsv(): Promise<string> {
   const rl = await rateLimitAdmin();
   if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
 
-  const subscribers = await prisma.newsletterSubscriber.findMany({
+  const db = await getDb();
+  const subscribers = await db.newsletterSubscriber.findMany({
     where: { active: true },
     orderBy: { createdAt: "desc" },
   });

@@ -1,7 +1,7 @@
 "use server";
 
-import { prisma } from "@/lib/db";
-import { getVisitorId, RESERVATION_MS } from "@/lib/visitor";
+import { getDb } from "@/lib/db";
+import { getOrCreateVisitorId, RESERVATION_MS } from "@/lib/visitor";
 import { rateLimitReservation } from "@/lib/rate-limit";
 
 export type ReservationResult = {
@@ -22,14 +22,16 @@ export async function reserveProduct(
     return { success: false, error: "Příliš mnoho požadavků, zkuste to za chvíli" };
   }
 
-  const visitorId = await getVisitorId();
+  const visitorId = await getOrCreateVisitorId();
   const now = new Date();
   const reservedUntil = new Date(now.getTime() + RESERVATION_MS);
+
+  const db = await getDb();
 
   // Atomic conditional update — prevents TOCTOU race where two concurrent
   // "Add to cart" clicks both read the product as available and the second
   // silently overwrites the first visitor's reservation.
-  const result = await prisma.product.updateMany({
+  const result = await db.product.updateMany({
     where: {
       id: productId,
       active: true,
@@ -45,7 +47,7 @@ export async function reserveProduct(
 
   if (result.count === 0) {
     // Distinguish "not found" from "reserved by someone else"
-    const product = await prisma.product.findUnique({
+    const product = await db.product.findUnique({
       where: { id: productId },
       select: { id: true },
     });
@@ -65,9 +67,10 @@ export async function reserveProduct(
  * Release a reservation (when removing from cart).
  */
 export async function releaseReservation(productId: string): Promise<void> {
-  const visitorId = await getVisitorId();
+  const visitorId = await getOrCreateVisitorId();
+  const db = await getDb();
 
-  await prisma.product.updateMany({
+  await db.product.updateMany({
     where: {
       id: productId,
       reservedBy: visitorId,
@@ -90,15 +93,17 @@ export async function extendReservations(
   // Cap array size to prevent abuse via crafted requests
   if (productIds.length > 50) productIds = productIds.slice(0, 50);
 
-  const visitorId = await getVisitorId();
+  const visitorId = await getOrCreateVisitorId();
   const now = new Date();
   const reservedUntil = new Date(now.getTime() + RESERVATION_MS);
   const result: Record<string, string | null> = {};
 
+  const db = await getDb();
+
   // Atomic batch update — extends only products that are available to this visitor.
   // Prevents TOCTOU race where individual read-then-write could overwrite
   // another visitor's reservation made between the read and write.
-  await prisma.product.updateMany({
+  await db.product.updateMany({
     where: {
       id: { in: productIds },
       active: true,
@@ -113,7 +118,7 @@ export async function extendReservations(
   });
 
   // Read back to determine which products were successfully extended
-  const products = await prisma.product.findMany({
+  const products = await db.product.findMany({
     where: { id: { in: productIds } },
     select: { id: true, reservedBy: true },
   });
@@ -146,14 +151,15 @@ export async function checkAvailability(
   // Cap array size to prevent abuse via crafted requests
   if (productIds.length > 50) productIds = productIds.slice(0, 50);
 
-  const visitorId = await getVisitorId();
+  const visitorId = await getOrCreateVisitorId();
   const now = new Date();
   const result: Record<
     string,
     "available" | "reserved_by_you" | "reserved" | "sold"
   > = {};
 
-  const products = await prisma.product.findMany({
+  const db = await getDb();
+  const products = await db.product.findMany({
     where: { id: { in: productIds } },
     select: {
       id: true,

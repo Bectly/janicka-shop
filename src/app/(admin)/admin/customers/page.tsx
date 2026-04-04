@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { formatPrice, formatDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +12,8 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminCustomersPage() {
-  const customers = await prisma.customer.findMany({
+  const db = await getDb();
+  const customers = await db.customer.findMany({
     orderBy: { createdAt: "desc" },
     take: 200,
     include: {

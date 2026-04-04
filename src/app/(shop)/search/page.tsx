@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 import { ProductCard } from "@/components/shop/product-card";
@@ -19,6 +19,7 @@ export default async function SearchPage({
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
+  const db = await getDb();
   const params = await searchParams;
   const query = params.q?.trim().slice(0, 100) ?? "";
 
@@ -33,7 +34,7 @@ export default async function SearchPage({
   // then JS-level pass handles Czech diacritics (Š/š, Č/č, Ř/ř) that SQLite misses.
   const dbResults =
     query.length > 0 && !rateLimited
-      ? await prisma.product.findMany({
+      ? await db.product.findMany({
           where: {
             active: true,
             sold: false,
@@ -60,7 +61,7 @@ export default async function SearchPage({
       .toLowerCase()
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "");
-    const all = await prisma.product.findMany({
+    const all = await db.product.findMany({
       where: { active: true, sold: false },
       include: { category: { select: { name: true } } },
       orderBy: { createdAt: "desc" },
@@ -83,12 +84,12 @@ export default async function SearchPage({
   const showDiscovery = query.length === 0 || (products.length === 0 && !rateLimited);
   const [categories, featuredProducts] = showDiscovery
     ? await Promise.all([
-        prisma.category.findMany({
+        db.category.findMany({
           orderBy: { sortOrder: "asc" },
           select: { name: true, slug: true },
           take: 10,
         }),
-        prisma.product.findMany({
+        db.product.findMany({
           where: { active: true, sold: false, featured: true },
           include: { category: { select: { name: true } } },
           orderBy: { createdAt: "desc" },

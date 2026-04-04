@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -15,8 +15,9 @@ export default async function EditCategoryPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const db = await getDb();
 
-  const category = await prisma.category.findUnique({
+  const category = await db.category.findUnique({
     where: { id },
   });
 

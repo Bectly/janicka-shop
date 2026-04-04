@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 import {
@@ -39,7 +39,8 @@ function escapeXml(str: string): string {
 
 export async function GET() {
   try {
-    const products = await prisma.product.findMany({
+    const db = await getDb();
+    const products = await db.product.findMany({
       where: { active: true, sold: false },
       include: { category: { select: { slug: true, name: true } } },
       orderBy: { createdAt: "desc" },

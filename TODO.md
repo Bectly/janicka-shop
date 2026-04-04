@@ -1,25 +1,29 @@
 # Janička Shop — TODO
 
-## 🚨 CRITICAL: Vercel/Turso Runtime 500 Error
+## ✅ RESOLVED: Vercel/Turso Runtime 500 Error
 
-**Status**: Build passes on Vercel ✅, but runtime returns 500 on all shop pages.
+**Status**: FIXED — all pages return 200 on Vercel production.
 
-**What's done**:
-- Turso DB created (`janicka-shop-bectly.aws-eu-west-1.turso.io`), schema + seed data pushed
-- Vercel env vars set: `DATABASE_URL` (libsql://...), `TURSO_AUTH_TOKEN`, `AUTH_SECRET`
-- `@libsql/client` + `@prisma/adapter-libsql` installed, Prisma `previewFeatures = ["driverAdapters"]`
-- `auth-config.ts` split from `auth.ts` — middleware uses Edge-safe config without Prisma
-- `force-dynamic` on all layouts and pages
-- `db.ts` uses async Proxy with `getDb()` + dynamic import of libsql
+**Root causes (multiple)**:
+1. Proxy pattern in `db.ts` didn't work with RSC async — removed, migrated all 34 files to `const db = await getDb()`
+2. `@prisma/adapter-libsql@7.6.0` was incompatible with `@prisma/client@6.19.3` — downgraded adapter to 6.19.3
+3. Prisma 6 adapter API: `new PrismaLibSQL({url, authToken})` (NOT `new PrismaLibSQL(libsqlClient)` which is v7 API)
+4. Vercel env vars had trailing `\n` — fixed by re-setting without newlines
+5. `DATABASE_URL` must be a valid Prisma URL (`file:./dev.db`), actual Turso URL goes in `TURSO_DATABASE_URL`
+6. `getVisitorId()` called `cookies().set()` in Server Components — not allowed in Next.js 16, split into read-only `getVisitorId()` + `getOrCreateVisitorId()` for Server Actions
 
-**Problem**: Runtime 500 — the async Proxy pattern in `db.ts` doesn't work correctly with server components. When code does `await prisma.product.findMany()`, the Proxy returns a nested Promise that RSC can't unwrap properly.
+**Env var setup on Vercel**:
+- `DATABASE_URL` = `file:./dev.db` (for Prisma query engine)
+- `TURSO_DATABASE_URL` = `libsql://janicka-shop-bectly.aws-eu-west-1.turso.io` (for adapter)
+- `TURSO_AUTH_TOKEN` = JWT token (no trailing newline!)
 
-**Fix needed**: 
-- [ ] [BOLT] Replace Proxy with direct `getDb()` pattern. Migrate ALL server code to use `const db = await getDb(); const products = await db.product.findMany(...)` instead of `prisma.product.findMany()`. This is the only reliable way to handle async Turso init.
-- [ ] [BOLT] Search all files: `grep -rn "prisma\." src/app/ src/lib/ --include="*.ts" --include="*.tsx"` and replace every `prisma.xxx` with `const db = await getDb(); db.xxx`
-- [ ] [BOLT] Test locally with Turso URL: `DATABASE_URL="libsql://janicka-shop-bectly.aws-eu-west-1.turso.io" TURSO_AUTH_TOKEN="..." npm run dev`
-- [ ] [BOLT] After runtime works: `vercel deploy --prod --token $(sqlite3 ~/.claude/jarvis-gym/jarvis.db "SELECT key_value FROM api_keys WHERE name='vercel'")`
-- [ ] [BOLT] Verify: `curl -s -o /dev/null -w "%{http_code}" https://janicka-shop.vercel.app` must return 200
+**Fix applied**:
+- [x] [BOLT] Removed Proxy, migrated 34 files to `await getDb()` pattern
+- [x] [BOLT] Downgraded `@prisma/adapter-libsql` to 6.19.3 (matching @prisma/client)
+- [x] [BOLT] Fixed adapter API: `PrismaLibSQL({url, authToken})` direct config
+- [x] [BOLT] Fixed Vercel env vars (no trailing newlines, separate TURSO_DATABASE_URL)
+- [x] [BOLT] Fixed `getVisitorId()` — read-only in RSC, cookie-setting in Server Actions
+- [x] [BOLT] Deployed to Vercel production — all pages return 200
 
 ## Phase 1: Foundation [DONE]
 - [x] [BOLT] Fix html lang="cs", use Inter font, all metadata in Czech

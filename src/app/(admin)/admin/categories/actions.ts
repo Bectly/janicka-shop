@@ -1,6 +1,6 @@
 "use server";
 
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -45,23 +45,24 @@ export async function createCategory(formData: FormData) {
   };
 
   const parsed = categorySchema.parse(raw);
+  const db = await getDb();
 
   // Check slug uniqueness
   let slug = parsed.slug;
-  const existing = await prisma.category.findUnique({ where: { slug } });
+  const existing = await db.category.findUnique({ where: { slug } });
   if (existing) {
     slug = `${slug}-${Date.now().toString(36)}`;
   }
 
   // Check name uniqueness
-  const nameExists = await prisma.category.findUnique({
+  const nameExists = await db.category.findUnique({
     where: { name: parsed.name },
   });
   if (nameExists) {
     throw new Error("Kategorie s tímto názvem již existuje");
   }
 
-  await prisma.category.create({
+  await db.category.create({
     data: {
       name: parsed.name,
       slug,
@@ -90,10 +91,11 @@ export async function updateCategory(id: string, formData: FormData) {
   };
 
   const parsed = categorySchema.parse(raw);
+  const db = await getDb();
 
   // Check slug uniqueness (skip self)
   let slug = parsed.slug;
-  const existingSlug = await prisma.category.findFirst({
+  const existingSlug = await db.category.findFirst({
     where: { slug, NOT: { id } },
   });
   if (existingSlug) {
@@ -101,14 +103,14 @@ export async function updateCategory(id: string, formData: FormData) {
   }
 
   // Check name uniqueness (skip self)
-  const nameExists = await prisma.category.findFirst({
+  const nameExists = await db.category.findFirst({
     where: { name: parsed.name, NOT: { id } },
   });
   if (nameExists) {
     throw new Error("Kategorie s tímto názvem již existuje");
   }
 
-  await prisma.category.update({
+  await db.category.update({
     where: { id },
     data: {
       name: parsed.name,
@@ -129,8 +131,10 @@ export async function deleteCategory(id: string) {
   const rl = await rateLimitAdmin();
   if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
 
+  const db = await getDb();
+
   // Check if category has products — prevent deletion to avoid orphans
-  const productCount = await prisma.product.count({
+  const productCount = await db.product.count({
     where: { categoryId: id },
   });
 
@@ -140,7 +144,7 @@ export async function deleteCategory(id: string) {
     );
   }
 
-  await prisma.category.delete({ where: { id } });
+  await db.category.delete({ where: { id } });
 
   revalidatePath("/admin/categories");
   revalidatePath("/products");

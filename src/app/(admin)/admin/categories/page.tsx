@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +11,8 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminCategoriesPage() {
-  const categories = await prisma.category.findMany({
+  const db = await getDb();
+  const categories = await db.category.findMany({
     orderBy: { sortOrder: "asc" },
     include: {
       _count: { select: { products: true } },

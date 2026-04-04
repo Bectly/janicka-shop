@@ -348,8 +348,17 @@ Must be 100% original implementation, zero copied code/design.
 - Order status management (color-coded badges)
 - Customer management
 
-### devChat — Owner ↔ Lead Communication
+### devChat — Owner ↔ Lead Communication (2 kanály)
 Floating chat widget dostupný na KAŽDÉ stránce (shop i admin). Janička (owner) píše požadavky, feedback, změny — Lead agent je čte a promítá do direktiv pro dev tým.
+
+**Kanál 1: Web (Janička)** — devChat widget na webu, plné požadavky, feedback na design/UX
+**Kanál 2: Telegram (Bectly)** — rychlé checky z telefonu, stav projektu, krátké příkazy
+- Telegram bot: `@Jarvis_bectly_bot` (token v JARVIS DB: `telegram-bot`, chat_id: `8750673812`)
+- Polling script checkuje `getUpdates` → zapisuje do DB (stejná tabulka jako devChat, `sender: "bectly"`)
+- Lead čte obojí ve svém cyklu — devChat od Janičky i Telegram od Bectlyho
+- **Telegram = krátké zprávy z mobilu.** Bectly tam nekládá velké zadání — spíš "jak je na tom Vercel?", "kolik cyklů?", "stopni devloop", "pushnout na main?"
+- **Když není žádná nová zpráva → Lead to prostě přeskočí.** Žádné extra tokeny, žádný overhead. Jen quick check "jsou nové zprávy? ne → jedu dál"
+- Lead odpovídá stručně — Bectly čte na telefonu, nechce román
 
 **Architektura:**
 - `DevChatWidget` — floating bubble (bottom-right), expanduje se do chat panelu

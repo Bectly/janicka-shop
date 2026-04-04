@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 import { ProductForm } from "@/components/admin/product-form";
@@ -12,7 +12,8 @@ export const metadata: Metadata = {
 };
 
 export default async function NewProductPage() {
-  const categories = await prisma.category.findMany({
+  const db = await getDb();
+  const categories = await db.category.findMany({
     orderBy: { sortOrder: "asc" },
     select: { id: true, name: true },
   });

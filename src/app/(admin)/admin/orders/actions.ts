@@ -1,6 +1,6 @@
 "use server";
 
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { ORDER_STATUS_LABELS } from "@/lib/constants";
@@ -40,7 +40,9 @@ export async function updateOrderStatus(orderId: string, status: string) {
     throw new Error("Neplatný status objednávky");
   }
 
-  const order = await prisma.order.findUnique({
+  const db = await getDb();
+
+  const order = await db.order.findUnique({
     where: { id: orderId },
     select: { status: true, items: { select: { productId: true } } },
   });
@@ -63,7 +65,7 @@ export async function updateOrderStatus(orderId: string, status: string) {
   // cancels first and a new checkout re-sells the product, the late admin
   // action safely no-ops instead of releasing the newly sold product.
   if (status === "cancelled" && order.status !== "cancelled") {
-    await prisma.$transaction(async (tx) => {
+    await db.$transaction(async (tx) => {
       const updated = await tx.order.updateMany({
         where: { id: orderId, status: order.status },
         data: { status: "cancelled" },
@@ -82,7 +84,7 @@ export async function updateOrderStatus(orderId: string, status: string) {
     // Both check and update MUST be inside the same transaction to prevent
     // a TOCTOU race where a concurrent checkout sells the products between
     // the availability check and the update.
-    await prisma.$transaction(async (tx) => {
+    await db.$transaction(async (tx) => {
       const alreadySold = await tx.product.findMany({
         where: { id: { in: productIds }, sold: true },
         select: { id: true, name: true },
@@ -110,14 +112,14 @@ export async function updateOrderStatus(orderId: string, status: string) {
       }
     });
   } else {
-    await prisma.order.update({
+    await db.order.update({
       where: { id: orderId },
       data: { status },
     });
   }
 
   // Fire-and-forget status notification email (never blocks admin action)
-  prisma.order
+  db.order
     .findUnique({
       where: { id: orderId },
       select: {
@@ -186,7 +188,9 @@ export async function exportOrdersCsv(statusFilter?: string): Promise<string> {
     where.status = statusFilter;
   }
 
-  const orders = await prisma.order.findMany({
+  const db = await getDb();
+
+  const orders = await db.order.findMany({
     where,
     orderBy: { createdAt: "desc" },
     take: 5000,
@@ -258,7 +262,9 @@ export async function updateTrackingNumber(orderId: string, trackingNumber: stri
   // Validate input length — tracking numbers are typically 10-30 chars
   const trimmed = trackingNumber.trim().slice(0, 100);
 
-  await prisma.order.update({
+  const db = await getDb();
+
+  await db.order.update({
     where: { id: orderId },
     data: { trackingNumber: trimmed || null },
   });

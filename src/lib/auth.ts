@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { rateLimitLogin, recordLoginFailure } from "@/lib/rate-limit";
 import { authConfig } from "@/lib/auth-config";
 
@@ -20,7 +20,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const rl = await rateLimitLogin();
         if (!rl.success) return null;
 
-        const admin = await prisma.admin.findUnique({
+        const db = await getDb();
+        const admin = await db.admin.findUnique({
           where: { email: credentials.email as string },
         });
 

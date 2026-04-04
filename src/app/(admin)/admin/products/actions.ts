@@ -1,6 +1,6 @@
 "use server";
 
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -79,16 +79,18 @@ export async function createProduct(formData: FormData) {
 
   const parsed = productSchema.parse(raw);
 
+  const db = await getDb();
+
   // Ensure slug uniqueness
   let slug = parsed.slug;
-  const existing = await prisma.product.findUnique({ where: { slug } });
+  const existing = await db.product.findUnique({ where: { slug } });
   if (existing) {
     slug = `${slug}-${Date.now().toString(36)}`;
   }
 
   const validatedImages = parseImages(formData);
 
-  const product = await prisma.product.create({
+  const product = await db.product.create({
     data: {
       name: parsed.name,
       slug,
@@ -113,7 +115,7 @@ export async function createProduct(formData: FormData) {
   });
 
   // Log initial price for 30-day price history (Czech fake discount law)
-  await prisma.priceHistory.create({
+  await db.priceHistory.create({
     data: { productId: product.id, price: parsed.price },
   });
 
@@ -146,9 +148,11 @@ export async function updateProduct(id: string, formData: FormData) {
 
   const parsed = productSchema.parse(raw);
 
+  const db = await getDb();
+
   // Ensure slug uniqueness (skip self)
   let slug = parsed.slug;
-  const existing = await prisma.product.findFirst({
+  const existing = await db.product.findFirst({
     where: { slug, NOT: { id } },
   });
   if (existing) {
@@ -158,17 +162,17 @@ export async function updateProduct(id: string, formData: FormData) {
   const validatedImages = parseImages(formData);
 
   // Check if price changed — log old price for 30-day price history (Czech fake discount law)
-  const current = await prisma.product.findUnique({
+  const current = await db.product.findUnique({
     where: { id },
     select: { price: true },
   });
   if (current && current.price !== parsed.price) {
-    await prisma.priceHistory.create({
+    await db.priceHistory.create({
       data: { productId: id, price: current.price },
     });
   }
 
-  await prisma.product.update({
+  await db.product.update({
     where: { id },
     data: {
       name: parsed.name,
@@ -234,9 +238,11 @@ export async function quickCreateProduct(formData: FormData) {
 
   const parsed = quickProductSchema.parse(raw);
 
+  const db = await getDb();
+
   // Auto-generate slug from name
   let slug = slugify(parsed.name);
-  const existingSlug = await prisma.product.findUnique({ where: { slug } });
+  const existingSlug = await db.product.findUnique({ where: { slug } });
   if (existingSlug) {
     slug = `${slug}-${Date.now().toString(36)}`;
   }
@@ -250,7 +256,7 @@ export async function quickCreateProduct(formData: FormData) {
   const description = parsed.description.trim()
     || `${parsed.name}${parsed.brand ? ` od značky ${parsed.brand}` : ""}. Stav: ${parsed.condition === "new_with_tags" ? "nové s visačkou" : parsed.condition === "excellent" ? "výborný" : parsed.condition === "good" ? "dobrý" : "viditelné opotřebení"}.`;
 
-  const product = await prisma.product.create({
+  const product = await db.product.create({
     data: {
       name: parsed.name,
       slug,
@@ -275,7 +281,7 @@ export async function quickCreateProduct(formData: FormData) {
   });
 
   // Log initial price for 30-day price history (Czech fake discount law)
-  await prisma.priceHistory.create({
+  await db.priceHistory.create({
     data: { productId: product.id, price: parsed.price },
   });
 
@@ -290,18 +296,20 @@ export async function deleteProduct(id: string) {
   const rl = await rateLimitAdmin();
   if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
 
+  const db = await getDb();
+
   // Check if product has order items — if so, soft-delete to preserve order history
-  const orderItemCount = await prisma.orderItem.count({
+  const orderItemCount = await db.orderItem.count({
     where: { productId: id },
   });
 
   if (orderItemCount > 0) {
-    await prisma.product.update({
+    await db.product.update({
       where: { id },
       data: { active: false, sold: true },
     });
   } else {
-    await prisma.product.delete({ where: { id } });
+    await db.product.delete({ where: { id } });
   }
 
   revalidatePath("/admin/products");

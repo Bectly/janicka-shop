@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { ProductCard } from "@/components/shop/product-card";
 import { Header } from "@/components/shop/header";
 import { Footer } from "@/components/shop/footer";
@@ -17,12 +17,13 @@ export default async function NotFound() {
   let lowestPricesMap = new Map<string, number>();
 
   try {
+    const db = await getDb();
     [categories, latestProducts] = await Promise.all([
-      prisma.category.findMany({
+      db.category.findMany({
         orderBy: { sortOrder: "asc" },
         select: { name: true, slug: true },
       }),
-      prisma.product.findMany({
+      db.product.findMany({
         where: { active: true, sold: false },
         include: { category: { select: { name: true } } },
         orderBy: { createdAt: "desc" },

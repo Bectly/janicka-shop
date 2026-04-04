@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 import { ProductForm } from "@/components/admin/product-form";
@@ -13,8 +13,9 @@ interface Props {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const db = await getDb();
   const { id } = await params;
-  const product = await prisma.product.findUnique({
+  const product = await db.product.findUnique({
     where: { id },
     select: { name: true },
   });
@@ -22,11 +23,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function EditProductPage({ params }: Props) {
+  const db = await getDb();
   const { id } = await params;
 
   const [product, categories] = await Promise.all([
-    prisma.product.findUnique({ where: { id } }),
-    prisma.category.findMany({
+    db.product.findUnique({ where: { id } }),
+    db.category.findMany({
       orderBy: { sortOrder: "asc" },
       select: { id: true, name: true },
     }),

@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { formatDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +12,8 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminSubscribersPage() {
-  const subscribers = await prisma.newsletterSubscriber.findMany({
+  const db = await getDb();
+  const subscribers = await db.newsletterSubscriber.findMany({
     orderBy: { createdAt: "desc" },
     take: 500,
   });

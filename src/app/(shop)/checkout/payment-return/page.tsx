@@ -1,6 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 import { getComgatePaymentStatus } from "@/lib/payments/comgate";
@@ -22,8 +22,10 @@ export default async function PaymentReturnPage({ searchParams }: Props) {
 
   if (!refId) notFound();
 
+  const db = await getDb();
+
   // Find the order by reference ID (order number)
-  const order = await prisma.order.findUnique({
+  const order = await db.order.findUnique({
     where: { orderNumber: refId },
     select: {
       id: true,
@@ -56,7 +58,7 @@ export default async function PaymentReturnPage({ searchParams }: Props) {
       // If Comgate says PAID but webhook hasn't processed yet, update now.
       // Use updateMany with status guard for atomic TOCTOU-safe write.
       if (status.status === "PAID" && order.status === "pending") {
-        const updated = await prisma.order.updateMany({
+        const updated = await db.order.updateMany({
           where: { id: order.id, status: "pending" },
           data: { status: "paid" },
         });
@@ -64,7 +66,7 @@ export default async function PaymentReturnPage({ searchParams }: Props) {
         // Send payment confirmed email if we were the ones to transition to PAID
         // (the webhook would skip since status is no longer "pending").
         if (updated.count > 0) {
-          const fullOrder = await prisma.order.findUnique({
+          const fullOrder = await db.order.findUnique({
             where: { id: order.id },
             include: { customer: true },
           });
@@ -89,7 +91,7 @@ export default async function PaymentReturnPage({ searchParams }: Props) {
       // blocking retry (checkout would fail on "product unavailable").
       // Uses same atomic pattern as webhook: updateMany with status guard + transaction.
       if (status.status === "CANCELLED" && order.status === "pending") {
-        await prisma.$transaction(async (tx) => {
+        await db.$transaction(async (tx) => {
           const updated = await tx.order.updateMany({
             where: { id: order.id, status: "pending" },
             data: { status: "cancelled" },

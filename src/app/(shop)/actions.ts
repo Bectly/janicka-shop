@@ -1,6 +1,6 @@
 "use server";
 
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { z } from "zod";
 import { rateLimitNewsletter } from "@/lib/rate-limit";
 import { sendNewsletterWelcomeEmail } from "@/lib/email";
@@ -33,14 +33,15 @@ export async function subscribeNewsletter(
   const { email } = parsed.data;
 
   try {
+    const db = await getDb();
     // Check if this is a new subscriber (not a re-subscribe)
-    const existing = await prisma.newsletterSubscriber.findUnique({
+    const existing = await db.newsletterSubscriber.findUnique({
       where: { email },
       select: { active: true },
     });
     const isNew = !existing || !existing.active;
 
-    await prisma.newsletterSubscriber.upsert({
+    await db.newsletterSubscriber.upsert({
       where: { email },
       create: { email, active: true },
       update: { active: true },
@@ -92,8 +93,9 @@ export async function getCartRecommendations(
   // Cap input to prevent abuse
   const safeIds = productIds.slice(0, 20);
 
+  const db = await getDb();
   // Get category IDs for the cart items
-  const cartProducts = await prisma.product.findMany({
+  const cartProducts = await db.product.findMany({
     where: { id: { in: safeIds } },
     select: { categoryId: true },
   });
@@ -102,7 +104,7 @@ export async function getCartRecommendations(
   if (categoryIds.length === 0) return [];
 
   // Fetch candidates from same categories, excluding cart items
-  const candidates = await prisma.product.findMany({
+  const candidates = await db.product.findMany({
     where: {
       categoryId: { in: categoryIds },
       id: { notIn: safeIds },

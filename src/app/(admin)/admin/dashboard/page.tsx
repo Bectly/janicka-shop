@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { formatPrice, formatDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -52,6 +52,7 @@ export default async function AdminDashboardPage({
 }: {
   searchParams: Promise<{ period?: string }>;
 }) {
+  const db = await getDb();
   const params = await searchParams;
   const period = (["today", "7d", "30d", "all"].includes(params.period ?? "")
     ? params.period
@@ -73,28 +74,28 @@ export default async function AdminDashboardPage({
     revenueAgg,
     statusGroups,
   ] = await Promise.all([
-    prisma.product.count(dateFilter ? { where: { createdAt: dateFilter } } : undefined),
-    prisma.product.count({ where: { active: true, sold: false, ...(dateFilter ? { createdAt: dateFilter } : {}) } }),
-    prisma.product.count({ where: { sold: true, ...(dateFilter ? { updatedAt: dateFilter } : {}) } }),
-    prisma.order.count(dateFilter ? { where: { createdAt: dateFilter } } : undefined),
-    prisma.customer.count(dateFilter ? { where: { createdAt: dateFilter } } : undefined),
-    prisma.product.findMany({
+    db.product.count(dateFilter ? { where: { createdAt: dateFilter } } : undefined),
+    db.product.count({ where: { active: true, sold: false, ...(dateFilter ? { createdAt: dateFilter } : {}) } }),
+    db.product.count({ where: { sold: true, ...(dateFilter ? { updatedAt: dateFilter } : {}) } }),
+    db.order.count(dateFilter ? { where: { createdAt: dateFilter } } : undefined),
+    db.customer.count(dateFilter ? { where: { createdAt: dateFilter } } : undefined),
+    db.product.findMany({
       orderBy: { createdAt: "desc" },
       take: 5,
       include: { category: { select: { name: true } } },
     }),
-    prisma.order.findMany({
+    db.order.findMany({
       orderBy: { createdAt: "desc" },
       take: 5,
       include: {
         customer: { select: { firstName: true, lastName: true } },
       },
     }),
-    prisma.order.aggregate({
+    db.order.aggregate({
       where: { status: { not: "cancelled" }, ...(dateFilter ? { createdAt: dateFilter } : {}) },
       _sum: { total: true },
     }),
-    prisma.order.groupBy({
+    db.order.groupBy({
       by: ["status"],
       _count: { status: true },
       ...(dateFilter ? { where: { createdAt: dateFilter } } : {}),

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 import { formatPrice } from "@/lib/format";
@@ -37,7 +37,8 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
   const { orderNumber } = await params;
   const { token } = await searchParams;
 
-  const order = await prisma.order.findUnique({
+  const db = await getDb();
+  const order = await db.order.findUnique({
     where: { orderNumber },
     include: {
       customer: true,

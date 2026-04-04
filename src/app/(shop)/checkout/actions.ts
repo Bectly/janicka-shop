@@ -1,9 +1,9 @@
 "use server";
 
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { getVisitorId } from "@/lib/visitor";
+import { getOrCreateVisitorId } from "@/lib/visitor";
 import { createComgatePayment } from "@/lib/payments/comgate";
 import { rateLimitCheckout } from "@/lib/rate-limit";
 import { sendOrderConfirmationEmail } from "@/lib/email";
@@ -197,15 +197,16 @@ export async function createOrder(
 
   const data = result.data;
   const productIds = data.items.map((i) => i.productId);
-  const visitorId = await getVisitorId();
+  const visitorId = await getOrCreateVisitorId();
   const isCod = data.paymentMethod === "cod";
   const isPacketaPickup = data.shippingMethod === "packeta_pickup";
 
   // Use a transaction to prevent double-sell race conditions.
   // Inside the transaction: verify availability, use DB prices (never trust client), create order, mark sold.
   let order;
+  const db = await getDb();
   try {
-    order = await prisma.$transaction(async (tx) => {
+    order = await db.$transaction(async (tx) => {
       // Verify all products are still available (authoritative check inside transaction)
       // Products reserved by this visitor are considered available
       const products = await tx.product.findMany({
@@ -430,7 +431,7 @@ export async function createOrder(
     });
 
     // Store Comgate transaction ID on the order
-    await prisma.order.update({
+    await db.order.update({
       where: { id: order.id },
       data: { paymentId: payment.transId },
     });
@@ -441,7 +442,7 @@ export async function createOrder(
     // Without rollback, products stay sold:true and the user can't retry checkout
     // (neither online payment nor COD — both would fail on availability check).
     try {
-      await prisma.$transaction(async (tx) => {
+      await db.$transaction(async (tx) => {
         await tx.orderItem.deleteMany({ where: { orderId: order.id } });
         await tx.order.delete({ where: { id: order.id } });
         await tx.product.updateMany({

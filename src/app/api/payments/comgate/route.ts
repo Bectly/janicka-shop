@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 import { getComgatePaymentStatus } from "@/lib/payments/comgate";
@@ -31,15 +31,17 @@ export async function POST(request: NextRequest) {
     // ALWAYS verify payment status via API — never trust webhook payload
     const paymentStatus = await getComgatePaymentStatus(transId);
 
+    const db = await getDb();
+
     // Find order by payment transaction ID
-    const order = await prisma.order.findFirst({
+    const order = await db.order.findFirst({
       where: { paymentId: transId },
       select: { id: true, status: true, orderNumber: true },
     });
 
     if (!order) {
       // Try finding by refId (order number) as fallback
-      const orderByRef = await prisma.order.findUnique({
+      const orderByRef = await db.order.findUnique({
         where: { orderNumber: paymentStatus.refId },
         select: { id: true, status: true, orderNumber: true },
       });
@@ -56,7 +58,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Update paymentId if not set yet
-      await prisma.order.update({
+      await db.order.update({
         where: { id: orderByRef.id },
         data: { paymentId: transId },
       });
@@ -103,19 +105,20 @@ async function processPaymentStatus(
   currentOrderStatus: string,
   comgateStatus: string,
 ) {
+  const db = await getDb();
   switch (comgateStatus) {
     case "PAID": {
       // Only mark as paid if order is still pending — never regress a more advanced status.
       // Use updateMany with status guard for atomic TOCTOU-safe write (same as payment-return page).
       if (currentOrderStatus === "pending") {
-        const updated = await prisma.order.updateMany({
+        const updated = await db.order.updateMany({
           where: { id: orderId, status: "pending" },
           data: { status: "paid" },
         });
 
         // Send payment confirmed email (fire-and-forget)
         if (updated.count > 0) {
-          const order = await prisma.order.findUnique({
+          const order = await db.order.findUnique({
             where: { id: orderId },
             include: { customer: true },
           });
@@ -139,7 +142,7 @@ async function processPaymentStatus(
       // Use updateMany with status guard for atomic TOCTOU-safe write,
       // consistent with the PAID branch above.
       if (currentOrderStatus === "pending") {
-        await prisma.$transaction(async (tx) => {
+        await db.$transaction(async (tx) => {
           // Atomic status guard: only updates if still "pending"
           const updated = await tx.order.updateMany({
             where: { id: orderId, status: "pending" },

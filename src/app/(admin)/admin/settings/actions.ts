@@ -1,6 +1,6 @@
 "use server";
 
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -33,12 +33,13 @@ export type SettingsResult = {
 export async function getShopSettings() {
   await requireAdmin();
 
-  const settings = await prisma.shopSettings.findUnique({
+  const db = await getDb();
+  const settings = await db.shopSettings.findUnique({
     where: { id: "singleton" },
   });
 
   if (!settings) {
-    return prisma.shopSettings.create({
+    return db.shopSettings.create({
       data: { id: "singleton" },
     });
   }
@@ -76,7 +77,8 @@ export async function updateShopSettings(
     return { success: false, message: first?.message ?? "Neplatné údaje" };
   }
 
-  await prisma.shopSettings.upsert({
+  const db = await getDb();
+  await db.shopSettings.upsert({
     where: { id: "singleton" },
     create: { id: "singleton", ...parsed.data },
     update: parsed.data,

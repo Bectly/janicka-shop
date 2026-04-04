@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -41,20 +41,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Graceful degradation: if DB is unavailable (Turso cold start, network error),
   // return static pages only so crawlers don't get a 500 on /sitemap.xml
   try {
+    const db = await getDb();
     const [activeProducts, soldProducts, categories] = await Promise.all([
-      prisma.product.findMany({
+      db.product.findMany({
         where: { active: true, sold: false },
         select: { slug: true, updatedAt: true },
         orderBy: { updatedAt: "desc" },
       }),
       // Sold products still have valid pages (show "Prodáno" + similar items).
       // Including them helps SEO — users find them via Google, see alternatives.
-      prisma.product.findMany({
+      db.product.findMany({
         where: { active: true, sold: true },
         select: { slug: true, updatedAt: true },
         orderBy: { updatedAt: "desc" },
       }),
-      prisma.category.findMany({
+      db.category.findMany({
         select: { slug: true, updatedAt: true },
       }),
     ]);

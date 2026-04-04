@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 import { formatPrice } from "@/lib/format";
@@ -71,16 +71,18 @@ export default async function AdminProductsPage({
     ];
   }
 
+  const db = await getDb();
+
   const [totalCount, products, categories] = await Promise.all([
-    prisma.product.count({ where }),
-    prisma.product.findMany({
+    db.product.count({ where }),
+    db.product.findMany({
       where,
       orderBy: { createdAt: "desc" },
       include: { category: { select: { name: true } } },
       skip: (currentPage - 1) * ADMIN_PRODUCTS_PER_PAGE,
       take: ADMIN_PRODUCTS_PER_PAGE,
     }),
-    prisma.category.findMany({
+    db.category.findMany({
       orderBy: { name: "asc" },
       select: { id: true, name: true },
     }),

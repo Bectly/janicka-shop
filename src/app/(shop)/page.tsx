@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 import { ProductCard } from "@/components/shop/product-card";
@@ -15,17 +15,18 @@ import { getLowestPrices30d } from "@/lib/price-history";
 import { buildItemListSchema, buildWebSiteSchema, buildOrganizationSchema, jsonLdString } from "@/lib/structured-data";
 
 export default async function HomePage() {
+  const db = await getDb();
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
   const [featuredProducts, categories, newProducts, recentlySold, brandProducts, saleProducts] = await Promise.all([
-    prisma.product.findMany({
+    db.product.findMany({
       where: { featured: true, active: true, sold: false },
       include: { category: { select: { name: true } } },
       take: 8,
       orderBy: { createdAt: "desc" },
     }),
-    prisma.category.findMany({
+    db.category.findMany({
       orderBy: { sortOrder: "asc" },
       include: {
         _count: {
@@ -33,13 +34,13 @@ export default async function HomePage() {
         },
       },
     }),
-    prisma.product.findMany({
+    db.product.findMany({
       where: { active: true, sold: false, createdAt: { gte: sevenDaysAgo } },
       include: { category: { select: { name: true } } },
       take: 8,
       orderBy: { createdAt: "desc" },
     }),
-    prisma.product.findMany({
+    db.product.findMany({
       where: { sold: true, active: true },
       select: {
         name: true,
@@ -53,11 +54,11 @@ export default async function HomePage() {
       take: 8,
       orderBy: { updatedAt: "desc" },
     }),
-    prisma.product.findMany({
+    db.product.findMany({
       where: { active: true, sold: false, brand: { not: null } },
       select: { brand: true },
     }),
-    prisma.product.findMany({
+    db.product.findMany({
       where: {
         active: true,
         sold: false,
