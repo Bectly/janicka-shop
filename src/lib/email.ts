@@ -387,6 +387,13 @@ function buildOrderConfirmedHtml(data: StatusEmailData): string {
 }
 
 function buildOrderShippedHtml(data: StatusEmailData): string {
+  const trackingHtml = data.trackingNumber
+    ? `<div style="background: #f5f3ff; border-radius: 8px; padding: 12px 16px; margin: 16px auto 0; display: inline-block;">
+          <p style="margin: 0; color: #666; font-size: 13px;">Sledovací číslo zásilky:</p>
+          <p style="margin: 4px 0 0; font-size: 16px; font-weight: 700; color: #1a1a1a; letter-spacing: 0.5px;">${escapeHtml(data.trackingNumber)}</p>
+        </div>`
+    : "";
+
   return buildStatusEmailWrapper(`
       <div style="text-align: center;">
         <div style="width: 64px; height: 64px; background: #ede9fe; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
@@ -399,6 +406,7 @@ function buildOrderShippedHtml(data: StatusEmailData): string {
           ve výši <strong style="color: #1a1a1a;">${formatPriceCzk(data.total)}</strong>
           byla odeslána.
         </p>
+        ${trackingHtml}
         <p style="margin: 16px 0 0; color: #666; font-size: 14px;">
           Zásilka je na cestě k vám. Sledujte stav doručení na stránce objednávky.
         </p>
