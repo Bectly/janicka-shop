@@ -2,8 +2,10 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/db";
 import { rateLimitLogin, recordLoginFailure } from "@/lib/rate-limit";
+import { authConfig } from "@/lib/auth-config";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  ...authConfig,
   providers: [
     Credentials({
       name: "Přihlášení",
@@ -26,8 +28,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const { compare } = await import("bcryptjs");
 
         // Always run bcrypt compare to prevent timing-based user enumeration.
-        // Without this, non-existent users return instantly (~0ms) vs real users (~100-200ms),
-        // letting attackers determine which emails are registered.
         const DUMMY_HASH = "$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWX.Z";
         const isValid = await compare(
           credentials.password as string,
@@ -47,31 +47,4 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
-  pages: {
-    signIn: "/admin/login",
-  },
-  session: {
-    strategy: "jwt",
-    maxAge: 24 * 60 * 60, // 24 hours
-  },
-  callbacks: {
-    authorized({ auth, request: { nextUrl } }) {
-      const isLoggedIn = !!auth?.user;
-      const isAdmin = nextUrl.pathname.startsWith("/admin");
-      const isLoginPage = nextUrl.pathname === "/admin/login";
-
-      if (isLoginPage) {
-        if (isLoggedIn) {
-          return Response.redirect(new URL("/admin/dashboard", nextUrl));
-        }
-        return true;
-      }
-
-      if (isAdmin) {
-        return isLoggedIn;
-      }
-
-      return true;
-    },
-  },
 });
