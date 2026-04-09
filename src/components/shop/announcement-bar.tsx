@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 
 const STORAGE_KEY = "janicka-announcement-dismissed";
@@ -9,40 +9,53 @@ const messages = [
   "Doprava zdarma od 1 500 Kč",
   "Každý kousek je unikát — second hand & vintage",
   "14 dní na vrácení bez udání důvodu",
+  "Prémiová kvalita, ověřený stav",
 ];
 
 export function AnnouncementBar() {
-  // Lazy initializer: SSR returns true (hidden), client reads localStorage on mount.
-  // Avoids extra render from useEffect + setState pattern.
-  const [dismissed, setDismissed] = useState<boolean>(() => {
-    if (typeof window === "undefined") return true;
-    return !!localStorage.getItem(STORAGE_KEY);
-  });
-  const [currentIndex, setCurrentIndex] = useState(0);
+  // Fix hydration mismatch: always render on server (hidden via useEffect), not via typeof window
+  const [dismissed, setDismissed] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const marqueeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (dismissed) return;
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % messages.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [dismissed]);
+    if (localStorage.getItem(STORAGE_KEY)) {
+      setDismissed(true);
+    }
+    setMounted(true);
+  }, []);
 
-  if (dismissed) return null;
+  // Don't render until client-side hydration is complete
+  if (!mounted || dismissed) return null;
+
+  // Build doubled message string for seamless marquee loop
+  const marqueeText = messages.join("  ✦  ");
 
   return (
-    <div className="relative bg-primary text-primary-foreground">
-      <div className="mx-auto flex min-h-11 max-w-7xl items-center justify-center px-4 sm:px-6 lg:px-8">
-        <p className="text-center text-xs font-medium sm:text-sm">
-          {messages[currentIndex]}
-        </p>
+    <div className="announcement-bar relative overflow-hidden bg-gradient-to-r from-brand via-brand-dark to-brand text-white">
+      <div className="flex min-h-10 items-center sm:min-h-11">
+        {/* Marquee track — two copies for seamless loop */}
+        <div
+          ref={marqueeRef}
+          className="announcement-marquee flex shrink-0 items-center gap-0 whitespace-nowrap"
+          aria-live="polite"
+        >
+          <span className="inline-block px-8 text-xs font-medium tracking-wide sm:text-sm">
+            {marqueeText}
+          </span>
+          <span className="inline-block px-8 text-xs font-medium tracking-wide sm:text-sm">
+            {marqueeText}
+          </span>
+        </div>
+
+        {/* Dismiss button */}
         <button
           type="button"
           onClick={() => {
             setDismissed(true);
             localStorage.setItem(STORAGE_KEY, "1");
           }}
-          className="absolute right-2 inline-flex size-11 items-center justify-center rounded text-primary-foreground/70 transition-colors hover:text-primary-foreground sm:right-4"
+          className="absolute right-1 z-10 inline-flex size-10 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white sm:right-3 sm:size-11"
           aria-label="Zavřít oznámení"
         >
           <X className="size-3.5" />

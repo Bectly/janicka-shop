@@ -298,11 +298,31 @@
   }
 }
 
+/* ─── Announcement bar marquee ─── */
+@keyframes marquee-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.announcement-marquee {
+  animation: marquee-scroll 30s linear infinite;
+}
+
+.announcement-bar:hover .announcement-marquee {
+  animation-play-state: paused;
+}
+
+/* ─── Newsletter input glow (footer variant) ─── */
+.newsletter-input-footer:focus {
+  box-shadow: 0 0 20px oklch(0.55 0.2 350 / 15%);
+}
+
 /* ─── Reduced motion: disable custom animations ─── */
 @media (prefers-reduced-motion: reduce) {
   .animate-shimmer,
   .animate-heart-burst,
-  .animate-cart-bounce {
+  .animate-cart-bounce,
+  .announcement-marquee {
     animation: none !important;
   }
   .btn-fill-hover::after {
