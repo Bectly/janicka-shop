@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { CONDITION_LABELS, COLOR_MAP } from "@/lib/constants";
 import { ImageUpload } from "@/components/admin/image-upload";
 import { uploadFiles } from "@/lib/uploadthing";
-import { Zap, ChevronDown, ChevronUp, Video, X, Loader2 } from "lucide-react";
+import { Zap, ChevronDown, ChevronUp, Video, X, Loader2, Ruler } from "lucide-react";
 
 interface Category {
   id: string;
@@ -222,7 +222,7 @@ export function QuickAddForm({ categories, action }: QuickAddFormProps) {
         onClick={() => setShowExtras(!showExtras)}
         className="flex w-full items-center justify-between rounded-lg border border-dashed border-muted-foreground/30 px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:border-muted-foreground/50 hover:text-foreground"
       >
-        <span>Další údaje (značka, popis)</span>
+        <span>Další údaje (značka, míry, popis)</span>
         {showExtras ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
       </button>
 
@@ -237,6 +237,51 @@ export function QuickAddForm({ categories, action }: QuickAddFormProps) {
               className="text-base"
             />
           </div>
+          {/* Measurements */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Ruler className="size-4 text-muted-foreground" />
+              <Label>Míry (volitelné)</Label>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {([
+                ["chest", "Prsa"],
+                ["waist", "Pas"],
+                ["hips", "Boky"],
+                ["length", "Délka"],
+              ] as const).map(([key, label]) => (
+                <div key={key} className="space-y-1">
+                  <Label htmlFor={`qa-measurements_${key}`} className="text-xs text-muted-foreground">
+                    {label}
+                  </Label>
+                  <Input
+                    id={`qa-measurements_${key}`}
+                    name={`measurements_${key}`}
+                    type="number"
+                    min={0}
+                    step={0.5}
+                    placeholder="cm"
+                    inputMode="decimal"
+                    className="text-base"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Fit note */}
+          <div className="space-y-2">
+            <Label htmlFor="qa-fitNote">Poznámka ke střihu</Label>
+            <Input
+              id="qa-fitNote"
+              name="fitNote"
+              maxLength={120}
+              placeholder="Oversize střih, sezení na hrudi volné..."
+              className="text-base"
+            />
+            <p className="text-xs text-muted-foreground">Jak kousek sedí (max 120 znaků)</p>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="qa-description">Popis</Label>
             <Textarea

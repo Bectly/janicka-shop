@@ -1,10 +1,12 @@
 {
-  "pause": {},
+  "pause": {
+    "trace": "until_next_bolt_commit"
+  },
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 2774,
-  "paused_at_bolt_cycle": 2770,
+  "paused_at_bolt_cycle": 2774,
   "notes": "C2771 Lead: 3 new tasks added (#51 Den matek banner, #52 Quick-add measurements, #53 Vinted T&C urgency). Bolt UNPAUSED. Trace unpaused after next Bolt commit. SAGE tasks #44-50 open but deprioritized — visual polish after functional work. 3 blocked bectly (#1 R2, #4 Heureka, #14 GMC). GMC deadline April 30 (21d). Vinted T&C window April 28-May 1 (19d). Den matek May 10 (31d).",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
