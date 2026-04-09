@@ -1,9 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { getDb } from "@/lib/db";
-import { unstable_cache } from "next/cache";
-
-export const revalidate = 300; // 5min ISR fallback — primary caching is via unstable_cache below
+import { cacheLife, cacheTag } from "next/cache";
 import { ProductFilters } from "@/components/shop/product-filters";
 import { Pagination } from "@/components/shop/pagination";
 import { ProductGrid } from "./product-grid";
@@ -69,30 +67,29 @@ export async function generateMetadata({
 }
 
 /* ---------- Cached facet data (same for ALL users, biggest query) ---------- */
-const getCachedFacetData = unstable_cache(
-  async () => {
-    const db = await getDb();
-    const [categories, countingProducts] = await Promise.all([
-      db.category.findMany({ orderBy: { sortOrder: "asc" } }),
-      db.product.findMany({
-        where: { active: true, sold: false },
-        select: {
-          brand: true,
-          sizes: true,
-          colors: true,
-          condition: true,
-          price: true,
-          compareAt: true,
-          category: { select: { slug: true } },
-        },
-        take: 2000,
-      }),
-    ]);
-    return { categories, countingProducts };
-  },
-  ["products-facet-data"],
-  { revalidate: 30, tags: ["products"] },
-);
+async function getCachedFacetData() {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("products");
+  const db = await getDb();
+  const [categories, countingProducts] = await Promise.all([
+    db.category.findMany({ orderBy: { sortOrder: "asc" } }),
+    db.product.findMany({
+      where: { active: true, sold: false },
+      select: {
+        brand: true,
+        sizes: true,
+        colors: true,
+        condition: true,
+        price: true,
+        compareAt: true,
+        category: { select: { slug: true } },
+      },
+      take: 2000,
+    }),
+  ]);
+  return { categories, countingProducts };
+}
 
 const PRODUCTS_PER_PAGE = 12;
 

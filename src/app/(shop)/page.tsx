@@ -1,9 +1,8 @@
-import { Suspense, cache } from "react";
+import { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { getDb } from "@/lib/db";
-
-export const revalidate = 300; // 5min — homepage shows new arrivals, needs moderate freshness
+import { cacheLife, cacheTag } from "next/cache";
 import { ProductCard } from "@/components/shop/product-card";
 import { CategoryCard } from "@/components/shop/category-card";
 import { NewsletterForm } from "@/components/shop/newsletter-form";
@@ -17,9 +16,12 @@ import { ArrowRight } from "lucide-react";
 import { getLowestPrices30d } from "@/lib/price-history";
 import { buildItemListSchema, buildWebSiteSchema, buildOrganizationSchema, jsonLdString } from "@/lib/structured-data";
 
-/* ---------- Cached DB fetches (deduplicated within a request) ---------- */
+/* ---------- Cached DB fetches (cross-request via "use cache") ---------- */
 
-const getNewProductsForPage = cache(async () => {
+async function getNewProductsForPage() {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("products");
   const db = await getDb();
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -29,9 +31,12 @@ const getNewProductsForPage = cache(async () => {
     take: 8,
     orderBy: { createdAt: "desc" },
   });
-});
+}
 
-const getFeaturedProductsForPage = cache(async () => {
+async function getFeaturedProductsForPage() {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("products");
   const db = await getDb();
   return db.product.findMany({
     where: { featured: true, active: true, sold: false },
@@ -39,7 +44,7 @@ const getFeaturedProductsForPage = cache(async () => {
     take: 8,
     orderBy: { createdAt: "desc" },
   });
-});
+}
 
 /* ---------- Skeleton placeholders for streamed sections ---------- */
 
@@ -80,6 +85,9 @@ function BrandsSkeleton() {
 /* ---------- Async streamed sections ---------- */
 
 async function CategoriesSection() {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("products");
   const db = await getDb();
   const categories = await db.category.findMany({
     orderBy: { sortOrder: "asc" },
@@ -232,6 +240,9 @@ async function FeaturedProductsSection() {
 }
 
 async function SaleProductsSection() {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("products");
   const db = await getDb();
   const saleProducts = await db.product.findMany({
     where: {
@@ -302,6 +313,9 @@ async function SaleProductsSection() {
 }
 
 async function PopularBrandsSection() {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("products");
   const db = await getDb();
   const brandProducts = await db.product.groupBy({
     by: ["brand"],
@@ -345,6 +359,9 @@ async function PopularBrandsSection() {
 }
 
 async function FeaturedCollectionsSection() {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("products");
   const db = await getDb();
   const featuredCollections = await db.collection.findMany({
     where: {
@@ -427,6 +444,9 @@ async function FeaturedCollectionsSection() {
 }
 
 async function RecentlySoldSection() {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("products");
   const db = await getDb();
   const recentlySold = await db.product.findMany({
     where: { sold: true, active: true },

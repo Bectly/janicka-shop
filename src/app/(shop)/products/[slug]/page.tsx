@@ -1,9 +1,7 @@
-import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
-
-export const revalidate = 3600; // 1h — products barely change (second-hand unique items, sold once)
+import { cacheLife, cacheTag } from "next/cache";
 import { formatPrice } from "@/lib/format";
 import { CONDITION_LABELS, CONDITION_COLORS } from "@/lib/constants";
 import { ProductCard } from "@/components/shop/product-card";
@@ -61,13 +59,16 @@ function formatDeliveryDate(date: Date): string {
 const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://janicka-shop.vercel.app";
 
-const getProduct = cache(async (slug: string) => {
+async function getProduct(slug: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(`product-${slug}`, "products");
   const db = await getDb();
   return db.product.findUnique({
     where: { slug, active: true },
     include: { category: true },
   });
-});
+}
 
 /** Pre-generate the 50 most recent product pages at build time.
  *  ISR (revalidate=3600) handles the rest on-demand — avoids SQLite lock contention
