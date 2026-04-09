@@ -98,9 +98,6 @@ export default async function CollectionPage({ params }: Props) {
     .map((id) => productMap.get(id))
     .filter(Boolean) as typeof products;
 
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
   const lowestPricesMap = await getLowestPrices30d(
     orderedProducts.map((p) => p.id),
   );

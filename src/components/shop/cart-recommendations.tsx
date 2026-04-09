@@ -18,6 +18,7 @@ type Recommendation = {
   sizes: string;
   colors: string;
   stock: number;
+  createdAt: string;
 };
 
 export function CartRecommendations() {
@@ -60,6 +61,7 @@ export function CartRecommendations() {
             sizes={p.sizes}
             colors={p.colors}
             stock={p.stock}
+            createdAt={p.createdAt}
           />
         ))}
       </div>

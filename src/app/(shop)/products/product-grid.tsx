@@ -148,9 +148,6 @@ export async function ProductGrid({
     );
   }
 
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
   // 30-day lowest prices for displayed products (Czech "fake discount" law)
   const lowestPricesMap = await getLowestPrices30d(
     paginatedProducts.map((p) => p.id),
