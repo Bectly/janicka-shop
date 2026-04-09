@@ -77,6 +77,7 @@ export default async function HomePage() {
           { startDate: null },
           { startDate: { lte: new Date() } },
         ],
+        AND: [{ OR: [{ endDate: null }, { endDate: { gte: new Date() } }] }],
       },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
       take: 6,
@@ -412,7 +413,6 @@ export default async function HomePage() {
           </div>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {featuredCollections
-              .filter((c) => !c.endDate || c.endDate >= now)
               .map((collection) => (
                 <Link
                   key={collection.id}

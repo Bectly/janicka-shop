@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: ["/", "/api/feed/"],
-        disallow: ["/admin/", "/api/", "/checkout/", "/order/", "/cart/", "/search/"],
+        disallow: ["/admin/", "/api/", "/checkout/", "/order/", "/cart/", "/search/", "/pick-logo/"],
       },
       // Pinterest crawler — explicit access to catalog feed; disallow admin/sensitive paths
       {

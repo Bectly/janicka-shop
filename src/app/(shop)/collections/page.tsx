@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { getDb } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -29,19 +28,22 @@ export default async function CollectionsPage() {
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
   });
 
-  // Count available products per collection
-  const collectionsWithCounts = await Promise.all(
-    activeCollections.map(async (c) => {
-      let productIds: string[] = [];
-      try { productIds = JSON.parse(c.productIds); } catch { /* */ }
-      const availableCount = productIds.length > 0
-        ? await db.product.count({
-            where: { id: { in: productIds }, active: true, sold: false },
-          })
-        : 0;
-      return { ...c, availableCount };
-    }),
-  );
+  // Count available products per collection — single DB query for all collections
+  const allProductIdSets = activeCollections.map((c) => {
+    try { return JSON.parse(c.productIds) as string[]; } catch { return [] as string[]; }
+  });
+  const allProductIds = [...new Set(allProductIdSets.flat())];
+  const availableProductIds = allProductIds.length > 0
+    ? (await db.product.findMany({
+        where: { id: { in: allProductIds }, active: true, sold: false },
+        select: { id: true },
+      })).map((p) => p.id)
+    : [];
+  const availableSet = new Set(availableProductIds);
+  const collectionsWithCounts = activeCollections.map((c, i) => ({
+    ...c,
+    availableCount: allProductIdSets[i].filter((id) => availableSet.has(id)).length,
+  }));
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -74,12 +76,14 @@ export default async function CollectionsPage() {
               {/* Image */}
               <div className="aspect-[16/9] overflow-hidden bg-muted">
                 {collection.image ? (
-                  <Image
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
                     src={collection.image}
                     alt={collection.title}
                     width={640}
                     height={360}
                     className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    loading="lazy"
                   />
                 ) : (
                   <div className="flex size-full items-center justify-center">

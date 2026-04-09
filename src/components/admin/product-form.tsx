@@ -9,7 +9,8 @@ import { CONDITION_LABELS } from "@/lib/constants";
 import { ImageUpload } from "@/components/admin/image-upload";
 import { parseProductImages, parseMeasurements } from "@/lib/images";
 import type { ProductImage, ProductMeasurements } from "@/lib/images";
-import { Save, Ruler } from "lucide-react";
+import { UploadDropzone } from "@/lib/uploadthing";
+import { Save, Ruler, Video, X } from "lucide-react";
 
 interface Category {
   id: string;
@@ -33,6 +34,7 @@ interface ProductData {
   images: string;
   measurements?: string;
   fitNote?: string | null;
+  videoUrl?: string | null;
 }
 
 interface ProductFormProps {
@@ -47,6 +49,9 @@ export function ProductForm({ categories, product, action }: ProductFormProps) {
     if (!product?.images) return [];
     return parseProductImages(product.images);
   });
+
+  // Video URL state
+  const [videoUrl, setVideoUrl] = useState<string>(product?.videoUrl ?? "");
 
   // Measurements state
   const [measurements, setMeasurements] = useState<ProductMeasurements>(() => {
@@ -132,6 +137,75 @@ export function ProductForm({ categories, product, action }: ProductFormProps) {
           </p>
         </div>
       )}
+
+      {/* Product video */}
+      <div className="space-y-2">
+        <Label className="flex items-center gap-2">
+          <Video className="size-4 text-muted-foreground" />
+          Video produktu
+        </Label>
+        <input type="hidden" name="videoUrl" value={videoUrl} />
+        {videoUrl ? (
+          <div className="relative max-w-sm">
+            <video
+              src={videoUrl}
+              controls
+              preload="metadata"
+              className="w-full rounded-lg border"
+              style={{ maxHeight: "300px" }}
+            />
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              className="absolute top-2 right-2 size-7"
+              onClick={() => setVideoUrl("")}
+            >
+              <X className="size-4" />
+            </Button>
+          </div>
+        ) : (
+          <UploadDropzone
+            endpoint="productVideo"
+            onClientUploadComplete={(res) => {
+              if (res?.[0]) {
+                setVideoUrl(res[0].ufsUrl);
+              }
+            }}
+            onUploadError={(error: Error) => {
+              alert(`Chyba nahrávání videa: ${error.message}`);
+            }}
+            config={{ mode: "auto" }}
+            content={{
+              label: () => (
+                <div className="flex flex-col items-center gap-1">
+                  <Video className="size-8 text-muted-foreground" />
+                  <span className="text-sm font-medium">
+                    Přetáhněte video sem nebo klikněte
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    Max 32 MB, MP4/WebM, 15–30 sekund
+                  </span>
+                </div>
+              ),
+              allowedContent: () => (
+                <span className="text-xs text-muted-foreground">
+                  Krátké video produktu (přední, zadní, pohyb)
+                </span>
+              ),
+            }}
+            appearance={{
+              container:
+                "border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 cursor-pointer hover:border-primary/50 transition-colors ut-uploading:border-primary/30",
+              button:
+                "bg-primary text-primary-foreground text-sm px-4 py-2 rounded-md ut-uploading:bg-primary/70",
+            }}
+          />
+        )}
+        <p className="text-xs text-muted-foreground">
+          Nepovinné — krátké video zvyšuje konverzi o 65 %. Ideálně 9:16 na výšku, 15–30 s.
+        </p>
+      </div>
 
       <div className="grid gap-6 sm:grid-cols-2">
         {/* Name */}

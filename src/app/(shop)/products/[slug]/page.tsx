@@ -288,7 +288,7 @@ export default async function ProductDetailPage({ params }: Props) {
           {/* Image — greyed out */}
           <div className="relative">
             <div className="opacity-60 grayscale">
-              <ProductGallery images={productImages} productName={product.name} />
+              <ProductGallery images={productImages} productName={product.name} videoUrl={product.videoUrl} />
             </div>
             <div className="absolute inset-0 flex items-center justify-center">
               <span className="rounded-full bg-foreground/80 px-6 py-2 text-lg font-bold text-background">
@@ -436,7 +436,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
       <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
         {/* Image Gallery */}
-        <ProductGallery images={productImages} productName={product.name} />
+        <ProductGallery images={productImages} productName={product.name} videoUrl={product.videoUrl} />
 
         {/* Info */}
         <div className="flex flex-col">

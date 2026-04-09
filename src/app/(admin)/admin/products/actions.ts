@@ -113,6 +113,7 @@ export async function createProduct(formData: FormData) {
   const validatedImages = parseImages(formData);
   const measurements = parseMeasurementsInput(formData);
   const fitNote = ((formData.get("fitNote") as string) || "").trim().slice(0, 120) || null;
+  const videoUrl = ((formData.get("videoUrl") as string) || "").trim() || null;
 
   const product = await db.product.create({
     data: {
@@ -134,6 +135,7 @@ export async function createProduct(formData: FormData) {
       images: validatedImages,
       measurements,
       fitNote,
+      videoUrl,
       stock: 1,
       featured: parsed.featured,
       active: parsed.active,
@@ -188,6 +190,7 @@ export async function updateProduct(id: string, formData: FormData) {
   const validatedImages = parseImages(formData);
   const measurements = parseMeasurementsInput(formData);
   const fitNote = ((formData.get("fitNote") as string) || "").trim().slice(0, 120) || null;
+  const videoUrl = ((formData.get("videoUrl") as string) || "").trim() || null;
 
   // Check if price changed — log old price for 30-day price history (Czech fake discount law)
   const current = await db.product.findUnique({
@@ -221,6 +224,7 @@ export async function updateProduct(id: string, formData: FormData) {
       images: validatedImages,
       measurements,
       fitNote,
+      videoUrl,
       featured: parsed.featured,
       active: parsed.active,
     },
@@ -283,6 +287,7 @@ export async function quickCreateProduct(formData: FormData) {
   const validatedImages = parseImages(formData);
   const measurements = parseMeasurementsInput(formData);
   const fitNote = ((formData.get("fitNote") as string) || "").trim().slice(0, 120) || null;
+  const videoUrl = ((formData.get("videoUrl") as string) || "").trim() || null;
 
   // Default description if empty
   const description = parsed.description.trim()
@@ -308,6 +313,7 @@ export async function quickCreateProduct(formData: FormData) {
       images: validatedImages,
       measurements,
       fitNote,
+      videoUrl,
       stock: 1,
       featured: false,
       active: true,
@@ -359,6 +365,7 @@ export async function duplicateProduct(id: string) {
       images: source.images,
       measurements: source.measurements,
       fitNote: source.fitNote,
+      videoUrl: source.videoUrl,
       stock: 1,
       featured: false,
       active: false, // Start hidden so admin can review before publishing

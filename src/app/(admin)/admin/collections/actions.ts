@@ -1,9 +1,15 @@
 "use server";
 
 import { getDb } from "@/lib/db";
+import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+
+async function requireAdmin() {
+  const session = await auth();
+  if (!session?.user) throw new Error("Unauthorized");
+}
 
 function slugify(text: string): string {
   return text
@@ -38,6 +44,7 @@ export async function createCollection(
   _prev: CollectionFormState,
   formData: FormData,
 ): Promise<CollectionFormState> {
+  await requireAdmin();
   const raw = {
     title: formData.get("title") as string,
     description: (formData.get("description") as string) || undefined,
@@ -97,6 +104,7 @@ export async function updateCollection(
   _prev: CollectionFormState,
   formData: FormData,
 ): Promise<CollectionFormState> {
+  await requireAdmin();
   const raw = {
     title: formData.get("title") as string,
     description: (formData.get("description") as string) || undefined,
@@ -164,6 +172,7 @@ export async function updateCollection(
 }
 
 export async function deleteCollection(id: string): Promise<void> {
+  await requireAdmin();
   const db = await getDb();
   const collection = await db.collection.findUnique({ where: { id } });
   await db.collection.delete({ where: { id } });

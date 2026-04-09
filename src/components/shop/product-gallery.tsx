@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, ZoomIn, Play } from "lucide-react";
 
 const SWIPE_THRESHOLD = 50;
 
@@ -14,6 +14,7 @@ interface ProductImage {
 interface ProductGalleryProps {
   images: (string | ProductImage)[];
   productName: string;
+  videoUrl?: string | null;
 }
 
 function getUrl(img: string | ProductImage): string {
@@ -25,9 +26,17 @@ function getAlt(img: string | ProductImage, productName: string, index: number):
   return `${productName} — fotka ${index + 1}`;
 }
 
-export function ProductGallery({ images, productName }: ProductGalleryProps) {
+export function ProductGallery({ images, productName, videoUrl }: ProductGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [videoPlaying, setVideoPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Video is always the last slide (after all images)
+  const hasVideo = !!videoUrl;
+  const videoSlideIndex = hasVideo ? images.length : -1;
+  const totalSlides = images.length + (hasVideo ? 1 : 0);
+  const isVideoActive = hasVideo && activeIndex === videoSlideIndex;
   const [zoomed, setZoomed] = useState(false);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [swipeOffset, setSwipeOffset] = useState(0);
@@ -65,16 +74,18 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
   }, []);
 
   const goNext = useCallback(() => {
-    setActiveIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+    setActiveIndex((prev) => (prev === totalSlides - 1 ? 0 : prev + 1));
     setZoomed(false);
     setPanOffset({ x: 0, y: 0 });
-  }, [images.length]);
+    setVideoPlaying(false);
+  }, [totalSlides]);
 
   const goPrev = useCallback(() => {
-    setActiveIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+    setActiveIndex((prev) => (prev === 0 ? totalSlides - 1 : prev - 1));
     setZoomed(false);
     setPanOffset({ x: 0, y: 0 });
-  }, [images.length]);
+    setVideoPlaying(false);
+  }, [totalSlides]);
 
   const toggleZoom = useCallback(() => {
     setZoomed((z) => {
@@ -85,7 +96,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
 
   // Touch swipe handlers for mobile gallery navigation
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (images.length <= 1) return;
+    if (totalSlides <= 1) return;
     const touch = e.touches[0];
     touchRef.current = {
       startX: touch.clientX,
@@ -94,10 +105,10 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
       swiping: false,
       directionLocked: false,
     };
-  }, [images.length]);
+  }, [totalSlides]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (images.length <= 1) return;
+    if (totalSlides <= 1) return;
     const touch = e.touches[0];
     const dx = touch.clientX - touchRef.current.startX;
     const dy = touch.clientY - touchRef.current.startY;
@@ -117,7 +128,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
     e.preventDefault();
     touchRef.current.currentOffset = dx;
     setSwipeOffset(dx);
-  }, [images.length]);
+  }, [totalSlides]);
 
   const handleTouchEnd = useCallback(() => {
     if (!touchRef.current.swiping) {
@@ -191,7 +202,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
     dragRef.current.dragging = false;
   }, []);
 
-  if (images.length === 0) {
+  if (totalSlides === 0) {
     return (
       <div className="aspect-[3/4] overflow-hidden rounded-2xl bg-muted">
         <div className="flex size-full items-center justify-center bg-gradient-to-br from-muted to-muted/50">
@@ -206,34 +217,79 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
   return (
     <>
       <div className="space-y-3">
-        {/* Main image — swipeable on touch devices */}
+        {/* Main image/video — swipeable on touch devices */}
         <div
           className="group relative aspect-[3/4] overflow-hidden rounded-2xl bg-muted touch-pan-y"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          <button
-            type="button"
-            onClick={() => openLightbox(activeIndex)}
-            className="absolute inset-0 z-10 cursor-zoom-in"
-            aria-label="Zvětšit obrázek"
-          >
-            <span className="absolute right-3 bottom-3 flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
-              <ZoomIn className="size-3.5" />
-              Zvětšit
-            </span>
-          </button>
-          <Image
-            src={getUrl(images[activeIndex])}
-            alt={getAlt(images[activeIndex], productName, activeIndex)}
-            fill
-            className="object-cover transition-transform duration-150 ease-out"
-            style={swipeOffset !== 0 ? { transform: `translateX(${swipeOffset}px)` } : undefined}
-            sizes="(max-width: 1024px) 100vw, 50vw"
-            priority
-          />
-          {images.length > 1 && (
+          {isVideoActive ? (
+            /* Video slide — tap to play/pause */
+            <div className="absolute inset-0 flex items-center justify-center bg-black">
+              <video
+                ref={videoRef}
+                src={videoUrl!}
+                preload="metadata"
+                playsInline
+                loop
+                className="size-full object-contain"
+                onClick={() => {
+                  if (videoRef.current) {
+                    if (videoPlaying) {
+                      videoRef.current.pause();
+                    } else {
+                      videoRef.current.play();
+                    }
+                    setVideoPlaying(!videoPlaying);
+                  }
+                }}
+                onEnded={() => setVideoPlaying(false)}
+              />
+              {!videoPlaying && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (videoRef.current) {
+                      videoRef.current.play();
+                      setVideoPlaying(true);
+                    }
+                  }}
+                  className="absolute inset-0 z-10 flex items-center justify-center"
+                  aria-label="Přehrát video"
+                >
+                  <span className="flex size-16 items-center justify-center rounded-full bg-white/90 shadow-lg transition-transform hover:scale-110">
+                    <Play className="size-7 text-foreground ml-1" fill="currentColor" />
+                  </span>
+                </button>
+              )}
+            </div>
+          ) : (
+            /* Image slide */
+            <>
+              <button
+                type="button"
+                onClick={() => openLightbox(activeIndex)}
+                className="absolute inset-0 z-10 cursor-zoom-in"
+                aria-label="Zvětšit obrázek"
+              >
+                <span className="absolute right-3 bottom-3 flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
+                  <ZoomIn className="size-3.5" />
+                  Zvětšit
+                </span>
+              </button>
+              <Image
+                src={getUrl(images[activeIndex])}
+                alt={getAlt(images[activeIndex], productName, activeIndex)}
+                fill
+                className="object-cover transition-transform duration-150 ease-out"
+                style={swipeOffset !== 0 ? { transform: `translateX(${swipeOffset}px)` } : undefined}
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                priority
+              />
+            </>
+          )}
+          {totalSlides > 1 && (
             <>
               {/* Desktop-only nav arrows (hidden on touch via hover) */}
               <button
@@ -241,8 +297,9 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
                 onClick={(e) => {
                   e.stopPropagation();
                   setActiveIndex((prev) =>
-                    prev === 0 ? images.length - 1 : prev - 1,
+                    prev === 0 ? totalSlides - 1 : prev - 1,
                   );
+                  setVideoPlaying(false);
                 }}
                 className="absolute top-1/2 left-2 z-20 -translate-y-1/2 rounded-full bg-white/80 p-1.5 opacity-0 shadow transition-opacity hover:bg-white group-hover:opacity-100"
                 aria-label="Předchozí fotka"
@@ -254,33 +311,35 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
                 onClick={(e) => {
                   e.stopPropagation();
                   setActiveIndex((prev) =>
-                    prev === images.length - 1 ? 0 : prev + 1,
+                    prev === totalSlides - 1 ? 0 : prev + 1,
                   );
+                  setVideoPlaying(false);
                 }}
                 className="absolute top-1/2 right-2 z-20 -translate-y-1/2 rounded-full bg-white/80 p-1.5 opacity-0 shadow transition-opacity hover:bg-white group-hover:opacity-100"
                 aria-label="Další fotka"
               >
                 <ChevronRight className="size-5" />
               </button>
-              {/* Image counter + dot indicators */}
+              {/* Slide counter + dot indicators */}
               <div className="absolute right-3 top-3 z-20 rounded-full bg-black/50 px-2.5 py-1 text-xs font-medium text-white lg:hidden">
-                {activeIndex + 1} / {images.length}
+                {activeIndex + 1} / {totalSlides}
               </div>
               <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 gap-1.5">
-                {images.map((_, i) => (
+                {Array.from({ length: totalSlides }).map((_, i) => (
                   <button
                     key={i}
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       setActiveIndex(i);
+                      setVideoPlaying(false);
                     }}
                     className={`size-2 rounded-full transition-all ${
                       i === activeIndex
                         ? "scale-125 bg-white"
                         : "bg-white/50 hover:bg-white/75"
                     }`}
-                    aria-label={`Fotka ${i + 1}`}
+                    aria-label={i === videoSlideIndex ? "Video" : `Fotka ${i + 1}`}
                   />
                 ))}
               </div>
@@ -289,13 +348,13 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
         </div>
 
         {/* Thumbnails */}
-        {images.length > 1 && (
+        {totalSlides > 1 && (
           <div className="flex gap-2 overflow-x-auto pb-1">
             {images.map((img, i) => (
               <button
                 key={`${getUrl(img)}-${i}`}
                 type="button"
-                onClick={() => setActiveIndex(i)}
+                onClick={() => { setActiveIndex(i); setVideoPlaying(false); }}
                 className={`relative size-16 shrink-0 overflow-hidden rounded-lg border-2 transition-all sm:size-20 ${
                   i === activeIndex
                     ? "border-primary ring-1 ring-primary"
@@ -311,12 +370,26 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
                 />
               </button>
             ))}
+            {hasVideo && (
+              <button
+                type="button"
+                onClick={() => { setActiveIndex(videoSlideIndex); setVideoPlaying(false); }}
+                className={`relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border-2 bg-muted transition-all sm:size-20 ${
+                  activeIndex === videoSlideIndex
+                    ? "border-primary ring-1 ring-primary"
+                    : "border-transparent opacity-70 hover:opacity-100"
+                }`}
+                aria-label="Video"
+              >
+                <Play className="size-6 text-muted-foreground" fill="currentColor" />
+              </button>
+            )}
           </div>
         )}
       </div>
 
-      {/* Lightbox */}
-      {lightboxOpen && (
+      {/* Lightbox — images only, no video */}
+      {lightboxOpen && !isVideoActive && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95"
           role="dialog"
@@ -340,12 +413,16 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
             </div>
           )}
 
-          {/* Navigation arrows */}
+          {/* Navigation arrows — only within image slides */}
           {images.length > 1 && (
             <>
               <button
                 type="button"
-                onClick={goPrev}
+                onClick={() => {
+                  setActiveIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+                  setZoomed(false);
+                  setPanOffset({ x: 0, y: 0 });
+                }}
                 className="absolute top-1/2 left-2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20 sm:left-4 sm:p-3"
                 aria-label="Předchozí fotka"
               >
@@ -353,7 +430,11 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
               </button>
               <button
                 type="button"
-                onClick={goNext}
+                onClick={() => {
+                  setActiveIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+                  setZoomed(false);
+                  setPanOffset({ x: 0, y: 0 });
+                }}
                 className="absolute top-1/2 right-2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20 sm:right-4 sm:p-3"
                 aria-label="Další fotka"
               >
