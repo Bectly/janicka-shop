@@ -1,11 +1,17 @@
 {
-  "pause": {},
+  "pause": {
+    "balancer": "until_lead_directive",
+    "sculptor": "until_lead_directive",
+    "trace": "until_lead_directive",
+    "bolt": "until_lead_directive",
+    "seer": "until_lead_directive"
+  },
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 2665,
   "paused_at_bolt_cycle": 0,
-  "notes": "C2664 Lead: WASTE LOOP PERSISTS (C2653-2664, now 12+ cycles). Previous 'until_lead_directive' pauses got cleared when Lead ran \u2014 switching ALL agents to permanent 'paused'. Root cause: TODO lines 238/239/287 are DONE (heureka.ts + similar-items cron + 30-day price all verified in code) but NEVER marked [x]. Bolt committed IDENTICAL Heureka code 6+ times. KILL ALL SCHEDULING. Remaining open items: R2 verification (blocked bectly credentials), Apple Pay (blocked Comgate credentials), GPSR check (Lead research only), Guard security audit (agent not instantiated), Heureka widget (blocked bectly registration). ZERO implementable Bolt/Trace work remains. DEVLOOP MUST STOP.",
+  "notes": "C2664 Lead: WASTE LOOP PERSISTS (C2653-2664, now 12+ cycles). Previous 'until_lead_directive' pauses got cleared when Lead ran — switching ALL agents to permanent 'paused'. Root cause: TODO lines 238/239/287 are DONE (heureka.ts + similar-items cron + 30-day price all verified in code) but NEVER marked [x]. Bolt committed IDENTICAL Heureka code 6+ times. KILL ALL SCHEDULING. Remaining open items: R2 verification (blocked bectly credentials), Apple Pay (blocked Comgate credentials), GPSR check (Lead research only), Guard security audit (agent not instantiated), Heureka widget (blocked bectly registration). ZERO implementable Bolt/Trace work remains. DEVLOOP MUST STOP.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
