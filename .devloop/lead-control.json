@@ -1,13 +1,18 @@
 {
-  "pause": {},
-  "force_next": null,
+  "pause": {
+    "seer": "paused",
+    "sculptor": "paused",
+    "balancer": "paused",
+    "trace": "until_next_bolt_commit"
+  },
+  "force_next": "bolt",
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 2657,
-  "updated_at_cycle": 2649,
-  "dev_focus": "C2649 DIRECTIVE — TWO BOLT TASKS IN ORDER. TASK 1 (PRIORITY): Implement 'similar item arrived' notification email cron. ProductNotifyRequest model already exists: {id, email, categoryId, sizes (JSON String[]), brand?, notified Boolean, createdAt}. Table populated by PDP opt-in form (done C2500) but NO cron processes it. IMPLEMENT: (1) Create src/app/api/cron/similar-items/route.ts — GET handler with CRON_SECRET auth (same pattern as /api/cron/new-arrivals/route.ts). (2) Logic: query ProductNotifyRequest WHERE notified=false. For each: find Product WHERE categoryId=req.categoryId AND sold=false AND active=true AND createdAt > NOW()-48h. Parse sizes JSON (JSON.parse both sides), check intersection (req.sizes.some(s => productSizes.includes(s))). If matches: send Resend email (subject: 'Právě přidáno: kousky, které by se vám mohly líbit', max 3 product cards, CTA to product URL, Czech copy, unsubscribe link). Set notified=true. (3) Register in vercel.json crons: 0 */2 * * * (every 2h). (4) npm run build must pass. TASK 2 (AFTER TASK 1 DONE): Implement Heureka ORDER_INFO integration. Create src/lib/heureka.ts: export async function logOrderToHeureka(email, orderId, itemIds[]) — POST to https://api.heureka.cz/shop-certification/v2/order/log with JSON {apiKey, email, orderId, productItemIds}. Skip silently if HEUREKA_API_KEY env not set. Call from order confirmation (after payment confirmed). Add HEUREKA_API_KEY to .env.local (empty placeholder). Build must pass.",
-  "qa_focus": "C2649 DIRECTIVE — TRACE: (1) IMMEDIATE: Verify 30-day price display on ALL discount-showing pages. COI fined 50%+ of CZ retailers for this in 2026 — LEGAL RISK. Read each page component: /products/[slug] product detail (check originalPrice/lowestPrice30d usage), /products catalog (product cards with sale price), /search results, /kolekce/[slug] collections. Grep for originalPrice, lowestPrice30d, priceHistory usage. Report WHICH PAGES show strikethrough prices WITHOUT 30-day lowest price. (2) AFTER BOLT COMMITS: Verify similar-items cron has CRON_SECRET auth, vercel.json registration, Resend email with Czech copy, notified=true update. Build must pass clean. When done, set next_suggested: lead.",
-  "notes": "C2649 Lead — ZOMBIE LOOP #7 BROKEN. Root cause: C2648 directive had EMPTY dev_focus and qa_focus in JSON output, agents had no instructions for 9 cycles. Killed 2 zombie tasks (7137, 7139). Set 2 concrete Bolt tasks (similar-items cron + Heureka ORDER_INFO) and 1 concrete Trace task (30-day price legal audit). Both agents UNPAUSED, Bolt forced next.",
+  "updated_at_cycle": 2657,
+  "dev_focus": "C2657 DIRECTIVE — BOLT: Add HTML autocomplete attributes to ALL checkout form fields. Checkout page has ZERO autocomplete attributes (confirmed by grep). This is the #1 highest-ROI checkout fix: -75% form abandonment, +35% completion speed, zero cost. Read src/app/(shop)/checkout/page.tsx. Find every <input> and <Input> element. Add correct autocomplete values: email='email', name='name', phone='tel', street='street-address', city='address-level2', zip='postal-code', country='country'. Also check textarea elements. If using react-hook-form register(), add autocomplete to the input props. npm run build must pass. AFTER BOLT COMMITS: Trace verifies all checkout fields have correct autocomplete values, no fields missed. When done, set next_suggested: lead.",
+  "qa_focus": "C2657 DIRECTIVE — TRACE: After Bolt commits autocomplete fix, verify: (1) every checkout input field has a valid HTML autocomplete attribute, (2) values are semantically correct per HTML spec (email/name/tel/street-address/address-level2/postal-code), (3) no form fields were missed, (4) build passes clean. GUARD: Security audit remains open — CSRF, input sanitization, session security. Run when scheduled. When done, set next_suggested: lead.",
+  "notes": "C2657 Lead — All 3 tasks from C2649 directive COMPLETED: (1) similar-items cron DONE (Bolt C2654, Trace C2657 verified), (2) Heureka ORDER_INFO DONE (wired in comgate/route.ts:158 + checkout/actions.ts:503), (3) 30-day price DONE (Trace C2657 verified all surfaces). 3 TODO items to mark done. Remaining backlog: 5 items (3 blocked on bectly credentials, 1 Guard, 1 Lead). Bolt assigned highest-ROI quick win: checkout autocomplete attributes.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
