@@ -1,9 +1,9 @@
 {
   "pause": {},
-  "force_next": "bolt",
+  "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2458,
+  "last_bolt_commit_cycle": 2469,
   "updated_at_cycle": 2458,
   "notes": "C2458 Lead: ZOMBIE BROKEN. Completed from C2452 directive: (1) ISR staleness FIXED (checkout/actions.ts lines 415-421 has revalidatePath for sold slugs + /products + / — committed 271efc2). (2) DevChat widget DONE (dev-chat-widget.tsx 321 lines + admin/layout.tsx — committed 271efc2). (3) Win-back DONE (discovered pre-implemented C2390 — /api/cron/win-back/route.ts 185 lines, sendWinBackEmail in email.ts:1784). NEW DIRECTIVE for Bolt — 2 tasks: TASK 1 (CART EMAIL CAPTURE): Add email opt-in widget to cart page. In src/app/(shop)/cart/page.tsx, add AbandonedCartCapture component after the cart items list (before order summary). Small card: 'Chceš být upozorněna, pokud někdo koupí tvůj kousek?' with email input + GDPR consent checkbox. On submit: call captureAbandonedCart() server action (already exists in checkout/actions.ts or lib) with email, product IDs from cart, and marketingConsent=true. This captures higher-funnel abandonment at 84.61% fashion cart abandonment rate. Keep UI minimal — 1-2 lines max, unobtrusive. TASK 2 (VIDEO OPTIMIZATION): Upgrade PDP video from tap-to-play to passive gallery video. In ProductGallery component (src/components/shop/product-gallery.tsx or similar), change video slide: use <video muted autoPlay loop playsInline preload='none'> instead of tap-to-play. Add IntersectionObserver on the gallery container to set video.src only when slide is visible (prevents mobile bandwidth waste). Position video as gallery slide 2 (after hero photo). Add play triangle overlay on the thumbnail to distinguish from photo slides. Both tasks: run npm run build before committing.",
   "schema": {
