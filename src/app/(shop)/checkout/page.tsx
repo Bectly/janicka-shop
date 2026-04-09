@@ -541,7 +541,16 @@ export default function CheckoutPage() {
               activeStep={activeStep}
               completedSteps={completedSteps}
               summary={contactSummary.trim()}
-              onEdit={() => setActiveStep(0)}
+              onEdit={() => {
+                setActiveStep(0);
+                setCompletedSteps((prev) => {
+                  const next = new Set(prev);
+                  next.delete(0);
+                  next.delete(1);
+                  next.delete(2);
+                  return next;
+                });
+              }}
             >
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
@@ -658,7 +667,15 @@ export default function CheckoutPage() {
               activeStep={activeStep}
               completedSteps={completedSteps}
               summary={shippingSummary}
-              onEdit={() => setActiveStep(1)}
+              onEdit={() => {
+                setActiveStep(1);
+                setCompletedSteps((prev) => {
+                  const next = new Set(prev);
+                  next.delete(1);
+                  next.delete(2);
+                  return next;
+                });
+              }}
             >
               {state.fieldErrors.shippingMethod && (
                 <p className="mb-3 text-xs text-destructive">
@@ -695,6 +712,7 @@ export default function CheckoutPage() {
                           checked={isSelected}
                           onChange={() => {
                             setShippingMethod(option.id);
+                            setShippingError(null);
                             if (option.id !== "packeta_pickup") {
                               setPacketaPoint(null);
                             }
@@ -881,7 +899,14 @@ export default function CheckoutPage() {
               activeStep={activeStep}
               completedSteps={completedSteps}
               summary={paymentSummary}
-              onEdit={() => setActiveStep(2)}
+              onEdit={() => {
+                setActiveStep(2);
+                setCompletedSteps((prev) => {
+                  const next = new Set(prev);
+                  next.delete(2);
+                  return next;
+                });
+              }}
             >
               {state.fieldErrors.paymentMethod && (
                 <p className="mb-3 text-xs text-destructive">
