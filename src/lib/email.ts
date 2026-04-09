@@ -1715,3 +1715,91 @@ export async function sendCrossSellFollowUpEmail(
     return false;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Win-back email (30+ days since last order, no recent purchase)
+// ---------------------------------------------------------------------------
+
+export interface WinBackEmailData {
+  customerName: string;
+  customerEmail: string;
+  products: CrossSellProduct[];
+}
+
+function buildWinBackHtml(data: WinBackEmailData): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+
+  const productsHtml = buildCrossSellProductsHtml(data.products);
+
+  return `<!DOCTYPE html>
+<html lang="cs">
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/></head>
+<body style="margin: 0; padding: 0; background-color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
+
+    <div style="text-align: center; padding: 24px 0;">
+      <a href="${baseUrl}" style="text-decoration: none;">
+        <h1 style="margin: 0; font-size: 24px; color: #1a1a1a;">Jani&ccaron;ka Shop</h1>
+      </a>
+    </div>
+
+    <div style="background: #fff; border-radius: 12px; padding: 32px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+
+      <div style="text-align: center;">
+        <div style="width: 64px; height: 64px; background: #fef3c7; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+          <span style="font-size: 32px; line-height: 64px;">&#128075;</span>
+        </div>
+        <h2 style="margin: 0 0 8px; font-size: 20px; color: #1a1a1a;">Chyb&iacute;&scaron; n&aacute;m!</h2>
+        <p style="margin: 0; color: #666; font-size: 14px; line-height: 1.5;">
+          ${escapeHtml(data.customerName)}, u&zcaron; je to chv&iacute;li, co jsi u n&aacute;s nakupovala.
+          Mezit&iacute;m p&rcaron;ibyly nov&eacute; unik&aacute;tn&iacute; kousky &mdash; ka&zcaron;d&yacute; jen jeden.
+        </p>
+      </div>
+
+      ${productsHtml}
+
+      <div style="text-align: center; margin-top: 24px;">
+        <a href="${baseUrl}/products?sort=newest" style="display: inline-block; background: #1a1a1a; color: #fff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
+          Prohl&eacute;dnout novinky
+        </a>
+      </div>
+
+    </div>
+
+    <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
+      <p style="margin: 0;">Jani&ccaron;ka Shop &mdash; Second hand m&oacute;da</p>
+      <p style="margin: 8px 0 0;">
+        <a href="${baseUrl}/odhlasit-novinky?email=${encodeURIComponent(data.customerEmail)}" style="color: #999; text-decoration: underline;">Odhl&aacute;sit se z odb&ecaron;ru</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+/**
+ * Send win-back email to customers who haven't ordered in 30+ days.
+ * Shows fresh products to re-engage lapsed customers.
+ */
+export async function sendWinBackEmail(
+  data: WinBackEmailData,
+): Promise<boolean> {
+  const resend = getResendClient();
+  if (!resend) {
+    console.warn("[Email] RESEND_API_KEY not set — skipping win-back email");
+    return false;
+  }
+
+  try {
+    await resend.emails.send({
+      from: NEWSLETTER_FROM_EMAIL,
+      to: data.customerEmail,
+      subject: "Nové kousky čekají \u{1F44B} — Janička Shop",
+      html: buildWinBackHtml(data),
+    });
+    return true;
+  } catch (error) {
+    console.error(`[Email] Failed to send win-back email to ${data.customerEmail}:`, error);
+    return false;
+  }
+}

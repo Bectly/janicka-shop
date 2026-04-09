@@ -11,6 +11,7 @@ import { FREE_SHIPPING_THRESHOLD, SHIPPING_PRICES, SHIPPING_METHOD_LABELS } from
 import { CartRecommendations } from "@/components/shop/cart-recommendations";
 import { CartExitIntent } from "@/components/shop/cart-exit-intent";
 import { FreeShippingBar } from "@/components/shop/free-shipping-bar";
+import { CartEmailCapture } from "@/components/shop/cart-email-capture";
 import { useSyncExternalStore, useState, useEffect, useCallback, useTransition } from "react";
 
 const emptySubscribe = () => () => {};
@@ -108,6 +109,11 @@ export default function CartPage() {
 
         {/* Free shipping progress bar */}
         <FreeShippingBar total={totalPrice()} hideMinLabel />
+
+        {/* Email capture for abandoned cart recovery — captures email before checkout */}
+        <div className="mt-4">
+          <CartEmailCapture />
+        </div>
 
         <Button size="lg" className="mt-4 w-full" render={<Link href="/checkout" />}>
           Pokračovat k objednávce

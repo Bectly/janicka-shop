@@ -5,7 +5,7 @@ import { CONDITION_LABELS, CONDITION_COLORS, COLOR_MAP, FREE_SHIPPING_THRESHOLD 
 import { getImageUrls } from "@/lib/images";
 import { WishlistButton } from "./wishlist-button";
 import { QuickViewButton } from "./quick-view-modal";
-import { Sparkles } from "lucide-react";
+import { Flame } from "lucide-react";
 
 interface ProductCardProps {
   id: string;
@@ -114,6 +114,12 @@ export function ProductCard({
               Rezervováno
             </span>
           )}
+          {!isReserved && (
+            <span className="flex items-center gap-0.5 rounded-md bg-amber-500 px-2 py-0.5 text-xs font-semibold text-white">
+              <Flame className="size-3" />
+              Poslední kus
+            </span>
+          )}
         </div>
         {/* Hover gradient overlay with "Rychlý náhled" pill */}
         <div className="absolute inset-x-0 bottom-0 flex h-16 translate-y-full items-end justify-center bg-gradient-to-t from-black/40 to-transparent pb-3 transition-transform duration-300 group-hover:translate-y-0">
@@ -153,12 +159,6 @@ export function ProductCard({
         {price >= FREE_SHIPPING_THRESHOLD && (
           <p className="text-[10px] font-medium leading-tight text-emerald-600 dark:text-emerald-400">
             Doprava zdarma
-          </p>
-        )}
-        {!isReserved && (
-          <p className="flex items-center gap-1 text-[10px] font-medium leading-tight text-amber-600 dark:text-amber-400">
-            <Sparkles className="size-2.5" />
-            Jediný kus
           </p>
         )}
         {/* Size & color indicators */}

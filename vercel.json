@@ -23,6 +23,10 @@
     {
       "path": "/api/cron/cross-sell",
       "schedule": "0 17 * * *"
+    },
+    {
+      "path": "/api/cron/win-back",
+      "schedule": "0 17 * * *"
     }
   ]
 }

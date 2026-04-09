@@ -120,6 +120,9 @@ export function InstantSearch() {
             .normalize("NFD")
             .replace(/[\u0300-\u036f]/g, ""),
       });
+      // Yield to event loop so React can paint the loading spinner before
+      // ms.addAll() blocks the main thread (INP fix — ~100-300ms blocking work)
+      await new Promise<void>((resolve) => setTimeout(resolve, 0));
       ms.addAll(data);
       miniSearchRef.current = ms;
     } catch {
