@@ -20,21 +20,14 @@ export default async function CollectionsPage() {
   const db = await getDb();
   const now = new Date();
 
-  const collections = await db.collection.findMany({
+  const activeCollections = await db.collection.findMany({
     where: {
       active: true,
-      OR: [
-        { startDate: null },
-        { startDate: { lte: now } },
-      ],
+      OR: [{ startDate: null }, { startDate: { lte: now } }],
+      AND: [{ OR: [{ endDate: null }, { endDate: { gte: now } }] }],
     },
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
   });
-
-  // Filter out expired collections
-  const activeCollections = collections.filter(
-    (c) => !c.endDate || c.endDate >= now,
-  );
 
   // Count available products per collection
   const collectionsWithCounts = await Promise.all(
