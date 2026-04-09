@@ -1,19 +1,19 @@
 {
   "pause": {
-    "trace": "until_lead_directive",
-    "seer": "until_lead_directive",
-    "sculptor": "until_lead_directive",
-    "balancer": "until_lead_directive",
-    "bolt": "until_lead_directive"
+    "trace": "paused",
+    "seer": "paused",
+    "sculptor": "paused",
+    "balancer": "paused",
+    "bolt": "paused"
   },
   "force_next": "guard",
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 2660,
-  "updated_at_cycle": 2659,
-  "dev_focus": "C2659 DIRECTIVE — GUARD ONLY: Comprehensive security audit (open since Cycle #19, launch-blocking). ALL other agents HARD PAUSED until Guard reports. Scope: (1) CSRF — verify SameSite cookies, Origin header checks on all Server Actions and API routes, (2) Input sanitization — grep for dangerouslySetInnerHTML, raw SQL, unsanitized user input in emails/HTML, (3) Session security — NextAuth config: httpOnly, secure, sameSite cookies, session expiry, (4) Rate limiting — verify auth endpoints (/api/auth/*), checkout, email capture, dev-chat all rate-limited, (5) Content-Security-Policy headers — frame-ancestors, script-src, (6) API auth — verify all admin routes check session, all cron routes check CRON_SECRET, dev-chat API key auth, (7) XSS vectors — product names/descriptions rendered in emails and HTML (especially new similar-item.ts and heureka.ts from C2654-2659). Report findings as JSON with severity (critical/high/medium/low). When done, set next_suggested: lead.",
-  "qa_focus": "C2659 DIRECTIVE — GUARD: Security audit is THE SOLE priority. See dev_focus for full scope. DO NOT re-audit similar-items cron or 30-day price — both were verified clean by Trace C2657+C2658. Focus on OWASP top 10 across the ENTIRE codebase. After Guard reports: if critical/high findings → Bolt fixes immediately. If clean → Bolt builds referral backend (StoreCredit model, ref= URL tracking from existing ReferralCard, apply at checkout). 150/100 CZK bilateral structure validated by Scout.",
-  "notes": "C2659 Lead — WASTE CYCLE DETECTED: C2659 Bolt and Trace BOTH only modified lead-control.json (zero production code changes). They re-ran C2658's completed tasks verbatim. Guard was force_next but never ran — orchestrator queued Bolt+Trace before processing control file. Fix: kill_zombie_tasks + hard pause ALL non-Guard agents. 3 TODO items confirmed DONE and need marking: (1) Heureka ORDER_INFO [line 238] — done C2658 Bolt, (2) 30-day price [line 239] — verified C2657-2658 Trace, (3) Similar items cron [line 287] — done C2653 Bolt. Effective backlog: 2 actionable (Guard audit + GPSR check), 3 blocked on bectly (R2, Comgate, Heureka registration).",
+  "updated_at_cycle": 2660,
+  "dev_focus": "C2660 DIRECTIVE — GUARD ONLY (3rd consecutive enforcement, open since C19). ALL non-Guard agents HARD PAUSED (status: paused, not conditional). Guard MUST run next. Scope: OWASP top 10 across ENTIRE codebase. Specifics: (1) CSRF — SameSite cookies, Origin header on Server Actions + API routes, (2) Input sanitization — dangerouslySetInnerHTML, raw SQL, unsanitized user input in emails/HTML (especially src/lib/heureka.ts and src/emails/similar-item.ts from C2654-2660), (3) Session security — NextAuth httpOnly/secure/sameSite/expiry, (4) Rate limiting on /api/auth/*, checkout, email capture, dev-chat, cron endpoints, (5) CSP headers — frame-ancestors, script-src, (6) API auth — all admin routes session-check, all cron routes CRON_SECRET, dev-chat Bearer token, (7) XSS in product names/descriptions rendered in email templates. Report findings as JSON: {severity: critical|high|medium|low, location, description, fix}. When done, set next_suggested: lead.",
+  "qa_focus": "C2660 — Guard security audit ONLY. Do NOT re-audit similar-items cron or 30-day price (Trace verified clean C2657-2659). Focus on systemic security posture. After Guard: if critical/high findings → Bolt fixes. If clean → Bolt builds referral backend (StoreCredit, ref= URL, 150/100 CZK bilateral). 3 TODO items need [x] marking: Heureka ORDER_INFO (line 238), 30-day price (line 239), similar-items cron (line 287).",
+  "notes": "C2660 Lead — WASTE LOOP CONTINUES (4 cycles deep, C2657-2660). Bolt committed identical Heureka code AGAIN in C2660 despite C2659 pause directive. Root cause: orchestrator queued agents before reading control file update. Fix applied: changed pause condition from until_lead_directive to hard paused + kill_zombie_tasks + reset_no_change_counter. Only Guard should run next. If Guard still doesn't run after this: escalate to bectly — orchestrator may not be reading lead-control.json for Guard scheduling. Confirmed DONE: heureka.ts (1.7k), similar-items/route.ts (5.1k), 30-day price (Trace 3x verified). Effective backlog: 5 items (2 actionable: Guard + GPSR, 3 blocked bectly: R2 creds, Comgate creds, Heureka registration).",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
@@ -25,5 +25,5 @@
       "reset_no_change_counter": "bool"
     }
   },
-  "session_manager_last_processed": "2026-04-09T17:32:37.226943"
+  "session_manager_last_processed": "2026-04-09T17:35:08.801298"
 }
