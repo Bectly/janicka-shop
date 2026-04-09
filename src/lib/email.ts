@@ -1902,3 +1902,150 @@ export async function sendWinBackEmail(
     return false;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Newsletter campaign email (admin-triggered promotional campaigns)
+// ---------------------------------------------------------------------------
+
+export interface CampaignProduct {
+  name: string;
+  slug: string;
+  price: number;
+  compareAt: number | null;
+  brand: string | null;
+  condition: string;
+  image: string | null;
+}
+
+export interface CampaignEmailData {
+  subject: string;
+  previewText: string;
+  heading: string;
+  bodyHtml: string;
+  products: CampaignProduct[];
+  ctaText: string;
+  ctaUrl: string;
+}
+
+function buildCampaignProductGridHtml(products: CampaignProduct[]): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+
+  // 2-column grid using nested tables for email client compatibility
+  const cells = products.map((p) => {
+    const productUrl = `${baseUrl}/products/${p.slug}`;
+    const imageHtml = p.image
+      ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; border: 1px solid #f0f0f0;" />`
+      : `<div style="width: 100%; height: 200px; background: #f5f5f5; border-radius: 8px; display: flex; align-items: center; justify-content: center;"><span style="font-size: 32px;">&#128087;</span></div>`;
+
+    const discount = p.compareAt && p.compareAt > p.price
+      ? Math.round(((p.compareAt - p.price) / p.compareAt) * 100)
+      : null;
+
+    const priceHtml = discount
+      ? `<span style="text-decoration: line-through; color: #999; font-size: 12px;">${formatPriceCzk(p.compareAt!)}</span><br/><strong style="color: #dc2626;">${formatPriceCzk(p.price)}</strong> <span style="background: #dc2626; color: #fff; font-size: 11px; padding: 1px 5px; border-radius: 4px;">-${discount}%</span>`
+      : `<strong style="color: #1a1a1a;">${formatPriceCzk(p.price)}</strong>`;
+
+    const conditionLabel = CONDITION_LABELS_EMAIL[p.condition] ?? p.condition;
+
+    return `
+      <td style="width: 50%; padding: 8px; vertical-align: top;">
+        <a href="${productUrl}" style="text-decoration: none; color: inherit; display: block;">
+          ${imageHtml}
+          <p style="margin: 8px 0 2px; font-size: 13px; font-weight: 600; color: #1a1a1a; line-height: 1.3;">${escapeHtml(p.name)}</p>
+          ${p.brand ? `<p style="margin: 0 0 2px; font-size: 12px; color: #888;">${escapeHtml(p.brand)}</p>` : ""}
+          <p style="margin: 0 0 4px; font-size: 11px; color: #666;">${escapeHtml(conditionLabel)}</p>
+          <div>${priceHtml}</div>
+        </a>
+      </td>`;
+  });
+
+  // Pair cells into rows of 2
+  const rows: string[] = [];
+  for (let i = 0; i < cells.length; i += 2) {
+    const cell2 = cells[i + 1] ?? '<td style="width: 50%; padding: 8px;"></td>';
+    rows.push(`<tr>${cells[i]}${cell2}</tr>`);
+  }
+
+  return `<table style="width: 100%; border-collapse: collapse; margin-top: 16px;">${rows.join("")}</table>`;
+}
+
+function buildCampaignHtml(data: CampaignEmailData, recipientEmail: string): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const unsubscribeUrl = `${baseUrl}/odhlasit-novinky?email=${encodeURIComponent(recipientEmail)}`;
+
+  const productsHtml = data.products.length > 0
+    ? buildCampaignProductGridHtml(data.products)
+    : "";
+
+  return `<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  ${data.previewText ? `<span style="display: none; max-height: 0; overflow: hidden; mso-hide: all;">${escapeHtml(data.previewText)}</span>` : ""}
+</head>
+<body style="margin: 0; padding: 0; background-color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
+
+    <div style="text-align: center; padding: 24px 0;">
+      <a href="${baseUrl}" style="display: inline-block;"><img src="${baseUrl}/logo/logo-email.png" alt="Janička Shop" style="height: 40px; width: auto; border: 0;" /></a>
+      <p style="margin: 4px 0 0; font-size: 13px; color: #999;">Second hand móda pro tebe</p>
+    </div>
+
+    <div style="background: #fff; border-radius: 12px; padding: 32px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+
+      <div style="text-align: center;">
+        <h2 style="margin: 0 0 12px; font-size: 22px; color: #1a1a1a;">${escapeHtml(data.heading)}</h2>
+        <div style="color: #555; font-size: 15px; line-height: 1.6;">
+          ${data.bodyHtml}
+        </div>
+      </div>
+
+      ${productsHtml}
+
+      <div style="text-align: center; margin-top: 28px;">
+        <a href="${escapeHtml(data.ctaUrl)}" style="display: inline-block; background: #1a1a1a; color: #fff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 15px; font-weight: 600;">
+          ${escapeHtml(data.ctaText)}
+        </a>
+      </div>
+
+    </div>
+
+    <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
+      <p style="margin: 0;">Janička Shop — Second hand móda</p>
+      <p style="margin: 8px 0 0;">
+        <a href="${unsubscribeUrl}" style="color: #999; text-decoration: underline;">Odhlásit se z odběru</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+/**
+ * Send a single campaign email to one recipient.
+ * Returns true on success, false on failure (non-throwing for batch use).
+ */
+export async function sendCampaignEmail(
+  data: CampaignEmailData,
+  recipientEmail: string,
+): Promise<boolean> {
+  const resend = getResendClient();
+  if (!resend) {
+    console.warn("[Email] RESEND_API_KEY not set — skipping campaign email");
+    return false;
+  }
+
+  try {
+    await resend.emails.send({
+      from: NEWSLETTER_FROM_EMAIL,
+      to: recipientEmail,
+      subject: data.subject,
+      html: buildCampaignHtml(data, recipientEmail),
+    });
+    return true;
+  } catch (error) {
+    console.error(`[Email] Failed to send campaign email to ${recipientEmail}:`, error);
+    return false;
+  }
+}

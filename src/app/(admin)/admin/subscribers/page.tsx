@@ -1,11 +1,13 @@
 import { getDb } from "@/lib/db";
 import { formatDate } from "@/lib/format";
+import { parseJsonStringArray } from "@/lib/images";
 import { connection } from "next/server";
 
 import { Mail } from "lucide-react";
 import type { Metadata } from "next";
 import { SubscriberToggle } from "./subscriber-toggle";
 import { ExportCsvButton } from "./export-csv-button";
+import { CampaignSender } from "./campaign-sender";
 
 export const metadata: Metadata = {
   title: "Newsletter odběratelé",
@@ -41,6 +43,25 @@ export default async function AdminSubscribersPage() {
       s.preferredBrands !== "[]",
   ).length;
 
+  // Load collections + campaign history for CampaignSender
+  const [collections, campaignHistory] = await Promise.all([
+    db.collection.findMany({
+      where: { active: true },
+      orderBy: { sortOrder: "asc" },
+      select: { id: true, title: true, productIds: true },
+    }),
+    db.campaignLog.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 10,
+    }),
+  ]);
+
+  const collectionOptions = collections.map((c) => ({
+    id: c.id,
+    title: c.title,
+    productCount: parseJsonStringArray(c.productIds).length,
+  }));
+
   return (
     <>
       <div className="flex items-center justify-between">
@@ -55,6 +76,12 @@ export default async function AdminSubscribersPage() {
         </div>
         <ExportCsvButton />
       </div>
+
+      <CampaignSender
+        collections={collectionOptions}
+        activeSubscriberCount={activeCount}
+        initialHistory={campaignHistory}
+      />
 
       {subscribers.length === 0 ? (
         <div className="mt-12 rounded-xl border bg-card p-12 text-center shadow-sm">
