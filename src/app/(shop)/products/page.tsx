@@ -334,7 +334,7 @@ export default async function ProductsPage({
 
       {/* Page heading */}
       <div className="mb-6">
-        <h1 className="font-heading text-3xl font-bold text-foreground">
+        <h1 className="font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
           {categoryName}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">

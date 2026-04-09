@@ -109,7 +109,7 @@ async function CategoriesSection() {
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="flex items-end justify-between">
         <div>
-          <h2 className="font-heading text-2xl font-bold text-foreground">
+          <h2 className="font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
             Kategorie
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -143,7 +143,7 @@ async function NewProductsSection() {
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="flex items-end justify-between">
         <div>
-          <h2 className="font-heading text-2xl font-bold text-foreground">
+          <h2 className="font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
             Nově přidané
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -203,7 +203,7 @@ async function FeaturedProductsSection() {
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="flex items-end justify-between">
         <div>
-          <h2 className="font-heading text-2xl font-bold text-foreground">
+          <h2 className="font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
             Doporučujeme
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -275,7 +275,7 @@ async function SaleProductsSection() {
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="flex items-end justify-between">
           <div>
-            <h2 className="font-heading text-2xl font-bold text-foreground">
+            <h2 className="font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
               Výprodej
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -348,7 +348,7 @@ async function PopularBrandsSection() {
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="text-center">
-        <h2 className="font-heading text-2xl font-bold text-foreground">
+        <h2 className="font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
           Populární značky
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -396,7 +396,7 @@ async function FeaturedCollectionsSection() {
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="flex items-end justify-between">
         <div>
-          <h2 className="font-heading text-2xl font-bold text-foreground">
+          <h2 className="font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
             Kolekce
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -548,7 +548,7 @@ function SectionSkeleton({ title, subtitle }: { title: string; subtitle: string 
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div>
-        <h2 className="font-heading text-2xl font-bold text-foreground">{title}</h2>
+        <h2 className="font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">{title}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
       </div>
       <ProductGridSkeleton />
@@ -574,7 +574,7 @@ export default async function HomePage() {
             <p className="text-sm font-medium text-primary">
               Second hand &amp; vintage
             </p>
-            <h1 className="mt-2 font-heading text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+            <h1 className="mt-2 font-heading text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-[4rem]">
               Unikátní kousky za&nbsp;zlomek ceny
             </h1>
             <p className="mt-4 text-lg leading-relaxed text-muted-foreground sm:text-xl">
@@ -607,7 +607,7 @@ export default async function HomePage() {
       <Suspense fallback={
         <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
           <div>
-            <h2 className="font-heading text-2xl font-bold text-foreground">Kategorie</h2>
+            <h2 className="font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">Kategorie</h2>
             <p className="mt-1 text-sm text-muted-foreground">Najděte přesně to, co hledáte</p>
           </div>
           <CategoriesSkeleton />
@@ -642,7 +642,7 @@ export default async function HomePage() {
         <Suspense fallback={
           <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
             <div className="text-center">
-              <h2 className="font-heading text-2xl font-bold text-foreground">Populární značky</h2>
+              <h2 className="font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">Populární značky</h2>
               <p className="mt-1 text-sm text-muted-foreground">Oblíbené značky v naší nabídce</p>
             </div>
             <BrandsSkeleton />
@@ -688,7 +688,7 @@ export default async function HomePage() {
         <section className="bg-primary/5">
           <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-lg text-center">
-              <h2 className="font-heading text-2xl font-bold text-foreground">
+              <h2 className="font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
                 Buďte v obraze
               </h2>
               <p className="mt-2 text-sm text-muted-foreground">

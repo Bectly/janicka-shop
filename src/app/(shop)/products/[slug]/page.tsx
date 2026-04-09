@@ -326,7 +326,7 @@ export default async function ProductDetailPage({ params }: Props) {
                 </>
               )}
             </div>
-            <h1 className="mt-1 font-heading text-2xl font-bold text-foreground sm:text-3xl">
+            <h1 className="mt-1 font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
               {product.name}
             </h1>
 
@@ -477,7 +477,7 @@ export default async function ProductDetailPage({ params }: Props) {
               </>
             )}
           </div>
-          <h1 className="mt-1 font-heading text-2xl font-bold text-foreground sm:text-3xl">
+          <h1 className="mt-1 font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
             {product.name}
           </h1>
 
