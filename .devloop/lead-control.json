@@ -1,7 +1,11 @@
 {
-  "pause": {"trace": "until_next_bolt_commit"},
-  "force_next": "bolt",
-  "interval_override": {"trace": 6},
+  "pause": {
+    "trace": "until_next_bolt_commit"
+  },
+  "force_next": null,
+  "interval_override": {
+    "trace": 6
+  },
   "session_manager": {},
   "last_bolt_commit_cycle": 2387,
   "updated_at_cycle": 2390,
