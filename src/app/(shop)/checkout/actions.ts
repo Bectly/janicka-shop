@@ -148,6 +148,15 @@ function getComgateMethod(method: PaymentMethod): string {
 export type CheckoutState = {
   error: string | null;
   fieldErrors: Record<string, string>;
+  /**
+   * Set when order is created successfully for inline card/express payment.
+   * The client ComgatePaymentSection reads this and handles the inline iframe/SDK flow.
+   * Not set for COD or bank transfer (those redirect immediately).
+   */
+  pendingPayment?: {
+    orderNumber: string;
+    accessToken: string;
+  };
 };
 
 export async function createOrder(
@@ -461,8 +470,36 @@ export async function createOrder(
     redirect(`/order/${order.orderNumber}?token=${order.accessToken}`);
   }
 
-  // For online payment — create Comgate payment and redirect to payment page.
+  // Mark abandoned carts recovered (fire-and-forget — same for all online methods)
+  db.abandonedCart
+    .updateMany({
+      where: { email: data.email, status: "pending" },
+      data: { status: "recovered", recoveredOrderId: order.id },
+    })
+    .catch((err: unknown) => {
+      console.error("[Checkout] Failed to mark abandoned carts as recovered:", err);
+    });
+
+  // ---------------------------------------------------------------------------
+  // CARD payment — inline flow (no server-side redirect).
+  // Client-side ComgatePaymentSection reads pendingPayment and calls
+  // POST /api/payments/comgate/create to get the iframe URL / transactionId.
+  // ---------------------------------------------------------------------------
+  if (data.paymentMethod === "card") {
+    return {
+      error: null,
+      fieldErrors: {},
+      pendingPayment: {
+        orderNumber: order.orderNumber,
+        accessToken: order.accessToken ?? "",
+      },
+    };
+  }
+
+  // ---------------------------------------------------------------------------
+  // BANK TRANSFER — create Comgate payment server-side and redirect.
   // redirect() must be OUTSIDE try-catch to avoid catching Next.js redirect signals.
+  // ---------------------------------------------------------------------------
   let paymentRedirectUrl: string;
   try {
     const payment = await createComgatePayment({
@@ -507,16 +544,6 @@ export async function createOrder(
       fieldErrors: {},
     };
   }
-
-  // Mark any abandoned carts for this email as recovered (fire-and-forget)
-  db.abandonedCart
-    .updateMany({
-      where: { email: data.email, status: "pending" },
-      data: { status: "recovered", recoveredOrderId: order.id },
-    })
-    .catch((err: unknown) => {
-      console.error("[Checkout] Failed to mark abandoned carts as recovered:", err);
-    });
 
   redirect(paymentRedirectUrl);
 }

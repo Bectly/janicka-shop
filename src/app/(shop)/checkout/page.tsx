@@ -36,6 +36,7 @@ import {
   captureAbandonedCart,
   type CheckoutState,
 } from "./actions";
+import { ComgatePaymentSection } from "@/components/shop/checkout/comgate-payment-section";
 import {
   PacketaWidget,
   type PacketaPoint,
@@ -82,19 +83,19 @@ const PAYMENT_OPTIONS = [
   {
     id: "card" as const,
     label: "Kartou online",
-    description: "Visa, Mastercard, Apple Pay, Google Pay",
+    description: "Visa, Mastercard, Apple Pay, Google Pay — platba na místě",
     icon: CreditCard,
   },
   {
     id: "bank_transfer" as const,
     label: "Bankovním převodem",
-    description: "Online platba přes vaši banku",
+    description: "Online platba přes vaši banku — přesměrování na Comgate",
     icon: Landmark,
   },
   {
     id: "cod" as const,
     label: "Dobírka",
-    description: `Platba při převzetí (+${COD_SURCHARGE} Kč)`,
+    description: `Platba při převzetí zásilky (+${COD_SURCHARGE} Kč)`,
     icon: Truck,
   },
 ] as const;
@@ -199,6 +200,7 @@ function CheckoutStep({
 export default function CheckoutPage() {
   const items = useCartStore((s) => s.items);
   const totalPrice = useCartStore((s) => s.totalPrice);
+  const clearCart = useCartStore((s) => s.clearCart);
   const [paymentMethod, setPaymentMethod] = useState<string>("card");
   const [shippingMethod, setShippingMethod] =
     useState<ShippingMethod>("packeta_pickup");
@@ -500,6 +502,27 @@ export default function CheckoutPage() {
         <Button className="mt-6" render={<Link href="/products" />}>
           Prohlédnout produkty
         </Button>
+      </div>
+    );
+  }
+
+  // Inline card payment flow — order created, pending payment via ComgatePaymentSection
+  if (state.pendingPayment) {
+    const { orderNumber, accessToken } = state.pendingPayment;
+    return (
+      <div className="mx-auto max-w-lg px-4 py-8 sm:px-6 lg:px-8">
+        <h1 className="font-heading text-2xl font-bold">Platba</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Objednávka <strong>{orderNumber}</strong> vytvořena — dokončete platbu
+        </p>
+        <div className="mt-6 rounded-xl border bg-card p-6 shadow-sm">
+          <ComgatePaymentSection
+            orderNumber={orderNumber}
+            accessToken={accessToken}
+            total={totalPrice()}
+            onSuccess={clearCart}
+          />
+        </div>
       </div>
     );
   }
@@ -1106,13 +1129,17 @@ export default function CheckoutPage() {
                   ? "Zpracovávám..."
                   : isCod
                     ? "Objednat na dobírku"
-                    : "Přejít k platbě"}
+                    : paymentMethod === "card"
+                      ? "Zaplatit kartou"
+                      : "Přejít k platbě"}
               </Button>
 
               <p className="mt-2 text-center text-xs text-muted-foreground">
                 {isCod
                   ? `Zaplatíte ${formatPrice(total)} při převzetí zásilky`
-                  : "Budete přesměrováni na bezpečnou platební bránu"}
+                  : paymentMethod === "card"
+                    ? "Platba proběhne přímo zde — bezpečně a šifrovaně"
+                    : "Budete přesměrováni na bezpečnou platební bránu"}
               </p>
             </CheckoutStep>
           </div>
