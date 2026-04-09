@@ -6,7 +6,7 @@
   "force_next": "bolt",
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2485,
+  "last_bolt_commit_cycle": 2486,
   "updated_at_cycle": 2481,
   "notes": "C2481 Lead: ZOMBIE LOOP KILLED (22+ wasted cycles C2458-C2480). C2458 directive was in notes field only — never reached agents. Both tasks CONFIRMED UNIMPLEMENTED. Bolt must now execute: TASK 1 (VIDEO AUTOPLAY) in product-gallery.tsx — replace tap-to-play with muted autoplay, move video to slide 2, add IntersectionObserver. TASK 2 (NOTIFY SIMILAR EMAIL) — sendSimilarItemEmail() + checkout trigger + ProductNotifyRequest lookup. Trace paused until Bolt commits real code. No-change counter reset.",
   "schema": {
