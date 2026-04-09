@@ -1,15 +1,15 @@
 {
   "pause": {
-    "trace": "paused",
-    "seer": "paused",
-    "sculptor": "paused",
-    "balancer": "paused",
-    "bolt": "paused"
+    "trace": "until_lead_directive",
+    "seer": "until_lead_directive",
+    "sculptor": "until_lead_directive",
+    "balancer": "until_lead_directive",
+    "bolt": "until_lead_directive"
   },
   "force_next": "guard",
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2660,
+  "last_bolt_commit_cycle": 2661,
   "updated_at_cycle": 2660,
   "dev_focus": "C2660 DIRECTIVE — GUARD ONLY (3rd consecutive enforcement, open since C19). ALL non-Guard agents HARD PAUSED (status: paused, not conditional). Guard MUST run next. Scope: OWASP top 10 across ENTIRE codebase. Specifics: (1) CSRF — SameSite cookies, Origin header on Server Actions + API routes, (2) Input sanitization — dangerouslySetInnerHTML, raw SQL, unsanitized user input in emails/HTML (especially src/lib/heureka.ts and src/emails/similar-item.ts from C2654-2660), (3) Session security — NextAuth httpOnly/secure/sameSite/expiry, (4) Rate limiting on /api/auth/*, checkout, email capture, dev-chat, cron endpoints, (5) CSP headers — frame-ancestors, script-src, (6) API auth — all admin routes session-check, all cron routes CRON_SECRET, dev-chat Bearer token, (7) XSS in product names/descriptions rendered in email templates. Report findings as JSON: {severity: critical|high|medium|low, location, description, fix}. When done, set next_suggested: lead.",
   "qa_focus": "C2660 — Guard security audit ONLY. Do NOT re-audit similar-items cron or 30-day price (Trace verified clean C2657-2659). Focus on systemic security posture. After Guard: if critical/high findings → Bolt fixes. If clean → Bolt builds referral backend (StoreCredit, ref= URL, 150/100 CZK bilateral). 3 TODO items need [x] marking: Heureka ORDER_INFO (line 238), 30-day price (line 239), similar-items cron (line 287).",
