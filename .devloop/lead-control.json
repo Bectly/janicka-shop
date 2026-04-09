@@ -1,11 +1,11 @@
 {
-  "pause": {},
-  "force_next": null,
-  "interval_override": {},
+  "pause": {"trace": "until_next_bolt_commit"},
+  "force_next": "bolt",
+  "interval_override": {"trace": 6},
   "session_manager": {},
-  "last_bolt_commit_cycle": 0,
-  "updated_at_cycle": 0,
-  "notes": "Lead control file. Lead reads and writes this. Orchestrator reads every tick and applies overrides.",
+  "last_bolt_commit_cycle": 2387,
+  "updated_at_cycle": 2390,
+  "notes": "C2390 Lead: Trace paused — 8/15 cycles were empty 'build clean' verifications. Bolt directed to: (1) 'Poslední kus' scarcity badge on product cards (quick win, ~22% CR lift), (2) DevChat backend (Prisma model + API routes). Trace only resumes after Bolt commits real code.",
   "schema": {
     "pause": "Map of agent_name → condition ('paused' | 'until_next_bolt_commit')",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
