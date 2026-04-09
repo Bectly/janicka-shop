@@ -7,6 +7,7 @@ import { ORDER_STATUS_LABELS, PAYMENT_METHOD_LABELS, SHIPPING_METHOD_LABELS } fr
 import { sendOrderStatusEmail, sendShippingNotificationEmail } from "@/lib/email";
 import { rateLimitAdmin } from "@/lib/rate-limit";
 import { generateInvoicePdf, type InvoiceData } from "@/lib/invoice/generate-invoice";
+import { createPacket, getPacketLabel } from "@/lib/shipping/packeta";
 
 const VALID_STATUSES = [
   "pending",
@@ -629,4 +630,93 @@ export async function downloadInvoice(
   const pdfBase64 = Buffer.from(pdfBytes).toString("base64");
 
   return { invoiceNumber: invoice.number, pdfBase64 };
+}
+
+/**
+ * Create a Packeta shipment for an order.
+ * Requires: shippingMethod starts with "packeta", shippingPointId set, no packetId yet.
+ * Stores the returned packetId on the order.
+ */
+export async function createPacketaShipment(
+  orderId: string,
+): Promise<{ packetId: string }> {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
+
+  const db = await getDb();
+
+  const order = await db.order.findUnique({
+    where: { id: orderId },
+    select: {
+      id: true,
+      orderNumber: true,
+      packetId: true,
+      shippingMethod: true,
+      shippingPointId: true,
+      total: true,
+      customer: {
+        select: { firstName: true, lastName: true, email: true, phone: true },
+      },
+    },
+  });
+
+  if (!order) throw new Error("Objednávka nenalezena");
+
+  if (!order.shippingMethod?.startsWith("packeta")) {
+    throw new Error("Objednávka nemá zvolenou dopravu přes Packetu");
+  }
+
+  if (!order.shippingPointId) {
+    throw new Error("Objednávka nemá zvolené výdejní místo");
+  }
+
+  if (order.packetId) {
+    throw new Error(`Zásilka již existuje (ID: ${order.packetId})`);
+  }
+
+  const packetId = await createPacket({
+    number: order.orderNumber,
+    name: order.customer.firstName,
+    surname: order.customer.lastName,
+    email: order.customer.email || undefined,
+    phone: order.customer.phone || undefined,
+    value: order.total,
+    weight: 0.5, // Default for clothing
+    addressId: order.shippingPointId,
+    eshop: "Janička",
+  });
+
+  await db.order.update({
+    where: { id: orderId },
+    data: { packetId },
+  });
+
+  revalidatePath(`/admin/orders/${orderId}`);
+
+  return { packetId };
+}
+
+/**
+ * Download a Packeta shipping label PDF for an order.
+ * Returns base64-encoded PDF.
+ */
+export async function downloadPacketaLabel(
+  orderId: string,
+): Promise<{ pdfBase64: string; packetId: string }> {
+  await requireAdmin();
+
+  const db = await getDb();
+
+  const order = await db.order.findUnique({
+    where: { id: orderId },
+    select: { packetId: true },
+  });
+
+  if (!order) throw new Error("Objednávka nenalezena");
+  if (!order.packetId) throw new Error("Objednávka nemá vytvořenou zásilku v Packetě");
+
+  const pdfBase64 = await getPacketLabel(order.packetId);
+
+  return { pdfBase64, packetId: order.packetId };
 }
