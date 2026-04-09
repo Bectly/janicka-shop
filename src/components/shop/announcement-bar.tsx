@@ -32,7 +32,7 @@ export function AnnouncementBar() {
 
   return (
     <div className="relative bg-primary text-primary-foreground">
-      <div className="mx-auto flex h-9 max-w-7xl items-center justify-center px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex min-h-11 max-w-7xl items-center justify-center px-4 sm:px-6 lg:px-8">
         <p className="text-center text-xs font-medium sm:text-sm">
           {messages[currentIndex]}
         </p>
@@ -42,7 +42,7 @@ export function AnnouncementBar() {
             setDismissed(true);
             localStorage.setItem(STORAGE_KEY, "1");
           }}
-          className="absolute right-2 inline-flex size-9 items-center justify-center rounded text-primary-foreground/70 transition-colors hover:text-primary-foreground sm:right-4"
+          className="absolute right-2 inline-flex size-11 items-center justify-center rounded text-primary-foreground/70 transition-colors hover:text-primary-foreground sm:right-4"
           aria-label="Zavřít oznámení"
         >
           <X className="size-3.5" />

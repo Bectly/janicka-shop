@@ -123,7 +123,7 @@ export function ProductFilters({
       <button
         onClick={() => updateParams({ category: null })}
         aria-pressed={!activeCategory}
-        className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+        className={`min-h-11 inline-flex items-center rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
           !activeCategory
             ? "bg-primary text-primary-foreground"
             : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -136,7 +136,7 @@ export function ProductFilters({
           key={cat.slug}
           onClick={() => updateParams({ category: cat.slug })}
           aria-pressed={activeCategory === cat.slug}
-          className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+          className={`min-h-11 inline-flex items-center rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
             activeCategory === cat.slug
               ? "bg-primary text-primary-foreground"
               : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -173,7 +173,7 @@ export function ProductFilters({
         onClick={() => !isDisabled && toggleMulti("brand", brand, activeBrands)}
         aria-pressed={isActive}
         aria-disabled={isDisabled}
-        className={`rounded-lg px-3 ${size === "base" ? "py-1.5 text-sm" : "py-1 text-xs"} font-medium transition-colors ${
+        className={`min-h-11 inline-flex items-center rounded-lg px-3 ${size === "base" ? "py-1.5 text-sm" : "py-1 text-xs"} font-medium transition-colors ${
           isActive
             ? "bg-primary text-primary-foreground"
             : isDisabled
@@ -222,7 +222,7 @@ export function ProductFilters({
               onClick={() => !isDisabled && toggleMulti("size", size, activeSizes)}
               aria-pressed={isActive}
               aria-disabled={isDisabled}
-              className={`min-w-[2.5rem] rounded-lg px-2.5 py-1 text-center text-xs font-medium transition-colors ${
+              className={`min-h-11 min-w-[2.5rem] inline-flex items-center justify-center rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
                 isActive
                   ? "bg-primary text-primary-foreground"
                   : isDisabled
@@ -259,7 +259,7 @@ export function ProductFilters({
               aria-disabled={isDisabled}
               aria-label={`${color} (${count})`}
               title={`${color} (${count})`}
-              className={`group relative flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium transition-colors ${
+              className={`group relative flex min-h-11 items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium transition-colors ${
                 isActive
                   ? "bg-primary/10 ring-2 ring-primary"
                   : isDisabled
@@ -302,7 +302,7 @@ export function ProductFilters({
               onClick={() => !isDisabled && toggleMulti("condition", key, activeConditions)}
               aria-pressed={isActive}
               aria-disabled={isDisabled}
-              className={`rounded-lg px-3 py-1 text-xs font-medium transition-colors ${
+              className={`min-h-11 inline-flex items-center rounded-lg px-3 py-1 text-xs font-medium transition-colors ${
                 isActive
                   ? "bg-primary text-primary-foreground"
                   : isDisabled
@@ -368,7 +368,7 @@ export function ProductFilters({
     <button
       onClick={() => updateParams({ sale: saleOnly ? null : "true" })}
       aria-pressed={saleOnly}
-      className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+      className={`min-h-11 inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
         saleOnly
           ? "bg-destructive/10 text-destructive"
           : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -449,7 +449,7 @@ export function ProductFilters({
                   key={size}
                   onClick={() => toggleMulti("size", size, activeSizes)}
                   aria-pressed={isActive}
-                  className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                  className={`shrink-0 min-h-11 inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                     isActive
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -478,7 +478,7 @@ export function ProductFilters({
                   aria-pressed={isActive}
                   aria-label={color}
                   title={color}
-                  className={`group flex shrink-0 items-center gap-1 rounded-full py-1 pl-1.5 pr-2.5 text-xs font-medium transition-colors ${
+                  className={`group flex shrink-0 min-h-11 items-center gap-1 rounded-full py-1 pl-1.5 pr-2.5 text-xs font-medium transition-colors ${
                     isActive
                       ? "bg-primary/10 ring-2 ring-primary"
                       : "bg-muted hover:bg-muted/80"
@@ -563,7 +563,7 @@ export function ProductFilters({
               <DrawerTitle>Filtry</DrawerTitle>
               <button
                 onClick={() => setIsDrawerOpen(false)}
-                className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted"
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted"
                 aria-label="Zavřít filtry"
               >
                 <X className="size-5" />
@@ -595,7 +595,7 @@ export function ProductFilters({
                               onClick={() => !isDisabled && toggleMulti("size", size, activeSizes)}
                               aria-pressed={isActive}
                               aria-disabled={isDisabled}
-                              className={`min-w-[2.5rem] rounded-lg px-2.5 py-1.5 text-center text-sm font-medium transition-colors ${
+                              className={`min-h-11 min-w-[2.5rem] inline-flex items-center justify-center rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors ${
                                 isActive
                                   ? "bg-primary text-primary-foreground"
                                   : isDisabled
@@ -690,7 +690,7 @@ export function ProductFilters({
                               aria-disabled={isDisabled}
                               aria-label={`${color} (${count})`}
                               title={`${color} (${count})`}
-                              className={`group relative flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors ${
+                              className={`group relative flex min-h-11 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors ${
                                 isActive
                                   ? "bg-primary/10 ring-2 ring-primary"
                                   : isDisabled
