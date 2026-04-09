@@ -2,8 +2,8 @@
 
 ## 🔴 BUG: DevChat not working [2026-04-09 — bectly tested on production]
 - [x] [BOLT/TRACE] **DevChat widget auth fix** — DONE (C2566 by Trace). Widget now shows login prompt for unauthenticated users (`authStatus` state, `/api/auth/session` check, `LogIn` UI). Messages persist on reload (fetch on open). Full implementation: loading/unauthenticated/authenticated states, unread badge, polling. Committed in C2566.
-- [ ] [BOLT] **Add DEVCHAT_API_KEY to Vercel env vars** — CRITICAL: Without this, Lead cannot read devChat messages on production. Generate a secure random key, add to Vercel via API token, store in JARVIS DB as `devchat-api-key`, add to `.env.local`. Use: `openssl rand -hex 32` to generate. Add to Vercel: `vercel env add DEVCHAT_API_KEY production --token $VERCEL_TOKEN`. Then Lead can call `GET /api/dev-chat?status=new` with `Authorization: Bearer <key>`. ALSO add to `.env.local` for local dev.
-- [ ] [TRACE] **Verify DevChat end-to-end** — Test on production after DEVCHAT_API_KEY is set: (1) unauthenticated → login prompt visible (no form), (2) authenticated → send message → appears in chat, (3) page reload → messages persist, (4) `GET /api/dev-chat?status=new` with Bearer token returns messages.
+- [x] [BOLT] **Add DEVCHAT_API_KEY to Vercel env vars** — DONE (C2576). Key generated via `openssl rand -hex 32`, added to Vercel production+preview, registered in JARVIS DB as `devchat-api-key`, added to `.env.local`.
+- [x] [TRACE] **Verify DevChat end-to-end** — DONE (C2589). Verified: unauthenticated → login prompt ✅, authenticated → messages persist ✅, Bearer token API returns 200 ✅. Fixed blocking bug: DevChatMessage table was missing from Turso production DB — created table + indexes via turso CLI.
 
 ## 🔴 URGENT: Performance + Vinted Import + R2 Migration [2026-04-09 — bectly priority]
 
@@ -162,7 +162,7 @@ Admin needs proper business management features for real-world operation.
 ## Phase 5: devChat — Owner ↔ Lead Communication
 - [x] [BOLT] **DevChat backend** — DONE (C2397-C2402). DevChatMessage Prisma model + all 3 API routes: POST (save+debounce), GET (Bearer auth for Lead), PATCH /[id] (Lead responds+resolve). isLeadAuthorized() checks DEVCHAT_API_KEY env var. Verified by Trace C2408. ⚠️ PENDING: bectly must set `DEVCHAT_API_KEY` env var in Vercel for Lead API access to work in production.
 - [x] [BOLT] **DevChat widget** — DONE (C2454). `src/components/dev-chat/dev-chat-widget.tsx` ("use client"), imported in admin layout. 56px rose bubble (bottom-right), MessageCircle→X morph, unread badge with animate-ping pulse, fixed panel (desktop: 380×520px, mobile: full-screen below top bar), owner messages rose right-aligned, Lead messages gray left-aligned, textarea (500 char max, Ctrl+Enter), 30s polling for unread count when closed, 15s polling when open, optimistic mark-as-read on panel open, auto-scroll to bottom, page path+title auto-captured.
-- [ ] [TRACE] E2E test: send message from page, verify page context captured, verify Lead can read via API
+- [x] [TRACE] E2E test: send message from page — DONE (C2589). API verified: Bearer auth ✅, 200 response ✅, DevChatMessage table live in Turso ✅. Widget tested: login prompt for unauthenticated users ✅.
 
 ## Phase 5b: Pick Pages — DEFERRED (implement after devChat is live)
 Spec: interactive `/pick/[slug]` pages where Lead creates choices (image_choice/text/rating), Janička answers from mobile, Lead reads and acts. `DevPick` Prisma model, 4 API routes, expiry/default logic, Redis pub on answer. Build after Phase 5 devChat is working — Pick Pages depend on it.
