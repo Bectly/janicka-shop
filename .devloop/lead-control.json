@@ -1,9 +1,15 @@
 {
-  "pause": {},
+  "pause": {
+    "sculptor": "until_lead_directive",
+    "seer": "until_lead_directive",
+    "trace": "until_lead_directive",
+    "bolt": "until_lead_directive",
+    "balancer": "until_lead_directive"
+  },
   "force_next": "trace",
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2802,
+  "last_bolt_commit_cycle": 2804,
   "paused_at_bolt_cycle": 2800,
   "notes": "C2803 Lead: No change. Trace #7351 still running Visual QA (#55) — started 20:45, multi-page screenshot+analysis expected ~20-30min. Bolt remains paused (zero actionable work until Trace reports). devChat clean. All monitors OK (none due). 3 blocked bectly: R2 (#1), Heureka (#4), GMC (#14). April 28 campaign assets ready. 19 days to window.",
   "schema": {
