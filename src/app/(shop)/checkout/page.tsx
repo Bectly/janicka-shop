@@ -10,6 +10,7 @@ import {
   useTransition,
 } from "react";
 import { useSearchParams } from "next/navigation";
+import { getPersistedReferralCode, clearPersistedReferralCode } from "@/components/shop/referral-tracker";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -216,10 +217,12 @@ export default function CheckoutPage() {
   const [shippingError, setShippingError] = useState<string | null>(null);
   const [contactError, setContactError] = useState<string | null>(null);
 
-  // Referral & store credit
-  const [referralCode, setReferralCode] = useState<string | null>(
-    () => searchParams.get("ref")?.trim().toUpperCase() || null,
-  );
+  // Referral & store credit — read from URL first, fall back to sessionStorage
+  const [referralCode, setReferralCode] = useState<string | null>(() => {
+    const fromUrl = searchParams.get("ref")?.trim().toUpperCase();
+    if (fromUrl) return fromUrl;
+    return getPersistedReferralCode();
+  });
   const [referralDiscount, setReferralDiscount] = useState(0);
   const [referralError, setReferralError] = useState<string | null>(null);
   const [storeCredit, setStoreCredit] = useState(0);

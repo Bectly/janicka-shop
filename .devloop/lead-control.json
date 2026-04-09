@@ -5,7 +5,7 @@
   "force_next": "trace",
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2740,
+  "last_bolt_commit_cycle": 2743,
   "paused_at_bolt_cycle": 2740,
   "notes": "C2741 Lead: #39 referral DONE (C2739). 13/15 complete. New #40 Trace: verify referral logic. New #41 Bolt: admin referral/credit management UI. After #40+#41: ALL code tasks complete — only 3 blocked bectly items remain (R2/Heureka/GMC). Trace first (verify), then Bolt (admin UI). Monitors OK. 19 days to Vinted window.",
   "schema": {

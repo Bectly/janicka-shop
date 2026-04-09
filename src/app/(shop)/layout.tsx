@@ -6,6 +6,7 @@ import { BackToTop } from "@/components/shop/back-to-top";
 import { AnnouncementBar } from "@/components/shop/announcement-bar";
 import { VintedTcBanner } from "@/components/shop/vinted-tc-banner";
 import { DevChatWidget } from "@/components/dev-chat/dev-chat-widget";
+import { ReferralTracker } from "@/components/shop/referral-tracker";
 
 export default function ShopLayout({
   children,
@@ -23,6 +24,9 @@ export default function ShopLayout({
       </Suspense>
       <BackToTop />
       <CookieConsentBanner />
+      <Suspense>
+        <ReferralTracker />
+      </Suspense>
       <Suspense>
         <DevChatWidget />
       </Suspense>
