@@ -72,8 +72,8 @@ function SizeTable({
 export function SizeGuide() {
   return (
     <Dialog>
-      <DialogTrigger className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
-        <Ruler className="size-3.5" />
+      <DialogTrigger className="inline-flex min-h-11 items-center gap-1.5 text-sm text-primary hover:underline">
+        <Ruler className="size-4" />
         Průvodce velikostmi
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">

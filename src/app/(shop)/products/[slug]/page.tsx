@@ -693,6 +693,9 @@ export default async function ProductDetailPage({ params }: Props) {
 
       {/* Recently viewed */}
       <RecentlyViewedSection excludeProductId={product.id} />
+
+      {/* Bottom spacer — prevents sticky ATC bar from obscuring related/recently viewed on mobile */}
+      {product.stock > 0 && <div className="h-20 lg:hidden" />}
     </div>
   );
 }

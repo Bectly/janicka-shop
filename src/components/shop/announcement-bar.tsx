@@ -42,7 +42,7 @@ export function AnnouncementBar() {
             setDismissed(true);
             localStorage.setItem(STORAGE_KEY, "1");
           }}
-          className="absolute right-2 inline-flex items-center justify-center rounded p-1 text-primary-foreground/70 transition-colors hover:text-primary-foreground sm:right-4"
+          className="absolute right-2 inline-flex size-9 items-center justify-center rounded text-primary-foreground/70 transition-colors hover:text-primary-foreground sm:right-4"
           aria-label="Zavřít oznámení"
         >
           <X className="size-3.5" />

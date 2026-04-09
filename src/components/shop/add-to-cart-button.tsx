@@ -107,7 +107,7 @@ export function AddToCartButton({ product }: AddToCartProps) {
                   key={size}
                   onClick={() => setSelectedSize(size)}
                   aria-pressed={selectedSize === size}
-                  className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-all duration-100 active:scale-90 ${
+                  className={`min-h-11 rounded-lg border px-3 py-2 text-sm font-medium transition-all duration-100 active:scale-90 ${
                     selectedSize === size
                       ? "border-primary bg-primary/10 text-primary animate-ring-expand"
                       : "border-border text-muted-foreground hover:border-foreground/30"
@@ -130,7 +130,7 @@ export function AddToCartButton({ product }: AddToCartProps) {
                   key={color}
                   onClick={() => setSelectedColor(color)}
                   aria-pressed={selectedColor === color}
-                  className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-all duration-100 active:scale-90 ${
+                  className={`min-h-11 rounded-lg border px-3 py-2 text-sm font-medium transition-all duration-100 active:scale-90 ${
                     selectedColor === color
                       ? "border-primary bg-primary/10 text-primary animate-ring-expand"
                       : "border-border text-muted-foreground hover:border-foreground/30"

@@ -692,7 +692,7 @@ export default function CheckoutPage() {
                   type="checkbox"
                   checked={marketingConsent}
                   onChange={(e) => setMarketingConsent(e.target.checked)}
-                  className="mt-0.5 size-4 shrink-0 rounded border-gray-300 text-primary accent-primary"
+                  className="mt-0.5 size-5 shrink-0 rounded border-gray-300 text-primary accent-primary"
                 />
                 <span className="text-xs text-muted-foreground leading-relaxed">
                   Upozornit mě, pokud zboží v košíku nákoupí někdo jiný. Každý
@@ -754,7 +754,7 @@ export default function CheckoutPage() {
                   return (
                     <div key={option.id}>
                       <label
-                        className={`flex cursor-pointer items-center gap-4 rounded-lg border-2 p-4 transition-colors ${
+                        className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition-colors ${
                           isSelected
                             ? "border-primary bg-primary/5"
                             : "border-border hover:border-muted-foreground/30"
@@ -775,14 +775,14 @@ export default function CheckoutPage() {
                           className="sr-only"
                         />
                         <div
-                          className={`flex size-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                          className={`flex size-6 shrink-0 items-center justify-center rounded-full border-2 ${
                             isSelected
                               ? "border-primary"
                               : "border-muted-foreground/40"
                           }`}
                         >
                           {isSelected && (
-                            <div className="size-2.5 rounded-full bg-primary" />
+                            <div className="size-3 rounded-full bg-primary" />
                           )}
                         </div>
                         <Icon
@@ -976,7 +976,7 @@ export default function CheckoutPage() {
                   return (
                     <label
                       key={option.id}
-                      className={`flex cursor-pointer items-center gap-4 rounded-lg border-2 p-4 transition-colors ${
+                      className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition-colors ${
                         isSelected
                           ? "border-primary bg-primary/5"
                           : "border-border hover:border-muted-foreground/30"
@@ -991,14 +991,14 @@ export default function CheckoutPage() {
                         className="sr-only"
                       />
                       <div
-                        className={`flex size-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                        className={`flex size-6 shrink-0 items-center justify-center rounded-full border-2 ${
                           isSelected
                             ? "border-primary"
                             : "border-muted-foreground/40"
                         }`}
                       >
                         {isSelected && (
-                          <div className="size-2.5 rounded-full bg-primary" />
+                          <div className="size-3 rounded-full bg-primary" />
                         )}
                       </div>
                       <Icon

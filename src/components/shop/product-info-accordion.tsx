@@ -18,7 +18,7 @@ function AccordionItem({
       className="group border-b border-border last:border-b-0"
       {...(defaultOpen ? { open: true } : {})}
     >
-      <summary className="flex cursor-pointer items-center gap-3 py-3.5 text-sm font-medium text-foreground select-none [&::-webkit-details-marker]:hidden">
+      <summary className="flex cursor-pointer items-center gap-3 py-4 text-sm font-medium text-foreground select-none [&::-webkit-details-marker]:hidden">
         <span className="text-muted-foreground">{icon}</span>
         <span className="flex-1">{title}</span>
         <ChevronDown className="size-4 text-muted-foreground transition-transform group-open:rotate-180" />

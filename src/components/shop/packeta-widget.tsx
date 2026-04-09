@@ -86,7 +86,7 @@ export function PacketaWidget({
           <button
             type="button"
             onClick={() => onPointSelected(null)}
-            className="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="shrink-0 rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
             aria-label="Zrušit výběr"
           >
             <X className="size-4" />
