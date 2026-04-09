@@ -1,9 +1,15 @@
 {
-  "pause": {},
+  "pause": {
+    "seer": "until_lead_directive",
+    "trace": "until_lead_directive",
+    "sculptor": "until_lead_directive",
+    "balancer": "until_lead_directive",
+    "bolt": "until_lead_directive"
+  },
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2661,
+  "last_bolt_commit_cycle": 2662,
   "paused_at_bolt_cycle": 0,
   "notes": "Clean state after Lead redesign fix. Guard force removed (agent doesn't exist in project).",
   "schema": {
