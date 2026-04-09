@@ -3,7 +3,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2500,
+  "last_bolt_commit_cycle": 2501,
   "updated_at_cycle": 2496,
   "dev_focus": "BOLT TASK C2496: Add 'Upozornit mě na podobné kousky' PDP opt-in form. (1) Below main CTA on product page: email input + button 'Upozornit mě'. (2) Server Action notifySimilarItem(email, categoryId, sizes, brand?): upsert ProductNotifyRequest in Turso. (3) Success state: '✓ Dáme ti vědět'. Only visible when product not sold. Backend already done — src/lib/email/similar-item.ts + wired in checkout/actions.ts. See TODO Phase 9 for full spec.",
   "notes": "C2496 Lead — Video task ✅ marked done in TODO (C2489/C2490). Wishlist task updated: backend exists but PDP form is the MISSING PIECE. New Bolt directive: PDP opt-in form that populates ProductNotifyRequest records. Without this form, the sendSimilarItemNotifications system is dead — backend fires on checkout but no records exist to match. Trace also unpaused. AFTER PDP form: Bolt → delivery deadline tracking OR Packeta shipment creation.",
