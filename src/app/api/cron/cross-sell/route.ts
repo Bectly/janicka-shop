@@ -37,6 +37,13 @@ export async function GET(request: Request) {
   let failed = 0;
 
   try {
+    // Fetch emails that have explicitly opted out of all marketing
+    const unsubscribed = await db.newsletterSubscriber.findMany({
+      where: { active: false },
+      select: { email: true },
+    });
+    const unsubscribedEmails = new Set(unsubscribed.map((s) => s.email));
+
     // Find eligible orders: paid/shipped/delivered, 14-30 days old, no cross-sell sent
     const orders = await db.order.findMany({
       where: {
@@ -64,6 +71,16 @@ export async function GET(request: Request) {
     });
 
     for (const order of orders) {
+      // Skip if customer has explicitly unsubscribed from all marketing emails
+      if (unsubscribedEmails.has(order.customer.email)) {
+        await db.order.update({
+          where: { id: order.id },
+          data: { crossSellEmailSentAt: now },
+        });
+        skipped++;
+        continue;
+      }
+
       // Skip if customer has placed another order since this one
       const laterOrder = await db.order.findFirst({
         where: {
