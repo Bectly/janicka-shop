@@ -230,100 +230,126 @@ export function DevChatWidget() {
             </button>
           </div>
 
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-4 py-3">
-            {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="size-5 animate-spin text-muted-foreground" />
-              </div>
-            ) : messages.length === 0 ? (
-              <div className="py-8 text-center text-sm text-muted-foreground">
-                <MessageCircle className="mx-auto mb-2 size-8 text-muted-foreground/40" />
-                <p>Zatím žádné zprávy.</p>
-                <p className="mt-1 text-xs">
-                  Napište požadavek, feedback, nebo cokoliv.
-                </p>
-              </div>
-            ) : (
-              <>
-                {messages.map((msg) => (
-                  <div key={msg.id} className="mb-3">
-                    {/* Owner message */}
-                    {msg.sender === "owner" && (
-                      <div className="flex flex-col items-end">
-                        <div className="max-w-[85%] rounded-2xl rounded-br-md bg-rose-500 px-3.5 py-2 text-sm text-white">
-                          {msg.message}
-                        </div>
-                        <span className="mt-0.5 text-[10px] text-muted-foreground">
-                          {formatTime(msg.createdAt)}
-                          {msg.pagePath && (
-                            <span className="ml-1 opacity-60">
-                              z {msg.pagePath}
+          {/* Content — depends on auth status */}
+          {authStatus === "loading" ? (
+            <div className="flex flex-1 items-center justify-center">
+              <Loader2 className="size-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : authStatus === "unauthenticated" ? (
+            <div className="flex flex-1 flex-col items-center justify-center px-6 py-8 text-center">
+              <LogIn className="mb-3 size-10 text-muted-foreground/40" />
+              <p className="text-sm font-medium text-foreground">
+                Přihlas se pro komunikaci s týmem
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                DevChat je dostupný pouze pro přihlášené administrátory.
+              </p>
+              <Link
+                href="/admin/login"
+                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-rose-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-rose-600"
+              >
+                <LogIn className="size-4" />
+                Přihlásit se
+              </Link>
+            </div>
+          ) : (
+            <>
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto px-4 py-3">
+                {loading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : messages.length === 0 ? (
+                  <div className="py-8 text-center text-sm text-muted-foreground">
+                    <MessageCircle className="mx-auto mb-2 size-8 text-muted-foreground/40" />
+                    <p>Zatím žádné zprávy.</p>
+                    <p className="mt-1 text-xs">
+                      Napište požadavek, feedback, nebo cokoliv.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    {messages.map((msg) => (
+                      <div key={msg.id} className="mb-3">
+                        {/* Owner message */}
+                        {msg.sender === "owner" && (
+                          <div className="flex flex-col items-end">
+                            <div className="max-w-[85%] rounded-2xl rounded-br-md bg-rose-500 px-3.5 py-2 text-sm text-white">
+                              {msg.message}
+                            </div>
+                            <span className="mt-0.5 text-[10px] text-muted-foreground">
+                              {formatTime(msg.createdAt)}
+                              {msg.pagePath && (
+                                <span className="ml-1 opacity-60">
+                                  z {msg.pagePath}
+                                </span>
+                              )}
                             </span>
-                          )}
-                        </span>
-                        {/* Lead's inline response */}
-                        {msg.response && (
-                          <div className="mt-1.5 mr-auto max-w-[85%] rounded-2xl rounded-bl-md bg-muted px-3.5 py-2 text-sm">
-                            {msg.response}
+                            {/* Lead's inline response */}
+                            {msg.response && (
+                              <div className="mt-1.5 mr-auto max-w-[85%] rounded-2xl rounded-bl-md bg-muted px-3.5 py-2 text-sm">
+                                {msg.response}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {/* Lead message */}
+                        {msg.sender === "lead" && (
+                          <div className="flex flex-col items-start">
+                            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                              <span className="font-medium text-rose-600 dark:text-rose-400">
+                                Lead
+                              </span>
+                            </div>
+                            <div className="mt-0.5 max-w-[85%] rounded-2xl rounded-bl-md bg-muted px-3.5 py-2 text-sm">
+                              {msg.message}
+                            </div>
+                            <span className="mt-0.5 text-[10px] text-muted-foreground">
+                              {formatTime(msg.createdAt)}
+                            </span>
                           </div>
                         )}
                       </div>
-                    )}
-                    {/* Lead message */}
-                    {msg.sender === "lead" && (
-                      <div className="flex flex-col items-start">
-                        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                          <span className="font-medium text-rose-600 dark:text-rose-400">
-                            Lead
-                          </span>
-                        </div>
-                        <div className="mt-0.5 max-w-[85%] rounded-2xl rounded-bl-md bg-muted px-3.5 py-2 text-sm">
-                          {msg.message}
-                        </div>
-                        <span className="mt-0.5 text-[10px] text-muted-foreground">
-                          {formatTime(msg.createdAt)}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </>
-            )}
-          </div>
-
-          {/* Input */}
-          <div className="border-t bg-background p-3">
-            <div className="flex gap-2">
-              <textarea
-                ref={textareaRef}
-                value={input}
-                onChange={(e) =>
-                  setInput(e.target.value.slice(0, 500))
-                }
-                onKeyDown={handleKeyDown}
-                placeholder="Napište zprávu..."
-                rows={2}
-                className="flex-1 resize-none rounded-xl border bg-muted/50 px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-rose-300 focus:ring-1 focus:ring-rose-300"
-              />
-              <button
-                onClick={handleSend}
-                disabled={!input.trim() || sending}
-                className="flex size-10 shrink-0 items-center justify-center self-end rounded-xl bg-rose-500 text-white transition-colors hover:bg-rose-600 disabled:opacity-50"
-                aria-label="Odeslat zprávu"
-              >
-                {sending ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Send className="size-4" />
+                    ))}
+                    <div ref={messagesEndRef} />
+                  </>
                 )}
-              </button>
-            </div>
-            <p className="mt-1.5 text-[10px] text-muted-foreground">
-              {input.length}/500 &middot; Ctrl+Enter odešle
-            </p>
-          </div>
+              </div>
+
+              {/* Input */}
+              <div className="border-t bg-background p-3">
+                <div className="flex gap-2">
+                  <textarea
+                    ref={textareaRef}
+                    value={input}
+                    onChange={(e) =>
+                      setInput(e.target.value.slice(0, 500))
+                    }
+                    onKeyDown={handleKeyDown}
+                    placeholder="Napište zprávu..."
+                    rows={2}
+                    className="flex-1 resize-none rounded-xl border bg-muted/50 px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-rose-300 focus:ring-1 focus:ring-rose-300"
+                  />
+                  <button
+                    onClick={handleSend}
+                    disabled={!input.trim() || sending}
+                    className="flex size-10 shrink-0 items-center justify-center self-end rounded-xl bg-rose-500 text-white transition-colors hover:bg-rose-600 disabled:opacity-50"
+                    aria-label="Odeslat zprávu"
+                  >
+                    {sending ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <Send className="size-4" />
+                    )}
+                  </button>
+                </div>
+                <p className="mt-1.5 text-[10px] text-muted-foreground">
+                  {input.length}/500 &middot; Ctrl+Enter odešle
+                </p>
+              </div>
+            </>
+          )}
         </div>
       )}
 
