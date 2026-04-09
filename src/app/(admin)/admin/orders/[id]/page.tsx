@@ -15,6 +15,12 @@ import { ArrowLeft } from "lucide-react";
 import { OrderStatusSelect } from "./order-status-select";
 import { TrackingNumberForm } from "./tracking-number-form";
 import { InvoiceSection } from "./invoice-section";
+import { CreateReturnForm } from "./create-return-form";
+import {
+  RETURN_STATUS_LABELS,
+  RETURN_STATUS_COLORS,
+  RETURN_REASON_LABELS,
+} from "@/lib/constants";
 import type { Metadata } from "next";
 
 interface Props {
@@ -52,6 +58,17 @@ export default async function AdminOrderDetailPage({ params }: Props) {
         orderBy: { createdAt: "desc" },
         take: 1,
         select: { id: true, number: true, issuedAt: true, totalAmount: true },
+      },
+      returns: {
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          returnNumber: true,
+          status: true,
+          reason: true,
+          refundAmount: true,
+          createdAt: true,
+        },
       },
     },
   });
@@ -279,6 +296,62 @@ export default async function AdminOrderDetailPage({ params }: Props) {
               </div>
             </div>
           )}
+
+          {/* Returns */}
+          <div className="rounded-xl border bg-card p-5 shadow-sm">
+            <h2 className="font-heading text-base font-semibold text-foreground">
+              Vratky
+            </h2>
+            {order.returns.length > 0 ? (
+              <div className="mt-3 space-y-3">
+                {order.returns.map((ret) => (
+                  <div
+                    key={ret.id}
+                    className="flex items-center justify-between rounded-lg border bg-background p-3"
+                  >
+                    <div>
+                      <Link
+                        href={`/admin/returns/${ret.id}`}
+                        className="text-sm font-medium text-primary hover:underline"
+                      >
+                        {ret.returnNumber}
+                      </Link>
+                      <p className="text-xs text-muted-foreground">
+                        {RETURN_REASON_LABELS[ret.reason] ?? ret.reason}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span
+                        className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${RETURN_STATUS_COLORS[ret.status] ?? "bg-muted text-muted-foreground"}`}
+                      >
+                        {RETURN_STATUS_LABELS[ret.status] ?? ret.status}
+                      </span>
+                      <p className="mt-1 text-xs font-medium">
+                        {formatPrice(ret.refundAmount)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-3 text-sm text-muted-foreground">
+                Žádné vratky
+              </p>
+            )}
+            <div className="mt-4 border-t pt-4">
+              <CreateReturnForm
+                orderId={order.id}
+                orderTotal={order.total}
+                items={order.items.map((i) => ({
+                  id: i.id,
+                  name: i.name,
+                  price: i.price,
+                  size: i.size,
+                  color: i.color,
+                }))}
+              />
+            </div>
+          </div>
 
           {/* Note */}
           {order.note && (

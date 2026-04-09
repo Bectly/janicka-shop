@@ -63,20 +63,21 @@ model Product {
 }
 
 model Customer {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String?
-  firstName String
-  lastName  String
-  phone     String?
-  street    String?
-  city      String?
-  zip       String?
-  country   String   @default("CZ")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  orders    Order[]
-  returns   Return[]
+  id              String    @id @default(cuid())
+  email           String    @unique
+  password        String?
+  firstName       String
+  lastName        String
+  phone           String?
+  street          String?
+  city            String?
+  zip             String?
+  country         String    @default("CZ")
+  winBackSentAt   DateTime? // Last win-back email sent (prevents spam)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  orders          Order[]
+  returns         Return[]
 }
 
 model Order {

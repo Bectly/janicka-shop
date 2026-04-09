@@ -15,6 +15,7 @@ import {
   Zap,
   Mail,
   Layers,
+  RotateCcw,
 } from "lucide-react";
 
 const navItems = [
@@ -24,6 +25,7 @@ const navItems = [
   { href: "/admin/categories", label: "Kategorie", icon: Tags },
   { href: "/admin/collections", label: "Kolekce", icon: Layers },
   { href: "/admin/orders", label: "Objednávky", icon: ShoppingCart },
+  { href: "/admin/returns", label: "Vratky", icon: RotateCcw },
   { href: "/admin/customers", label: "Zákazníci", icon: Users },
   { href: "/admin/subscribers", label: "Newsletter", icon: Mail },
   { href: "/admin/settings", label: "Nastavení", icon: Settings },
