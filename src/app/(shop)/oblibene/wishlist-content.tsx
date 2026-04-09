@@ -3,7 +3,7 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Heart, ShoppingBag } from "lucide-react";
+import { Heart, ShoppingBag, Share2, Check } from "lucide-react";
 import { useWishlistStore } from "@/lib/wishlist-store";
 import { formatPrice } from "@/lib/format";
 import { CONDITION_LABELS, CONDITION_COLORS } from "@/lib/constants";
@@ -20,6 +20,35 @@ export function WishlistContent() {
 
   const [products, setProducts] = useState<WishlistProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [shareCopied, setShareCopied] = useState(false);
+
+  async function handleShare() {
+    const ids = wishlistIds.slice(0, 50);
+    const origin = window.location.origin;
+    const shareUrl = `${origin}/oblibene/sdilej?ids=${ids.join(",")}`;
+    const shareData = {
+      title: "Seznam přání z Janička Shop",
+      text: "Podívej se na moje oblíbené kousky!",
+      url: shareUrl,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch {
+        // User cancelled or share failed — fall through to clipboard
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2500);
+    } catch {
+      // Clipboard not available
+    }
+  }
 
   // Fetch products when wishlist IDs change
   useEffect(() => {
@@ -74,7 +103,27 @@ export function WishlistContent() {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+    <>
+      <div className="mb-6 flex justify-end">
+        <button
+          type="button"
+          onClick={handleShare}
+          className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+        >
+          {shareCopied ? (
+            <>
+              <Check className="size-4 text-green-600" />
+              Odkaz zkopírován!
+            </>
+          ) : (
+            <>
+              <Share2 className="size-4" />
+              Sdílet přání
+            </>
+          )}
+        </button>
+      </div>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
       {products.map((product) => {
         const parsedImages = getImageUrls(product.images);
         const mainImage = parsedImages[0];
@@ -190,5 +239,6 @@ export function WishlistContent() {
         );
       })}
     </div>
+    </>
   );
 }
