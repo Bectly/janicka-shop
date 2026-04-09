@@ -308,6 +308,36 @@ export function buildFaqSchema(
   };
 }
 
+/**
+ * Build a standalone VideoObject JSON-LD for Google Video rich results.
+ * Google Discover + Video tab require top-level VideoObject (not just nested in Product).
+ * Returns null if no valid video URL.
+ */
+export function buildVideoObjectSchema(product: {
+  name: string;
+  description: string;
+  videoUrl: string | null | undefined;
+  images: string;
+  createdAt?: Date | string | null;
+}): Record<string, unknown> | null {
+  if (!product.videoUrl || !/^https?:\/\//.test(product.videoUrl)) return null;
+
+  const productImages = getImageUrls(product.images);
+  const uploadDate = product.createdAt
+    ? new Date(product.createdAt).toISOString().split("T")[0]
+    : undefined;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    name: `${product.name} — video`,
+    description: product.description,
+    contentUrl: product.videoUrl,
+    thumbnailUrl: productImages.length > 0 ? productImages[0] : undefined,
+    ...(uploadDate ? { uploadDate } : {}),
+  };
+}
+
 /** Render a JSON-LD script tag string (safe for dangerouslySetInnerHTML). */
 export function jsonLdString(data: Record<string, unknown>): string {
   return JSON.stringify(data).replace(/</g, "\\u003c");

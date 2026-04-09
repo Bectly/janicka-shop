@@ -11,7 +11,7 @@ import { ProductGallery } from "@/components/shop/product-gallery";
 import { AddToCartButton } from "@/components/shop/add-to-cart-button";
 import { getVisitorId } from "@/lib/visitor";
 import { getLowestPrices30d } from "@/lib/price-history";
-import { buildProductSchema, buildBreadcrumbSchema, buildFaqSchema, jsonLdString } from "@/lib/structured-data";
+import { buildProductSchema, buildBreadcrumbSchema, buildFaqSchema, buildVideoObjectSchema, jsonLdString } from "@/lib/structured-data";
 import { ShareButtons } from "@/components/shop/share-buttons";
 import { WishlistButton } from "@/components/shop/wishlist-button";
 import {
@@ -223,8 +223,18 @@ export default async function ProductDetailPage({ params }: Props) {
       colors: product.colors,
       sizes: product.sizes,
       videoUrl: product.videoUrl,
+      createdAt: product.createdAt,
     }),
   };
+
+  // Standalone VideoObject for Google Video rich results / Discover (+22% CTR)
+  const videoJsonLd = buildVideoObjectSchema({
+    name: product.name,
+    description: product.description,
+    videoUrl: product.videoUrl,
+    images: product.images,
+    createdAt: product.createdAt,
+  });
 
   const breadcrumbJsonLd = buildBreadcrumbSchema([
     { name: "Katalog", url: "/products" },
@@ -270,6 +280,12 @@ export default async function ProductDetailPage({ params }: Props) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: jsonLdString(faqJsonLd) }}
         />
+        {videoJsonLd && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: jsonLdString(videoJsonLd) }}
+          />
+        )}
         <nav className="mb-6 text-sm text-muted-foreground">
           <Link href="/products" className="hover:text-foreground">
             Katalog
@@ -419,6 +435,12 @@ export default async function ProductDetailPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLdString(faqJsonLd) }}
       />
+      {videoJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLdString(videoJsonLd) }}
+        />
+      )}
       {/* Breadcrumb */}
       <nav className="mb-6 text-sm text-muted-foreground">
         <Link href="/products" className="hover:text-foreground">
