@@ -7,6 +7,7 @@ import { getOrCreateVisitorId } from "@/lib/visitor";
 import { createComgatePayment } from "@/lib/payments/comgate";
 import { rateLimitCheckout } from "@/lib/rate-limit";
 import { sendOrderConfirmationEmail, sendAdminNewOrderEmail } from "@/lib/email";
+import { sendSimilarItemNotifications } from "@/lib/email/similar-item";
 import { revalidatePath } from "next/cache";
 import {
   PAYMENT_METHODS,
@@ -403,7 +404,16 @@ export async function createOrder(
       const dbPrices = new Map(products.map((p) => [p.id, p.price]));
       const dbNames = new Map(products.map((p) => [p.id, p.name]));
       const productSlugs = products.map((p) => p.slug);
-      return { ...created, customerEmail: customer.email, dbPrices, dbNames, productSlugs };
+      // Sold product data for similar-item notification emails
+      const soldProducts = products.map((p) => ({
+        id: p.id,
+        name: p.name,
+        brand: p.brand,
+        categoryId: p.categoryId,
+        sizes: p.sizes,
+        images: p.images,
+      }));
+      return { ...created, customerEmail: customer.email, dbPrices, dbNames, productSlugs, soldProducts };
     });
   } catch (e) {
     if (e instanceof UnavailableError) {
@@ -419,6 +429,11 @@ export async function createOrder(
   }
   revalidatePath("/products");
   revalidatePath("/");
+
+  // Notify subscribers about similar items when their watched category sells (fire-and-forget)
+  sendSimilarItemNotifications(order.soldProducts).catch((e) =>
+    console.error("[Checkout] Similar notify:", e),
+  );
 
   // Send order confirmation email (fire-and-forget — never blocks checkout)
   sendOrderConfirmationEmail({

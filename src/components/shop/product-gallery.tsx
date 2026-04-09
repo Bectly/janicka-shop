@@ -30,14 +30,22 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
   const [activeIndex, setActiveIndex] = useState(0);
   const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [videoPlaying, setVideoPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Video is always the last slide (after all images)
+  // Video is slide 1 (after first image) for early engagement
   const hasVideo = !!videoUrl;
-  const videoSlideIndex = hasVideo ? images.length : -1;
+  const videoSlideIndex = hasVideo ? Math.min(1, images.length) : -1;
   const totalSlides = images.length + (hasVideo ? 1 : 0);
   const isVideoActive = hasVideo && activeIndex === videoSlideIndex;
+
+  // Map slide index → image array index (accounts for video slide offset)
+  const getImageIndex = (slideIdx: number) =>
+    hasVideo && slideIdx > videoSlideIndex ? slideIdx - 1 : slideIdx;
+
+  // Slide indices that are images (not video) — used for lightbox navigation
+  const imageSlideIndices = hasVideo
+    ? Array.from({ length: images.length }, (_, i) => (i < videoSlideIndex ? i : i + 1))
+    : Array.from({ length: images.length }, (_, i) => i);
   const [zoomed, setZoomed] = useState(false);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [swipeOffset, setSwipeOffset] = useState(0);
@@ -79,7 +87,6 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
     setActiveIndex((prev) => (prev === totalSlides - 1 ? 0 : prev + 1));
     setZoomed(false);
     setPanOffset({ x: 0, y: 0 });
-    setVideoPlaying(false);
   }, [totalSlides]);
 
   const goPrev = useCallback(() => {
@@ -87,7 +94,6 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
     setActiveIndex((prev) => (prev === 0 ? totalSlides - 1 : prev - 1));
     setZoomed(false);
     setPanOffset({ x: 0, y: 0 });
-    setVideoPlaying(false);
   }, [totalSlides]);
 
   const toggleZoom = useCallback(() => {
@@ -150,18 +156,24 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
     touchRef.current.swiping = false;
   }, [goNext, goPrev]);
 
-  // Keyboard navigation for lightbox — clamp within image-only range (video slide is not in lightbox)
+  // Keyboard navigation for lightbox — navigate image slides only (skip video)
   useEffect(() => {
     if (!lightboxOpen) return;
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         closeLightbox();
       } else if (e.key === "ArrowRight") {
-        setActiveIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+        setActiveIndex((prev) => {
+          const pos = imageSlideIndices.indexOf(prev);
+          return imageSlideIndices[(pos + 1) % imageSlideIndices.length];
+        });
         setZoomed(false);
         setPanOffset({ x: 0, y: 0 });
       } else if (e.key === "ArrowLeft") {
-        setActiveIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+        setActiveIndex((prev) => {
+          const pos = imageSlideIndices.indexOf(prev);
+          return imageSlideIndices[(pos - 1 + imageSlideIndices.length) % imageSlideIndices.length];
+        });
         setZoomed(false);
         setPanOffset({ x: 0, y: 0 });
       }
@@ -172,7 +184,17 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
       document.removeEventListener("keydown", handleKey);
       document.body.style.overflow = "";
     };
-  }, [lightboxOpen, closeLightbox, images.length]);
+  }, [lightboxOpen, closeLightbox, imageSlideIndices]);
+
+  // Autoplay video when its slide becomes active, pause when leaving
+  useEffect(() => {
+    if (!hasVideo || !videoRef.current) return;
+    if (isVideoActive) {
+      videoRef.current.play().catch(() => {});
+    } else {
+      videoRef.current.pause();
+    }
+  }, [isVideoActive, hasVideo]);
 
   // Mouse drag for panning when zoomed
   const handlePointerDown = useCallback(
@@ -236,47 +258,18 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
           onTouchEnd={handleTouchEnd}
         >
           {isVideoActive ? (
-            /* Video slide — tap to play/pause */
+            /* Video slide — muted autoplay, loops continuously */
             <div className="absolute inset-0 flex items-center justify-center bg-black">
               <video
                 ref={videoRef}
                 src={videoUrl!}
-                preload="metadata"
-                playsInline
+                muted
+                autoPlay
                 loop
+                playsInline
+                preload="none"
                 className="size-full object-contain"
-                onClick={() => {
-                  if (videoRef.current) {
-                    if (videoPlaying) {
-                      videoRef.current.pause();
-                      setVideoPlaying(false);
-                    } else {
-                      videoRef.current.play()
-                        .then(() => setVideoPlaying(true))
-                        .catch(() => {});
-                    }
-                  }
-                }}
-                onEnded={() => setVideoPlaying(false)}
               />
-              {!videoPlaying && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (videoRef.current) {
-                      videoRef.current.play()
-                        .then(() => setVideoPlaying(true))
-                        .catch(() => {});
-                    }
-                  }}
-                  className="absolute inset-0 z-10 flex items-center justify-center"
-                  aria-label="Přehrát video"
-                >
-                  <span className="flex size-16 items-center justify-center rounded-full bg-white/90 shadow-lg transition-transform hover:scale-110">
-                    <Play className="size-7 text-foreground ml-1" fill="currentColor" />
-                  </span>
-                </button>
-              )}
             </div>
           ) : (
             /* Image slide */
@@ -294,8 +287,8 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
               </button>
               <Image
                 key={`slide-${activeIndex}`}
-                src={getUrl(images[activeIndex])}
-                alt={getAlt(images[activeIndex], productName, activeIndex)}
+                src={getUrl(images[getImageIndex(activeIndex)])}
+                alt={getAlt(images[getImageIndex(activeIndex)], productName, getImageIndex(activeIndex))}
                 fill
                 className={`object-cover ${
                   swipeOffset !== 0
@@ -324,7 +317,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                   setActiveIndex((prev) =>
                     prev === 0 ? totalSlides - 1 : prev - 1,
                   );
-                  setVideoPlaying(false);
+
                 }}
                 className="absolute top-1/2 left-2 z-20 -translate-y-1/2 rounded-full bg-white/80 p-1.5 opacity-0 shadow transition-opacity hover:bg-white group-hover:opacity-100"
                 aria-label="Předchozí fotka"
@@ -339,7 +332,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                   setActiveIndex((prev) =>
                     prev === totalSlides - 1 ? 0 : prev + 1,
                   );
-                  setVideoPlaying(false);
+
                 }}
                 className="absolute top-1/2 right-2 z-20 -translate-y-1/2 rounded-full bg-white/80 p-1.5 opacity-0 shadow transition-opacity hover:bg-white group-hover:opacity-100"
                 aria-label="Další fotka"
@@ -359,7 +352,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                       e.stopPropagation();
                       setSlideDirection(i > activeIndex ? "left" : "right");
                       setActiveIndex(i);
-                      setVideoPlaying(false);
+    
                     }}
                     className={`size-2 rounded-full transition-all ${
                       i === activeIndex
@@ -374,43 +367,50 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
           )}
         </div>
 
-        {/* Thumbnails */}
+        {/* Thumbnails — video interleaved at its slide position */}
         {totalSlides > 1 && (
           <div className="flex gap-2 overflow-x-auto pb-1">
-            {images.map((img, i) => (
-              <button
-                key={`${getUrl(img)}-${i}`}
-                type="button"
-                onClick={() => { setSlideDirection(i > activeIndex ? "left" : "right"); setActiveIndex(i); setVideoPlaying(false); }}
-                className={`relative size-16 shrink-0 overflow-hidden rounded-lg border-2 transition-all sm:size-20 ${
-                  i === activeIndex
-                    ? "border-primary ring-1 ring-primary"
-                    : "border-transparent opacity-70 hover:opacity-100"
-                }`}
-              >
-                <Image
-                  src={getUrl(img)}
-                  alt={`${productName} — náhled ${i + 1}`}
-                  fill
-                  className="object-cover"
-                  sizes="80px"
-                />
-              </button>
-            ))}
-            {hasVideo && (
-              <button
-                type="button"
-                onClick={() => { setSlideDirection("left"); setActiveIndex(videoSlideIndex); setVideoPlaying(false); }}
-                className={`relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border-2 bg-muted transition-all sm:size-20 ${
-                  activeIndex === videoSlideIndex
-                    ? "border-primary ring-1 ring-primary"
-                    : "border-transparent opacity-70 hover:opacity-100"
-                }`}
-                aria-label="Video"
-              >
-                <Play className="size-6 text-muted-foreground" fill="currentColor" />
-              </button>
-            )}
+            {Array.from({ length: totalSlides }, (_, slideIdx) => {
+              if (hasVideo && slideIdx === videoSlideIndex) {
+                return (
+                  <button
+                    key="video-thumb"
+                    type="button"
+                    onClick={() => { setSlideDirection(slideIdx > activeIndex ? "left" : "right"); setActiveIndex(slideIdx); }}
+                    className={`relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border-2 bg-muted transition-all sm:size-20 ${
+                      activeIndex === videoSlideIndex
+                        ? "border-primary ring-1 ring-primary"
+                        : "border-transparent opacity-70 hover:opacity-100"
+                    }`}
+                    aria-label="Video"
+                  >
+                    <Play className="size-6 text-muted-foreground" fill="currentColor" />
+                  </button>
+                );
+              }
+              const imgIdx = getImageIndex(slideIdx);
+              const img = images[imgIdx];
+              return (
+                <button
+                  key={`${getUrl(img)}-${imgIdx}`}
+                  type="button"
+                  onClick={() => { setSlideDirection(slideIdx > activeIndex ? "left" : "right"); setActiveIndex(slideIdx); }}
+                  className={`relative size-16 shrink-0 overflow-hidden rounded-lg border-2 transition-all sm:size-20 ${
+                    slideIdx === activeIndex
+                      ? "border-primary ring-1 ring-primary"
+                      : "border-transparent opacity-70 hover:opacity-100"
+                  }`}
+                >
+                  <Image
+                    src={getUrl(img)}
+                    alt={`${productName} — náhled ${imgIdx + 1}`}
+                    fill
+                    className="object-cover"
+                    sizes="80px"
+                  />
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -436,17 +436,20 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
           {/* Image counter */}
           {images.length > 1 && (
             <div className="absolute top-4 left-4 z-10 rounded-full bg-white/10 px-3 py-1.5 text-sm text-white">
-              {activeIndex + 1} / {images.length}
+              {imageSlideIndices.indexOf(activeIndex) + 1} / {images.length}
             </div>
           )}
 
-          {/* Navigation arrows — only within image slides */}
+          {/* Navigation arrows — navigate image slides only (skip video) */}
           {images.length > 1 && (
             <>
               <button
                 type="button"
                 onClick={() => {
-                  setActiveIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+                  setActiveIndex((prev) => {
+                    const pos = imageSlideIndices.indexOf(prev);
+                    return imageSlideIndices[(pos - 1 + imageSlideIndices.length) % imageSlideIndices.length];
+                  });
                   setZoomed(false);
                   setPanOffset({ x: 0, y: 0 });
                 }}
@@ -458,7 +461,10 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
               <button
                 type="button"
                 onClick={() => {
-                  setActiveIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+                  setActiveIndex((prev) => {
+                    const pos = imageSlideIndices.indexOf(prev);
+                    return imageSlideIndices[(pos + 1) % imageSlideIndices.length];
+                  });
                   setZoomed(false);
                   setPanOffset({ x: 0, y: 0 });
                 }}
@@ -489,8 +495,8 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
             onTouchEnd={!zoomed ? handleTouchEnd : undefined}
           >
             <Image
-              src={getUrl(images[activeIndex])}
-              alt={getAlt(images[activeIndex], productName, activeIndex)}
+              src={getUrl(images[getImageIndex(activeIndex)])}
+              alt={getAlt(images[getImageIndex(activeIndex)], productName, getImageIndex(activeIndex))}
               fill
               className="object-contain transition-transform duration-200"
               style={{
@@ -508,31 +514,35 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
           {/* Thumbnail strip at bottom */}
           {images.length > 1 && (
             <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-2">
-              {images.map((img, i) => (
-                <button
-                  key={`${getUrl(img)}-${i}`}
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setActiveIndex(i);
-                    setZoomed(false);
-                    setPanOffset({ x: 0, y: 0 });
-                  }}
-                  className={`relative size-12 shrink-0 overflow-hidden rounded-lg border-2 transition-all sm:size-14 ${
-                    i === activeIndex
-                      ? "border-white ring-1 ring-white/50"
-                      : "border-transparent opacity-50 hover:opacity-80"
-                  }`}
-                >
-                  <Image
-                    src={getUrl(img)}
-                    alt={`${productName} — náhled ${i + 1}`}
-                    fill
-                    className="object-cover"
-                    sizes="56px"
-                  />
-                </button>
-              ))}
+              {imageSlideIndices.map((slideIdx) => {
+                const imgIdx = getImageIndex(slideIdx);
+                const img = images[imgIdx];
+                return (
+                  <button
+                    key={`${getUrl(img)}-${imgIdx}`}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveIndex(slideIdx);
+                      setZoomed(false);
+                      setPanOffset({ x: 0, y: 0 });
+                    }}
+                    className={`relative size-12 shrink-0 overflow-hidden rounded-lg border-2 transition-all sm:size-14 ${
+                      slideIdx === activeIndex
+                        ? "border-white ring-1 ring-white/50"
+                        : "border-transparent opacity-50 hover:opacity-80"
+                    }`}
+                  >
+                    <Image
+                      src={getUrl(img)}
+                      alt={`${productName} — náhled ${imgIdx + 1}`}
+                      fill
+                      className="object-cover"
+                      sizes="56px"
+                    />
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
