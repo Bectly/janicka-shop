@@ -1,19 +1,15 @@
 {
   "pause": {
-    "seer": "until_lead_directive",
-    "sculptor": "until_lead_directive",
-    "balancer": "until_lead_directive",
-    "trace": "until_lead_directive",
-    "bolt": "until_lead_directive"
+    "trace": "until_next_bolt_commit"
   },
-  "force_next": "bolt",
+  "force_next": "guard",
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 2658,
-  "updated_at_cycle": 2657,
-  "dev_focus": "C2657 DIRECTIVE — BOLT: Add HTML autocomplete attributes to ALL checkout form fields. Checkout page has ZERO autocomplete attributes (confirmed by grep). This is the #1 highest-ROI checkout fix: -75% form abandonment, +35% completion speed, zero cost. Read src/app/(shop)/checkout/page.tsx. Find every <input> and <Input> element. Add correct autocomplete values: email='email', name='name', phone='tel', street='street-address', city='address-level2', zip='postal-code', country='country'. Also check textarea elements. If using react-hook-form register(), add autocomplete to the input props. npm run build must pass. AFTER BOLT COMMITS: Trace verifies all checkout fields have correct autocomplete values, no fields missed. When done, set next_suggested: lead.",
-  "qa_focus": "C2657 DIRECTIVE — TRACE: After Bolt commits autocomplete fix, verify: (1) every checkout input field has a valid HTML autocomplete attribute, (2) values are semantically correct per HTML spec (email/name/tel/street-address/address-level2/postal-code), (3) no form fields were missed, (4) build passes clean. GUARD: Security audit remains open — CSRF, input sanitization, session security. Run when scheduled. When done, set next_suggested: lead.",
-  "notes": "C2657 Lead — All 3 tasks from C2649 directive COMPLETED: (1) similar-items cron DONE (Bolt C2654, Trace C2657 verified), (2) Heureka ORDER_INFO DONE (wired in comgate/route.ts:158 + checkout/actions.ts:503), (3) 30-day price DONE (Trace C2657 verified all surfaces). 3 TODO items to mark done. Remaining backlog: 5 items (3 blocked on bectly credentials, 1 Guard, 1 Lead). Bolt assigned highest-ROI quick win: checkout autocomplete attributes.",
+  "updated_at_cycle": 2658,
+  "dev_focus": "C2658 DIRECTIVE — GUARD: Run the comprehensive security audit (open since Cycle #19, launch-blocking). Check ALL mutation endpoints (Server Actions + API routes) for: (1) CSRF protection — verify SameSite cookies, Origin header checks, (2) Input sanitization — grep for dangerouslySetInnerHTML, raw SQL, unsanitized user input in emails/HTML, (3) Session security — NextAuth config: httpOnly, secure, sameSite cookies, session expiry, (4) Rate limiting — verify auth endpoints (/api/auth/*), checkout, email capture are rate-limited, (5) Content-Security-Policy headers — frame-ancestors, script-src, (6) API auth — verify all admin routes check session, all cron routes check CRON_SECRET, (7) XSS vectors — product names/descriptions rendered in emails and HTML. Report findings with severity (critical/high/medium/low). When done, set next_suggested: lead.",
+  "qa_focus": "C2658 DIRECTIVE — GUARD: Security audit is THE priority. See dev_focus for full scope. TRACE: Paused until Bolt commits. After Guard reports, if security findings need fixes, Bolt addresses them. If Guard finds no critical issues, Bolt builds referral backend: store credit Prisma model (StoreCredit: userId, amount, reason, referralOrderId, usedAt), referral tracking (track ref= URL param from existing ReferralCard component at components/shop/referral-card.tsx), apply credit at checkout. The ReferralCard UI already works — needs backend to make 150/100 CZK bilateral real.",
+  "notes": "C2658 Lead — CORRECTION: Checkout autocomplete was ALREADY DONE (autoComplete attributes found on all 7 fields: given-name, family-name, email, tel, street-address, address-level2, postal-code). Previous C2657 directive was based on incorrect grep result. Bolt had nothing to do — redirecting to Guard security audit (open since C19, never run). 3 TODO items confirmed DONE (Heureka ORDER_INFO C2658, 30-day price C2657, similar-items C2654). Mobile instant search also confirmed done in mobile-nav.tsx. Effective backlog: 2 actionable items (Guard audit + GPSR check), 3 blocked on bectly.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
