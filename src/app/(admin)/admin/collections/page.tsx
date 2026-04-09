@@ -2,7 +2,7 @@ import { getDb } from "@/lib/db";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
-import { Plus, Layers, Star, Eye, EyeOff } from "lucide-react";
+import { Plus, Layers } from "lucide-react";
 import type { Metadata } from "next";
 import { CollectionRow } from "./collection-row";
 

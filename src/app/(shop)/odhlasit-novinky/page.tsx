@@ -96,9 +96,9 @@ export default async function UnsubscribeNewsletterPage({ searchParams }: Props)
           </h1>
           <p className="mt-3 text-muted-foreground">
             Odhlášení se nepodařilo. Zkuste to prosím znovu nebo nás{" "}
-            <a href="/contact" className="text-foreground underline underline-offset-4">
+            <Link href="/contact" className="text-foreground underline underline-offset-4">
               kontaktujte
-            </a>
+            </Link>
             .
           </p>
         </>
