@@ -1,7 +1,5 @@
 {
-  "pause": {
-    "bolt": "until_lead_directive"
-  },
+  "pause": {},
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
