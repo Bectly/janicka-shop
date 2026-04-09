@@ -64,7 +64,7 @@ export async function GET(request: Request) {
       alertsSent: sent ? 1 : 0,
       ordersCount: alertOrders.length,
       overdue: alertOrders.filter((o) => o.daysRemaining < 0).length,
-      urgent: alertOrders.filter((o) => o.daysRemaining >= 0).length,
+      urgent: alertOrders.filter((o) => o.daysRemaining >= 0 && o.daysRemaining <= 5).length,
     });
   } catch (error) {
     console.error("[Cron:delivery-deadline] Error:", error);

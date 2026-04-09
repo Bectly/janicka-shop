@@ -1,14 +1,12 @@
 {
-  "pause": {
-    "trace": "until_next_bolt_commit"
-  },
-  "force_next": null,
+  "pause": {},
+  "force_next": "trace",
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 2543,
-  "updated_at_cycle": 2536,
-  "dev_focus": "BOLT TASK C2526: Delivery deadline tracking — Czech legal requirement. Full spec in .devloop/contexts/bolt.md. 5 steps: (1) Prisma schema + migrate, (2) checkout actions calc, (3) order confirmation page display, (4) confirmation email, (5) admin order detail with overdue warning. Run npm run build when done. When done, set next_suggested: lead.",
-  "notes": "C2536 Lead — Bolt task 7092 is running (spawned 13:17:09 for C2534). If it's still alive, it should be implementing delivery deadline tracking from bolt.md. force_next: bolt ensures Bolt runs again immediately if 7092 was a no-op. Trace stays paused until Bolt commits real code. 12 cycles wasted (C2521-C2533) from empty bolt.md — now recovered. reset_no_change_counter to prevent auto-pause from the no-change streak. 9 open items, backlog healthy.",
+  "updated_at_cycle": 2544,
+  "dev_focus": "TRACE: Audit Bolt C2542 delivery deadline tracking. Verify: (1) expectedDeliveryDate in schema.prisma ✓, (2) auto-set in checkout/actions.ts ✓, (3) ⚠️ MISSING — customer-facing order confirmation page /order/[orderNumber]/page.tsx, (4) ⚠️ MISSING — customer order confirmation email in sendOrderConfirmationEmail(), (5) admin orders/[id]/page.tsx ✓, (6) admin orders/page.tsx warning icons ✓, (7) cron route ✓. Report exactly which files are missing delivery date display. After Trace audits: Bolt implements the 2 missing customer-facing steps.",
+  "notes": "C2544 Lead — Bolt C2542 partially done: schema+checkout+admin+cron ✅ but customer-facing order confirmation page+email missing. Trace unpaused to do full audit of what was actually implemented. After Trace confirms the gap, Bolt closes it. 9 open items.",
   "schema": {
     "pause": "Map of agent_name → condition ('paused' | 'until_next_bolt_commit')",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
