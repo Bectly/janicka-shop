@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef, useCallback } from "react";
 import { ShoppingBag, Check, Clock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/lib/cart-store";
@@ -9,6 +9,7 @@ import { trackAddToCart } from "@/lib/analytics";
 import { SizeGuide } from "@/components/shop/size-guide";
 import { MobileStickyAtc } from "@/components/shop/mobile-sticky-atc";
 import { getImageUrls } from "@/lib/images";
+import confetti from "canvas-confetti";
 
 interface AddToCartProps {
   product: {
@@ -34,6 +35,21 @@ export function AddToCartButton({ product }: AddToCartProps) {
   const [isPending, startTransition] = useTransition();
 
   const isInCart = items.some((i) => i.productId === product.id);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const fireConfetti = useCallback(() => {
+    if (!buttonRef.current) return;
+    const rect = buttonRef.current.getBoundingClientRect();
+    const x = (rect.left + rect.width / 2) / window.innerWidth;
+    const y = (rect.top + rect.height / 2) / window.innerHeight;
+    confetti({
+      particleCount: 40,
+      spread: 60,
+      origin: { x, y },
+      colors: ["#f43f5e", "#fb7185", "#fda4af", "#fff1f2"],
+      disableForReducedMotion: true,
+    });
+  }, []);
 
   // Compute reservation status client-side: if there's an active reservation
   // and this user doesn't have the item in cart, it's reserved by someone else.
@@ -70,6 +86,7 @@ export function AddToCartButton({ product }: AddToCartProps) {
         variant: [selectedSize, selectedColor].filter(Boolean).join(" / ") || undefined,
       });
       setAdded(true);
+      fireConfetti();
       setTimeout(() => setAdded(false), 2000);
     });
   }
@@ -90,9 +107,9 @@ export function AddToCartButton({ product }: AddToCartProps) {
                   key={size}
                   onClick={() => setSelectedSize(size)}
                   aria-pressed={selectedSize === size}
-                  className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+                  className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-all duration-100 active:scale-90 ${
                     selectedSize === size
-                      ? "border-primary bg-primary/10 text-primary"
+                      ? "border-primary bg-primary/10 text-primary animate-ring-expand"
                       : "border-border text-muted-foreground hover:border-foreground/30"
                   }`}
                 >
@@ -113,9 +130,9 @@ export function AddToCartButton({ product }: AddToCartProps) {
                   key={color}
                   onClick={() => setSelectedColor(color)}
                   aria-pressed={selectedColor === color}
-                  className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+                  className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-all duration-100 active:scale-90 ${
                     selectedColor === color
-                      ? "border-primary bg-primary/10 text-primary"
+                      ? "border-primary bg-primary/10 text-primary animate-ring-expand"
                       : "border-border text-muted-foreground hover:border-foreground/30"
                   }`}
                 >
@@ -138,6 +155,7 @@ export function AddToCartButton({ product }: AddToCartProps) {
 
         {/* Add to cart button */}
         <Button
+          ref={buttonRef}
           size="lg"
           className="w-full"
           onClick={handleAdd}

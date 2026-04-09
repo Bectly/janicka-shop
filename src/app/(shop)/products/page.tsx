@@ -403,9 +403,9 @@ export default async function ProductsPage({
       <div className="mt-8">
         {paginatedProducts.length > 0 ? (
           <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
-            {paginatedProducts.map((product) => (
+            {paginatedProducts.map((product, i) => (
+                <div key={product.id} className="animate-fade-up-scroll" style={{ animationDelay: `${i * 60}ms` }}>
                 <ProductCard
-                  key={product.id}
                   id={product.id}
                   name={product.name}
                   slug={product.slug}
@@ -421,6 +421,7 @@ export default async function ProductsPage({
                   isReserved={false}
                   lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
                 />
+                </div>
               ))}
           </div>
         ) : (

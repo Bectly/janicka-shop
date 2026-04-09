@@ -55,8 +55,8 @@ export function ProductCard({
   try { if (colors) parsedColors = JSON.parse(colors); } catch { /* */ }
 
   return (
-    <Link href={`/products/${slug}`} className="group block">
-      <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-muted">
+    <Link href={`/products/${slug}`} className="group block transition-transform duration-300 hover:-translate-y-1.5">
+      <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-muted shadow-sm transition-shadow duration-300 group-hover:shadow-xl">
         {mainImage ? (
           <>
             <Image
@@ -110,6 +110,12 @@ export function ProductCard({
               Rezervováno
             </span>
           )}
+        </div>
+        {/* Hover gradient overlay with "Rychlý náhled" pill */}
+        <div className="absolute inset-x-0 bottom-0 flex h-16 translate-y-full items-end justify-center bg-gradient-to-t from-black/40 to-transparent pb-3 transition-transform duration-300 group-hover:translate-y-0">
+          <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-foreground shadow-sm">
+            Rychlý náhled
+          </span>
         </div>
       </div>
       <div className="mt-3 space-y-1">

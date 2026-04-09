@@ -28,6 +28,7 @@ function getAlt(img: string | ProductImage, productName: string, index: number):
 
 export function ProductGallery({ images, productName, videoUrl }: ProductGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [videoPlaying, setVideoPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -74,6 +75,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
   }, []);
 
   const goNext = useCallback(() => {
+    setSlideDirection("left");
     setActiveIndex((prev) => (prev === totalSlides - 1 ? 0 : prev + 1));
     setZoomed(false);
     setPanOffset({ x: 0, y: 0 });
@@ -81,6 +83,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
   }, [totalSlides]);
 
   const goPrev = useCallback(() => {
+    setSlideDirection("right");
     setActiveIndex((prev) => (prev === 0 ? totalSlides - 1 : prev - 1));
     setZoomed(false);
     setPanOffset({ x: 0, y: 0 });
@@ -290,13 +293,23 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                 </span>
               </button>
               <Image
+                key={`slide-${activeIndex}`}
                 src={getUrl(images[activeIndex])}
                 alt={getAlt(images[activeIndex], productName, activeIndex)}
                 fill
-                className="object-cover transition-transform duration-150 ease-out"
+                className={`object-cover ${
+                  swipeOffset !== 0
+                    ? "transition-transform duration-150 ease-out"
+                    : slideDirection === "left"
+                      ? "animate-slide-in-left"
+                      : slideDirection === "right"
+                        ? "animate-slide-in-right"
+                        : ""
+                }`}
                 style={swipeOffset !== 0 ? { transform: `translateX(${swipeOffset}px)` } : undefined}
                 sizes="(max-width: 1024px) 100vw, 50vw"
                 priority
+                onAnimationEnd={() => setSlideDirection(null)}
               />
             </>
           )}
@@ -307,6 +320,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
+                  setSlideDirection("right");
                   setActiveIndex((prev) =>
                     prev === 0 ? totalSlides - 1 : prev - 1,
                   );
@@ -321,6 +335,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
+                  setSlideDirection("left");
                   setActiveIndex((prev) =>
                     prev === totalSlides - 1 ? 0 : prev + 1,
                   );
@@ -342,6 +357,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
+                      setSlideDirection(i > activeIndex ? "left" : "right");
                       setActiveIndex(i);
                       setVideoPlaying(false);
                     }}
@@ -365,7 +381,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
               <button
                 key={`${getUrl(img)}-${i}`}
                 type="button"
-                onClick={() => { setActiveIndex(i); setVideoPlaying(false); }}
+                onClick={() => { setSlideDirection(i > activeIndex ? "left" : "right"); setActiveIndex(i); setVideoPlaying(false); }}
                 className={`relative size-16 shrink-0 overflow-hidden rounded-lg border-2 transition-all sm:size-20 ${
                   i === activeIndex
                     ? "border-primary ring-1 ring-primary"
@@ -384,7 +400,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
             {hasVideo && (
               <button
                 type="button"
-                onClick={() => { setActiveIndex(videoSlideIndex); setVideoPlaying(false); }}
+                onClick={() => { setSlideDirection("left"); setActiveIndex(videoSlideIndex); setVideoPlaying(false); }}
                 className={`relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border-2 bg-muted transition-all sm:size-20 ${
                   activeIndex === videoSlideIndex
                     ? "border-primary ring-1 ring-primary"
