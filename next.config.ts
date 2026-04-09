@@ -22,6 +22,20 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: "/obchodni-podminky",
+        destination: "/terms",
+        permanent: true,
+      },
+      {
+        source: "/ochrana-soukromi",
+        destination: "/privacy",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {
