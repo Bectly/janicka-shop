@@ -1,11 +1,17 @@
 {
-  "pause": {},
+  "pause": {
+    "trace": "until_lead_directive",
+    "seer": "until_lead_directive",
+    "balancer": "until_lead_directive",
+    "bolt": "until_lead_directive",
+    "sculptor": "until_lead_directive"
+  },
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 2688,
   "paused_at_bolt_cycle": 2688,
-  "notes": "C2699 Lead: ROOT CAUSE of C2698 failure \u2014 Bolt was still paused ('until_lead_directive') despite C2696 saying 'Bolt forced next'. Bolt REMOVED from pause map entirely so orchestrator can schedule it. force_next=bolt. Security audit DONE (C2698 Trace: 1 medium MIME spoofing, 4 low). 2 tasks for Bolt: (1) GPSR Heureka brand URLs \u2014 quick, (2) Apple Pay placement at checkout TOP + cart. Trace resumes after Bolt commits.",
+  "notes": "C2699 Lead: ROOT CAUSE of C2698 failure — Bolt was still paused ('until_lead_directive') despite C2696 saying 'Bolt forced next'. Bolt REMOVED from pause map entirely so orchestrator can schedule it. force_next=bolt. Security audit DONE (C2698 Trace: 1 medium MIME spoofing, 4 low). 2 tasks for Bolt: (1) GPSR Heureka brand URLs — quick, (2) Apple Pay placement at checkout TOP + cart. Trace resumes after Bolt commits.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
