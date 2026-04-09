@@ -191,12 +191,21 @@ Czech Act No. 424/2023 Coll. — in force since June 28, 2025. **⚠️ C40 UPDA
 - [ ] [LEAD] WhatsApp Business API for cart recovery (NEW C1511, **PRICING ASSESSED C2304 — POST-LAUNCH ONLY**) — WhatsApp cart recovery achieves **80% open rate** and **5x ROI** (vs email 50% open, 3-5% recovery). Multi-channel (email + WhatsApp) = **2-3x higher engagement**. **⚠️ C2304 PRICING REALITY CHECK**: CZ falls under "Rest of Central & Eastern Europe" — marketing messages = **$0.086/msg** (~2.15 CZK). PLUS mandatory BSP (Business Solution Provider) fee of **$50-500/month**. For a micro-business doing 20-50 cart recoveries/month, BSP fee alone makes this uneconomical at launch. **Decision: Email-first (Resend, already integrated) is correct for launch. Evaluate WhatsApp when monthly revenue exceeds ~50K CZK/month AND email recovery is fully established.** If proceeding: use Manychat or Wati (lowest BSP fees at $15-49/month for small plans). Free WhatsApp Business App (no API) is fine for 1-2 daily manual follow-ups as stopgap. Providers for CZ: Meta Cloud API direct (no BSP fee, but requires developer setup) OR Manychat/Wati for no-code.
 - [ ] [LEAD] "Holy grail hunting" messaging alignment (NEW C1511 — ThredUp 2026 insight) — Gen Z has shifted from secondhand "hauls" to curated **"holy grail" hunting** — finding unique, special pieces. 62% of Gen Z shopped secondhand in 2025. This is EXACTLY Janicka's positioning. Update messaging across: (1) homepage hero/tagline to emphasize uniqueness and curation, (2) product cards — "Unikátní kousek" instead of generic badges, (3) social sharing — lean into the treasure-hunt narrative. "Každý kousek je originál. Žádné masové kolekce." Also: 38% of Gen Z/millennials engage in social resale commerce (3x rate of older gens) — optimize sharing UX for this demographic.
 
-## URGENT: Production 500 Error [2026-04-09 — MUST FIX IMMEDIATELY]
-Homepage and /products return HTTP 500 on Vercel production (janicka-shop.vercel.app). Build succeeds — this is a RUNTIME error, likely Turso DB connection. Same class of bug as the one fixed in the "RESOLVED: Vercel/Turso Runtime 500 Error" section above.
+## ✅ RESOLVED: Production 500 Error [2026-04-09 — FIXED Cycle #2320]
 
-- [ ] [TRACE] **URGENT: Diagnose production 500** — Vercel build logs show clean build + deploy. Runtime returns 500 on ALL pages. Check: (1) Vercel runtime function logs via `npx vercel logs janicka-shop.vercel.app --token $(sqlite3 ~/.claude/jarvis-gym/jarvis.db "SELECT key_value FROM api_keys WHERE name='vercel';")`, (2) Turso DB connection — verify TURSO_DATABASE_URL and TURSO_AUTH_TOKEN env vars on Vercel are valid and not expired, (3) Prisma client generation on Vercel (postinstall hook: prisma generate), (4) Check if recent schema changes (last 5 days / ~40 commits) added columns that need `npx prisma db push` migration to Turso, (5) Test locally with production Turso env vars. This was fixed before (see RESOLVED section at top) — check if any recent cycle reverted the fix patterns (db.ts proxy pattern, adapter version mismatch, env var format).
-- [ ] [BOLT] **Fix production 500** — based on Trace diagnosis, fix the root cause. Common causes: (a) new Prisma model fields not pushed to Turso (run `TURSO_DATABASE_URL=... TURSO_AUTH_TOKEN=... npx prisma db push`), (b) expired Turso auth token (regenerate: `~/.turso/turso db tokens create janicka-shop`), (c) import path errors only visible at runtime, (d) env var issues on Vercel. After fix: `npm run build` locally AND deploy to Vercel AND verify `curl -s -o /dev/null -w '%{http_code}' https://janicka-shop.vercel.app` returns 200.
-- [ ] [TRACE] **Post-fix verification** — After Bolt fixes and deploys, verify ALL key pages return 200: / (homepage), /products, /cart, /collections, /search. If ANY page returns 500, cycle is NOT done. Mark URGENT section as RESOLVED only after all pages verified.
+**Root cause**: Turso production DB was missing schema changes from recent cycles:
+1. `Product.videoUrl` column (added in Cycle #2308 locally, never pushed to Turso)
+2. `ProductNotifyRequest` table (entire table missing from Turso)
+3. `NewsletterSubscriber` missing 5 columns: firstName, preferredSizes, preferredCategories, preferredBrands, source, updatedAt
+
+**Fix**: Applied schema changes directly via `turso db shell` (ALTER TABLE + CREATE TABLE). No code changes needed — the Prisma schema was already correct, only the remote Turso DB was out of sync.
+
+**Verification**: All key pages return 200: /, /products, /cart, /collections, /search. Build clean.
+
+**Prevention**: Any cycle that adds Prisma schema fields MUST push to Turso (`~/.turso/turso db shell janicka-shop "ALTER TABLE ..."`) before claiming done.
+
+- [x] [BOLT] **Fix production 500** — Added missing videoUrl column to Product, created ProductNotifyRequest table + indexes, added 5 missing columns to NewsletterSubscriber. All via turso db shell. Verified all pages return 200.
+- [x] [TRACE] **Post-fix verification** — All key pages verified: /, /products, /cart, /collections, /search → all return HTTP 200.
 
 ## Phase 8b: Vinted Product Migration [NEW — bectly request 2026-04-09]
 Migrace VŠECH produktů a fotek z Janičky Vinted profilu (https://www.vinted.cz/member/149371637) do Janička Shop.

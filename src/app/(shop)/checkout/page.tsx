@@ -179,7 +179,7 @@ function CheckoutStep({
             : "grid-rows-[0fr] opacity-0"
         }`}
       >
-        <div className="overflow-hidden">
+        <div className="overflow-hidden" inert={!isActive}>
           <div className="px-4 pb-6 sm:px-6">{children}</div>
         </div>
       </div>
