@@ -60,6 +60,10 @@ export function DevChatWidget() {
   const fetchMessages = useCallback(async () => {
     try {
       const res = await fetch("/api/dev-chat?limit=100");
+      if (res.status === 401) {
+        setAuthStatus("unauthenticated");
+        return;
+      }
       if (!res.ok) return;
       const data = await res.json();
       const msgs: Message[] = (data.messages ?? []).sort(
@@ -91,13 +95,17 @@ export function DevChatWidget() {
     }
   }, []);
 
-  // Poll for unread count when panel is closed
+  // Poll for unread count when panel is closed (skip if unauthenticated)
   useEffect(() => {
-    if (isOpen) return;
+    if (isOpen || authStatus !== "authenticated") return;
 
     const checkUnread = async () => {
       try {
         const res = await fetch("/api/dev-chat?sender=lead&status=new&limit=100");
+        if (res.status === 401) {
+          setAuthStatus("unauthenticated");
+          return;
+        }
         if (!res.ok) return;
         const data = await res.json();
         setUnreadCount(data.count ?? 0);
@@ -109,11 +117,11 @@ export function DevChatWidget() {
     checkUnread();
     const interval = setInterval(checkUnread, 30_000);
     return () => clearInterval(interval);
-  }, [isOpen]);
+  }, [isOpen, authStatus]);
 
-  // Fetch messages + mark read when panel opens
+  // Fetch messages + mark read when panel opens (skip if unauthenticated)
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || authStatus !== "authenticated") return;
 
     setLoading(true);
     fetchMessages().then(() => {
@@ -130,7 +138,7 @@ export function DevChatWidget() {
     // Poll for new messages while open
     const interval = setInterval(fetchMessages, 15_000);
     return () => clearInterval(interval);
-  }, [isOpen, fetchMessages, markAsRead]);
+  }, [isOpen, authStatus, fetchMessages, markAsRead]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
