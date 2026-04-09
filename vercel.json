@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/review-request",
       "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/new-arrivals",
+      "schedule": "0 8,20 * * *"
     }
   ]
 }

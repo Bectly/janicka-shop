@@ -1059,3 +1059,155 @@ export async function sendReviewRequestEmail(data: ReviewRequestEmailData): Prom
     return false;
   }
 }
+
+// ---------------------------------------------------------------------------
+// New arrival notification emails (personalized by subscriber preferences)
+// ---------------------------------------------------------------------------
+
+interface NewArrivalProduct {
+  name: string;
+  slug: string;
+  price: number;
+  compareAt: number | null;
+  brand: string | null;
+  condition: string;
+  image: string | null;
+  sizes: string[];
+}
+
+export interface NewArrivalEmailData {
+  email: string;
+  firstName: string | null;
+  products: NewArrivalProduct[];
+}
+
+const CONDITION_LABELS_EMAIL: Record<string, string> = {
+  new_with_tags: "Nové s visačkou",
+  excellent: "Výborný stav",
+  good: "Dobrý stav",
+  visible_wear: "Viditelné opotřebení",
+};
+
+function buildNewArrivalProductsHtml(products: NewArrivalProduct[]): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+
+  return products
+    .map((p) => {
+      const productUrl = `${baseUrl}/products/${p.slug}`;
+      const imageHtml = p.image
+        ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" style="width: 120px; height: 150px; object-fit: cover; border-radius: 8px; border: 1px solid #f0f0f0;" />`
+        : `<div style="width: 120px; height: 150px; background: #f5f5f5; border-radius: 8px; display: flex; align-items: center; justify-content: center;"><span style="font-size: 32px;">&#128087;</span></div>`;
+
+      const discount = p.compareAt && p.compareAt > p.price
+        ? Math.round(((p.compareAt - p.price) / p.compareAt) * 100)
+        : null;
+
+      const priceHtml = discount
+        ? `<span style="text-decoration: line-through; color: #999; font-size: 12px;">${formatPriceCzk(p.compareAt!)}</span> <strong style="color: #dc2626;">${formatPriceCzk(p.price)}</strong> <span style="background: #dc2626; color: #fff; font-size: 11px; padding: 1px 5px; border-radius: 4px;">-${discount}%</span>`
+        : `<strong style="color: #1a1a1a;">${formatPriceCzk(p.price)}</strong>`;
+
+      const conditionLabel = CONDITION_LABELS_EMAIL[p.condition] ?? p.condition;
+      const sizesText = p.sizes.length > 0 ? p.sizes.join(", ") : null;
+
+      return `
+        <tr>
+          <td style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; vertical-align: top; width: 120px;">
+            <a href="${productUrl}" style="text-decoration: none;">${imageHtml}</a>
+          </td>
+          <td style="padding: 12px 0 12px 16px; border-bottom: 1px solid #f0f0f0; vertical-align: top;">
+            <a href="${productUrl}" style="color: #1a1a1a; text-decoration: none; font-weight: 600; font-size: 14px; line-height: 1.3;">${escapeHtml(p.name)}</a>
+            ${p.brand ? `<br/><span style="color: #888; font-size: 12px;">${escapeHtml(p.brand)}</span>` : ""}
+            <br/><span style="color: #666; font-size: 12px;">${escapeHtml(conditionLabel)}</span>
+            ${sizesText ? `<br/><span style="color: #666; font-size: 12px;">Vel.: ${escapeHtml(sizesText)}</span>` : ""}
+            <div style="margin-top: 6px;">${priceHtml}</div>
+          </td>
+        </tr>`;
+    })
+    .join("");
+}
+
+function buildNewArrivalHtml(data: NewArrivalEmailData): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const shopUrl = `${baseUrl}/products?sort=newest`;
+  const greeting = data.firstName
+    ? `${escapeHtml(data.firstName)}, máme`
+    : "Máme";
+
+  return `<!DOCTYPE html>
+<html lang="cs">
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/></head>
+<body style="margin: 0; padding: 0; background-color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
+
+    <div style="text-align: center; padding: 24px 0;">
+      <h1 style="margin: 0; font-size: 24px; color: #1a1a1a;">Janička Shop</h1>
+      <p style="margin: 4px 0 0; font-size: 13px; color: #999;">Second hand móda pro tebe</p>
+    </div>
+
+    <div style="background: #fff; border-radius: 12px; padding: 32px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+
+      <div style="text-align: center;">
+        <div style="width: 64px; height: 64px; background: #fce7f3; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+          <span style="font-size: 32px; line-height: 64px;">&#10024;</span>
+        </div>
+        <h2 style="margin: 0 0 8px; font-size: 20px; color: #1a1a1a;">Nové kousky pro tebe!</h2>
+        <p style="margin: 0 0 20px; color: #666; font-size: 15px; line-height: 1.6;">
+          ${greeting} pro tebe nové kousky, které by se ti mohly líbit. Každý je unikát — když ti padne do oka, neváhej!
+        </p>
+      </div>
+
+      <table style="width: 100%; border-collapse: collapse;">
+        ${buildNewArrivalProductsHtml(data.products)}
+      </table>
+
+      <div style="text-align: center; margin-top: 24px;">
+        <a href="${shopUrl}" style="display: inline-block; background: #1a1a1a; color: #fff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
+          Zobrazit všechny novinky
+        </a>
+      </div>
+
+      <p style="margin: 20px 0 0; color: #999; font-size: 12px; text-align: center; line-height: 1.5;">
+        Tento email jsi dostala, protože jsi přihlášená k odběru novinek z Janička Shop.
+      </p>
+    </div>
+
+    <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
+      <p style="margin: 0;">Janička Shop — Second hand móda</p>
+      <p style="margin: 4px 0 0;">
+        <a href="${baseUrl}/odhlasit-novinky?email=${encodeURIComponent(data.email)}" style="color: #999; text-decoration: underline;">Odhlásit se z odběru</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+/**
+ * Send new arrival notification email to a subscriber.
+ * Returns true on success, false on failure.
+ */
+export async function sendNewArrivalEmail(data: NewArrivalEmailData): Promise<boolean> {
+  const resend = getResendClient();
+  if (!resend) {
+    console.warn("[Email] RESEND_API_KEY not set — skipping new arrival email");
+    return false;
+  }
+
+  const count = data.products.length;
+  const subject = count === 1
+    ? `Nový kousek pro tebe! — Janička Shop`
+    : `${count} nových kousků pro tebe! — Janička Shop`;
+
+  try {
+    await resend.emails.send({
+      from: NEWSLETTER_FROM_EMAIL,
+      to: data.email,
+      subject,
+      html: buildNewArrivalHtml(data),
+    });
+    return true;
+  } catch (error) {
+    console.error(`[Email] Failed to send new arrival email to ${data.email}:`, error);
+    return false;
+  }
+}
