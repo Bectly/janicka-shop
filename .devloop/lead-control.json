@@ -5,7 +5,7 @@
   "session_manager": {},
   "last_bolt_commit_cycle": 2715,
   "paused_at_bolt_cycle": 2703,
-  "notes": "C2716 Lead: Verified+marked 4 tasks DONE (#5 GPSR, #8 PWA manifest, #10 image optimization, #11 Apple Pay — all code-confirmed). Backlog was critically lean (1 open) → added 2 new tasks: Heureka ORDER_INFO v2 (graceful no-op pattern) + Next.js 16 use-cache on homepage/listing/PDP. Scans: Comgate 29th v2.0.15 (no change), Vinted CZ media 21st zero (window intact, 21 days to April 30), 21st no new CZ competitor. Bolt priority: (1) Vinted T&C April 28 banner — TIME-SENSITIVE, must be live by April 27. (2) Heureka ORDER_INFO integration. (3) use-cache. Trace: running security audit #3, continue — after next Bolt commit verify build.",
+  "notes": "C2718 Lead: Marked #3 security audit DONE (Trace C2717 — Comgate accessToken fix confirmed in code). Comgate SDK 30th check: v2.0.15 (6+ months frozen). Bolt running on #9 (Vinted T&C banner, deadline April 27 — 18 days left, on track). After #9: priority is #12 Heureka ORDER_INFO, then #13 use-cache. Trace: verify Bolt's Vinted banner commit (date range April 28-May 1, auto-hide logic, mobile rendering, build). 2 blocked items (#1 R2, #4 Heureka Overeno) await bectly.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
