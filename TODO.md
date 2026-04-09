@@ -109,7 +109,7 @@ Admin needs proper business management features for real-world operation.
 - [x] [BOLT] Color filter — DONE. Color swatches (5px circles with hex colors from COLOR_MAP) + checkmark overlay on selected. Visual filter in product-filters.tsx colorFilterSection.
 - [x] [BOLT] Pagination on product listing (12 items/page, reusable Pagination component) — done Cycle #22
 - [x] [SAGE] Active filter chips with individual removal — done (FilterChip component with X button + "Smazat vše")
-- [ ] [LEAD] "Poslední kus" scarcity badge on all product cards — honest urgency for qty=1 items (~22% conversion lift per A/B data)
+- [x] [LEAD] "Poslední kus" scarcity badge on all product cards — DONE (C2397). Flame icon + amber badge shows when `stock === 1 && !isReserved` in product-card.tsx. Verified by Trace C2408: 10/10 ProductCard call sites pass stock prop.
 - [x] [BOLT] **Product garment measurements field** — DONE Cycle #2296. `measurements` JSON field (chest/waist/hips/length cm) on Product model, 4 number inputs in admin form row, bordered measurements table with Ruler icon on PDP.
 - [x] [BOLT] **Fit note field on products** — DONE Cycle #2296. `fitNote` string field (max 120 chars) on Product, text input in admin, italicized on PDP below size selector.
 - [x] [BOLT] **Image captions per photo slot in admin** — DONE Cycle #2296. `images` field changed from `string[]` to `{url, alt}[]`, backward-compat parse utility in `src/lib/images.ts`, per-image caption inputs in admin, all 12 image-parsing locations updated across codebase.
@@ -153,7 +153,7 @@ Admin needs proper business management features for real-world operation.
 - [x] [BOLT] Settings: shop info, payment config, shipping config — DONE (admin/settings page with ShopSettings model, form, server actions)
 - [x] [BOLT] **Product duplicate/copy** — DONE Cycle #2303. `duplicateProduct()` server action copies all product data (name + " (kopie)", auto slug + SKU, clears sold/reserved, starts hidden). Copy icon button on products list. Redirects to edit page.
 ## Phase 5: devChat — Owner ↔ Lead Communication
-- [ ] [BOLT] **DevChat backend** — `DevChatMessage` Prisma model (id, message, page_path, page_title, sender, status, priority, response, created_at, resolved_at) + API routes: `POST /api/dev-chat` (save + Redis pub), `GET /api/dev-chat?status=new` (Lead reads, Bearer auth), `PATCH /api/dev-chat/[id]` (Lead responds + resolve)
+- [x] [BOLT] **DevChat backend** — DONE (C2397-C2402). DevChatMessage Prisma model + all 3 API routes: POST (save+debounce), GET (Bearer auth for Lead), PATCH /[id] (Lead responds+resolve). isLeadAuthorized() checks DEVCHAT_API_KEY env var. Verified by Trace C2408. ⚠️ PENDING: bectly must set `DEVCHAT_API_KEY` env var in Vercel for Lead API access to work in production.
 - [ ] [BOLT] **DevChat widget** — floating bubble (bottom-right), expand to chat panel, auto-detect current page path + title, unread badge (count of unresolved), auth guard (only logged-in admin), message list (owner vs lead), status indicators
 - [ ] [TRACE] E2E test: send message from page, verify page context captured, verify Lead can read via API
 
