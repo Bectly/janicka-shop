@@ -1,14 +1,14 @@
 {
   "pause": {
-    "bolt": "until_lead_directive"
+    "trace": "until_next_bolt_commit"
   },
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 2501,
-  "updated_at_cycle": 2496,
-  "dev_focus": "BOLT TASK C2496: Add 'Upozornit mě na podobné kousky' PDP opt-in form. (1) Below main CTA on product page: email input + button 'Upozornit mě'. (2) Server Action notifySimilarItem(email, categoryId, sizes, brand?): upsert ProductNotifyRequest in Turso. (3) Success state: '✓ Dáme ti vědět'. Only visible when product not sold. Backend already done — src/lib/email/similar-item.ts + wired in checkout/actions.ts. See TODO Phase 9 for full spec.",
-  "notes": "C2496 Lead — Video task ✅ marked done in TODO (C2489/C2490). Wishlist task updated: backend exists but PDP form is the MISSING PIECE. New Bolt directive: PDP opt-in form that populates ProductNotifyRequest records. Without this form, the sendSimilarItemNotifications system is dead — backend fires on checkout but no records exist to match. Trace also unpaused. AFTER PDP form: Bolt → delivery deadline tracking OR Packeta shipment creation.",
+  "updated_at_cycle": 2505,
+  "dev_focus": "BOLT TASK C2505: Packeta SOAP shipment creation — core shipping integration needed for launch. (1) `npm install soap`. (2) Implement `src/lib/shipping/packeta.ts` — SOAP client connecting to `https://www.zasilkovna.cz/api/soap` (WSDL: `?wsdl`). Functions: `createPacket(order)` → returns packetId, `getPacketLabel(packetId)` → base64 PDF, `getPacketStatus(packetId)` → status object, `cancelPacket(packetId)`. Use env var `PACKETA_API_PASSWORD`. Required fields for createPacket: apiPassword, number (order ID), name, surname, value (CZK decimal), weight (kg, 3 decimals, min 0.001 — use 0.5 default for clothing), addressId (numeric point.id from Packeta widget), eshop (sender label). Optional: email, phone, cod, currency 'CZK'. (3) Add `packetId String?` to Order model in schema.prisma + migrate. (4) Admin order detail: add 'Vytvořit zásilku' button (Server Action) — visible when order has shippingMethod='packeta' + shippingPointId set + no packetId yet. On success: store packetId on order, show 'Stáhnout štítek' link that fetches label PDF via packetsLabelsPdf. (5) Gotchas: weight=0 rejected, addressId must be numeric string. ALSO: mark TODO Phase 9 'Upozornit mě na podobné kousky' as [x] DONE — NotifyMeForm is live on both regular and sold PDP (verified: page.tsx lines 22, 361, 650).",
+  "notes": "C2505 Lead — NotifyMeForm PDP opt-in ✅ DONE (C2500-2501, verified in page.tsx). Trace wasted 5 consecutive cycles (2501-2505) auditing nothing — paused until Bolt commits. Packeta SOAP is the highest-impact remaining BOLT task — it's the core shipping integration. Widget is done (C2370), SOAP packet creation is the missing piece. After Packeta: delivery deadline tracking (Czech law 30d). Backlog at 10 real open items (healthy).",
   "schema": {
     "pause": "Map of agent_name → condition ('paused' | 'until_next_bolt_commit')",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
