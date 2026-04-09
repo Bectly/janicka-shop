@@ -13,6 +13,7 @@ import { generateOrderQrPayment, orderNumberToVariableSymbol } from "@/lib/payme
 import { QrPaymentCode } from "@/components/shop/qr-payment-code";
 import { PaymentStatusPoller } from "@/components/shop/payment-status-poller";
 import { CreateAccountCard } from "@/components/shop/create-account-card";
+import { ReferralCard } from "@/components/shop/referral-card";
 
 interface Props {
   params: Promise<{ orderNumber: string }>;
@@ -276,6 +277,9 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
       {showAccountCreation && token && (
         <CreateAccountCard orderNumber={order.orderNumber} accessToken={token} />
       )}
+
+      {/* Referral prompt — bilateral: 150 CZK credit for referrer, 100 CZK off for friend */}
+      <ReferralCard orderNumber={order.orderNumber} />
 
       <div className="mt-8">
         <Button render={<Link href="/products" />}>

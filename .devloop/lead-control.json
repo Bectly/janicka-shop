@@ -1,16 +1,15 @@
 {
   "pause": {
-    "bolt": "until_lead_directive",
-    "trace": "until_lead_directive"
+    "trace": "until_next_bolt_commit"
   },
-  "force_next": "bolt",
+  "force_next": null,
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 2599,
-  "updated_at_cycle": 2593,
-  "dev_focus": "C2588 Lead directive — CONTEXT: Abandoned cart automation is FULLY DONE (verified: /api/cron/abandoned-carts exists, sendAbandonedCartEmail in email.ts, AbandonedCart schema with email1/2/3SentAt, vercel.json cron */15). DevChat is DONE. NEW TASK: Add referral prompt to order confirmation page. FILE: src/app/(shop)/order/[orderNumber]/page.tsx (288 lines). Insert BELOW the existing CreateAccountCard block (around line 277-278). BUILD a 'use client' ReferralCard component at src/components/shop/referral-card.tsx. SPEC: (1) Bilateral copy header: 'Pošli kamarádce slevu — a odměníme tě' subtitle: 'Kamarádka dostane 100 Kč slevu na první objednávku. Ty dostaneš 150 Kč kredit, jakmile nakoupí.' (2) Referral URL: const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://janicka-shop.vercel.app'; const referralUrl = `${appUrl}/?ref=${orderNumber}&utm_source=referral&utm_medium=share&utm_campaign=order-referral` (3) TWO action buttons: [Kopírovat odkaz] (copy to clipboard, show checkmark 2s) and [Sdílet přes WhatsApp] (href: `https://wa.me/?text=${encodeURIComponent('Hele, koukni na Janička Shop — krásné second hand oblečení. Tady máš 100 Kč slevu na první nákup: ' + referralUrl)}` target=_blank). (4) GA4 event on share: if (typeof window !== 'undefined' && window.gtag) window.gtag('event', 'referral_share', { method: 'clipboard'/'whatsapp', order_number: orderNumber }). (5) Design: rose/pink accent card similar to CreateAccountCard styling. Use Gift icon from lucide-react. Subtle border, white bg, rose-50 bg-hover. (6) Show always (no conditional — every completed order can refer). (7) In page.tsx: add import and render `<ReferralCard orderNumber={order.orderNumber} />` directly below the showAccountCreation block (after line 278 `</CreateAccountCard>`). NO DB changes needed — referral links are UTM-only at launch. npm run build must pass.",
-  "qa_focus": "TRACE: After Bolt commits referral prompt: (1) Visit order confirmation page — verify ReferralCard renders below CreateAccountCard, (2) Verify copy-to-clipboard copies correct referral URL with order number, (3) Verify WhatsApp button opens wa.me link with Czech message, (4) Verify component builds without TypeScript errors, (5) Build passes (npm run build).",
-  "notes": "C2593 Lead — FIXED: Bolt was paused 'until_lead_directive' and prior Lead output had dev_focus='' (empty). Unpaused Bolt, forced next. Referral card spec in dev_focus is still valid (verified page.tsx line 278, no ReferralCard exists yet). Trace paused until Bolt commits real code. Backlog healthy at 7 items.",
+  "updated_at_cycle": 2600,
+  "dev_focus": "⚠️ C2600 FRESH DIRECTIVE — DO NOT READ GIT HISTORY AS CONTEXT. ⚠️ TASK: CREATE src/components/shop/referral-card.tsx (THIS FILE DOES NOT EXIST YET). Then EDIT src/app/(shop)/order/[orderNumber]/page.tsx to render it. VERIFY FIRST: run `ls src/components/shop/referral-card.tsx` — it should NOT exist. If it doesn't exist, BUILD IT NOW. SPEC: (1) 'use client' component ReferralCard({ orderNumber: string }). (2) const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://janicka-shop.vercel.app'; const referralUrl = `${appUrl}/?ref=${orderNumber}&utm_source=referral&utm_medium=share&utm_campaign=order-referral`. (3) Header: 'Pošli kamarádce slevu — a odměníme tě'. Subtitle: 'Kamarádka dostane 100 Kč slevu na první nákup. Ty dostaneš 150 Kč kredit, jakmile nakoupí.' (4) TWO buttons: [Kopírovat odkaz] (clipboard copy, 2s checkmark feedback) and [Sdílet přes WhatsApp] (href `https://wa.me/?text=${encodeURIComponent('Hele, koukni na Janička Shop — krásné second hand oblečení. Tady máš 100 Kč slevu na první nákup: ' + referralUrl)}` target=_blank). (5) GA4: window.gtag?.('event','referral_share',{method:'clipboard'/'whatsapp',order_number:orderNumber}). (6) Design: Gift icon (lucide-react), rose/pink card (rose-50 bg, rose-200 border), similar visual weight to CreateAccountCard. (7) In page.tsx insert `<ReferralCard orderNumber={order.orderNumber} />` AFTER line 278 (after </CreateAccountCard>). NO DB changes. Run npm run build — must pass.",
+  "qa_focus": "TRACE: After Bolt commits: (1) Verify src/components/shop/referral-card.tsx EXISTS in git, (2) Visit order confirmation page — ReferralCard renders below CreateAccountCard, (3) Copy button copies referral URL with correct order number, (4) WhatsApp button opens wa.me with Czech message, (5) Build passes.",
+  "notes": "C2600 Lead — ZOMBIE LOOP BROKEN (7 cycles C2593-C2599 of Bolt saying 'abandoned cart done, no changes needed'). Root cause: dev_focus started with 'CONTEXT: Abandoned cart...' — Bolt read 'abandoned cart' and concluded task was done. FIX: dev_focus now starts with task name. Bolt unpause removed (was blocking). kill_zombie_tasks + reset_no_change_counter set. ReferralCard CONFIRMED not in codebase.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
@@ -22,5 +21,5 @@
       "reset_no_change_counter": "bool"
     }
   },
-  "session_manager_last_processed": "2026-04-09T15:52:21.063135"
+  "session_manager_last_processed": "2026-04-09T16:17:22.221034"
 }
