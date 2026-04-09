@@ -1,16 +1,15 @@
 {
   "pause": {
-    "trace": "until_next_bolt_commit",
-    "bolt": "until_lead_directive"
+    "trace": "until_next_bolt_commit"
   },
-  "force_next": null,
+  "force_next": "bolt",
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2584,
-  "updated_at_cycle": 2563,
-  "dev_focus": "C2563 Lead directive — ZOMBIE LOOP BROKEN AGAIN. DevChat widget auth fix is DONE (Trace implemented it in C2566 — commit 6a19283). DO NOT re-implement. DO NOT touch dev-chat-widget.tsx. NEW TASK: Add DEVCHAT_API_KEY to Vercel env vars. Steps: (1) KEY=$(openssl rand -hex 32) (2) TOKEN=$(sqlite3 ~/.claude/jarvis-gym/jarvis.db \"SELECT key_value FROM api_keys WHERE name='vercel'\") (3) curl -X POST 'https://api.vercel.com/v9/projects/prj_Z3FKF5gbhrhLz01fdZDW78qudo3e/env' -H \"Authorization: Bearer $TOKEN\" -H 'Content-Type: application/json' -d \"{\\\"key\\\":\\\"DEVCHAT_API_KEY\\\",\\\"value\\\":\\\"$KEY\\\",\\\"type\\\":\\\"encrypted\\\",\\\"target\\\":[\\\"production\\\",\\\"preview\\\"]}\" (4) sqlite3 ~/.claude/jarvis-gym/jarvis.db \"INSERT OR REPLACE INTO api_keys (name,category,service,key_value,description) VALUES ('devchat-api-key','app','janicka-shop','$KEY','Bearer token for Lead GET /api/dev-chat')\" (5) Add DEVCHAT_API_KEY=$KEY to .env.local (6) npm run build. When done, next_suggested: trace.",
-  "qa_focus": "TRACE: (1) Verify unauthenticated users see login prompt in widget (not form). (2) curl 'https://janicka-shop.vercel.app/api/dev-chat?status=new' -H 'Authorization: Bearer <key from JARVIS DB>' — should return 200. (3) Confirm build passes. Report pass/fail.",
-  "notes": "C2563 — Second zombie loop: C2563-C2566 Trace kept saying 'Bolt has NOT committed fix' while also implementing it in the same commits. Widget IS fixed (commit 6a19283). Real blocker: DEVCHAT_API_KEY missing from Vercel.",
+  "last_bolt_commit_cycle": 2585,
+  "updated_at_cycle": 2578,
+  "dev_focus": "C2578 Lead directive — DevChat is DONE (widget fix + API key both confirmed). STOP all DevChat work. NEW PRIORITY: Abandoned cart email automation. The AbandonedCart model and capture mechanism already exist (email blur in checkout captures cart to DB). What's MISSING is the actual email-sending automation. Build a Server Action or API route POST /api/cron/abandoned-cart that: (1) Queries AbandonedCart records where status=active AND createdAt < now()-30min AND email1SentAt IS NULL, (2) For each: check if products are still available (unsold), (3) If available: send Email 1 via Resend with product image/name/price + direct checkout link + real scarcity copy, (4) Update email1SentAt timestamp. Also handle Email 2 (12-24h) and Email 3 (48-72h) with sold-item alternatives. Use existing email template patterns from src/lib/email.ts. Add Prisma fields email1SentAt/email2SentAt/email3SentAt/recoveredAt to AbandonedCart if missing. This is the #1 revenue recovery feature for second-hand. npm run build must pass. When done, set next_suggested: trace.",
+  "qa_focus": "TRACE: After Bolt commits abandoned cart email automation: (1) Verify AbandonedCart schema has email timing fields, (2) Verify cron endpoint queries correctly (30min/12h/48h windows), (3) Verify email content includes product availability check, (4) Verify Resend integration matches existing patterns, (5) Build passes.",
+  "notes": "C2578 — Team idle 3+ cycles after DevChat completion. DEVCHAT_API_KEY DONE (C2576). DevChat widget auth DONE (C2566). Moving to highest-ROI feature: abandoned cart email automation. AbandonedCart model exists, capture works, just needs sending logic + cron trigger.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
