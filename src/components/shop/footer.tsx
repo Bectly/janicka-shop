@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { CookieSettingsButton } from "@/components/shop/cookie-settings-button";
 import { NewsletterForm } from "@/components/shop/newsletter-form";
 import { getDb } from "@/lib/db";
@@ -67,11 +68,14 @@ export async function Footer() {
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <Link
-              href="/"
-              className="font-heading text-xl font-bold text-primary"
-            >
-              Janička
+            <Link href="/" className="inline-block">
+              <Image
+                src="/logo/logo-header.png"
+                alt="Janička"
+                width={120}
+                height={48}
+                className="h-8 w-auto"
+              />
             </Link>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
               Stylové oblečení pro moderní ženy. Kvalita, elegance a pohodlí v

@@ -116,7 +116,7 @@ function buildOrderConfirmationHtml(data: OrderEmailData): string {
 
     <!-- Header -->
     <div style="text-align: center; padding: 24px 0;">
-      <h1 style="margin: 0; font-size: 24px; color: #1a1a1a;">Janička Shop</h1>
+      <a href="${baseUrl}" style="display: inline-block;"><img src="${baseUrl}/logo/logo-email.png" alt="Janička Shop" style="height: 40px; width: auto; border: 0;" /></a>
     </div>
 
     <!-- Main card -->
@@ -227,7 +227,7 @@ function buildPaymentConfirmedHtml(data: Pick<OrderEmailData, "orderNumber" | "c
   <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
 
     <div style="text-align: center; padding: 24px 0;">
-      <h1 style="margin: 0; font-size: 24px; color: #1a1a1a;">Janička Shop</h1>
+      <a href="${baseUrl}" style="display: inline-block;"><img src="${baseUrl}/logo/logo-email.png" alt="Janička Shop" style="height: 40px; width: auto; border: 0;" /></a>
     </div>
 
     <div style="background: #fff; border-radius: 12px; padding: 32px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); text-align: center;">
@@ -347,7 +347,7 @@ function buildStatusEmailWrapper(content: string, data: Pick<StatusEmailData, "o
   <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
 
     <div style="text-align: center; padding: 24px 0;">
-      <h1 style="margin: 0; font-size: 24px; color: #1a1a1a;">Janička Shop</h1>
+      <a href="${baseUrl}" style="display: inline-block;"><img src="${baseUrl}/logo/logo-email.png" alt="Janička Shop" style="height: 40px; width: auto; border: 0;" /></a>
     </div>
 
     <div style="background: #fff; border-radius: 12px; padding: 32px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
@@ -696,7 +696,7 @@ function buildNewsletterWelcomeHtml(email: string): string {
   <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
 
     <div style="text-align: center; padding: 24px 0;">
-      <h1 style="margin: 0; font-size: 24px; color: #1a1a1a;">Janička Shop</h1>
+      <a href="${baseUrl}" style="display: inline-block;"><img src="${baseUrl}/logo/logo-email.png" alt="Janička Shop" style="height: 40px; width: auto; border: 0;" /></a>
       <p style="margin: 4px 0 0; font-size: 13px; color: #999;">Second hand móda pro tebe</p>
     </div>
 
@@ -937,7 +937,7 @@ function buildAbandonedCartEmailWrapper(
   <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
 
     <div style="text-align: center; padding: 24px 0;">
-      <h1 style="margin: 0; font-size: 24px; color: #1a1a1a;">Janička Shop</h1>
+      <a href="${baseUrl}" style="display: inline-block;"><img src="${baseUrl}/logo/logo-email.png" alt="Janička Shop" style="height: 40px; width: auto; border: 0;" /></a>
       <p style="margin: 4px 0 0; font-size: 13px; color: #999;">Second hand móda pro tebe</p>
     </div>
 
@@ -1174,7 +1174,7 @@ function buildReviewRequestHtml(data: ReviewRequestEmailData): string {
   <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
 
     <div style="text-align: center; padding: 24px 0;">
-      <h1 style="margin: 0; font-size: 24px; color: #1a1a1a;">Janička Shop</h1>
+      <a href="${baseUrl}" style="display: inline-block;"><img src="${baseUrl}/logo/logo-email.png" alt="Janička Shop" style="height: 40px; width: auto; border: 0;" /></a>
       <p style="margin: 4px 0 0; font-size: 13px; color: #999;">Second hand móda pro tebe</p>
     </div>
 
@@ -1279,7 +1279,7 @@ function buildDeliveryCheckHtml(data: DeliveryCheckEmailData): string {
   <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
 
     <div style="text-align: center; padding: 24px 0;">
-      <h1 style="margin: 0; font-size: 24px; color: #1a1a1a;">Janička Shop</h1>
+      <a href="${baseUrl}" style="display: inline-block;"><img src="${baseUrl}/logo/logo-email.png" alt="Janička Shop" style="height: 40px; width: auto; border: 0;" /></a>
       <p style="margin: 4px 0 0; font-size: 13px; color: #999;">Second hand móda pro tebe</p>
     </div>
 
@@ -1435,7 +1435,7 @@ function buildNewArrivalHtml(data: NewArrivalEmailData): string {
   <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
 
     <div style="text-align: center; padding: 24px 0;">
-      <h1 style="margin: 0; font-size: 24px; color: #1a1a1a;">Janička Shop</h1>
+      <a href="${baseUrl}" style="display: inline-block;"><img src="${baseUrl}/logo/logo-email.png" alt="Janička Shop" style="height: 40px; width: auto; border: 0;" /></a>
       <p style="margin: 4px 0 0; font-size: 13px; color: #999;">Second hand móda pro tebe</p>
     </div>
 
@@ -1543,7 +1543,7 @@ function buildBrowseAbandonmentHtml(data: BrowseAbandonmentEmailData): string {
   <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
 
     <div style="text-align: center; padding: 24px 0;">
-      <h1 style="margin: 0; font-size: 24px; color: #1a1a1a;">Janička Shop</h1>
+      <a href="${baseUrl}" style="display: inline-block;"><img src="${baseUrl}/logo/logo-email.png" alt="Janička Shop" style="height: 40px; width: auto; border: 0;" /></a>
       <p style="margin: 4px 0 0; font-size: 13px; color: #999;">Second hand móda pro tebe</p>
     </div>
 

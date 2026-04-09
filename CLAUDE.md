@@ -10,7 +10,7 @@
 - **State**: Zustand (košík, UI state)
 - **Email**: Resend (objednávky, registrace)
 - **Deploy**: Vercel (auto-deploy on push to main)
-- **Images**: UploadThing v7 (**⚠️ C2304 SCOUT: Free tier GONE** — now $25/month, 250GB storage included, $0.08/GB overage. No bandwidth charges. Verify account billing status before launch.)
+- **Images**: **MIGRATING TO Cloudflare R2** (C2341 decision). UploadThing was never configured ($25/month, no token set). Switching to R2: free 10GB, no egress fees. R2 migration in progress (see Integration Spec below). UploadThing packages still in codebase — will be removed during migration.
 
 ## Project Structure
 ```

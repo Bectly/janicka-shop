@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { CartButton } from "./cart-button";
 import { WishlistHeaderButton } from "./wishlist-header-button";
 import { MobileNav } from "./mobile-nav";
@@ -21,11 +22,15 @@ export function Header() {
         <MobileNav />
 
         {/* Logo */}
-        <Link
-          href="/"
-          className="font-heading text-xl font-bold tracking-tight text-primary"
-        >
-          Janička
+        <Link href="/" className="shrink-0">
+          <Image
+            src="/logo/logo-header.png"
+            alt="Janička"
+            width={120}
+            height={48}
+            className="h-8 w-auto"
+            priority
+          />
         </Link>
 
         {/* Desktop nav */}

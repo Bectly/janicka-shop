@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,8 +35,14 @@ export function MobileNav() {
       <SheetContent side="left" className="w-72">
         <SheetHeader>
           <SheetTitle>
-            <Link href="/" className="font-heading text-xl font-bold text-primary">
-              Janička
+            <Link href="/" className="inline-block">
+              <Image
+                src="/logo/logo-header.png"
+                alt="Janička"
+                width={120}
+                height={48}
+                className="h-8 w-auto"
+              />
             </Link>
           </SheetTitle>
         </SheetHeader>

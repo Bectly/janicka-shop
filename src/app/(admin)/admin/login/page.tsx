@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -37,11 +38,16 @@ export default function AdminLoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4">
       <div className="w-full max-w-sm rounded-xl border bg-card p-8 shadow-sm">
-        <div className="mb-6 text-center">
-          <h1 className="font-heading text-2xl font-bold text-primary">
-            Janička
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+        <div className="mb-6 flex flex-col items-center text-center">
+          <Image
+            src="/logo/logo-header-lg.png"
+            alt="Janička"
+            width={160}
+            height={64}
+            className="h-12 w-auto"
+            priority
+          />
+          <p className="mt-3 text-sm text-muted-foreground">
             Přihlášení do administrace
           </p>
         </div>
