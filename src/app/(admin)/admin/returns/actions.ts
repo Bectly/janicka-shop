@@ -4,6 +4,11 @@ import { getDb } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { rateLimitAdmin } from "@/lib/rate-limit";
+import {
+  generateCreditNotePdf,
+  type CreditNoteData,
+} from "@/lib/invoice/generate-credit-note";
+import { RETURN_REASON_LABELS } from "@/lib/constants";
 
 const VALID_STATUSES = ["pending", "approved", "rejected", "completed"];
 const VALID_REASONS = ["withdrawal_14d", "defect", "wrong_item", "other"];

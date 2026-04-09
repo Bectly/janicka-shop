@@ -277,6 +277,7 @@ model Return {
   updatedAt     DateTime @updatedAt
 
   items         ReturnItem[]
+  creditNotes   CreditNote[]
 
   @@index([orderId])
   @@index([customerId])
@@ -294,6 +295,19 @@ model ReturnItem {
   price       Float
   size        String?
   color       String?
+
+  @@index([returnId])
+}
+
+model CreditNote {
+  id              String   @id @default(cuid())
+  returnId        String
+  return          Return   @relation(fields: [returnId], references: [id], onDelete: Cascade)
+  number          String   @unique          // DOP-YYYY-NNNN
+  invoiceNumber   String                    // Reference to original invoice number
+  issuedAt        DateTime @default(now())
+  totalAmount     Float                     // Negative amount (refund)
+  createdAt       DateTime @default(now())
 
   @@index([returnId])
 }
