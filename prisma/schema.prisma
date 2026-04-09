@@ -101,6 +101,7 @@ model Order {
   shippingMethod String?
   shippingPointId String?
   trackingNumber String?
+  packetId      String?     // Packeta/Zásilkovna packet ID (from SOAP createPacket)
   shippedAt                DateTime?   // Set when admin changes status to "shipped"
   reviewEmailSentAt        DateTime?   // Set when review request email is sent (prevents duplicates)
   deliveryCheckEmailSentAt DateTime?   // Set when delivery check-in email is sent (ship+4d)
