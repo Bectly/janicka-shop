@@ -3,9 +3,10 @@
 import { getDb } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-import { ORDER_STATUS_LABELS } from "@/lib/constants";
+import { ORDER_STATUS_LABELS, PAYMENT_METHOD_LABELS, SHIPPING_METHOD_LABELS } from "@/lib/constants";
 import { sendOrderStatusEmail, sendShippingNotificationEmail } from "@/lib/email";
 import { rateLimitAdmin } from "@/lib/rate-limit";
+import { generateInvoicePdf, type InvoiceData } from "@/lib/invoice/generate-invoice";
 
 const VALID_STATUSES = [
   "pending",
@@ -389,4 +390,242 @@ export async function updateTrackingNumber(orderId: string, trackingNumber: stri
 
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${orderId}`);
+}
+
+/**
+ * Generate a sequential invoice number: JAN-YYYY-NNNN
+ * Sequential within the current year, zero-padded to 4 digits.
+ */
+async function getNextInvoiceNumber(
+  db: Awaited<ReturnType<typeof getDb>>,
+): Promise<string> {
+  const year = new Date().getFullYear();
+  const prefix = `JAN-${year}-`;
+
+  // Find the highest invoice number for the current year
+  const latest = await db.invoice.findFirst({
+    where: { number: { startsWith: prefix } },
+    orderBy: { number: "desc" },
+    select: { number: true },
+  });
+
+  let seq = 1;
+  if (latest) {
+    const lastSeq = parseInt(latest.number.replace(prefix, ""), 10);
+    if (!isNaN(lastSeq)) seq = lastSeq + 1;
+  }
+
+  return `${prefix}${String(seq).padStart(4, "0")}`;
+}
+
+/**
+ * Generate an invoice PDF for an order and save it to the database.
+ * Returns the invoice ID and PDF bytes as base64.
+ */
+export async function generateInvoice(
+  orderId: string,
+): Promise<{ invoiceId: string; invoiceNumber: string; pdfBase64: string }> {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success)
+    throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
+
+  const db = await getDb();
+
+  // Check if invoice already exists
+  const existing = await db.invoice.findFirst({
+    where: { orderId },
+    select: { id: true, number: true },
+  });
+  if (existing) {
+    throw new Error(
+      `Faktura pro tuto objednávku již existuje (${existing.number}).`,
+    );
+  }
+
+  // Fetch order with all related data
+  const order = await db.order.findUnique({
+    where: { id: orderId },
+    include: {
+      customer: true,
+      items: {
+        include: {
+          product: { select: { brand: true, condition: true } },
+        },
+      },
+    },
+  });
+
+  if (!order) throw new Error("Objednávka nenalezena");
+
+  // Fetch shop settings (seller info)
+  let settings = await db.shopSettings.findUnique({
+    where: { id: "singleton" },
+  });
+  if (!settings) {
+    // Create default settings if not found
+    settings = await db.shopSettings.create({
+      data: { id: "singleton" },
+    });
+  }
+
+  const invoiceNumber = await getNextInvoiceNumber(db);
+
+  const now = new Date();
+  // DUZP = date of taxable event. For paid orders, use payment date (createdAt of status change).
+  // For simplicity, use order creation date as DUZP.
+  const taxableEventDate = order.createdAt;
+
+  const invoiceData: InvoiceData = {
+    invoiceNumber,
+    issuedAt: now,
+    taxableEventDate,
+
+    sellerName: settings.shopName || "Janička",
+    sellerStreet: settings.street || "",
+    sellerCity: settings.city || "",
+    sellerZip: settings.zip || "",
+    sellerIco: settings.ico || "",
+    sellerDic: settings.dic || "",
+    sellerEmail: settings.contactEmail || "",
+    sellerPhone: settings.contactPhone || "",
+
+    buyerName: `${order.customer.firstName} ${order.customer.lastName}`,
+    buyerStreet: order.shippingStreet ?? order.customer.street ?? "",
+    buyerCity: order.shippingCity ?? order.customer.city ?? "",
+    buyerZip: order.shippingZip ?? order.customer.zip ?? "",
+    buyerCountry: order.shippingCountry ?? order.customer.country ?? "CZ",
+    buyerEmail: order.customer.email,
+
+    orderNumber: order.orderNumber,
+    paymentMethod:
+      PAYMENT_METHOD_LABELS[order.paymentMethod ?? ""] ??
+      order.paymentMethod ??
+      "Neurčen",
+
+    items: order.items.map((item) => ({
+      name: item.name,
+      quantity: item.quantity,
+      unitPrice: item.price,
+      totalPrice: item.price * item.quantity,
+      size: item.size,
+    })),
+
+    subtotal: order.subtotal,
+    shipping: order.shipping,
+    shippingLabel:
+      SHIPPING_METHOD_LABELS[order.shippingMethod ?? ""] ??
+      order.shippingMethod ??
+      "Standardní doručení",
+    total: order.total,
+  };
+
+  const pdfBytes = generateInvoicePdf(invoiceData);
+  const pdfBase64 = Buffer.from(pdfBytes).toString("base64");
+
+  // Save invoice record to DB
+  const invoice = await db.invoice.create({
+    data: {
+      orderId,
+      number: invoiceNumber,
+      issuedAt: now,
+      totalAmount: order.total,
+      // pdfUrl left null — PDF is generated on-demand from DB data
+    },
+  });
+
+  revalidatePath(`/admin/orders/${orderId}`);
+
+  return {
+    invoiceId: invoice.id,
+    invoiceNumber: invoice.number,
+    pdfBase64,
+  };
+}
+
+/**
+ * Regenerate and download an existing invoice PDF.
+ * Does NOT create a new invoice — re-renders the PDF from order data.
+ */
+export async function downloadInvoice(
+  invoiceId: string,
+): Promise<{ invoiceNumber: string; pdfBase64: string }> {
+  await requireAdmin();
+
+  const db = await getDb();
+
+  const invoice = await db.invoice.findUnique({
+    where: { id: invoiceId },
+    include: {
+      order: {
+        include: {
+          customer: true,
+          items: {
+            include: {
+              product: { select: { brand: true, condition: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!invoice) throw new Error("Faktura nenalezena");
+
+  const order = invoice.order;
+  let settings = await db.shopSettings.findUnique({
+    where: { id: "singleton" },
+  });
+  if (!settings) {
+    settings = await db.shopSettings.create({ data: { id: "singleton" } });
+  }
+
+  const invoiceData: InvoiceData = {
+    invoiceNumber: invoice.number,
+    issuedAt: invoice.issuedAt,
+    taxableEventDate: order.createdAt,
+
+    sellerName: settings.shopName || "Janička",
+    sellerStreet: settings.street || "",
+    sellerCity: settings.city || "",
+    sellerZip: settings.zip || "",
+    sellerIco: settings.ico || "",
+    sellerDic: settings.dic || "",
+    sellerEmail: settings.contactEmail || "",
+    sellerPhone: settings.contactPhone || "",
+
+    buyerName: `${order.customer.firstName} ${order.customer.lastName}`,
+    buyerStreet: order.shippingStreet ?? order.customer.street ?? "",
+    buyerCity: order.shippingCity ?? order.customer.city ?? "",
+    buyerZip: order.shippingZip ?? order.customer.zip ?? "",
+    buyerCountry: order.shippingCountry ?? order.customer.country ?? "CZ",
+    buyerEmail: order.customer.email,
+
+    orderNumber: order.orderNumber,
+    paymentMethod:
+      PAYMENT_METHOD_LABELS[order.paymentMethod ?? ""] ??
+      order.paymentMethod ??
+      "Neurčen",
+
+    items: order.items.map((item) => ({
+      name: item.name,
+      quantity: item.quantity,
+      unitPrice: item.price,
+      totalPrice: item.price * item.quantity,
+      size: item.size,
+    })),
+
+    subtotal: order.subtotal,
+    shipping: order.shipping,
+    shippingLabel:
+      SHIPPING_METHOD_LABELS[order.shippingMethod ?? ""] ??
+      order.shippingMethod ??
+      "Standardní doručení",
+    total: order.total,
+  };
+
+  const pdfBytes = generateInvoicePdf(invoiceData);
+  const pdfBase64 = Buffer.from(pdfBytes).toString("base64");
+
+  return { invoiceNumber: invoice.number, pdfBase64 };
 }

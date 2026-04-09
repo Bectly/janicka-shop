@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { Suspense, cache } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { getDb } from "@/lib/db";
@@ -15,6 +15,30 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowRight } from "lucide-react";
 import { getLowestPrices30d } from "@/lib/price-history";
 import { buildItemListSchema, buildWebSiteSchema, buildOrganizationSchema, jsonLdString } from "@/lib/structured-data";
+
+/* ---------- Cached DB fetches (deduplicated within a request) ---------- */
+
+const getNewProductsForPage = cache(async () => {
+  const db = await getDb();
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  return db.product.findMany({
+    where: { active: true, sold: false, createdAt: { gte: sevenDaysAgo } },
+    include: { category: { select: { name: true } } },
+    take: 8,
+    orderBy: { createdAt: "desc" },
+  });
+});
+
+const getFeaturedProductsForPage = cache(async () => {
+  const db = await getDb();
+  return db.product.findMany({
+    where: { featured: true, active: true, sold: false },
+    include: { category: { select: { name: true } } },
+    take: 8,
+    orderBy: { createdAt: "desc" },
+  });
+});
 
 /* ---------- Skeleton placeholders for streamed sections ---------- */
 
@@ -93,16 +117,7 @@ async function CategoriesSection() {
 }
 
 async function NewProductsSection() {
-  const db = await getDb();
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-  const newProducts = await db.product.findMany({
-    where: { active: true, sold: false, createdAt: { gte: sevenDaysAgo } },
-    include: { category: { select: { name: true } } },
-    take: 8,
-    orderBy: { createdAt: "desc" },
-  });
+  const newProducts = await getNewProductsForPage();
 
   if (newProducts.length === 0) return null;
 
@@ -160,13 +175,7 @@ async function NewProductsSection() {
 }
 
 async function FeaturedProductsSection() {
-  const db = await getDb();
-  const featuredProducts = await db.product.findMany({
-    where: { featured: true, active: true, sold: false },
-    include: { category: { select: { name: true } } },
-    take: 8,
-    orderBy: { createdAt: "desc" },
-  });
+  const featuredProducts = await getFeaturedProductsForPage();
 
   const lowestPricesMap = await getLowestPrices30d(featuredProducts.map((p) => p.id));
 
@@ -442,23 +451,10 @@ async function RecentlySoldSection() {
 }
 
 async function JsonLdSection() {
-  const db = await getDb();
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
+  // Re-uses cached results from NewProductsSection + FeaturedProductsSection — no extra DB queries.
   const [newProducts, featuredProducts] = await Promise.all([
-    db.product.findMany({
-      where: { active: true, sold: false, createdAt: { gte: sevenDaysAgo } },
-      include: { category: { select: { name: true } } },
-      take: 8,
-      orderBy: { createdAt: "desc" },
-    }),
-    db.product.findMany({
-      where: { featured: true, active: true, sold: false },
-      include: { category: { select: { name: true } } },
-      take: 8,
-      orderBy: { createdAt: "desc" },
-    }),
+    getNewProductsForPage(),
+    getFeaturedProductsForPage(),
   ]);
 
   const allDisplayedProducts = [...newProducts, ...featuredProducts];

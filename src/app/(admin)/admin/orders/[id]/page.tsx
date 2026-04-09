@@ -14,6 +14,7 @@ import {
 import { ArrowLeft } from "lucide-react";
 import { OrderStatusSelect } from "./order-status-select";
 import { TrackingNumberForm } from "./tracking-number-form";
+import { InvoiceSection } from "./invoice-section";
 import type { Metadata } from "next";
 
 interface Props {
@@ -46,6 +47,11 @@ export default async function AdminOrderDetailPage({ params }: Props) {
             select: { slug: true, condition: true, brand: true },
           },
         },
+      },
+      invoices: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: { id: true, number: true, issuedAt: true, totalAmount: true },
       },
     },
   });
@@ -248,6 +254,12 @@ export default async function AdminOrderDetailPage({ params }: Props) {
               </p>
             </div>
           </div>
+
+          {/* Invoice */}
+          <InvoiceSection
+            orderId={order.id}
+            existingInvoice={order.invoices[0] ?? null}
+          />
 
           {/* Email status */}
           {order.shippedAt && (
