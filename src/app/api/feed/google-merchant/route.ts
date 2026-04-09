@@ -115,10 +115,13 @@ export async function GET() {
         }
       }
 
-      // Price
-      xml += `    <g:price>${product.price.toFixed(2)} CZK</g:price>\n`;
+      // Price — when on sale, g:price must be the regular price (compareAt) and
+      // g:sale_price the discounted price; Google uses this to show "was X, now Y"
       if (product.compareAt && product.compareAt > product.price) {
+        xml += `    <g:price>${product.compareAt.toFixed(2)} CZK</g:price>\n`;
         xml += `    <g:sale_price>${product.price.toFixed(2)} CZK</g:sale_price>\n`;
+      } else {
+        xml += `    <g:price>${product.price.toFixed(2)} CZK</g:price>\n`;
       }
 
       xml += `    <g:availability>in_stock</g:availability>\n`;

@@ -1,6 +1,13 @@
 "use client";
 
-import { useActionState, useState, useCallback, useEffect, useRef } from "react";
+import {
+  useActionState,
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+  useSyncExternalStore,
+} from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -14,6 +21,8 @@ import {
   Home,
   Mail,
   Lock,
+  Check,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,8 +31,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCartStore } from "@/lib/cart-store";
 import { formatPrice } from "@/lib/format";
 import { trackBeginCheckout } from "@/lib/analytics";
-import { createOrder, captureAbandonedCart, type CheckoutState } from "./actions";
-import { useSyncExternalStore } from "react";
+import {
+  createOrder,
+  captureAbandonedCart,
+  type CheckoutState,
+} from "./actions";
 import {
   PacketaWidget,
   type PacketaPoint,
@@ -84,6 +96,101 @@ const PAYMENT_OPTIONS = [
 
 type ShippingMethod = (typeof SHIPPING_OPTIONS)[number]["id"];
 
+// ---------------------------------------------------------------------------
+// Accordion checkout step
+// ---------------------------------------------------------------------------
+
+function CheckoutStep({
+  step,
+  title,
+  activeStep,
+  completedSteps,
+  summary,
+  onEdit,
+  children,
+}: {
+  step: number;
+  title: string;
+  activeStep: number;
+  completedSteps: Set<number>;
+  summary?: string;
+  onEdit: () => void;
+  children: React.ReactNode;
+}) {
+  const isActive = activeStep === step;
+  const isCompleted = completedSteps.has(step);
+  const isAccessible = step <= activeStep || isCompleted;
+
+  return (
+    <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+      {/* Header — clickable when completed (to re-edit) */}
+      <button
+        type="button"
+        onClick={isCompleted && !isActive ? onEdit : undefined}
+        disabled={!isCompleted || isActive}
+        className={`flex w-full items-center gap-3 p-4 sm:p-6 text-left transition-colors ${
+          isCompleted && !isActive
+            ? "cursor-pointer hover:bg-muted/50"
+            : "cursor-default"
+        }`}
+      >
+        {/* Step indicator */}
+        <div
+          className={`flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-bold transition-colors ${
+            isCompleted
+              ? "bg-emerald-100 text-emerald-700"
+              : isActive
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground"
+          }`}
+        >
+          {isCompleted ? <Check className="size-4" /> : step + 1}
+        </div>
+
+        {/* Title + summary */}
+        <div className="min-w-0 flex-1">
+          <h2
+            className={`font-heading text-base font-semibold ${
+              !isAccessible ? "text-muted-foreground" : ""
+            }`}
+          >
+            {title}
+          </h2>
+          {isCompleted && !isActive && summary && (
+            <p className="mt-0.5 truncate text-sm text-muted-foreground">
+              {summary}
+            </p>
+          )}
+        </div>
+
+        {/* Edit link for completed steps */}
+        {isCompleted && !isActive && (
+          <span className="shrink-0 text-sm font-medium text-primary">
+            Upravit
+          </span>
+        )}
+      </button>
+
+      {/* Collapsible content */}
+      <div
+        className={`grid transition-all duration-300 ease-in-out ${
+          isActive
+            ? "grid-rows-[1fr] opacity-100"
+            : "grid-rows-[0fr] opacity-0"
+        }`}
+      >
+        <div className="overflow-hidden">
+          <div className="px-4 pb-6 sm:px-6">{children}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main checkout page
+// ---------------------------------------------------------------------------
+
 export default function CheckoutPage() {
   const items = useCartStore((s) => s.items);
   const totalPrice = useCartStore((s) => s.totalPrice);
@@ -95,22 +202,37 @@ export default function CheckoutPage() {
   const mounted = useSyncExternalStore(
     emptySubscribe,
     () => true,
-    () => false
+    () => false,
   );
+
+  // Accordion state
+  const [activeStep, setActiveStep] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState<Set<number>>(
+    new Set(),
+  );
+
+  // Form field refs for validation + summaries
+  const firstNameRef = useRef<HTMLInputElement>(null);
+  const lastNameRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const phoneRef = useRef<HTMLInputElement>(null);
+  const streetRef = useRef<HTMLInputElement>(null);
+  const cityRef = useRef<HTMLInputElement>(null);
+  const zipRef = useRef<HTMLInputElement>(null);
 
   const [state, dispatch, isPending] = useActionState<CheckoutState, FormData>(
     createOrder,
-    { error: null, fieldErrors: {} }
+    { error: null, fieldErrors: {} },
   );
 
   const handlePacketaPointSelected = useCallback(
     (point: PacketaPoint | null) => {
       setPacketaPoint(point);
     },
-    []
+    [],
   );
 
-  // Capture abandoned cart when email field loses focus (for recovery emails)
+  // Capture abandoned cart when email field loses focus
   const handleEmailBlur = useCallback(
     (e: React.FocusEvent<HTMLInputElement>) => {
       const email = e.target.value.trim();
@@ -130,11 +252,9 @@ export default function CheckoutPage() {
         })),
         cartTotal: totalPrice(),
         marketingConsent,
-      }).catch(() => {
-        // Silently ignore — never disrupt checkout
-      });
+      }).catch(() => {});
     },
-    [items, totalPrice, marketingConsent]
+    [items, totalPrice, marketingConsent],
   );
 
   // Fire begin_checkout analytics event once on mount
@@ -148,17 +268,104 @@ export default function CheckoutPage() {
     );
   }, [mounted, items, totalPrice]);
 
-  const isCod = paymentMethod === "cod";
-  const isPacketaPickup = shippingMethod === "packeta_pickup";
-  const subtotal = totalPrice();
+  // If server action returned field errors, open the relevant step
+  useEffect(() => {
+    if (!state.fieldErrors || Object.keys(state.fieldErrors).length === 0)
+      return;
 
-  // Free shipping for orders above threshold
+    const contactFields = ["firstName", "lastName", "email", "phone"];
+    const shippingFields = [
+      "shippingMethod",
+      "packetaPointId",
+      "street",
+      "city",
+      "zip",
+    ];
+    const paymentFields = ["paymentMethod"];
+
+    const errorKeys = Object.keys(state.fieldErrors);
+    if (errorKeys.some((k) => contactFields.includes(k))) {
+      setActiveStep(0);
+      // Remove step 0 from completed so user can fix
+      setCompletedSteps((prev) => {
+        const next = new Set(prev);
+        next.delete(0);
+        return next;
+      });
+    } else if (errorKeys.some((k) => shippingFields.includes(k))) {
+      setActiveStep(1);
+      setCompletedSteps((prev) => {
+        const next = new Set(prev);
+        next.delete(1);
+        return next;
+      });
+    } else if (errorKeys.some((k) => paymentFields.includes(k))) {
+      setActiveStep(2);
+      setCompletedSteps((prev) => {
+        const next = new Set(prev);
+        next.delete(2);
+        return next;
+      });
+    }
+  }, [state.fieldErrors]);
+
+  const isPacketaPickup = shippingMethod === "packeta_pickup";
+  const isCod = paymentMethod === "cod";
+  const subtotal = totalPrice();
   const shippingOption = SHIPPING_OPTIONS.find((o) => o.id === shippingMethod);
   const baseShipping = shippingOption?.price ?? 0;
-  const shippingCost =
-    subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : baseShipping;
+  const shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : baseShipping;
   const codFee = isCod ? COD_SURCHARGE : 0;
   const total = subtotal + shippingCost + codFee;
+
+  // Step validation + advance
+  const advanceFromContact = useCallback(() => {
+    const firstName = firstNameRef.current?.value.trim();
+    const lastName = lastNameRef.current?.value.trim();
+    const email = emailRef.current?.value.trim();
+
+    if (!firstName || !lastName || !email) return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+
+    setCompletedSteps((prev) => new Set(prev).add(0));
+    setActiveStep(1);
+  }, []);
+
+  const advanceFromShipping = useCallback(() => {
+    if (isPacketaPickup && !packetaPoint) return;
+    if (!isPacketaPickup) {
+      const street = streetRef.current?.value.trim();
+      const city = cityRef.current?.value.trim();
+      const zip = zipRef.current?.value.trim();
+      const phone = phoneRef.current?.value.trim();
+      if (!street || !city || !zip || !phone) return;
+    }
+    setCompletedSteps((prev) => new Set(prev).add(1));
+    setActiveStep(2);
+  }, [isPacketaPickup, packetaPoint]);
+
+  const advanceFromPayment = useCallback(() => {
+    setCompletedSteps((prev) => new Set(prev).add(2));
+    setActiveStep(3);
+  }, []);
+
+  // Build inline summaries for completed steps
+  const contactSummary =
+    (firstNameRef.current?.value || "") +
+    " " +
+    (lastNameRef.current?.value || "") +
+    (emailRef.current?.value ? `, ${emailRef.current.value}` : "");
+
+  const shippingSummary = isPacketaPickup
+    ? packetaPoint
+      ? `Zásilkovna — ${packetaPoint.name}`
+      : "Zásilkovna — výdejní místo"
+    : shippingMethod === "packeta_home"
+      ? `Na adresu — ${streetRef.current?.value || ""}, ${cityRef.current?.value || ""}`
+      : `Česká pošta — ${streetRef.current?.value || ""}, ${cityRef.current?.value || ""}`;
+
+  const paymentSummary =
+    PAYMENT_OPTIONS.find((o) => o.id === paymentMethod)?.label ?? "";
 
   if (!mounted) {
     return (
@@ -220,12 +427,11 @@ export default function CheckoutPage() {
               size: i.size,
               color: i.color,
               quantity: i.quantity,
-            }))
+            })),
           )}
         />
         <input type="hidden" name="paymentMethod" value={paymentMethod} />
         <input type="hidden" name="shippingMethod" value={shippingMethod} />
-        {/* Packeta point data */}
         {packetaPoint && (
           <>
             <input
@@ -247,27 +453,40 @@ export default function CheckoutPage() {
         )}
 
         <div className="grid gap-8 lg:grid-cols-3">
-          {/* Contact + Shipping + Payment form */}
-          <div className="space-y-6 lg:col-span-2">
-            {/* Contact info */}
-            <section className="rounded-xl border bg-card p-6 shadow-sm">
-              <h2 className="font-heading text-lg font-semibold">
-                Kontaktní údaje
-              </h2>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          {/* Accordion form steps */}
+          <div className="space-y-4 lg:col-span-2">
+            {/* Step 1: Contact */}
+            <CheckoutStep
+              step={0}
+              title="Kontaktní údaje"
+              activeStep={activeStep}
+              completedSteps={completedSteps}
+              summary={contactSummary.trim()}
+              onEdit={() => setActiveStep(0)}
+            >
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">Jméno</Label>
                   <Input
+                    ref={firstNameRef}
                     id="firstName"
                     name="firstName"
                     required
                     placeholder="Jana"
                     autoComplete="given-name"
                     aria-invalid={!!state.fieldErrors.firstName}
-                    aria-describedby={state.fieldErrors.firstName ? "firstName-error" : undefined}
+                    aria-describedby={
+                      state.fieldErrors.firstName
+                        ? "firstName-error"
+                        : undefined
+                    }
                   />
                   {state.fieldErrors.firstName && (
-                    <p id="firstName-error" role="alert" className="text-xs text-destructive">
+                    <p
+                      id="firstName-error"
+                      role="alert"
+                      className="text-xs text-destructive"
+                    >
                       {state.fieldErrors.firstName}
                     </p>
                   )}
@@ -275,16 +494,23 @@ export default function CheckoutPage() {
                 <div className="space-y-2">
                   <Label htmlFor="lastName">Příjmení</Label>
                   <Input
+                    ref={lastNameRef}
                     id="lastName"
                     name="lastName"
                     required
                     placeholder="Nováková"
                     autoComplete="family-name"
                     aria-invalid={!!state.fieldErrors.lastName}
-                    aria-describedby={state.fieldErrors.lastName ? "lastName-error" : undefined}
+                    aria-describedby={
+                      state.fieldErrors.lastName ? "lastName-error" : undefined
+                    }
                   />
                   {state.fieldErrors.lastName && (
-                    <p id="lastName-error" role="alert" className="text-xs text-destructive">
+                    <p
+                      id="lastName-error"
+                      role="alert"
+                      className="text-xs text-destructive"
+                    >
                       {state.fieldErrors.lastName}
                     </p>
                   )}
@@ -292,6 +518,7 @@ export default function CheckoutPage() {
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
+                    ref={emailRef}
                     id="email"
                     name="email"
                     type="email"
@@ -300,38 +527,23 @@ export default function CheckoutPage() {
                     autoComplete="email"
                     onBlur={handleEmailBlur}
                     aria-invalid={!!state.fieldErrors.email}
-                    aria-describedby={state.fieldErrors.email ? "email-error" : undefined}
+                    aria-describedby={
+                      state.fieldErrors.email ? "email-error" : undefined
+                    }
                   />
                   {state.fieldErrors.email && (
-                    <p id="email-error" role="alert" className="text-xs text-destructive">
+                    <p
+                      id="email-error"
+                      role="alert"
+                      className="text-xs text-destructive"
+                    >
                       {state.fieldErrors.email}
                     </p>
                   )}
                 </div>
-                {/* Phone: required for home delivery (courier contact), optional for Packeta pickup */}
-                {!isPacketaPickup && (
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Telefon</Label>
-                    <Input
-                      id="phone"
-                      name="phone"
-                      type="tel"
-                      required
-                      placeholder="+420 123 456 789"
-                      autoComplete="tel"
-                      aria-invalid={!!state.fieldErrors.phone}
-                      aria-describedby={state.fieldErrors.phone ? "phone-error" : undefined}
-                    />
-                    {state.fieldErrors.phone && (
-                      <p id="phone-error" role="alert" className="text-xs text-destructive">
-                        {state.fieldErrors.phone}
-                      </p>
-                    )}
-                  </div>
-                )}
               </div>
 
-              {/* GDPR marketing consent — required for abandoned cart recovery emails */}
+              {/* GDPR marketing consent */}
               <label className="mt-4 flex items-start gap-3 cursor-pointer">
                 <input
                   type="checkbox"
@@ -340,32 +552,45 @@ export default function CheckoutPage() {
                   className="mt-0.5 size-4 shrink-0 rounded border-gray-300 text-primary accent-primary"
                 />
                 <span className="text-xs text-muted-foreground leading-relaxed">
-                  Upozornit mě, pokud zboží v košíku nákoupí někdo jiný. Každý kousek
-                  je unikát — kdokoliv ho může koupit.
+                  Upozornit mě, pokud zboží v košíku nákoupí někdo jiný. Každý
+                  kousek je unikát — kdokoliv ho může koupit.
                 </span>
               </label>
-            </section>
 
-            {/* Shipping method selection */}
-            <section className="rounded-xl border bg-card p-6 shadow-sm">
-              <h2 className="font-heading text-lg font-semibold">
-                Způsob dopravy
-              </h2>
+              <Button
+                type="button"
+                className="mt-6 w-full gap-2"
+                onClick={advanceFromContact}
+              >
+                Pokračovat
+                <ChevronRight className="size-4" />
+              </Button>
+            </CheckoutStep>
+
+            {/* Step 2: Shipping */}
+            <CheckoutStep
+              step={1}
+              title="Doprava"
+              activeStep={activeStep}
+              completedSteps={completedSteps}
+              summary={shippingSummary}
+              onEdit={() => setActiveStep(1)}
+            >
               {state.fieldErrors.shippingMethod && (
-                <p className="mt-1 text-xs text-destructive">
+                <p className="mb-3 text-xs text-destructive">
                   {state.fieldErrors.shippingMethod}
                 </p>
               )}
 
               {subtotal >= FREE_SHIPPING_THRESHOLD && (
-                <div className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+                <div className="mb-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
                   <Package className="mr-1.5 inline-block size-4" />
                   Doprava zdarma u objednávek nad{" "}
                   {formatPrice(FREE_SHIPPING_THRESHOLD)}
                 </div>
               )}
 
-              <div className="mt-4 space-y-3">
+              <div className="space-y-3">
                 {SHIPPING_OPTIONS.map((option) => {
                   const Icon = option.icon;
                   const isSelected = shippingMethod === option.id;
@@ -386,7 +611,6 @@ export default function CheckoutPage() {
                           checked={isSelected}
                           onChange={() => {
                             setShippingMethod(option.id);
-                            // Clear packeta point when switching away
                             if (option.id !== "packeta_pickup") {
                               setPacketaPoint(null);
                             }
@@ -426,7 +650,7 @@ export default function CheckoutPage() {
                         </span>
                       </label>
 
-                      {/* Packeta widget — shown when packeta_pickup selected */}
+                      {/* Packeta widget */}
                       {option.id === "packeta_pickup" && isSelected && (
                         <div className="mt-3 ml-9">
                           <PacketaWidget
@@ -444,81 +668,138 @@ export default function CheckoutPage() {
                   );
                 })}
               </div>
-            </section>
 
-            {/* Shipping address — shown for home delivery methods */}
-            {!isPacketaPickup && (
-              <section className="rounded-xl border bg-card p-6 shadow-sm">
-                <h2 className="font-heading text-lg font-semibold">
-                  Doručovací adresa
-                </h2>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2 sm:col-span-2">
-                    <Label htmlFor="street">Ulice a číslo popisné</Label>
-                    <Input
-                      id="street"
-                      name="street"
-                      required
-                      placeholder="Květná 15"
-                      autoComplete="street-address"
-                      aria-invalid={!!state.fieldErrors.street}
-                      aria-describedby={state.fieldErrors.street ? "street-error" : undefined}
-                    />
-                    {state.fieldErrors.street && (
-                      <p id="street-error" role="alert" className="text-xs text-destructive">
-                        {state.fieldErrors.street}
-                      </p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="city">Město</Label>
-                    <Input
-                      id="city"
-                      name="city"
-                      required
-                      placeholder="Praha"
-                      autoComplete="address-level2"
-                      aria-invalid={!!state.fieldErrors.city}
-                      aria-describedby={state.fieldErrors.city ? "city-error" : undefined}
-                    />
-                    {state.fieldErrors.city && (
-                      <p id="city-error" role="alert" className="text-xs text-destructive">
-                        {state.fieldErrors.city}
-                      </p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="zip">PSČ</Label>
-                    <Input
-                      id="zip"
-                      name="zip"
-                      required
-                      placeholder="110 00"
-                      autoComplete="postal-code"
-                      aria-invalid={!!state.fieldErrors.zip}
-                      aria-describedby={state.fieldErrors.zip ? "zip-error" : undefined}
-                    />
-                    {state.fieldErrors.zip && (
-                      <p id="zip-error" role="alert" className="text-xs text-destructive">
-                        {state.fieldErrors.zip}
-                      </p>
-                    )}
+              {/* Address — for home delivery */}
+              {!isPacketaPickup && (
+                <div className="mt-6">
+                  <h3 className="text-sm font-medium">Doručovací adresa</h3>
+                  <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Telefon</Label>
+                      <Input
+                        ref={phoneRef}
+                        id="phone"
+                        name="phone"
+                        type="tel"
+                        required
+                        placeholder="+420 123 456 789"
+                        autoComplete="tel"
+                        aria-invalid={!!state.fieldErrors.phone}
+                        aria-describedby={
+                          state.fieldErrors.phone ? "phone-error" : undefined
+                        }
+                      />
+                      {state.fieldErrors.phone && (
+                        <p
+                          id="phone-error"
+                          role="alert"
+                          className="text-xs text-destructive"
+                        >
+                          {state.fieldErrors.phone}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-2 sm:col-span-2">
+                      <Label htmlFor="street">Ulice a číslo popisné</Label>
+                      <Input
+                        ref={streetRef}
+                        id="street"
+                        name="street"
+                        required
+                        placeholder="Květná 15"
+                        autoComplete="street-address"
+                        aria-invalid={!!state.fieldErrors.street}
+                        aria-describedby={
+                          state.fieldErrors.street ? "street-error" : undefined
+                        }
+                      />
+                      {state.fieldErrors.street && (
+                        <p
+                          id="street-error"
+                          role="alert"
+                          className="text-xs text-destructive"
+                        >
+                          {state.fieldErrors.street}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="city">Město</Label>
+                      <Input
+                        ref={cityRef}
+                        id="city"
+                        name="city"
+                        required
+                        placeholder="Praha"
+                        autoComplete="address-level2"
+                        aria-invalid={!!state.fieldErrors.city}
+                        aria-describedby={
+                          state.fieldErrors.city ? "city-error" : undefined
+                        }
+                      />
+                      {state.fieldErrors.city && (
+                        <p
+                          id="city-error"
+                          role="alert"
+                          className="text-xs text-destructive"
+                        >
+                          {state.fieldErrors.city}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="zip">PSČ</Label>
+                      <Input
+                        ref={zipRef}
+                        id="zip"
+                        name="zip"
+                        required
+                        placeholder="110 00"
+                        autoComplete="postal-code"
+                        aria-invalid={!!state.fieldErrors.zip}
+                        aria-describedby={
+                          state.fieldErrors.zip ? "zip-error" : undefined
+                        }
+                      />
+                      {state.fieldErrors.zip && (
+                        <p
+                          id="zip-error"
+                          role="alert"
+                          className="text-xs text-destructive"
+                        >
+                          {state.fieldErrors.zip}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </section>
-            )}
+              )}
 
-            {/* Payment method selection */}
-            <section className="rounded-xl border bg-card p-6 shadow-sm">
-              <h2 className="font-heading text-lg font-semibold">
-                Způsob platby
-              </h2>
+              <Button
+                type="button"
+                className="mt-6 w-full gap-2"
+                onClick={advanceFromShipping}
+              >
+                Pokračovat
+                <ChevronRight className="size-4" />
+              </Button>
+            </CheckoutStep>
+
+            {/* Step 3: Payment */}
+            <CheckoutStep
+              step={2}
+              title="Platba"
+              activeStep={activeStep}
+              completedSteps={completedSteps}
+              summary={paymentSummary}
+              onEdit={() => setActiveStep(2)}
+            >
               {state.fieldErrors.paymentMethod && (
-                <p className="mt-1 text-xs text-destructive">
+                <p className="mb-3 text-xs text-destructive">
                   {state.fieldErrors.paymentMethod}
                 </p>
               )}
-              <div className="mt-4 space-y-3">
+              <div className="space-y-3">
                 {PAYMENT_OPTIONS.map((option) => {
                   const Icon = option.icon;
                   const isSelected = paymentMethod === option.id;
@@ -568,7 +849,7 @@ export default function CheckoutPage() {
                 })}
               </div>
 
-              {/* Inline trust badge — 40-60% better conversion than footer placement */}
+              {/* Inline trust badge */}
               <div className="mt-4 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400">
                 <Lock className="size-4 shrink-0" />
                 <span>
@@ -577,30 +858,123 @@ export default function CheckoutPage() {
                   vaše údaje jsou šifrovány a v bezpečí
                 </span>
               </div>
-            </section>
 
-            {/* Note */}
-            <section className="rounded-xl border bg-card p-6 shadow-sm">
-              <h2 className="font-heading text-lg font-semibold">
-                Poznámka k objednávce
-              </h2>
-              <div className="mt-4">
-                <Label htmlFor="note" className="sr-only">Poznámka k objednávce</Label>
-              <Textarea
+              <Button
+                type="button"
+                className="mt-6 w-full gap-2"
+                onClick={advanceFromPayment}
+              >
+                Pokračovat ke shrnutí
+                <ChevronRight className="size-4" />
+              </Button>
+            </CheckoutStep>
+
+            {/* Step 4: Summary + Note + Submit */}
+            <CheckoutStep
+              step={3}
+              title="Shrnutí a odeslání"
+              activeStep={activeStep}
+              completedSteps={completedSteps}
+              onEdit={() => setActiveStep(3)}
+            >
+              {/* Order items summary */}
+              <div className="divide-y rounded-lg border">
+                {items.map((item) => (
+                  <div
+                    key={`${item.productId}-${item.size}-${item.color}`}
+                    className="flex items-center gap-3 p-3"
+                  >
+                    {item.image && (
+                      <div className="relative size-12 shrink-0 overflow-hidden rounded-md border bg-muted">
+                        <Image
+                          src={item.image}
+                          alt={item.name}
+                          fill
+                          sizes="48px"
+                          className="object-cover"
+                        />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">
+                        {item.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {item.size}
+                        {item.color && ` · ${item.color}`}
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-sm font-medium">
+                      {formatPrice(item.price)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Price breakdown */}
+              <div className="mt-4 space-y-1.5">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Mezisoučet</span>
+                  <span>{formatPrice(subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Doprava</span>
+                  {shippingCost === 0 ? (
+                    <span className="text-emerald-600">Zdarma</span>
+                  ) : (
+                    <span>{formatPrice(shippingCost)}</span>
+                  )}
+                </div>
+                {isCod && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Dobírka</span>
+                    <span>{formatPrice(COD_SURCHARGE)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between border-t pt-2 text-lg font-bold">
+                  <span>Celkem</span>
+                  <span>{formatPrice(total)}</span>
+                </div>
+              </div>
+
+              {/* Note */}
+              <div className="mt-6">
+                <Label htmlFor="note">Poznámka k objednávce</Label>
+                <Textarea
                   id="note"
                   name="note"
-                  rows={3}
+                  rows={2}
+                  className="mt-2"
                   placeholder="Máte speciální přání? Napište nám..."
                 />
               </div>
-            </section>
+
+              <Button
+                type="submit"
+                size="lg"
+                className="mt-6 w-full"
+                disabled={isPending}
+              >
+                {isPending
+                  ? "Zpracovávám..."
+                  : isCod
+                    ? "Objednat na dobírku"
+                    : "Přejít k platbě"}
+              </Button>
+
+              <p className="mt-2 text-center text-xs text-muted-foreground">
+                {isCod
+                  ? `Zaplatíte ${formatPrice(total)} při převzetí zásilky`
+                  : "Budete přesměrováni na bezpečnou platební bránu"}
+              </p>
+            </CheckoutStep>
           </div>
 
-          {/* Order summary sidebar — hidden on mobile, shown on desktop */}
+          {/* Desktop order summary sidebar */}
           <div className="hidden lg:col-span-1 lg:block">
             <div className="sticky top-24 space-y-4 rounded-xl border bg-card p-6 shadow-sm">
               <h2 className="font-heading text-lg font-semibold">
-                Shrnutí objednávky
+                Vaše objednávka
               </h2>
 
               <div className="divide-y">
@@ -660,51 +1034,12 @@ export default function CheckoutPage() {
                   <span>{formatPrice(total)}</span>
                 </div>
               </div>
-
-              <Button
-                type="submit"
-                size="lg"
-                className="w-full"
-                disabled={isPending}
-              >
-                {isPending
-                  ? "Zpracovávám..."
-                  : isCod
-                    ? "Objednat na dobírku"
-                    : "Přejít k platbě"}
-              </Button>
-
-              <p className="text-center text-xs text-muted-foreground">
-                {isCod
-                  ? `Zaplatíte ${formatPrice(total)} při převzetí zásilky`
-                  : "Budete přesměrováni na bezpečnou platební bránu"}
-              </p>
             </div>
           </div>
         </div>
 
-        {/* Mobile submit button + bottom padding to avoid overlap with sticky bar */}
-        <div className="mt-6 lg:hidden">
-          <Button
-            type="submit"
-            size="lg"
-            className="w-full"
-            disabled={isPending}
-          >
-            {isPending
-              ? "Zpracovávám..."
-              : isCod
-                ? "Objednat na dobírku"
-                : "Přejít k platbě"}
-          </Button>
-          <p className="mt-2 text-center text-xs text-muted-foreground">
-            {isCod
-              ? `Zaplatíte ${formatPrice(total)} při převzetí zásilky`
-              : "Budete přesměrováni na bezpečnou platební bránu"}
-          </p>
-          {/* Spacer for mobile sticky bar */}
-          <div className="h-16" />
-        </div>
+        {/* Mobile bottom padding for sticky bar */}
+        <div className="h-16 lg:hidden" />
       </form>
 
       {/* Mobile sticky summary bar */}
