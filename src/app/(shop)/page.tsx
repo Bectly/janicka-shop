@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getDb } from "@/lib/db";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30; // Revalidate every 30s (was force-dynamic — no caching at all)
 import { ProductCard } from "@/components/shop/product-card";
 import { CategoryCard } from "@/components/shop/category-card";
 import { NewsletterForm } from "@/components/shop/newsletter-form";
@@ -55,9 +55,12 @@ export default async function HomePage() {
       take: 8,
       orderBy: { updatedAt: "desc" },
     }),
-    db.product.findMany({
+    db.product.groupBy({
+      by: ["brand"],
       where: { active: true, sold: false, brand: { not: null } },
-      select: { brand: true },
+      _count: { id: true },
+      orderBy: { _count: { id: "desc" } },
+      take: 15,
     }),
     db.product.findMany({
       where: {
@@ -99,14 +102,11 @@ export default async function HomePage() {
     return !!p.reservedUntil && p.reservedUntil > now && p.reservedBy !== visitorId;
   }
 
-  // Compute popular brands sorted by product count
-  const brandCounts = new Map<string, number>();
-  for (const p of brandProducts) {
-    if (p.brand) brandCounts.set(p.brand, (brandCounts.get(p.brand) ?? 0) + 1);
-  }
-  const popularBrands = [...brandCounts.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 12);
+  // Popular brands — already grouped and sorted by DB
+  const popularBrands: [string, number][] = brandProducts
+    .filter((g) => g.brand && g.brand.length > 0)
+    .slice(0, 12)
+    .map((g) => [g.brand!, g._count.id]);
 
   // Map recently sold products for the feed component
   const soldFeedProducts = recentlySold.map((p) => ({

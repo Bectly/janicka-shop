@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { getDb } from "@/lib/db";
 
 /**
@@ -7,8 +8,10 @@ import { getDb } from "@/lib/db";
  *
  * Czech "fake discount" law (Omnibus Directive) requires displaying the lowest
  * price from the previous 30 days whenever a price reduction is advertised.
+ *
+ * Wrapped in React.cache() to deduplicate calls within a single request.
  */
-export async function getLowestPrices30d(
+export const getLowestPrices30d = cache(async function getLowestPrices30d(
   productIds: string[],
 ): Promise<Map<string, number>> {
   if (productIds.length === 0) return new Map();
@@ -48,4 +51,4 @@ export async function getLowestPrices30d(
   }
 
   return result;
-}
+});

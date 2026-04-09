@@ -6,9 +6,10 @@
  *
  * Steps:
  * 1. Read scripts/vinted-data/products.json
- * 2. Upload photos to UploadThing
- * 3. Map Vinted fields → Prisma Product model
- * 4. Create products in database (draft/hidden by default)
+ * 2. Map Vinted fields → Prisma Product model
+ * 3. Use Vinted photo URLs directly (Next.js remotePatterns configured)
+ * 4. Create products in database (hidden/draft by default)
+ * 5. Create PriceHistory entries for 30-day price compliance
  *
  * Usage:
  *   npx tsx scripts/import-vinted-products.ts [--dry-run] [--publish]
@@ -20,42 +21,42 @@
 
 import * as fs from "fs";
 import * as path from "path";
+import { PrismaClient } from "@prisma/client";
 
 const PRODUCTS_FILE = path.join(__dirname, "vinted-data", "products.json");
 
 // Condition mapping: Vinted CZ → Janička Shop
 const CONDITION_MAP: Record<string, string> = {
   "Nové s visačkou": "new_with_tags",
-  "Nové bez visačky": "new_without_tags",
+  "Nové bez visačky": "new_with_tags",
+  "Velmi dobrý": "excellent",
   "Velmi dobré": "excellent",
+  "Dobrý": "good",
   "Dobré": "good",
-  "Uspokojivé": "fair",
-  // Fallbacks
+  "Uspokojivý": "visible_wear",
+  "Uspokojivé": "visible_wear",
+  // Fallback English terms
   "new with tags": "new_with_tags",
-  "new without tags": "new_without_tags",
+  "new without tags": "new_with_tags",
   "very good": "excellent",
-  "good": "good",
-  "satisfactory": "fair",
+  good: "good",
+  satisfactory: "visible_wear",
 };
 
-// Category mapping: Vinted categories → Janička categories
-const CATEGORY_MAP: Record<string, string> = {
-  "Šaty": "saty",
-  "Topy a tílka": "topy-halenky",
-  "Halenky": "topy-halenky",
-  "Trička": "topy-halenky",
-  "Svetry": "topy-halenky",
-  "Kalhoty": "kalhoty-sukne",
-  "Džíny": "kalhoty-sukne",
-  "Sukně": "kalhoty-sukne",
-  "Bundy a kabáty": "bundy-kabaty",
-  "Kabáty": "bundy-kabaty",
-  "Bundy": "bundy-kabaty",
-  "Doplňky": "doplnky",
-  "Kabelky": "doplnky",
-  "Šperky": "doplnky",
-  "Šátky": "doplnky",
-};
+// Category keyword mapping: Vinted categories → Janička category slugs
+const CATEGORY_KEYWORDS: [string[], string][] = [
+  [["šaty", "dress", "šat"], "saty"],
+  [["top", "tílko", "halenk", "tričk", "svetr", "mikina", "blůz", "košil", "rolák", "cardigan", "polokošile", "triko", "vesta", "crop"], "topy-halenky"],
+  [["kalhot", "sukn", "džín", "jeans", "legín", "šortk", "kraťas", "bermudy"], "kalhoty-sukne"],
+  [["bund", "kabát", "sako", "blejzr", "pláštěnk", "vesta", "parka", "coat", "jacket", "blazer"], "bundy-kabaty"],
+  [["kabelk", "šátek", "šátk", "šperky", "náušnic", "náhrdelník", "prsten", "hodinky", "pásek", "čepic", "klobouk", "brýle", "peněženk", "batoh", "tašk", "doplň"], "doplnky"],
+];
+
+interface CategoryInfo {
+  id: string;
+  name: string;
+  slug: string;
+}
 
 function slugify(text: string): string {
   return text
@@ -69,38 +70,63 @@ function slugify(text: string): string {
 
 function generateSKU(brand: string, index: number): string {
   const brandCode = brand
-    ? brand.slice(0, 3).toUpperCase().replace(/[^A-Z]/g, "X")
+    ? brand
+        .slice(0, 3)
+        .toUpperCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^A-Z]/g, "X")
     : "GEN";
   return `VNT-${brandCode}-${String(index).padStart(4, "0")}`;
 }
 
 function mapCondition(vintedCondition: string): string {
-  // Try exact match first
+  if (!vintedCondition) return "good";
+
+  // Exact match
   if (CONDITION_MAP[vintedCondition]) return CONDITION_MAP[vintedCondition];
 
-  // Try case-insensitive partial match
+  // Case-insensitive partial match
   const lower = vintedCondition.toLowerCase();
   for (const [key, value] of Object.entries(CONDITION_MAP)) {
     if (lower.includes(key.toLowerCase())) return value;
   }
 
-  return "good"; // Default
+  return "good";
 }
 
-function mapCategory(vintedCategory: string): string {
-  // Try each part of the category path
-  const parts = vintedCategory.split(" > ");
-  for (const part of parts) {
-    if (CATEGORY_MAP[part]) return CATEGORY_MAP[part];
+function mapCategory(
+  vintedCategory: string,
+  title: string,
+  description: string,
+  categories: CategoryInfo[]
+): string {
+  const searchText = `${vintedCategory} ${title} ${description}`.toLowerCase();
+
+  for (const [keywords, slug] of CATEGORY_KEYWORDS) {
+    for (const keyword of keywords) {
+      if (searchText.includes(keyword)) {
+        const cat = categories.find((c) => c.slug === slug);
+        if (cat) return cat.id;
+      }
+    }
   }
 
-  // Partial match
-  const lower = vintedCategory.toLowerCase();
-  for (const [key, value] of Object.entries(CATEGORY_MAP)) {
-    if (lower.includes(key.toLowerCase())) return value;
-  }
+  // Default to "Topy & Halenky" as the largest category
+  const defaultCat = categories.find((c) => c.slug === "topy-halenky");
+  return defaultCat?.id || categories[0]?.id || "";
+}
 
-  return ""; // Unknown — will need manual categorization
+/**
+ * Convert Vinted photo URLs to full-resolution URLs.
+ * Vinted URLs: https://images1.vinted.net/t/{hash}/{size}/{id}.webp?s=...
+ * We want f1600x1600 for quality but also the URL without query params
+ * for cleaner storage (the query string is a signature that may expire).
+ */
+function normalizePhotoUrl(url: string): string {
+  // Upgrade resolution to f800x800 (good quality, reasonable size)
+  // f1600x1600 may not be available for all images
+  return url.replace(/\/(?:f?\d+x\d+)\//, "/f800x800/");
 }
 
 async function main() {
@@ -113,107 +139,241 @@ async function main() {
     process.exit(1);
   }
 
-  const products = JSON.parse(fs.readFileSync(PRODUCTS_FILE, "utf-8"));
+  const rawProducts = JSON.parse(fs.readFileSync(PRODUCTS_FILE, "utf-8"));
   console.log(`=== Vinted → Janička Shop Importer ===`);
-  console.log(`Products to import: ${products.length}`);
+  console.log(`Products to import: ${rawProducts.length}`);
   console.log(`Mode: ${isDryRun ? "DRY RUN" : "LIVE"}`);
   console.log(`Publish: ${isPublish ? "YES (active)" : "NO (draft)"}`);
   console.log();
 
-  const importData = products.map((p: any, i: number) => ({
-    // Core fields
-    name: p.title,
-    slug: slugify(p.title) + `-${p.vintedId}`,
-    sku: generateSKU(p.brand, i + 1),
-    description: p.description,
-    price: p.price,
-    originalPrice: p.originalPrice || Math.round(p.price * 1.8), // Estimate 80% discount
-    condition: mapCondition(p.condition),
-    brand: p.brand,
-    size: p.size,
-    color: p.color.length > 0 ? p.color[0] : "",
-    material: p.material,
-
-    // Category (needs manual review for unmapped)
-    categorySlug: mapCategory(p.category),
-    vintedCategory: p.category, // Keep original for reference
-
-    // Images (local paths — need upload to UploadThing)
-    localPhotos: p.photos,
-    photoUrls: p.photoUrls,
-
-    // Metadata
-    vintedId: p.vintedId,
-    vintedUrl: p.url,
-    vintedViews: p.views,
-    vintedFavorites: p.favorites,
-
-    // Status
-    active: isPublish,
-    quantity: 1, // Always 1 for second-hand
-  }));
-
-  // Print summary
-  const brands = new Map<string, number>();
-  const categories = new Map<string, number>();
-  const conditions = new Map<string, number>();
-  let unmappedCategories = 0;
-
-  for (const item of importData) {
-    brands.set(item.brand || "(unknown)", (brands.get(item.brand || "(unknown)") || 0) + 1);
-    categories.set(
-      item.categorySlug || "(unmapped)",
-      (categories.get(item.categorySlug || "(unmapped)") || 0) + 1
-    );
-    conditions.set(item.condition, (conditions.get(item.condition) || 0) + 1);
-    if (!item.categorySlug) unmappedCategories++;
-  }
-
-  console.log("--- Brands ---");
-  [...brands.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .forEach(([b, c]) => console.log(`  ${b}: ${c}`));
-
-  console.log("\n--- Categories ---");
-  [...categories.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .forEach(([c, n]) => console.log(`  ${c}: ${n}`));
-
-  console.log("\n--- Conditions ---");
-  [...conditions.entries()].forEach(([c, n]) => console.log(`  ${c}: ${n}`));
-
-  console.log(
-    `\nTotal photos: ${importData.reduce(
-      (sum: number, p: any) => sum + p.localPhotos.length,
-      0
-    )}`
+  // Filter out products with no title or price
+  const products = rawProducts.filter(
+    (p: any) => p.title && p.title.length > 2 && p.price > 0
   );
-  if (unmappedCategories > 0) {
-    console.log(`\n!! ${unmappedCategories} products have unmapped categories — need manual review`);
-  }
+  console.log(`Valid products (with title + price): ${products.length}`);
+  console.log(
+    `Skipped (no title/price): ${rawProducts.length - products.length}`
+  );
 
-  if (isDryRun) {
-    console.log("\n[DRY RUN] No changes made. Remove --dry-run to import.");
-    // Write preview
-    fs.writeFileSync(
-      path.join(__dirname, "vinted-data", "import-preview.json"),
-      JSON.stringify(importData, null, 2)
+  const db = new PrismaClient();
+
+  try {
+    // Get all categories
+    const categories = await db.category.findMany({
+      select: { id: true, name: true, slug: true },
+    });
+    console.log(
+      `Categories in DB: ${categories.map((c) => c.slug).join(", ")}`
     );
-    console.log(`Preview saved to: vinted-data/import-preview.json`);
-    return;
+
+    // Check for existing products (skip duplicates)
+    const existingProducts = await db.product.findMany({
+      select: { slug: true, sku: true },
+    });
+    const existingSlugs = new Set(existingProducts.map((p) => p.slug));
+    const existingSKUs = new Set(existingProducts.map((p) => p.sku));
+
+    // Prepare import data
+    const importData = products.map((p: any, i: number) => {
+      // Clean up title (remove emojis at start/end for cleaner product names)
+      let title = p.title
+        .replace(/^\s*[\u{1F300}-\u{1FAFF}\u{2702}-\u{27B0}]+\s*/u, "")
+        .replace(/\s*[\u{1F300}-\u{1FAFF}\u{2702}-\u{27B0}]+\s*$/u, "")
+        .trim();
+      if (!title) title = p.title; // Fallback to original if stripping removed everything
+
+      let slug = slugify(title);
+      // Ensure slug uniqueness by appending vintedId
+      if (existingSlugs.has(slug)) {
+        slug = `${slug}-${p.vintedId}`;
+      }
+
+      let sku = generateSKU(p.brand, i + 1);
+      let skuAttempt = 0;
+      while (existingSKUs.has(sku)) {
+        skuAttempt++;
+        sku = generateSKU(p.brand, i + 1 + skuAttempt * 1000);
+      }
+
+      // Photo URLs — use Vinted CDN directly
+      const photoUrls = (p.photoUrls || []).map(normalizePhotoUrl);
+
+      // Parse sizes from the Vinted size string (e.g., "S / 36 / 8")
+      const sizeStr = p.size || "";
+      const sizes = sizeStr
+        ? sizeStr
+            .split("/")
+            .map((s: string) => s.trim())
+            .filter(Boolean)
+        : [];
+
+      // Colors
+      const colors = Array.isArray(p.color) ? p.color : [];
+
+      const categoryId = mapCategory(
+        p.category,
+        p.title,
+        p.description,
+        categories
+      );
+
+      return {
+        name: title,
+        slug,
+        description: p.description || `${title} — second hand`,
+        price: p.price,
+        compareAt: p.originalPrice || null,
+        sku,
+        categoryId,
+        brand: p.brand || null,
+        condition: mapCondition(p.condition),
+        sizes: JSON.stringify(sizes),
+        colors: JSON.stringify(colors),
+        images: JSON.stringify(photoUrls),
+        stock: 1,
+        featured: false,
+        active: isPublish,
+        sold: false,
+        // Metadata for reference
+        _vintedId: p.vintedId,
+        _vintedUrl: p.url,
+        _vintedCategory: p.category,
+      };
+    });
+
+    // Print summary
+    const brandCounts = new Map<string, number>();
+    const categoryCounts = new Map<string, number>();
+    const conditionCounts = new Map<string, number>();
+
+    for (const item of importData) {
+      const brand = item.brand || "(neznámá)";
+      brandCounts.set(brand, (brandCounts.get(brand) || 0) + 1);
+
+      const cat = categories.find((c) => c.id === item.categoryId);
+      const catName = cat?.name || "(nepřiřazeno)";
+      categoryCounts.set(catName, (categoryCounts.get(catName) || 0) + 1);
+
+      conditionCounts.set(
+        item.condition,
+        (conditionCounts.get(item.condition) || 0) + 1
+      );
+    }
+
+    console.log("\n--- Značky (top 15) ---");
+    [...brandCounts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 15)
+      .forEach(([b, c]) => console.log(`  ${b}: ${c}`));
+
+    console.log("\n--- Kategorie ---");
+    [...categoryCounts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .forEach(([c, n]) => console.log(`  ${c}: ${n}`));
+
+    console.log("\n--- Stav ---");
+    [...conditionCounts.entries()].forEach(([c, n]) =>
+      console.log(`  ${c}: ${n}`)
+    );
+
+    const totalPhotos = importData.reduce(
+      (sum: number, p: any) =>
+        sum + JSON.parse(p.images).length,
+      0
+    );
+    console.log(`\nCelkem fotek: ${totalPhotos}`);
+
+    if (isDryRun) {
+      console.log("\n[DRY RUN] Žádné změny provedeny. Odstraňte --dry-run pro import.");
+      const preview = importData.slice(0, 5).map((p: any) => ({
+        name: p.name,
+        slug: p.slug,
+        price: p.price,
+        brand: p.brand,
+        condition: p.condition,
+        categoryId: p.categoryId,
+        sizes: p.sizes,
+        colors: p.colors,
+        images: `${JSON.parse(p.images).length} fotek`,
+      }));
+      console.log("\nPrvních 5 produktů:");
+      console.log(JSON.stringify(preview, null, 2));
+      return;
+    }
+
+    // LIVE IMPORT
+    console.log("\n--- Importuji do databáze ---");
+    let created = 0;
+    let skipped = 0;
+    let errors = 0;
+
+    for (let i = 0; i < importData.length; i++) {
+      const item = importData[i];
+
+      // Skip duplicates
+      if (existingSlugs.has(item.slug)) {
+        skipped++;
+        continue;
+      }
+
+      try {
+        const product = await db.product.create({
+          data: {
+            name: item.name,
+            slug: item.slug,
+            description: item.description,
+            price: item.price,
+            compareAt: item.compareAt,
+            sku: item.sku,
+            categoryId: item.categoryId,
+            brand: item.brand,
+            condition: item.condition,
+            sizes: item.sizes,
+            colors: item.colors,
+            images: item.images,
+            stock: item.stock,
+            featured: item.featured,
+            active: item.active,
+            sold: item.sold,
+          },
+        });
+
+        // Create initial PriceHistory entry (30-day price compliance)
+        await db.priceHistory.create({
+          data: {
+            productId: product.id,
+            price: item.price,
+          },
+        });
+
+        existingSlugs.add(item.slug);
+        existingSKUs.add(item.sku);
+        created++;
+
+        if (created % 25 === 0) {
+          console.log(`  Importováno: ${created}/${importData.length}`);
+        }
+      } catch (e: any) {
+        errors++;
+        console.error(
+          `  Chyba u "${item.name}" (${item.slug}): ${e.message}`
+        );
+      }
+    }
+
+    console.log("\n=== IMPORT DOKONČEN ===");
+    console.log(`Vytvořeno: ${created}`);
+    console.log(`Přeskočeno (duplicity): ${skipped}`);
+    console.log(`Chyby: ${errors}`);
+    console.log(`Stav: ${isPublish ? "AKTIVNÍ (viditelné)" : "SKRYTÉ (draft)"}`);
+    if (!isPublish) {
+      console.log(
+        '\nProdukty jsou skryté. Spusťte s --publish pro aktivaci, nebo aktivujte v adminu.'
+      );
+    }
+  } finally {
+    await db.$disconnect();
   }
-
-  // TODO: Bolt implements the actual DB import + UploadThing upload
-  // 1. For each product:
-  //    a. Upload local photos to UploadThing → get URLs
-  //    b. Map categorySlug to actual Category.id from DB
-  //    c. Create Product record with all fields
-  //    d. Create PriceHistory entry (30-day price compliance)
-  // 2. Handle duplicates (check by vintedId or slug)
-  // 3. Log import results
-
-  console.log("\n!! DB import not yet implemented — Bolt will handle this.");
-  console.log("Run with --dry-run to see the preview data.");
 }
 
 main().catch(console.error);

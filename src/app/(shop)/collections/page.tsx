@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getDb } from "@/lib/db";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 import { Layers } from "lucide-react";
 import type { Metadata } from "next";
 

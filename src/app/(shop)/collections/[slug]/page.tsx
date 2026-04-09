@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getDb } from "@/lib/db";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30;
 import { ProductCard } from "@/components/shop/product-card";
 import { getVisitorId } from "@/lib/visitor";
 import { getLowestPrices30d } from "@/lib/price-history";

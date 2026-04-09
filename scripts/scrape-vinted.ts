@@ -3,21 +3,17 @@
  *
  * Uses Playwright to:
  * 1. Navigate to the member profile page
- * 2. Intercept Vinted's internal API responses (structured JSON data)
- * 3. Scroll to trigger pagination and capture all items
- * 4. Download all product photos at full resolution (f1600x1600)
- *
- * This approach is much more reliable than DOM scraping because:
- * - Vinted renders products entirely client-side (no SSR product data)
- * - API responses contain rich structured data (brand, size, condition, etc.)
- * - Photo URLs are available in multiple resolutions
+ * 2. Accept cookies, scroll to load all products
+ * 3. Extract product URLs from the rendered DOM
+ * 4. Visit each product detail page and capture data via API interception + DOM
+ * 5. Download all product photos at full resolution
  *
  * Usage:
  *   npx tsx scripts/scrape-vinted.ts
  *
  * Output:
  *   scripts/vinted-data/products.json  — all product data
- *   scripts/vinted-data/images/        — downloaded product photos (f1600x1600)
+ *   scripts/vinted-data/images/        — downloaded product photos
  */
 
 import { chromium, type Page, type BrowserContext } from "playwright";
@@ -30,10 +26,9 @@ const MEMBER_URL = `https://www.vinted.cz/member/${MEMBER_ID}`;
 const OUTPUT_DIR = path.join(__dirname, "vinted-data");
 const IMAGES_DIR = path.join(OUTPUT_DIR, "images");
 const PRODUCTS_FILE = path.join(OUTPUT_DIR, "products.json");
-const RAW_API_FILE = path.join(OUTPUT_DIR, "raw-api-responses.json");
-const DELAY_MS = 2000; // between page loads for detail pages
+const DELAY_MS = 2500; // between detail page loads
 const MAX_RETRIES = 3;
-const PHOTO_RESOLUTION = "f1600x1600"; // highest quality
+const PHOTO_RESOLUTION = "f1600x1600";
 
 interface VintedProduct {
   vintedId: string;
@@ -53,8 +48,8 @@ interface VintedProduct {
   views: number;
   favorites: number;
   uploadedAt: string;
-  photos: string[]; // local file paths after download
-  photoUrls: string[]; // original Vinted URLs (full res)
+  photos: string[];
+  photoUrls: string[];
   status: string;
 }
 
@@ -91,191 +86,51 @@ async function downloadImage(
   return false;
 }
 
-/**
- * Convert a Vinted photo URL to full resolution.
- * Vinted URLs look like: https://images1.vinted.net/t/{hash}/{size}/{id}.webp?s=...
- * We replace the size segment with f1600x1600 for max quality.
- */
 function toFullResUrl(url: string): string {
-  // Replace any resolution pattern like /310x310/, /f800x800/, /150x150/ etc.
   return url.replace(/\/(?:f?\d+x\d+)\//, `/${PHOTO_RESOLUTION}/`);
 }
 
 /**
- * Extract item data from Vinted's API response format.
- * Vinted's internal API returns items in a specific structure.
+ * Step 1: Collect all product URLs from the member profile page.
+ * Products are server-rendered, so we extract from the DOM.
  */
-function parseApiItem(item: any): Partial<VintedProduct> | null {
-  try {
-    const vintedId = String(item.id || "");
-    if (!vintedId) return null;
-
-    // Extract photo URLs
-    const photoUrls: string[] = [];
-    if (item.photos && Array.isArray(item.photos)) {
-      for (const photo of item.photos) {
-        const url =
-          photo.full_size_url ||
-          photo.url ||
-          photo.thumbnails?.[0]?.url ||
-          "";
-        if (url) {
-          photoUrls.push(toFullResUrl(url));
-        }
-      }
-    } else if (item.photo) {
-      // Single photo from list view
-      const url =
-        item.photo.full_size_url ||
-        item.photo.url ||
-        item.photo.thumbnails?.[0]?.url ||
-        "";
-      if (url) photoUrls.push(toFullResUrl(url));
-    }
-
-    // Extract colors
-    const colors: string[] = [];
-    if (item.color1) colors.push(item.color1);
-    if (item.color2) colors.push(item.color2);
-
-    return {
-      vintedId,
-      url: `https://www.vinted.cz/items/${vintedId}`,
-      title: item.title || "",
-      description: item.description || "",
-      price: parseFloat(item.price?.amount || item.price || "0"),
-      currency: item.price?.currency_code || item.currency || "CZK",
-      originalPrice: item.original_price?.amount
-        ? parseFloat(item.original_price.amount)
-        : null,
-      brand: item.brand_dto?.title || item.brand?.title || item.brand_title || "",
-      size: item.size_title || item.size?.title || "",
-      condition:
-        item.status?.replace(/_/g, " ") ||
-        item.disposal_conditions?.toString() ||
-        "",
-      color: colors,
-      category:
-        item.catalog_id?.toString() ||
-        item.category?.title ||
-        "",
-      material: item.material?.title || "",
-      measurements: "",
-      views: item.view_count || 0,
-      favorites: item.favourite_count || item.favorite_count || 0,
-      uploadedAt: item.created_at_ts
-        ? new Date(item.created_at_ts * 1000).toISOString()
-        : item.created_at || "",
-      photoUrls,
-      status: item.status || "active",
-    };
-  } catch (e) {
-    console.error(`  Error parsing item: ${e}`);
-    return null;
-  }
-}
-
-/**
- * Strategy 1: Intercept API responses while browsing the profile page.
- * Vinted's frontend fetches items via internal API calls.
- */
-async function scrapeViaNetworkInterception(
-  context: BrowserContext
-): Promise<Map<string, Partial<VintedProduct>>> {
-  const items = new Map<string, Partial<VintedProduct>>();
-  const rawResponses: any[] = [];
-  const page = await context.newPage();
-
-  // Set up response interception BEFORE navigating
-  page.on("response", async (response) => {
-    const url = response.url();
-
-    // Capture user items API responses
-    if (
-      url.includes("/api/v2/users/") &&
-      url.includes("/items") &&
-      response.status() === 200
-    ) {
-      try {
-        const json = await response.json();
-        rawResponses.push({ url, data: json });
-
-        const itemsList =
-          json.items || json.user_items || json.data?.items || [];
-        if (Array.isArray(itemsList)) {
-          for (const item of itemsList) {
-            const parsed = parseApiItem(item);
-            if (parsed?.vintedId) {
-              items.set(parsed.vintedId, parsed);
-            }
-          }
-          console.log(
-            `  Captured ${itemsList.length} items from API (total: ${items.size})`
-          );
-        }
-      } catch {
-        // Not JSON or parse error — skip
-      }
-    }
-
-    // Also capture individual item detail responses
-    if (
-      url.match(/\/api\/v2\/items\/\d+/) &&
-      !url.includes("/items/") &&
-      response.status() === 200
-    ) {
-      try {
-        const json = await response.json();
-        const item = json.item || json;
-        const parsed = parseApiItem(item);
-        if (parsed?.vintedId) {
-          // Merge with existing (detail has richer data)
-          const existing = items.get(parsed.vintedId) || {};
-          items.set(parsed.vintedId, { ...existing, ...parsed });
-        }
-      } catch {
-        // Skip
-      }
-    }
-  });
-
+async function collectProductUrls(page: Page): Promise<string[]> {
   console.log("Navigating to member profile...");
-  try {
-    await page.goto(MEMBER_URL, { waitUntil: "domcontentloaded", timeout: 30000 });
-  } catch (e) {
-    console.log(`  Navigation timeout (expected for heavy page): ${e}`);
-  }
+  await page.goto(MEMBER_URL, { waitUntil: "load", timeout: 30000 });
+  await sleep(2000);
 
-  // Accept cookies if banner appears
-  try {
-    const cookieBtn = page.locator("#onetrust-accept-btn-handler");
-    if (await cookieBtn.isVisible({ timeout: 5000 })) {
-      await cookieBtn.click();
-      console.log("  Accepted cookies");
-      await sleep(1000);
-    }
-  } catch {
-    // Try alternative cookie button
+  // Accept cookies — try multiple selectors
+  const cookieSelectors = [
+    "#onetrust-accept-btn-handler",
+    '[data-testid="cookie-consent-banner-accept"]',
+    'button:has-text("Přijmout vše")',
+    'button:has-text("Souhlasím")',
+    'button:has-text("Accept")',
+    'button:has-text("Přijmout")',
+  ];
+
+  for (const selector of cookieSelectors) {
     try {
-      const altBtn = page.locator(
-        '[data-testid="cookie-consent-banner-accept"], [id*="accept"], button:has-text("Souhlasím"), button:has-text("Přijmout")'
-      );
-      if (await altBtn.first().isVisible({ timeout: 2000 })) {
-        await altBtn.first().click();
-        console.log("  Accepted cookies (alt button)");
-        await sleep(1000);
+      const btn = page.locator(selector).first();
+      if (await btn.isVisible({ timeout: 1500 })) {
+        await btn.click();
+        console.log(`  Accepted cookies via: ${selector}`);
+        await sleep(1500);
+        break;
       }
     } catch {
-      // No cookie banner
+      // Try next selector
     }
   }
 
-  // Wait for initial content to load
-  await sleep(3000);
+  // Take screenshot after cookie acceptance
+  await page.screenshot({
+    path: path.join(OUTPUT_DIR, "after-cookies.png"),
+    fullPage: false,
+  });
 
-  // Scroll down to trigger lazy loading / infinite scroll / pagination
-  console.log("Scrolling to load all items...");
-  let lastItemCount = 0;
+  // Scroll to load all items (infinite scroll)
+  let previousCount = 0;
   let stableRounds = 0;
 
   for (let scroll = 0; scroll < 50; scroll++) {
@@ -284,221 +139,329 @@ async function scrapeViaNetworkInterception(
     );
     await sleep(1500);
 
-    const currentCount = items.size;
-    if (currentCount === lastItemCount) {
+    // Count product links on page
+    const count = await page.evaluate(() => {
+      const links = document.querySelectorAll('a[href*="/items/"]');
+      return new Set(
+        Array.from(links)
+          .map((a) => (a as HTMLAnchorElement).href)
+          .filter((h) => h.match(/\/items\/\d+/))
+      ).size;
+    });
+
+    if (count === previousCount) {
       stableRounds++;
-      if (stableRounds >= 5) {
-        console.log(
-          `  No new items after ${stableRounds} scrolls, done scrolling.`
-        );
+      if (stableRounds >= 4) {
+        console.log(`  Loaded all items (${count} found)`);
         break;
       }
     } else {
       stableRounds = 0;
-      console.log(`  Items so far: ${currentCount}`);
+      console.log(`  Scrolling... ${count} items found`);
     }
-    lastItemCount = currentCount;
+    previousCount = count;
   }
 
-  // Also try clicking "load more" / pagination buttons
-  try {
-    const loadMoreBtn = page.locator(
-      'button:has-text("Načíst další"), button:has-text("Zobrazit více"), [data-testid*="load-more"], [data-testid*="show-more"]'
-    );
-    let clickCount = 0;
-    while (await loadMoreBtn.first().isVisible({ timeout: 2000 })) {
-      await loadMoreBtn.first().click();
-      clickCount++;
-      await sleep(2000);
-      console.log(`  Clicked "load more" (${clickCount}x, items: ${items.size})`);
-      if (clickCount > 20) break; // Safety limit
-    }
-  } catch {
-    // No load more button
-  }
-
-  // Save raw API responses for debugging
-  fs.writeFileSync(RAW_API_FILE, JSON.stringify(rawResponses, null, 2));
-  console.log(`  Saved ${rawResponses.length} raw API responses`);
-
-  // Take a screenshot for debugging
-  await page
-    .screenshot({
-      path: path.join(OUTPUT_DIR, "profile-screenshot.png"),
-      fullPage: false,
-    })
-    .catch(() => {});
-
-  await page.close();
-  return items;
-}
-
-/**
- * Strategy 2: If network interception didn't capture items,
- * try fetching the API directly using cookies from the browser session.
- */
-async function scrapeViaDirectApi(
-  context: BrowserContext
-): Promise<Map<string, Partial<VintedProduct>>> {
-  const items = new Map<string, Partial<VintedProduct>>();
-
-  // Get cookies from the browser context
-  const cookies = await context.cookies("https://www.vinted.cz");
-  const cookieHeader = cookies.map((c) => `${c.name}=${c.value}`).join("; ");
-
-  console.log(
-    `  Using ${cookies.length} cookies for direct API access`
-  );
-
-  // Try paginated API requests
-  let page = 1;
-  const perPage = 96; // Vinted's max per page
-
-  while (page <= 20) {
-    // Safety limit
-    const apiUrl = `https://www.vinted.cz/api/v2/users/${MEMBER_ID}/items?page=${page}&per_page=${perPage}&order=relevance`;
-
-    try {
-      const response = await fetch(apiUrl, {
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-          Accept: "application/json",
-          Cookie: cookieHeader,
-          Referer: MEMBER_URL,
-          "X-Requested-With": "XMLHttpRequest",
-        },
-      });
-
-      if (response.status === 403) {
-        console.log(`  API returned 403 (Datadome) on page ${page}`);
-        break;
+  // Extract unique product URLs
+  const urls = await page.evaluate(() => {
+    const links = document.querySelectorAll('a[href*="/items/"]');
+    const uniqueUrls = new Set<string>();
+    links.forEach((link) => {
+      const href = (link as HTMLAnchorElement).href;
+      const match = href.match(/(https:\/\/www\.vinted\.cz\/items\/\d+)/);
+      if (match) {
+        uniqueUrls.add(match[1]);
       }
-
-      if (!response.ok) {
-        console.log(`  API returned ${response.status} on page ${page}`);
-        break;
-      }
-
-      const json = await response.json();
-      const itemsList =
-        json.items || json.user_items || json.data?.items || [];
-
-      if (!Array.isArray(itemsList) || itemsList.length === 0) {
-        console.log(`  No more items on page ${page}`);
-        break;
-      }
-
-      for (const item of itemsList) {
-        const parsed = parseApiItem(item);
-        if (parsed?.vintedId) {
-          items.set(parsed.vintedId, parsed);
-        }
-      }
-
-      console.log(
-        `  Page ${page}: ${itemsList.length} items (total: ${items.size})`
-      );
-
-      if (itemsList.length < perPage) break; // Last page
-      page++;
-      await sleep(DELAY_MS);
-    } catch (e) {
-      console.error(`  API error on page ${page}: ${e}`);
-      break;
-    }
-  }
-
-  return items;
-}
-
-/**
- * Strategy 3: Scrape individual product detail pages for richer data.
- * Only for items we already know about (from strategies 1/2).
- */
-async function enrichWithDetailPages(
-  context: BrowserContext,
-  items: Map<string, Partial<VintedProduct>>
-): Promise<void> {
-  if (items.size === 0) return;
-
-  console.log(`\nEnriching ${items.size} items with detail page data...`);
-  const page = await context.newPage();
-
-  // Set up interception for detail API calls
-  page.on("response", async (response) => {
-    const url = response.url();
-    const match = url.match(/\/api\/v2\/items\/(\d+)/);
-    if (match && response.status() === 200) {
-      try {
-        const json = await response.json();
-        const item = json.item || json;
-        const parsed = parseApiItem(item);
-        if (parsed?.vintedId) {
-          const existing = items.get(parsed.vintedId) || {};
-          items.set(parsed.vintedId, {
-            ...existing,
-            ...parsed,
-            // Keep existing photos if detail page has fewer
-            photoUrls:
-              (parsed.photoUrls?.length || 0) >=
-              (existing.photoUrls?.length || 0)
-                ? parsed.photoUrls
-                : existing.photoUrls,
-          });
-        }
-      } catch {
-        // Skip
-      }
-    }
+    });
+    return Array.from(uniqueUrls);
   });
 
-  const itemEntries = Array.from(items.entries());
-  for (let i = 0; i < itemEntries.length; i++) {
-    const [id, item] = itemEntries[i];
+  console.log(`Found ${urls.length} unique product URLs`);
+  return urls;
+}
 
-    // Skip if we already have rich data (description + multiple photos)
+/**
+ * Step 2: Scrape a single product detail page.
+ * Uses both DOM scraping and API interception (whichever provides richer data).
+ */
+async function scrapeProductDetail(
+  page: Page,
+  url: string,
+  index: number,
+  total: number
+): Promise<VintedProduct | null> {
+  const vintedIdMatch = url.match(/\/items\/(\d+)/);
+  const vintedId = vintedIdMatch ? vintedIdMatch[1] : "";
+
+  console.log(`\n[${index}/${total}] ${url}`);
+
+  // Set up API interception for this page
+  let apiData: any = null;
+  const responseHandler = async (response: any) => {
+    const rUrl = response.url();
     if (
-      item.description &&
-      item.description.length > 10 &&
-      (item.photoUrls?.length || 0) >= 2
+      rUrl.includes(`/items/${vintedId}`) &&
+      !rUrl.includes("/items/" + vintedId + "/") &&
+      response.status() === 200
     ) {
-      continue;
+      try {
+        const json = await response.json();
+        apiData = json.item || json;
+      } catch {
+        // Not JSON
+      }
+    }
+  };
+  page.on("response", responseHandler);
+
+  try {
+    await page.goto(url, { waitUntil: "load", timeout: 20000 });
+  } catch {
+    console.log(`  Navigation timeout (continuing with partial data)`);
+  }
+  await sleep(2000);
+
+  // Extract data from the DOM — use string evaluation to avoid tsx __name injection
+  const domData = await page.evaluate(`(function() {
+    // Title — use reliable sources first: og:title, document.title, then h1/h2
+    var title = "";
+    // 1. og:title meta tag (most reliable — Vinted always sets this)
+    var ogTitle = document.querySelector('meta[property="og:title"]');
+    if (ogTitle) {
+      title = (ogTitle.getAttribute("content") || "").trim();
+      // Strip " | Vinted" suffix
+      title = title.replace(/\\s*\\|\\s*Vinted$/i, "").trim();
+    }
+    // 2. Page title (usually "Product Name | Vinted")
+    if (!title && document.title) {
+      var parts = document.title.split("|");
+      if (parts.length > 0) title = parts[0].trim();
+    }
+    // 3. itemprop="name"
+    if (!title) {
+      var nameEl = document.querySelector('[itemprop="name"]');
+      if (nameEl) title = (nameEl.textContent || "").trim();
+    }
+    // 4. Fallback to first short h1 that isn't navigation
+    if (!title) {
+      var h1s = document.querySelectorAll("h1");
+      for (var i = 0; i < h1s.length; i++) {
+        var t = (h1s[i].textContent || "").trim();
+        if (t.length > 2 && t.length < 200 && t.indexOf("Vinted") === -1 && t.indexOf("Hledat") === -1 && t.indexOf("šatník") === -1 && t.indexOf("Předměty") === -1) {
+          title = t;
+          break;
+        }
+      }
     }
 
-    const detailUrl = `https://www.vinted.cz/items/${id}`;
-    console.log(
-      `  [${i + 1}/${items.size}] Enriching: ${item.title || id}`
-    );
-
-    try {
-      await page.goto(detailUrl, {
-        waitUntil: "domcontentloaded",
-        timeout: 15000,
-      });
-      await sleep(1500); // Wait for API response to be captured
-    } catch {
-      console.log(`    Timeout on detail page (data may still be captured)`);
+    // Description
+    var description = "";
+    var descEls = document.querySelectorAll('[data-testid="item-description"], [itemprop="description"]');
+    for (var i = 0; i < descEls.length; i++) {
+      var t = (descEls[i].textContent || "").trim();
+      if (t.length > 5) { description = t; break; }
     }
 
-    if (i < itemEntries.length - 1) {
-      await sleep(DELAY_MS);
+    // Price
+    var price = 0;
+    var priceEls = document.querySelectorAll('[data-testid="item-price"], [itemprop="price"], [class*="price"], [class*="Price"]');
+    for (var i = 0; i < priceEls.length; i++) {
+      var t = (priceEls[i].textContent || "").trim();
+      var m = t.match(/(\\d[\\d\\s,.]*)\\s*(?:Kč|CZK|€)/);
+      if (m) {
+        price = parseFloat(m[1].replace(/\\s/g, "").replace(",", ".")) || 0;
+        if (price > 0) break;
+      }
+    }
+
+    // Details from body text
+    var allText = document.body.innerText;
+    var brand = "", size = "", condition = "", material = "";
+    var color = [];
+
+    var brandMatch = allText.match(/Značka\\s*\\n\\s*(.+)/);
+    if (brandMatch) brand = brandMatch[1].trim();
+    var sizeMatch = allText.match(/Velikost\\s*\\n\\s*(.+)/);
+    if (sizeMatch) size = sizeMatch[1].trim();
+    var condMatch = allText.match(/Stav\\s*\\n\\s*(.+)/);
+    if (condMatch) condition = condMatch[1].trim();
+    var matMatch = allText.match(/Materiál\\s*\\n\\s*(.+)/);
+    if (matMatch) material = matMatch[1].trim();
+    var colorMatch = allText.match(/Barva\\s*\\n\\s*(.+)/);
+    if (colorMatch) color = colorMatch[1].trim().split(",").map(function(c) { return c.trim(); });
+
+    // Category from breadcrumbs
+    var category = "";
+    var breadcrumbs = document.querySelectorAll('[data-testid*="breadcrumb"] a, nav[aria-label*="breadcrumb"] a, [class*="Breadcrumb"] a');
+    if (breadcrumbs.length > 1) {
+      var parts = [];
+      for (var i = 1; i < breadcrumbs.length; i++) {
+        var txt = (breadcrumbs[i].textContent || "").trim();
+        if (txt) parts.push(txt);
+      }
+      category = parts.join(" > ");
+    }
+
+    // Photo URLs
+    var photoUrls = [];
+    var seenHashes = {};
+    var allImgs = document.querySelectorAll("img");
+    for (var i = 0; i < allImgs.length; i++) {
+      var src = allImgs[i].src || "";
+      if (src.indexOf("vinted.net") !== -1 &&
+          src.indexOf("logo") === -1 &&
+          src.indexOf("avatar") === -1 &&
+          src.indexOf("badge") === -1 &&
+          src.indexOf("app-store") === -1 &&
+          src.indexOf("google-play") === -1 &&
+          src.indexOf("20x20") === -1 &&
+          src.indexOf("50x50") === -1 &&
+          src.indexOf("100x100") === -1 &&
+          src.indexOf("assets") === -1) {
+        var hashMatch = src.match(/\\/t\\/([^\\/]+)\\//);
+        var hash = hashMatch ? hashMatch[1] : src;
+        if (!seenHashes[hash]) {
+          seenHashes[hash] = true;
+          photoUrls.push(src);
+        }
+      }
+    }
+
+    // Views / favorites
+    var views = 0, favorites = 0;
+    var statsMatch = allText.match(/(\\d+)\\s*(?:zobrazení|zhlédnutí)/i);
+    if (statsMatch) views = parseInt(statsMatch[1]);
+    var favsMatch = allText.match(/(\\d+)\\s*(?:oblíben|to se líbí)/i);
+    if (favsMatch) favorites = parseInt(favsMatch[1]);
+
+    // Upload date
+    var uploadedAt = "";
+    var dateMatch = allText.match(/(?:Přidáno|Nahráno)\\s*(?:dne\\s*)?(\\d{1,2}[\\.\\/ ]\\s*\\d{1,2}[\\.\\/ ]\\s*\\d{2,4}|\\d+\\s*(?:minut|hodin|dní|dnů|dny|den|měsíc|rok)\\s*(?:zpět|nazpět))/i);
+    if (dateMatch) uploadedAt = dateMatch[1].trim();
+
+    // JSON-LD
+    var jsonLd = null;
+    var ldScript = document.querySelector('script[type="application/ld+json"]');
+    if (ldScript) {
+      try { jsonLd = JSON.parse(ldScript.textContent || "{}"); } catch(e) {}
+    }
+
+    return {
+      title: title,
+      description: description,
+      price: price,
+      brand: brand,
+      size: size,
+      condition: condition,
+      color: color,
+      category: category,
+      material: material,
+      views: views,
+      favorites: favorites,
+      uploadedAt: uploadedAt,
+      photoUrls: photoUrls,
+      jsonLd: jsonLd
+    };
+  })()`
+  ) as any;
+
+  // Remove the response handler
+  page.off("response", responseHandler);
+
+  // Merge DOM data with API data (if captured)
+  const title = apiData?.title || domData.title || "";
+  const description =
+    apiData?.description || domData.description || "";
+
+  // Photo URLs — prefer API data (has all photos), fallback to DOM
+  let photoUrls: string[] = [];
+  if (apiData?.photos && Array.isArray(apiData.photos)) {
+    for (const photo of apiData.photos) {
+      const pUrl =
+        photo.full_size_url || photo.url || "";
+      if (pUrl) photoUrls.push(toFullResUrl(pUrl));
+    }
+  }
+  if (photoUrls.length === 0 && domData.photoUrls.length > 0) {
+    photoUrls = domData.photoUrls.map(toFullResUrl);
+  }
+
+  // Also try JSON-LD for additional data
+  const jsonLd = domData.jsonLd;
+  if (jsonLd) {
+    if (!title && jsonLd.name) domData.title = jsonLd.name;
+    if (!description && jsonLd.description)
+      domData.description = jsonLd.description;
+    if (jsonLd.offers?.price && !domData.price) {
+      domData.price = parseFloat(jsonLd.offers.price);
+    }
+    if (jsonLd.brand?.name && !domData.brand)
+      domData.brand = jsonLd.brand.name;
+    if (jsonLd.image && photoUrls.length === 0) {
+      const images = Array.isArray(jsonLd.image)
+        ? jsonLd.image
+        : [jsonLd.image];
+      photoUrls = images.map(toFullResUrl);
     }
   }
 
-  await page.close();
+  // Build the product
+  const product: VintedProduct = {
+    vintedId,
+    url,
+    title: title || domData.title,
+    description: description || domData.description,
+    price:
+      (apiData?.price?.amount
+        ? parseFloat(apiData.price.amount)
+        : null) ||
+      domData.price ||
+      (jsonLd?.offers?.price ? parseFloat(jsonLd.offers.price) : 0),
+    currency:
+      apiData?.price?.currency_code || domData.jsonLd?.offers?.priceCurrency || "CZK",
+    originalPrice: apiData?.original_price?.amount
+      ? parseFloat(apiData.original_price.amount)
+      : null,
+    brand:
+      apiData?.brand_dto?.title || apiData?.brand?.title || domData.brand,
+    size:
+      apiData?.size_title || apiData?.size?.title || domData.size,
+    condition:
+      apiData?.status || domData.condition,
+    color:
+      apiData?.color1
+        ? [apiData.color1, apiData.color2].filter(Boolean)
+        : domData.color,
+    category:
+      domData.category || apiData?.catalog_id?.toString() || "",
+    material:
+      apiData?.material?.title || domData.material,
+    measurements: "",
+    views: apiData?.view_count || domData.views,
+    favorites:
+      apiData?.favourite_count || apiData?.favorite_count || domData.favorites,
+    uploadedAt: apiData?.created_at_ts
+      ? new Date(apiData.created_at_ts * 1000).toISOString()
+      : domData.uploadedAt,
+    photos: [], // Will be filled after download
+    photoUrls,
+    status: apiData?.status || "active",
+  };
+
+  console.log(
+    `  "${product.title}" | ${product.price} ${product.currency} | ${product.brand} | ${product.size} | ${photoUrls.length} photos`
+  );
+
+  return product;
 }
 
 async function main() {
-  // Create output directories
   fs.mkdirSync(IMAGES_DIR, { recursive: true });
 
-  console.log("=== Vinted Profile Scraper (Network Interception) ===");
+  console.log("=== Vinted Profile Scraper ===");
   console.log(`Target: ${MEMBER_URL}`);
-  console.log(`Output: ${OUTPUT_DIR}`);
-  console.log();
+  console.log(`Output: ${OUTPUT_DIR}\n`);
 
-  // Launch browser
   const browser = await chromium.launch({
     headless: true,
     args: [
@@ -519,136 +482,117 @@ async function main() {
     },
   });
 
-  // Block unnecessary resources to speed up loading
-  await context.route(
-    /\.(woff2?|ttf|eot|svg|gif|mp4)(\?|$)/,
-    (route) => route.abort()
-  );
-  await context.route(
-    /google-analytics|gtag|facebook|sentry|datadome.*\.js/,
-    (route) => route.abort()
-  );
-
   try {
-    // Strategy 1: Network interception while browsing profile
-    console.log("--- Strategy 1: Network Interception ---");
-    const interceptedItems = await scrapeViaNetworkInterception(context);
-    console.log(`\nNetwork interception captured: ${interceptedItems.size} items`);
+    const page = await context.newPage();
 
-    // Strategy 2: Direct API if interception didn't get enough
-    let allItems = interceptedItems;
-    if (interceptedItems.size === 0) {
-      console.log("\n--- Strategy 2: Direct API Access ---");
-      const apiItems = await scrapeViaDirectApi(context);
-      console.log(`Direct API captured: ${apiItems.size} items`);
-      allItems = apiItems.size > interceptedItems.size ? apiItems : interceptedItems;
-    }
+    // Step 1: Collect product URLs from profile
+    const productUrls = await collectProductUrls(page);
 
-    if (allItems.size === 0) {
-      console.error(
-        "\nNo products found! Possible causes:"
+    if (productUrls.length === 0) {
+      console.error("\nNo product URLs found on the profile page!");
+      console.error("Taking full-page debug screenshot...");
+      await page.screenshot({
+        path: path.join(OUTPUT_DIR, "debug-full.png"),
+        fullPage: true,
+      });
+
+      // Dump page HTML for debugging
+      const html = await page.content();
+      fs.writeFileSync(
+        path.join(OUTPUT_DIR, "debug-page.html"),
+        html
       );
-      console.error("  - Datadome is blocking the browser");
-      console.error("  - The member has no active listings");
-      console.error("  - Vinted changed their API structure");
-      console.error(
-        "\nCheck the debug screenshot at: scripts/vinted-data/profile-screenshot.png"
-      );
-      console.error(
-        "Check raw API responses at: scripts/vinted-data/raw-api-responses.json"
-      );
-      await browser.close();
+      console.error("Debug files saved to scripts/vinted-data/");
       return;
     }
 
-    // Strategy 3: Enrich items that need more data
-    await enrichWithDetailPages(context, allItems);
-
-    // Download photos for all items
-    console.log(`\n--- Downloading Photos ---`);
-    const products: VintedProduct[] = [];
-
-    // Load existing progress for resume support
+    // Load existing progress for resume
+    const existingProducts: VintedProduct[] = [];
     const existingIds = new Set<string>();
     if (fs.existsSync(PRODUCTS_FILE)) {
       try {
-        const existing = JSON.parse(fs.readFileSync(PRODUCTS_FILE, "utf-8"));
+        const existing = JSON.parse(
+          fs.readFileSync(PRODUCTS_FILE, "utf-8")
+        );
         if (Array.isArray(existing)) {
           for (const p of existing) {
             if (p.vintedId && p.photos?.length > 0) {
+              existingProducts.push(p);
               existingIds.add(p.vintedId);
-              products.push(p);
             }
           }
-          console.log(`Resuming: ${existingIds.size} products already complete`);
+          if (existingIds.size > 0) {
+            console.log(`Resuming: ${existingIds.size} products already done`);
+          }
         }
       } catch {
-        // Corrupted — start fresh
+        // Start fresh
       }
     }
 
-    const entries = Array.from(allItems.entries());
-    for (let i = 0; i < entries.length; i++) {
-      const [id, itemData] = entries[i];
+    // Step 2: Scrape each product detail page
+    const products: VintedProduct[] = [...existingProducts];
+    let scraped = 0;
+    let failed = 0;
+
+    for (let i = 0; i < productUrls.length; i++) {
+      const pUrl = productUrls[i];
+      const idMatch = pUrl.match(/\/items\/(\d+)/);
+      const id = idMatch ? idMatch[1] : "";
 
       if (existingIds.has(id)) {
-        continue; // Already downloaded
+        console.log(`[${i + 1}/${productUrls.length}] Already done, skipping`);
+        continue;
       }
 
-      console.log(
-        `\n[${i + 1}/${entries.length}] "${itemData.title}" — ${itemData.photoUrls?.length || 0} photos`
+      const product = await scrapeProductDetail(
+        page,
+        pUrl,
+        i + 1,
+        productUrls.length
       );
 
-      // Download photos
-      const photos: string[] = [];
-      const productImagesDir = path.join(IMAGES_DIR, id);
-      fs.mkdirSync(productImagesDir, { recursive: true });
+      if (product) {
+        // Download photos
+        const productImagesDir = path.join(
+          IMAGES_DIR,
+          product.vintedId
+        );
+        fs.mkdirSync(productImagesDir, { recursive: true });
 
-      for (let j = 0; j < (itemData.photoUrls?.length || 0); j++) {
-        const photoUrl = itemData.photoUrls![j];
-        const ext = photoUrl.match(/\.(jpe?g|png|webp)/i)?.[1] || "webp";
-        const filename = `${j + 1}.${ext}`;
-        const filepath = path.join(productImagesDir, filename);
+        for (let j = 0; j < product.photoUrls.length; j++) {
+          const photoUrl = product.photoUrls[j];
+          const ext =
+            photoUrl.match(/\.(jpe?g|png|webp)/i)?.[1] || "webp";
+          const filename = `${j + 1}.${ext}`;
+          const filepath = path.join(productImagesDir, filename);
 
-        const success = await downloadImage(photoUrl, filepath);
-        if (success) {
-          photos.push(filepath);
-          process.stdout.write(
-            `  Photo ${j + 1}/${itemData.photoUrls!.length} ✓  \r`
-          );
+          const success = await downloadImage(photoUrl, filepath);
+          if (success) {
+            product.photos.push(filepath);
+          }
         }
+
+        console.log(
+          `  Downloaded ${product.photos.length}/${product.photoUrls.length} photos`
+        );
+
+        products.push(product);
+        scraped++;
+
+        // Save progress after each product
+        fs.writeFileSync(
+          PRODUCTS_FILE,
+          JSON.stringify(products, null, 2)
+        );
+      } else {
+        failed++;
       }
-      console.log(
-        `  Downloaded ${photos.length}/${itemData.photoUrls?.length || 0} photos`
-      );
 
-      const product: VintedProduct = {
-        vintedId: itemData.vintedId || id,
-        url: itemData.url || `https://www.vinted.cz/items/${id}`,
-        title: itemData.title || "",
-        description: itemData.description || "",
-        price: itemData.price || 0,
-        currency: itemData.currency || "CZK",
-        originalPrice: itemData.originalPrice || null,
-        brand: itemData.brand || "",
-        size: itemData.size || "",
-        condition: itemData.condition || "",
-        color: itemData.color || [],
-        category: itemData.category || "",
-        material: itemData.material || "",
-        measurements: itemData.measurements || "",
-        views: itemData.views || 0,
-        favorites: itemData.favorites || 0,
-        uploadedAt: itemData.uploadedAt || "",
-        photos,
-        photoUrls: itemData.photoUrls || [],
-        status: itemData.status || "active",
-      };
-
-      products.push(product);
-
-      // Save progress after each product
-      fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(products, null, 2));
+      // Rate limiting
+      if (i < productUrls.length - 1) {
+        await sleep(DELAY_MS);
+      }
     }
 
     // Final save
@@ -656,11 +600,15 @@ async function main() {
 
     console.log("\n=== SCRAPING COMPLETE ===");
     console.log(`Total products: ${products.length}`);
+    console.log(`Newly scraped: ${scraped}`);
+    console.log(`Failed: ${failed}`);
     console.log(
-      `Photos downloaded: ${products.reduce((sum, p) => sum + p.photos.length, 0)}`
+      `Photos downloaded: ${products.reduce(
+        (sum, p) => sum + p.photos.length,
+        0
+      )}`
     );
     console.log(`Output: ${PRODUCTS_FILE}`);
-    console.log(`Images: ${IMAGES_DIR}`);
   } finally {
     await browser.close();
   }

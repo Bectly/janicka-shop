@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getDb } from "@/lib/db";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30;
 import { ProductCard } from "@/components/shop/product-card";
 import { Search } from "lucide-react";
 import { rateLimitSearch } from "@/lib/rate-limit";

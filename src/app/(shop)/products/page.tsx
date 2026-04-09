@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { getDb } from "@/lib/db";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30; // Revalidate every 30s (was force-dynamic)
 import type { Prisma } from "@prisma/client";
 import { ProductCard } from "@/components/shop/product-card";
 import { ProductFilters } from "@/components/shop/product-filters";
@@ -208,7 +208,7 @@ export default async function ProductsPage({
         compareAt: true,
         category: { select: { slug: true } },
       },
-      take: 10000,
+      take: 2000, // Limit facet computation dataset (was 10000)
     }),
   ]);
 
@@ -252,7 +252,7 @@ export default async function ProductsPage({
       where,
       include: { category: { select: { name: true } } },
       orderBy,
-      take: 5000,
+      take: 2000, // Limit in-memory filtering (was 5000)
     });
     let filteredProducts = allProducts.filter((p) => {
       if (sizeFilter.length > 0) {

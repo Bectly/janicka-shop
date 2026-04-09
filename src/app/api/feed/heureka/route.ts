@@ -2,14 +2,12 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getImageUrls } from "@/lib/images";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600; // Revalidate every hour
 import {
   SHIPPING_PRICES,
   COD_SURCHARGE,
   CONDITION_LABELS,
 } from "@/lib/constants";
-
-export const revalidate = 3600; // Revalidate every hour
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://janicka-shop.vercel.app";

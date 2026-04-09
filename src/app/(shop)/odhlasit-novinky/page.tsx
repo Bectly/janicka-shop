@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
