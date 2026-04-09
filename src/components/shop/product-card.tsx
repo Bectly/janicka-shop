@@ -22,6 +22,8 @@ interface ProductCardProps {
   isNew?: boolean;
   isReserved?: boolean;
   lowestPrice30d?: number | null;
+  /** Pass true for above-the-fold cards (first 4) to preload with high priority — improves LCP */
+  priority?: boolean;
 }
 
 export function ProductCard({
@@ -39,6 +41,7 @@ export function ProductCard({
   isNew,
   isReserved,
   lowestPrice30d,
+  priority = false,
 }: ProductCardProps) {
   const hasDiscount = compareAt && compareAt > price;
   const discountPercent = hasDiscount
@@ -65,6 +68,7 @@ export function ProductCard({
               fill
               className="object-cover transition-all duration-500 group-hover:scale-105"
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              priority={priority}
             />
             {secondImage && (
               <Image

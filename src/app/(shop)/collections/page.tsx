@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getDb } from "@/lib/db";
 
 export const revalidate = 60;
@@ -67,7 +68,7 @@ export default async function CollectionsPage() {
 
       {collectionsWithCounts.length > 0 ? (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {collectionsWithCounts.map((collection) => (
+          {collectionsWithCounts.map((collection, i) => (
             <Link
               key={collection.id}
               href={`/collections/${collection.slug}`}
@@ -76,14 +77,13 @@ export default async function CollectionsPage() {
               {/* Image */}
               <div className="aspect-[16/9] overflow-hidden bg-muted">
                 {collection.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <Image
                     src={collection.image}
                     alt={collection.title}
                     width={640}
                     height={360}
                     className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    loading="lazy"
+                    priority={i < 3}
                   />
                 ) : (
                   <div className="flex size-full items-center justify-center">

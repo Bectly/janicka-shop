@@ -205,6 +205,7 @@ export async function ProductGrid({
               isNew={product.createdAt > sevenDaysAgo}
               isReserved={false}
               lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
+              priority={i < 4}
             />
           </div>
         ))}

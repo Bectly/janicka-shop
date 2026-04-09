@@ -10,6 +10,7 @@ import {
 } from "@/lib/constants";
 import { ArrowLeft } from "lucide-react";
 import { ReturnStatusSelect } from "./return-status-select";
+import { CreditNoteSection } from "./credit-note-section";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -46,9 +47,29 @@ export default async function AdminReturnDetailPage({ params }: Props) {
           total: true,
           paymentMethod: true,
           createdAt: true,
+          shippingStreet: true,
+          shippingCity: true,
+          shippingZip: true,
+          shippingCountry: true,
+          invoices: {
+            orderBy: { createdAt: "desc" as const },
+            take: 1,
+            select: { id: true },
+          },
         },
       },
       items: true,
+      creditNotes: {
+        orderBy: { createdAt: "desc" as const },
+        take: 1,
+        select: {
+          id: true,
+          number: true,
+          invoiceNumber: true,
+          issuedAt: true,
+          totalAmount: true,
+        },
+      },
     },
   });
 
@@ -209,6 +230,14 @@ export default async function AdminReturnDetailPage({ params }: Props) {
               </div>
             </div>
           </div>
+
+          {/* Credit note */}
+          <CreditNoteSection
+            returnId={ret.id}
+            returnStatus={ret.status}
+            existingCreditNote={ret.creditNotes[0] ?? null}
+            hasInvoice={ret.order.invoices.length > 0}
+          />
 
           {/* Customer info */}
           <div className="rounded-xl border bg-card p-5 shadow-sm">

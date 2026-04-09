@@ -1,0 +1,9 @@
+{
+  "pause": {},
+  "force_next": null,
+  "interval_override": {},
+  "last_bolt_commit_cycle": 0,
+  "notes": "Lead control file — Lead writes here, orchestrator reads every tick.",
+  "updated_by": "init",
+  "updated_at": "2026-04-09"
+}

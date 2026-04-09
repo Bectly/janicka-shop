@@ -143,7 +143,7 @@ async function NewProductsSection() {
         </Link>
       </div>
       <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
-        {newProducts.map((product) => (
+        {newProducts.map((product, i) => (
           <ProductCard
             key={product.id}
             id={product.id}
@@ -160,6 +160,7 @@ async function NewProductsSection() {
             isNew
             isReserved={false}
             lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
+            priority={i < 4}
           />
         ))}
       </div>
@@ -199,7 +200,7 @@ async function FeaturedProductsSection() {
         </Link>
       </div>
       <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
-        {featuredProducts.map((product) => (
+        {featuredProducts.map((product, i) => (
           <ProductCard
             key={product.id}
             id={product.id}
@@ -215,6 +216,7 @@ async function FeaturedProductsSection() {
             colors={product.colors}
             isReserved={false}
             lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
+            priority={i < 4}
           />
         ))}
       </div>
