@@ -9,6 +9,7 @@ import { CategoryCard } from "@/components/shop/category-card";
 import { NewsletterForm } from "@/components/shop/newsletter-form";
 import { TrustBadges } from "@/components/shop/trust-badges";
 import { VintedComparisonSection } from "@/components/shop/vinted-comparison";
+import { MothersDayBanner } from "@/components/shop/mothers-day-banner";
 import { RecentlySoldFeed } from "@/components/shop/recently-sold-feed";
 import { RecentlyViewedSection } from "@/components/shop/recently-viewed";
 import { Button } from "@/components/ui/button";
@@ -585,6 +586,11 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Mother's Day banner — date-gated May 1–10, 2026 */}
+      <Suspense fallback={null}>
+        <MothersDayBanner />
+      </Suspense>
 
       {/* Categories — streams independently */}
       <Suspense fallback={
