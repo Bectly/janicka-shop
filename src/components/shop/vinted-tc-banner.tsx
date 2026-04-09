@@ -44,7 +44,7 @@ export function VintedTcBanner() {
               U&nbsp;Janičky? Tvoje fotky jsou tvoje. Vždy.
             </span>{" "}
             <Link
-              href="/privacy"
+              href="/soukromi"
               className="inline-flex items-center gap-0.5 font-semibold text-red-700 underline underline-offset-2 transition-colors hover:text-red-900"
             >
               Proč jsme jiní&nbsp;→

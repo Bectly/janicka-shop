@@ -21,6 +21,7 @@ const footerLinks = {
       { name: "Doprava a platba", href: "/shipping" },
       { name: "Obchodní podmínky", href: "/terms" },
       { name: "Ochrana osobních údajů", href: "/privacy" },
+      { name: "Tvoje soukromí", href: "/soukromi" },
     ],
   },
   kontakt: {
