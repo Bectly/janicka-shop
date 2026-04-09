@@ -1,11 +1,12 @@
 {
   "pause": {
-    "trace": "until_next_bolt_commit"
+    "trace": "until_next_bolt_commit",
+    "bolt": "until_lead_directive"
   },
   "force_next": "bolt",
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2556,
+  "last_bolt_commit_cycle": 2557,
   "updated_at_cycle": 2551,
   "dev_focus": "BOLT: Fix DevChat widget auth — it's broken in production because unauthenticated users see the full chat form but all API calls return 401 silently. Root cause analyzed by Lead C2551. FIX in src/components/dev-chat/dev-chat-widget.tsx: (1) Import useSession from 'next-auth/react'. (2) At top of DevChatWidget(), add: const { status: authStatus } = useSession(). (3) Before the return JSX, if authStatus === 'unauthenticated': render ONLY the floating bubble button (keep same button styling), but when bubble is clicked show the panel with header + a centered 'Přihlas se pro komunikaci s týmem' message + a login button linking to /api/auth/signin. No textarea, no send button. (4) If authStatus === 'loading': render the bubble only, panel shows spinner. (5) If authStatus === 'authenticated': current code unchanged (already works correctly for auth users). Also in fetchMessages: when res.status === 401, don't silently ignore — set a state flag `setAuthRequired(true)` so the UI can react. Add `authRequired` state (boolean, default false). In GET call, also add that check. Run npm run build when done. Trace unpaused and will verify after commit.",
   "notes": "C2551 Lead — Delivery deadline 100% DONE (verified in code: page.tsx line 251 + email.ts line 40,194). Marked TODO done. Bolt was looping with same commit message — stale dev_focus. New focus: DevChat widget auth fix. Trace unpaused to verify after Bolt commits.",
