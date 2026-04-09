@@ -1,11 +1,15 @@
 {
   "pause": {
-    "trace": "until_next_bolt_commit"
+    "trace": "until_lead_directive",
+    "seer": "until_lead_directive",
+    "sculptor": "until_lead_directive",
+    "balancer": "until_lead_directive",
+    "bolt": "until_lead_directive"
   },
   "force_next": "guard",
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2658,
+  "last_bolt_commit_cycle": 2659,
   "updated_at_cycle": 2658,
   "dev_focus": "C2658 DIRECTIVE — GUARD: Run the comprehensive security audit (open since Cycle #19, launch-blocking). Check ALL mutation endpoints (Server Actions + API routes) for: (1) CSRF protection — verify SameSite cookies, Origin header checks, (2) Input sanitization — grep for dangerouslySetInnerHTML, raw SQL, unsanitized user input in emails/HTML, (3) Session security — NextAuth config: httpOnly, secure, sameSite cookies, session expiry, (4) Rate limiting — verify auth endpoints (/api/auth/*), checkout, email capture are rate-limited, (5) Content-Security-Policy headers — frame-ancestors, script-src, (6) API auth — verify all admin routes check session, all cron routes check CRON_SECRET, (7) XSS vectors — product names/descriptions rendered in emails and HTML. Report findings with severity (critical/high/medium/low). When done, set next_suggested: lead.",
   "qa_focus": "C2658 DIRECTIVE — GUARD: Security audit is THE priority. See dev_focus for full scope. TRACE: Paused until Bolt commits. After Guard reports, if security findings need fixes, Bolt addresses them. If Guard finds no critical issues, Bolt builds referral backend: store credit Prisma model (StoreCredit: userId, amount, reason, referralOrderId, usedAt), referral tracking (track ref= URL param from existing ReferralCard component at components/shop/referral-card.tsx), apply credit at checkout. The ReferralCard UI already works — needs backend to make 150/100 CZK bilateral real.",
