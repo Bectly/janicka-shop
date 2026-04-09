@@ -1,7 +1,7 @@
 import { getDb } from "@/lib/db";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 
-export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import { CategoryForm } from "../../category-form";
 
@@ -14,6 +14,7 @@ export default async function EditCategoryPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  await connection();
   const { id } = await params;
   const db = await getDb();
 

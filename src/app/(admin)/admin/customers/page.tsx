@@ -1,7 +1,7 @@
 import { getDb } from "@/lib/db";
 import { formatPrice, formatDate } from "@/lib/format";
+import { connection } from "next/server";
 
-export const dynamic = "force-dynamic";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from "@/lib/constants";
 import { Users, Mail, Phone, MapPin } from "lucide-react";
 import Link from "next/link";
@@ -12,6 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminCustomersPage() {
+  await connection();
   const db = await getDb();
   const customers = await db.customer.findMany({
     orderBy: { createdAt: "desc" },

@@ -1,5 +1,5 @@
-export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { OrderLookupForm } from "./lookup-form";
 
 export const metadata: Metadata = {
@@ -7,7 +7,8 @@ export const metadata: Metadata = {
   description: "Zadejte číslo objednávky a e-mail pro zobrazení stavu vaší objednávky.",
 };
 
-export default function OrderLookupPage() {
+export default async function OrderLookupPage() {
+  await connection();
   return (
     <div className="mx-auto max-w-md px-4 py-16 sm:px-6">
       <h1 className="text-center font-heading text-2xl font-bold text-foreground">

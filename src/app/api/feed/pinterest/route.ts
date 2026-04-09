@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { getDb } from "@/lib/db";
 import { getImageUrls, parseJsonStringArray } from "@/lib/images";
 import { validateFeedToken } from "@/lib/feed-auth";
@@ -8,7 +8,6 @@ import {
   CONDITION_LABELS,
 } from "@/lib/constants";
 
-export const dynamic = "force-dynamic";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://janicka-shop.vercel.app";
@@ -79,6 +78,7 @@ function escapeTsv(value: string): string {
  * Docs: https://help.pinterest.com/en/business/article/data-source-ingestion
  */
 export async function GET(req: NextRequest) {
+  await connection();
   const tokenError = validateFeedToken(req);
   if (tokenError) return tokenError;
 

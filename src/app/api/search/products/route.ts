@@ -1,8 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextResponse, connection } from "next/server";
 import { getDb } from "@/lib/db";
 import { getImageUrls } from "@/lib/images";
 
-export const dynamic = "force-dynamic";
 
 /**
  * Lightweight product index for client-side MiniSearch.
@@ -11,6 +10,7 @@ export const dynamic = "force-dynamic";
  * Cached via Next.js fetch cache + CDN for 60s.
  */
 export async function GET() {
+  await connection();
   const db = await getDb();
 
   const products = await db.product.findMany({

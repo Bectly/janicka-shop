@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getDb } from "@/lib/db";
+import { connection } from "next/server";
 
-export const dynamic = "force-dynamic";
 import { QuickAddForm } from "./quick-add-form";
 import { quickCreateProduct } from "../actions";
 import { ArrowLeft } from "lucide-react";
@@ -12,6 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function QuickAddPage() {
+  await connection();
   const db = await getDb();
   const categories = await db.category.findMany({
     orderBy: { sortOrder: "asc" },

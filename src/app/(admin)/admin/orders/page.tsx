@@ -1,8 +1,8 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { getDb } from "@/lib/db";
+import { connection } from "next/server";
 
-export const dynamic = "force-dynamic";
 import { formatPrice, formatDate } from "@/lib/format";
 import {
   ORDER_STATUS_LABELS,
@@ -24,6 +24,7 @@ export default async function AdminOrdersPage({
 }: {
   searchParams: Promise<{ status?: string; q?: string }>;
 }) {
+  await connection();
   const db = await getDb();
   const params = await searchParams;
   const query = params.q?.trim() ?? "";

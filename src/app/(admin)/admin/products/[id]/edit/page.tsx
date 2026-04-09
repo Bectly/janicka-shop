@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
+import { connection } from "next/server";
 
-export const dynamic = "force-dynamic";
 import { ProductForm } from "@/components/admin/product-form";
 import { updateProduct } from "../../actions";
 import { ArrowLeft } from "lucide-react";
@@ -23,6 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function EditProductPage({ params }: Props) {
+  await connection();
   const db = await getDb();
   const { id } = await params;
 

@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getDb } from "@/lib/db";
+import { connection } from "next/server";
 
-export const dynamic = "force-dynamic";
 import { formatPrice, formatDate } from "@/lib/format";
 import {
   ORDER_STATUS_LABELS,
@@ -43,6 +43,7 @@ export default async function CustomerDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  await connection();
   const { id } = await params;
   const db = await getDb();
 

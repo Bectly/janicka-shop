@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getDb } from "@/lib/db";
+import { connection } from "next/server";
 import { formatPrice, formatDate } from "@/lib/format";
 import {
   RETURN_STATUS_LABELS,
@@ -8,7 +9,6 @@ import {
 } from "@/lib/constants";
 import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Vratky",
@@ -19,6 +19,7 @@ export default async function AdminReturnsPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
+  await connection();
   const db = await getDb();
   const params = await searchParams;
 

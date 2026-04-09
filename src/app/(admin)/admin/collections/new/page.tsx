@@ -1,6 +1,6 @@
 import { getDb } from "@/lib/db";
+import { connection } from "next/server";
 
-export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import { CollectionForm } from "../collection-form";
 
@@ -9,6 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default async function NewCollectionPage() {
+  await connection();
   const db = await getDb();
   const products = await db.product.findMany({
     where: { active: true, sold: false },

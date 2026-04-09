@@ -1,5 +1,5 @@
-export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { getShopSettings } from "./actions";
 import { SettingsForm } from "./settings-form";
 
@@ -8,6 +8,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminSettingsPage() {
+  await connection();
   const settings = await getShopSettings();
 
   return (

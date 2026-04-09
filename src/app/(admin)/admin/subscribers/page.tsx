@@ -1,7 +1,7 @@
 import { getDb } from "@/lib/db";
 import { formatDate } from "@/lib/format";
+import { connection } from "next/server";
 
-export const dynamic = "force-dynamic";
 import { Mail } from "lucide-react";
 import type { Metadata } from "next";
 import { SubscriberToggle } from "./subscriber-toggle";
@@ -21,6 +21,7 @@ function safeJsonParseArray(json: string): string[] {
 }
 
 export default async function AdminSubscribersPage() {
+  await connection();
   const db = await getDb();
   const subscribers = await db.newsletterSubscriber.findMany({
     orderBy: { createdAt: "desc" },

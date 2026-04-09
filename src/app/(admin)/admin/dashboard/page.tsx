@@ -1,7 +1,7 @@
 import { getDb } from "@/lib/db";
 import { formatPrice, formatDate } from "@/lib/format";
+import { connection } from "next/server";
 
-export const dynamic = "force-dynamic";
 import {
   ORDER_STATUS_LABELS,
   ORDER_STATUS_COLORS,
@@ -52,6 +52,7 @@ export default async function AdminDashboardPage({
 }: {
   searchParams: Promise<{ period?: string }>;
 }) {
+  await connection();
   const db = await getDb();
   const params = await searchParams;
   const period = (["today", "7d", "30d", "all"].includes(params.period ?? "")

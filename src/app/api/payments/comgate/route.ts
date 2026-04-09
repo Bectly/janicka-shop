@@ -1,7 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { getDb } from "@/lib/db";
 
-export const dynamic = "force-dynamic";
 import { getComgatePaymentStatus } from "@/lib/payments/comgate";
 import { ComgateError } from "@/lib/payments/types";
 import { revalidatePath } from "next/cache";
@@ -14,6 +13,7 @@ import { logOrderToHeureka } from "@/lib/heureka";
  * CRITICAL: Never trust webhook payload alone — always verify via status API call.
  */
 export async function POST(request: NextRequest) {
+  await connection();
   let transId: string | null = null;
 
   try {

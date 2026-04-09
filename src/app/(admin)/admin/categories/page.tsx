@@ -1,7 +1,7 @@
 import { getDb } from "@/lib/db";
 import Link from "next/link";
+import { connection } from "next/server";
 
-export const dynamic = "force-dynamic";
 import { Plus } from "lucide-react";
 import type { Metadata } from "next";
 import { CategoryRow } from "./category-row";
@@ -11,6 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminCategoriesPage() {
+  await connection();
   const db = await getDb();
   const categories = await db.category.findMany({
     orderBy: { sortOrder: "asc" },

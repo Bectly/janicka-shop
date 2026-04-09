@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { connection } from "next/server";
 import Link from "next/link";
 import Image from "next/image";
 import { getDb } from "@/lib/db";
@@ -545,7 +546,8 @@ function SectionSkeleton({ title, subtitle }: { title: string; subtitle: string 
 
 /* ---------- Main page ---------- */
 
-export default function HomePage() {
+export default async function HomePage() {
+  await connection();
   return (
     <>
       {/* JSON-LD structured data — streamed, non-blocking */}

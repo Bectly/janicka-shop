@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { cacheLife, cacheTag } from "next/cache";
+import { connection } from "next/server";
 import { formatPrice } from "@/lib/format";
 import { CONDITION_LABELS, CONDITION_COLORS } from "@/lib/constants";
 import { ProductCard } from "@/components/shop/product-card";
@@ -70,23 +71,6 @@ async function getProduct(slug: string) {
   });
 }
 
-/** Pre-generate the 50 most recent product pages at build time.
- *  ISR (revalidate=3600) handles the rest on-demand — avoids SQLite lock contention
- *  when Next.js build uses 15 parallel workers with 350+ products. */
-export async function generateStaticParams() {
-  try {
-    const db = await getDb();
-    const products = await db.product.findMany({
-      where: { active: true },
-      select: { slug: true },
-      orderBy: { createdAt: "desc" },
-      take: 50,
-    });
-    return products.map((p) => ({ slug: p.slug }));
-  } catch {
-    return [];
-  }
-}
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -155,6 +139,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ProductDetailPage({ params }: Props) {
+  await connection();
   const { slug } = await params;
 
   const product = await getProduct(slug);

@@ -1,7 +1,7 @@
 import { getDb } from "@/lib/db";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 
-export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import { CollectionForm } from "../../collection-form";
 
@@ -14,6 +14,7 @@ interface Props {
 }
 
 export default async function EditCollectionPage({ params }: Props) {
+  await connection();
   const { id } = await params;
   const db = await getDb();
 

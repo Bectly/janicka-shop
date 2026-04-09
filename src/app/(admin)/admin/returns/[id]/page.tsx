@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
+import { connection } from "next/server";
 import { formatPrice, formatDate } from "@/lib/format";
 import {
   RETURN_STATUS_LABELS,
@@ -13,7 +14,6 @@ import { ReturnStatusSelect } from "./return-status-select";
 import { CreditNoteSection } from "./credit-note-section";
 import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -32,6 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function AdminReturnDetailPage({ params }: Props) {
+  await connection();
   const db = await getDb();
   const { id } = await params;
 

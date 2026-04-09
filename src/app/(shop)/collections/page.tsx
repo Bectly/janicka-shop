@@ -1,8 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { getDb } from "@/lib/db";
+import { connection } from "next/server";
 
-export const revalidate = 60;
 import { Layers } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -17,6 +17,7 @@ export const metadata: Metadata = {
 };
 
 export default async function CollectionsPage() {
+  await connection();
   const db = await getDb();
   const now = new Date();
 

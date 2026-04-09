@@ -1,8 +1,8 @@
+import { connection } from "next/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { getDb } from "@/lib/db";
 
-export const dynamic = "force-dynamic";
 import { getComgatePaymentStatus } from "@/lib/payments/comgate";
 import { sendPaymentConfirmedEmail } from "@/lib/email";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ interface Props {
 }
 
 export default async function PaymentReturnPage({ searchParams }: Props) {
+  await connection();
   const { refId, token } = await searchParams;
 
   if (!refId) notFound();

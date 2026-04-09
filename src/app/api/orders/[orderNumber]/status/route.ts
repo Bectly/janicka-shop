@@ -1,7 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { getDb } from "@/lib/db";
 
-export const dynamic = "force-dynamic";
 
 /**
  * GET /api/orders/[orderNumber]/status?token=...
@@ -14,6 +13,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ orderNumber: string }> },
 ) {
+  await connection();
   const { orderNumber } = await params;
   const token = request.nextUrl.searchParams.get("token");
 

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { getDb } from "@/lib/db";
 import { getImageUrls, parseJsonStringArray } from "@/lib/images";
 import { validateFeedToken } from "@/lib/feed-auth";
@@ -8,7 +8,6 @@ import {
   CONDITION_LABELS,
 } from "@/lib/constants";
 
-export const dynamic = "force-dynamic";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://janicka-shop.vercel.app";
@@ -58,6 +57,7 @@ function escapeXml(str: string): string {
  * Spec: https://support.google.com/merchants/answer/7052112
  */
 export async function GET(req: NextRequest) {
+  await connection();
   const tokenError = validateFeedToken(req);
   if (tokenError) return tokenError;
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Image from "next/image";
 
 const ALL_LOGOS = [
@@ -63,7 +63,9 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 export default function PickLogo() {
-  const [remaining, setRemaining] = useState(() => shuffle(ALL_LOGOS));
+  const [remaining, setRemaining] = useState(ALL_LOGOS);
+  const [shuffled, setShuffled] = useState(false);
+  useEffect(() => { if (!shuffled) { setRemaining(shuffle(ALL_LOGOS)); setShuffled(true); } }, [shuffled]);
   const [nextRound, setNextRound] = useState<typeof ALL_LOGOS>([]);
   const [round, setRound] = useState(1);
   const [matchIndex, setMatchIndex] = useState(0);

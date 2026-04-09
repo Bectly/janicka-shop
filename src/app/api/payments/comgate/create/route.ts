@@ -1,10 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { z } from "zod";
 import { getDb } from "@/lib/db";
 import { createComgatePayment } from "@/lib/payments/comgate";
 import { ComgateError } from "@/lib/payments/types";
 
-export const dynamic = "force-dynamic";
 
 /**
  * POST /api/payments/comgate/create
@@ -32,6 +31,7 @@ const COMGATE_METHOD_CODES: Record<string, string> = {
 };
 
 export async function POST(req: NextRequest) {
+  await connection();
   let body: unknown;
   try {
     body = await req.json();

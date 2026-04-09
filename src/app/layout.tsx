@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Suspense } from "react";
 import { RouteAnnouncer } from "@/components/route-announcer";
 import { AnalyticsProvider } from "@/components/analytics-provider";
 import "./globals.css";
@@ -60,8 +61,12 @@ export default function RootLayout({
         >
           Přejít na obsah
         </a>
-        <RouteAnnouncer />
-        <AnalyticsProvider />
+        <Suspense>
+          <RouteAnnouncer />
+        </Suspense>
+        <Suspense>
+          <AnalyticsProvider />
+        </Suspense>
         {children}
       </body>
     </html>

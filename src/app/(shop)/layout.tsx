@@ -1,5 +1,4 @@
-export const revalidate = 3600; // 1h — layout (header/footer) rarely changes
-
+import { Suspense } from "react";
 import { Header } from "@/components/shop/header";
 import { Footer } from "@/components/shop/footer";
 import { CookieConsentBanner } from "@/components/shop/cookie-consent";
@@ -19,10 +18,14 @@ export default function ShopLayout({
       <AnnouncementBar />
       <Header />
       <main id="main-content" className="flex-1">{children}</main>
-      <Footer />
+      <Suspense>
+        <Footer />
+      </Suspense>
       <BackToTop />
       <CookieConsentBanner />
-      <DevChatWidget />
+      <Suspense>
+        <DevChatWidget />
+      </Suspense>
     </>
   );
 }

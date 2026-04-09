@@ -1,8 +1,8 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { getDb } from "@/lib/db";
+import { connection } from "next/server";
 
-export const dynamic = "force-dynamic";
 import { Plus, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductSearch } from "@/components/admin/product-search";
@@ -68,6 +68,7 @@ export default async function AdminProductsPage({
     ];
   }
 
+  await connection();
   const db = await getDb();
 
   const [totalCount, products, categories] = await Promise.all([

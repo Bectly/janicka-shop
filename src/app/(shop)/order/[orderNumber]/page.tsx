@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { getDb } from "@/lib/db";
 
-export const dynamic = "force-dynamic";
 import { formatPrice } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock, ArrowRight, MapPin, Truck, CalendarClock } from "lucide-react";
@@ -38,6 +38,7 @@ const SHIPPING_METHOD_LABELS: Record<string, string> = {
 };
 
 export default async function OrderConfirmationPage({ params, searchParams }: Props) {
+  await connection();
   const { orderNumber } = await params;
   const { token } = await searchParams;
 

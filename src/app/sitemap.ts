@@ -1,7 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getDb } from "@/lib/db";
 
-export const revalidate = 600; // 10 min cache for sitemap
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://janicka-shop.vercel.app";

@@ -2,8 +2,8 @@ import { cache } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getDb } from "@/lib/db";
+import { connection } from "next/server";
 
-export const revalidate = 3600; // 1h — collection pages are relatively static
 import { ProductCard } from "@/components/shop/product-card";
 import { getLowestPrices30d } from "@/lib/price-history";
 import { buildItemListSchema, buildBreadcrumbSchema, jsonLdString } from "@/lib/structured-data";
@@ -12,9 +12,8 @@ import type { Metadata } from "next";
 const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://janicka-shop.vercel.app";
 
-const getCollection = cache(async (slug: string) => {
+const getCollection = cache(async (slug: string, now: Date) => {
   const db = await getDb();
-  const now = new Date();
   return db.collection.findFirst({
     where: {
       slug,
@@ -34,9 +33,10 @@ export async function generateStaticParams() {
       where: { active: true },
       select: { slug: true },
     });
+    if (collections.length === 0) return [{ slug: "_placeholder" }];
     return collections.map((c) => ({ slug: c.slug }));
   } catch {
-    return [];
+    return [{ slug: "_placeholder" }];
   }
 }
 
@@ -45,10 +45,12 @@ interface Props {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  await connection();
+  const now = new Date();
   const { slug } = await params;
-  const collection = await getCollection(slug);
+  const collection = await getCollection(slug, now);
   if (!collection) return { title: "Kolekce nenalezena" };
-  if (collection.endDate && collection.endDate < new Date()) return { title: "Kolekce nenalezena" };
+  if (collection.endDate && collection.endDate < now) return { title: "Kolekce nenalezena" };
 
   return {
     title: collection.title,
@@ -71,12 +73,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function CollectionPage({ params }: Props) {
+  await connection();
+  const now = new Date();
   const { slug } = await params;
-  const collection = await getCollection(slug);
+  const collection = await getCollection(slug, now);
   if (!collection) notFound();
 
   // Check endDate
-  if (collection.endDate && collection.endDate < new Date()) notFound();
+  if (collection.endDate && collection.endDate < now) notFound();
 
   // Parse product IDs and fetch products
   let productIds: string[] = [];

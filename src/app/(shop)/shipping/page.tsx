@@ -1,4 +1,3 @@
-export const revalidate = 300;
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {

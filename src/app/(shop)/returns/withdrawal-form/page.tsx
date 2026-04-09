@@ -1,6 +1,6 @@
-export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
 import { PrintButton } from "@/components/shop/print-button";
 
 export const metadata: Metadata = {
@@ -9,7 +9,8 @@ export const metadata: Metadata = {
     "Vzorový formulář pro odstoupení od kupní smlouvy do 14 dnů. Stáhněte, vyplňte a odešlete.",
 };
 
-export default function WithdrawalFormPage() {
+export default async function WithdrawalFormPage() {
+  await connection();
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
       {/* Navigation (hidden in print) */}

@@ -1,9 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { getDb } from "@/lib/db";
 import { getImageUrls } from "@/lib/images";
 import { validateFeedToken } from "@/lib/feed-auth";
 
-export const dynamic = "force-dynamic";
 import {
   SHIPPING_PRICES,
   COD_SURCHARGE,
@@ -63,6 +62,7 @@ function escapeXml(str: string): string {
 }
 
 export async function GET(req: NextRequest) {
+  await connection();
   const tokenError = validateFeedToken(req);
   if (tokenError) return tokenError;
 

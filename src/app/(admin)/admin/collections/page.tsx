@@ -1,7 +1,7 @@
 import { getDb } from "@/lib/db";
 import Link from "next/link";
+import { connection } from "next/server";
 
-export const dynamic = "force-dynamic";
 import { Plus, Layers } from "lucide-react";
 import type { Metadata } from "next";
 import { CollectionRow } from "./collection-row";
@@ -11,6 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminCollectionsPage() {
+  await connection();
   const db = await getDb();
   const collections = await db.collection.findMany({
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],

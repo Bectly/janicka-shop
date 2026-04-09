@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { getDb } from "@/lib/db";
 
-export const revalidate = 300; // 5min — search results need moderate freshness for availability
 import { ProductCard } from "@/components/shop/product-card";
 import { Search } from "lucide-react";
 import { rateLimitSearch } from "@/lib/rate-limit";
