@@ -199,6 +199,16 @@ export function trackBeginCheckout(items: AnalyticsItem[], total: number) {
   }
 }
 
+/** User shares a referral link */
+export function trackReferralShare(method: string, orderNumber: string) {
+  if (hasAnalyticsConsent()) {
+    ga4("event", "referral_share", {
+      method,
+      order_number: orderNumber,
+    });
+  }
+}
+
 /** Order completed — fires on order confirmation page */
 export function trackPurchase(
   transactionId: string,

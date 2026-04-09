@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Gift, Copy, Check, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { trackReferralShare } from "@/lib/analytics";
 
 interface ReferralCardProps {
   orderNumber: string;
@@ -38,12 +39,7 @@ export function ReferralCard({ orderNumber }: ReferralCardProps) {
   }
 
   function trackShare(method: string) {
-    if (typeof window !== "undefined" && window.gtag) {
-      window.gtag("event", "referral_share", {
-        method,
-        order_number: orderNumber,
-      });
-    }
+    trackReferralShare(method, orderNumber);
   }
 
   return (
