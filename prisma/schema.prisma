@@ -21,31 +21,31 @@ model Category {
 }
 
 model Product {
-  id          String      @id @default(cuid())
-  name        String
-  slug        String      @unique
-  description String
-  price       Float
-  compareAt   Float?
-  sku         String      @unique
-  categoryId  String
-  category    Category    @relation(fields: [categoryId], references: [id])
-  brand       String?
-  condition   String      @default("excellent") // new_with_tags | excellent | good | visible_wear
-  sizes        String      @default("[]")
-  colors       String      @default("[]")
-  images       String      @default("[]")
-  measurements String      @default("{}") // JSON: {chest?, waist?, hips?, length?} in cm
-  fitNote      String?                    // Human-readable fit note, max 120 chars
-  videoUrl     String?                    // Product video URL (15-30s, portrait 9:16)
-  stock       Int         @default(1) // second-hand: each piece is unique
-  featured    Boolean     @default(false)
-  active      Boolean     @default(true)
-  sold        Boolean     @default(false) // marks item as sold (unavailable)
+  id            String         @id @default(cuid())
+  name          String
+  slug          String         @unique
+  description   String
+  price         Float
+  compareAt     Float?
+  sku           String         @unique
+  categoryId    String
+  category      Category       @relation(fields: [categoryId], references: [id])
+  brand         String?
+  condition     String         @default("excellent") // new_with_tags | excellent | good | visible_wear
+  sizes         String         @default("[]")
+  colors        String         @default("[]")
+  images        String         @default("[]")
+  measurements  String         @default("{}") // JSON: {chest?, waist?, hips?, length?} in cm
+  fitNote       String? // Human-readable fit note, max 120 chars
+  videoUrl      String? // Product video URL (15-30s, portrait 9:16)
+  stock         Int            @default(1) // second-hand: each piece is unique
+  featured      Boolean        @default(false)
+  active        Boolean        @default(true)
+  sold          Boolean        @default(false) // marks item as sold (unavailable)
   reservedUntil DateTime? // reservation expiry — null means not reserved
-  reservedBy    String?   // visitor ID who reserved this item
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  reservedBy    String? // visitor ID who reserved this item
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
   orderItems    OrderItem[]
   priceHistory  PriceHistory[]
 
@@ -59,59 +59,59 @@ model Product {
   @@index([createdAt])
   @@index([price])
   @@index([active, sold, createdAt]) // Most common listing query
-  @@index([active, sold, featured])  // Featured products query
+  @@index([active, sold, featured]) // Featured products query
 }
 
 model Customer {
-  id              String    @id @default(cuid())
-  email           String    @unique
-  password        String?
-  firstName       String
-  lastName        String
-  phone           String?
-  street          String?
-  city            String?
-  zip             String?
-  country         String    @default("CZ")
-  winBackSentAt   DateTime? // Last win-back email sent (prevents spam)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  orders          Order[]
-  returns         Return[]
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String?
+  firstName     String
+  lastName      String
+  phone         String?
+  street        String?
+  city          String?
+  zip           String?
+  country       String    @default("CZ")
+  winBackSentAt DateTime? // Last win-back email sent (prevents spam)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  orders        Order[]
+  returns       Return[]
 }
 
 model Order {
-  id            String      @id @default(cuid())
-  orderNumber   String      @unique
-  accessToken   String?
-  customerId    String
-  customer      Customer    @relation(fields: [customerId], references: [id])
-  status        String      @default("pending")
-  paymentMethod String?
-  paymentId     String?
-  subtotal      Float
-  shipping      Float       @default(0)
-  total         Float
-  note          String?
-  shippingName  String?
-  shippingStreet String?
-  shippingCity  String?
-  shippingZip   String?
-  shippingCountry String    @default("CZ")
-  shippingMethod String?
-  shippingPointId String?
-  trackingNumber String?
-  packetId      String?     // Packeta/Zásilkovna packet ID (from SOAP createPacket)
-  shippedAt                DateTime?   // Set when admin changes status to "shipped"
-  reviewEmailSentAt        DateTime?   // Set when review request email is sent (prevents duplicates)
-  deliveryCheckEmailSentAt DateTime?   // Set when delivery check-in email is sent (ship+4d)
-  crossSellEmailSentAt     DateTime?   // Set when T+14 cross-sell follow-up email is sent
-  expectedDeliveryDate     DateTime?   // Czech law: 30 days from order for delivery (§2159 NOZ)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  items         OrderItem[]
-  invoices      Invoice[]
-  returns       Return[]
+  id                       String      @id @default(cuid())
+  orderNumber              String      @unique
+  accessToken              String?
+  customerId               String
+  customer                 Customer    @relation(fields: [customerId], references: [id])
+  status                   String      @default("pending")
+  paymentMethod            String?
+  paymentId                String?
+  subtotal                 Float
+  shipping                 Float       @default(0)
+  total                    Float
+  note                     String?
+  shippingName             String?
+  shippingStreet           String?
+  shippingCity             String?
+  shippingZip              String?
+  shippingCountry          String      @default("CZ")
+  shippingMethod           String?
+  shippingPointId          String?
+  trackingNumber           String?
+  packetId                 String? // Packeta/Zásilkovna packet ID (from SOAP createPacket)
+  shippedAt                DateTime? // Set when admin changes status to "shipped"
+  reviewEmailSentAt        DateTime? // Set when review request email is sent (prevents duplicates)
+  deliveryCheckEmailSentAt DateTime? // Set when delivery check-in email is sent (ship+4d)
+  crossSellEmailSentAt     DateTime? // Set when T+14 cross-sell follow-up email is sent
+  expectedDeliveryDate     DateTime? // Czech law: 30 days from order for delivery (§2159 NOZ)
+  createdAt                DateTime    @default(now())
+  updatedAt                DateTime    @updatedAt
+  items                    OrderItem[]
+  invoices                 Invoice[]
+  returns                  Return[]
 
   @@index([customerId])
   @@index([status])
@@ -158,19 +158,19 @@ model Invoice {
 }
 
 model NewsletterSubscriber {
-  id                     String    @id @default(cuid())
-  email                  String    @unique
-  active                 Boolean   @default(true)
-  firstName              String?
-  preferredSizes         String    @default("[]") // JSON array of size strings e.g. ["S","M","38"]
-  preferredCategories    String    @default("[]") // JSON array of category IDs
-  preferredBrands        String    @default("[]") // JSON array of brand name strings
-  source                 String    @default("website") // website, checkout, import
-  preferenceFilter       String?                        // Filter type: "new_arrivals" | "discounts" | null (all)
-  pausedUntil            DateTime?                      // If set and > now(), skip this subscriber in crons
-  lastNewArrivalEmailAt  DateTime?                      // Last time a new-arrival email was sent (prevents spam)
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt @default(now())
+  id                    String    @id @default(cuid())
+  email                 String    @unique
+  active                Boolean   @default(true)
+  firstName             String?
+  preferredSizes        String    @default("[]") // JSON array of size strings e.g. ["S","M","38"]
+  preferredCategories   String    @default("[]") // JSON array of category IDs
+  preferredBrands       String    @default("[]") // JSON array of brand name strings
+  source                String    @default("website") // website, checkout, import
+  preferenceFilter      String? // Filter type: "new_arrivals" | "discounts" | null (all)
+  pausedUntil           DateTime? // If set and > now(), skip this subscriber in crons
+  lastNewArrivalEmailAt DateTime? // Last time a new-arrival email was sent (prevents spam)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @default(now()) @updatedAt
 }
 
 model PriceHistory {
@@ -189,7 +189,7 @@ model ProductNotifyRequest {
   email      String
   categoryId String
   sizes      String   @default("[]") // JSON array of preferred sizes
-  brand      String?                  // optional brand preference
+  brand      String? // optional brand preference
   notified   Boolean  @default(false)
   createdAt  DateTime @default(now())
 
@@ -204,13 +204,13 @@ model AbandonedCart {
   customerName     String?
   cartItems        String    @default("[]") // JSON: [{productId, name, price, size, color, image, slug}]
   cartTotal        Float     @default(0)
-  pageUrl          String?                  // page where cart was abandoned (checkout, cart, etc.)
-  visitorId        String?                  // visitor ID for dedup
+  pageUrl          String? // page where cart was abandoned (checkout, cart, etc.)
+  visitorId        String? // visitor ID for dedup
   marketingConsent Boolean   @default(false) // GDPR: opt-in for recovery emails (Czech law requires explicit consent for marketing)
-  email1SentAt     DateTime?                // 30-60 min reminder
-  email2SentAt     DateTime?                // 12-24h follow-up
-  email3SentAt     DateTime?                // 48-72h final
-  recoveredOrderId String?                  // set when customer completes order
+  email1SentAt     DateTime? // 30-60 min reminder
+  email2SentAt     DateTime? // 12-24h follow-up
+  email3SentAt     DateTime? // 48-72h final
+  recoveredOrderId String? // set when customer completes order
   status           String    @default("pending") // pending | recovered | expired
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
@@ -226,10 +226,10 @@ model BrowseAbandonment {
   productId    String
   productSlug  String
   productName  String
-  productImage String?   // First image URL for email
+  productImage String? // First image URL for email
   productPrice Float
   productBrand String?
-  productSize  String?   // Primary size string for email copy
+  productSize  String? // Primary size string for email copy
   sentAt       DateTime? // Set when email is sent (null = pending)
   status       String    @default("pending") // pending | sent | sold | cart_added
   createdAt    DateTime  @default(now())
@@ -245,13 +245,13 @@ model Collection {
   title       String
   description String    @default("")
   slug        String    @unique
-  image       String?                   // featured image URL
-  productIds  String    @default("[]")  // JSON array of product IDs
+  image       String? // featured image URL
+  productIds  String    @default("[]") // JSON array of product IDs
   featured    Boolean   @default(false) // show on homepage
   sortOrder   Int       @default(0)
   active      Boolean   @default(true)
-  startDate   DateTime?                 // optional: collection visibility start
-  endDate     DateTime?                 // optional: collection visibility end
+  startDate   DateTime? // optional: collection visibility start
+  endDate     DateTime? // optional: collection visibility end
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -261,25 +261,25 @@ model Collection {
 }
 
 model Return {
-  id            String   @id @default(cuid())
-  returnNumber  String   @unique          // VRT-YYYY-NNNN
-  orderId       String
-  order         Order    @relation(fields: [orderId], references: [id])
-  customerId    String
-  customer      Customer @relation(fields: [customerId], references: [id])
-  status        String   @default("pending") // pending | approved | rejected | completed
-  reason        String                       // withdrawal_14d | defect | wrong_item | other
-  reasonDetail  String?                      // free-text explanation
-  refundAmount  Float                        // full or partial refund amount
-  refundMethod  String?                      // original_method | bank_transfer | store_credit
-  adminNote     String?                      // internal note from admin
-  resolvedAt    DateTime?                    // when status changed to approved/rejected/completed
-  completedAt   DateTime?                    // when refund was actually processed
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String    @id @default(cuid())
+  returnNumber String    @unique // VRT-YYYY-NNNN
+  orderId      String
+  order        Order     @relation(fields: [orderId], references: [id])
+  customerId   String
+  customer     Customer  @relation(fields: [customerId], references: [id])
+  status       String    @default("pending") // pending | approved | rejected | completed
+  reason       String // withdrawal_14d | defect | wrong_item | other
+  reasonDetail String? // free-text explanation
+  refundAmount Float // full or partial refund amount
+  refundMethod String? // original_method | bank_transfer | store_credit
+  adminNote    String? // internal note from admin
+  resolvedAt   DateTime? // when status changed to approved/rejected/completed
+  completedAt  DateTime? // when refund was actually processed
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  items         ReturnItem[]
-  creditNotes   CreditNote[]
+  items       ReturnItem[]
+  creditNotes CreditNote[]
 
   @@index([orderId])
   @@index([customerId])
@@ -288,9 +288,9 @@ model Return {
 }
 
 model ReturnItem {
-  id          String @id @default(cuid())
+  id          String  @id @default(cuid())
   returnId    String
-  return      Return @relation(fields: [returnId], references: [id], onDelete: Cascade)
+  return      Return  @relation(fields: [returnId], references: [id], onDelete: Cascade)
   orderItemId String
   productId   String
   productName String
@@ -302,14 +302,14 @@ model ReturnItem {
 }
 
 model CreditNote {
-  id              String   @id @default(cuid())
-  returnId        String
-  return          Return   @relation(fields: [returnId], references: [id], onDelete: Cascade)
-  number          String   @unique          // DOP-YYYY-NNNN
-  invoiceNumber   String                    // Reference to original invoice number
-  issuedAt        DateTime @default(now())
-  totalAmount     Float                     // Negative amount (refund)
-  createdAt       DateTime @default(now())
+  id            String   @id @default(cuid())
+  returnId      String
+  return        Return   @relation(fields: [returnId], references: [id], onDelete: Cascade)
+  number        String   @unique // DOP-YYYY-NNNN
+  invoiceNumber String // Reference to original invoice number
+  issuedAt      DateTime @default(now())
+  totalAmount   Float // Negative amount (refund)
+  createdAt     DateTime @default(now())
 
   @@index([returnId])
 }
@@ -317,12 +317,12 @@ model CreditNote {
 model DevChatMessage {
   id        String   @id @default(cuid())
   message   String
-  pagePath  String?                        // URL path where message was sent from
-  pageTitle String?                        // Page title for context
-  sender    String   @default("owner")     // owner | lead | bectly
-  status    String   @default("new")       // new | read | resolved
-  priority  String   @default("normal")    // low | normal | high
-  response  String?                        // Lead's response text
+  pagePath  String? // URL path where message was sent from
+  pageTitle String? // Page title for context
+  sender    String   @default("owner") // owner | lead | bectly
+  status    String   @default("new") // new | read | resolved
+  priority  String   @default("normal") // low | normal | high
+  response  String? // Lead's response text
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -332,17 +332,17 @@ model DevChatMessage {
 }
 
 model ShopSettings {
-  id            String  @id @default("singleton")
-  shopName      String  @default("Janička")
-  description   String  @default("")
-  contactEmail  String  @default("")
-  contactPhone  String  @default("")
-  street        String  @default("")
-  city          String  @default("")
-  zip           String  @default("")
-  ico           String  @default("")
-  dic           String  @default("")
-  instagram     String  @default("")
-  facebook      String  @default("")
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default("singleton")
+  shopName     String   @default("Janička")
+  description  String   @default("")
+  contactEmail String   @default("")
+  contactPhone String   @default("")
+  street       String   @default("")
+  city         String   @default("")
+  zip          String   @default("")
+  ico          String   @default("")
+  dic          String   @default("")
+  instagram    String   @default("")
+  facebook     String   @default("")
+  updatedAt    DateTime @updatedAt
 }

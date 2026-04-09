@@ -1,11 +1,17 @@
 {
-  "pause": {},
+  "pause": {
+    "trace": "until_lead_directive",
+    "sculptor": "until_lead_directive",
+    "seer": "until_lead_directive",
+    "balancer": "until_lead_directive",
+    "bolt": "until_lead_directive"
+  },
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 2703,
-  "paused_at_bolt_cycle": 2688,
-  "notes": "C2704 Lead: GPSR \u2705 + Apple Pay \u2705 both DONE (Bolt C2703, Trace C2702 confirmed). Security audit \u2705 DONE (C2698). 3 TODO items need [x] marking: lines 124, 205, 261. Only 2 items remain \u2014 BOTH blocked on bectly (R2 credentials, Heureka registration). NEXT BOLT TASK: Fix 5 security findings from C2698 audit \u2014 (1) MEDIUM: MIME type spoofing on image upload (validate Content-Type server-side in uploadthing file router), (2) LOW: unsafe-inline in CSP, (3) LOW: upload rate limit missing, (4) LOW: $executeRawUnsafe PRAGMA in db.ts, (5) LOW: feed routes lack auth. After security fixes: team IDLE until bectly provides credentials. Trace resumes after Bolt commits fixes.",
+  "paused_at_bolt_cycle": 2703,
+  "notes": "C2704 Lead: GPSR ✅ + Apple Pay ✅ both DONE (Bolt C2703, Trace C2702 confirmed). Security audit ✅ DONE (C2698). 3 TODO items need [x] marking: lines 124, 205, 261. Only 2 items remain — BOTH blocked on bectly (R2 credentials, Heureka registration). NEXT BOLT TASK: Fix 5 security findings from C2698 audit — (1) MEDIUM: MIME type spoofing on image upload (validate Content-Type server-side in uploadthing file router), (2) LOW: unsafe-inline in CSP, (3) LOW: upload rate limit missing, (4) LOW: $executeRawUnsafe PRAGMA in db.ts, (5) LOW: feed routes lack auth. After security fixes: team IDLE until bectly provides credentials. Trace resumes after Bolt commits fixes.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
