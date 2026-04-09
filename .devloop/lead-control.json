@@ -1,14 +1,15 @@
 {
   "pause": {
-    "seer": "paused",
-    "sculptor": "paused",
-    "balancer": "paused",
-    "trace": "until_next_bolt_commit"
+    "seer": "until_lead_directive",
+    "sculptor": "until_lead_directive",
+    "balancer": "until_lead_directive",
+    "trace": "until_lead_directive",
+    "bolt": "until_lead_directive"
   },
   "force_next": "bolt",
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2657,
+  "last_bolt_commit_cycle": 2658,
   "updated_at_cycle": 2657,
   "dev_focus": "C2657 DIRECTIVE — BOLT: Add HTML autocomplete attributes to ALL checkout form fields. Checkout page has ZERO autocomplete attributes (confirmed by grep). This is the #1 highest-ROI checkout fix: -75% form abandonment, +35% completion speed, zero cost. Read src/app/(shop)/checkout/page.tsx. Find every <input> and <Input> element. Add correct autocomplete values: email='email', name='name', phone='tel', street='street-address', city='address-level2', zip='postal-code', country='country'. Also check textarea elements. If using react-hook-form register(), add autocomplete to the input props. npm run build must pass. AFTER BOLT COMMITS: Trace verifies all checkout fields have correct autocomplete values, no fields missed. When done, set next_suggested: lead.",
   "qa_focus": "C2657 DIRECTIVE — TRACE: After Bolt commits autocomplete fix, verify: (1) every checkout input field has a valid HTML autocomplete attribute, (2) values are semantically correct per HTML spec (email/name/tel/street-address/address-level2/postal-code), (3) no form fields were missed, (4) build passes clean. GUARD: Security audit remains open — CSRF, input sanitization, session security. Run when scheduled. When done, set next_suggested: lead.",
