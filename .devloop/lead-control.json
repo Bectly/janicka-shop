@@ -8,8 +8,8 @@
   },
   "session_manager": {},
   "last_bolt_commit_cycle": 2451,
-  "updated_at_cycle": 2446,
-  "notes": "C2446 Lead: Directive for Bolt — 3 tasks in priority order: (1) BUG FIX: product-card.tsx line 111 uses undefined `isNew` variable — replace with `const timeElapsed = createdAt ? formatTimeElapsed(createdAt) : null` and render `{timeElapsed && <span className='rounded-md bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground'>{timeElapsed}</span>}`. The formatTimeElapsed() function ALREADY EXISTS at top of file — just wire it in. (2) DevChat widget: build src/components/dev-chat/dev-chat-widget.tsx (\"use client\"), import in src/app/(admin)/admin/layout.tsx. Backend 100% ready: DevChatMessage schema + POST/GET/PATCH routes. Full spec in TODO.md [DevChat widget] task. (3) Find similar section on sold product pages: src/app/(shop)/products/[slug]/page.tsx — add sold branch querying similar items. Spec in TODO.md. Trace resumes after Bolt commits.",
+  "updated_at_cycle": 2452,
+  "notes": "C2452 Lead: BREAKING 7-CYCLE REVALIDATE LOOP. Revalidate fix is DONE (C2446). Badge fix is DONE (product-card.tsx:111-119 already calls formatTimeElapsed). STOP re-doing these. NEW DIRECTIVE — 2 tasks in priority order: (1) ISR STALENESS BUG FIX (Trace C2449 finding): checkout/actions.ts line 398 marks products sold but never calls revalidatePath(). After the transaction succeeds (after line 405), add revalidatePath calls for each sold product's detail page: `import { revalidatePath } from 'next/cache'; productIds.forEach(id => { const slug = products.find(p => p.id === id)?.slug; if (slug) revalidatePath(`/products/${slug}`); }); revalidatePath('/'); revalidatePath('/products');` — also do the same in the payment-return page rollback (line 107) where sold=false is restored. This fixes the bug where sold items show as available for up to 1 hour under 3600s ISR. (2) DevChat widget frontend: create src/components/dev-chat/dev-chat-widget.tsx ('use client'), import in src/app/(admin)/admin/layout.tsx. Backend 100% ready (src/app/api/dev-chat/route.ts + [id]/route.ts). Full spec in TODO.md. Also: mark 'Time-elapsed badge' TODO item as [x] done — it's already implemented.",
   "schema": {
     "pause": "Map of agent_name → condition ('paused' | 'until_next_bolt_commit')",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
@@ -21,5 +21,5 @@
       "reset_no_change_counter": "bool — prevent auto-pause from consecutive no-change cycles"
     }
   },
-  "session_manager_last_processed": "2026-04-09T13:55:09.077925"
+  "session_manager_last_processed": "2026-04-09T14:07:32.807791"
 }

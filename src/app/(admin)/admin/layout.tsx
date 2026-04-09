@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { AdminSidebar } from "@/components/admin/sidebar";
+import { DevChatWidget } from "@/components/dev-chat/dev-chat-widget";
 
 export default async function AdminLayout({
   children,
@@ -23,6 +24,7 @@ export default async function AdminLayout({
           {children}
         </div>
       </main>
+      <DevChatWidget />
     </div>
   );
 }

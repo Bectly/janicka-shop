@@ -7,6 +7,7 @@ import { getOrCreateVisitorId } from "@/lib/visitor";
 import { createComgatePayment } from "@/lib/payments/comgate";
 import { rateLimitCheckout } from "@/lib/rate-limit";
 import { sendOrderConfirmationEmail, sendAdminNewOrderEmail } from "@/lib/email";
+import { revalidatePath } from "next/cache";
 import {
   PAYMENT_METHODS,
   SHIPPING_METHODS,
@@ -398,10 +399,11 @@ export async function createOrder(
         data: { sold: true, stock: 0, reservedUntil: null, reservedBy: null },
       });
 
-      // Collect DB prices and names for the email (never use client-submitted values)
+      // Collect DB prices, names, and slugs for email + ISR revalidation
       const dbPrices = new Map(products.map((p) => [p.id, p.price]));
       const dbNames = new Map(products.map((p) => [p.id, p.name]));
-      return { ...created, customerEmail: customer.email, dbPrices, dbNames };
+      const productSlugs = products.map((p) => p.slug);
+      return { ...created, customerEmail: customer.email, dbPrices, dbNames, productSlugs };
     });
   } catch (e) {
     if (e instanceof UnavailableError) {
@@ -409,6 +411,14 @@ export async function createOrder(
     }
     throw e;
   }
+
+  // Revalidate ISR cache for sold product pages — with 3600s ISR, sold items
+  // would show as available for up to 1 hour without immediate invalidation
+  for (const slug of order.productSlugs) {
+    revalidatePath(`/products/${slug}`);
+  }
+  revalidatePath("/products");
+  revalidatePath("/");
 
   // Send order confirmation email (fire-and-forget — never blocks checkout)
   sendOrderConfirmationEmail({
