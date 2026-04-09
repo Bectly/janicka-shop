@@ -4,7 +4,7 @@ import { getDb } from "@/lib/db";
 export const dynamic = "force-dynamic";
 import { getComgatePaymentStatus } from "@/lib/payments/comgate";
 import { ComgateError } from "@/lib/payments/types";
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
 import { sendPaymentConfirmedEmail } from "@/lib/email";
 
 /**
@@ -68,8 +68,27 @@ export async function POST(request: NextRequest) {
       await processPaymentStatus(order.id, order.status, paymentStatus.status);
     }
 
-    // Revalidate relevant pages + bust products cache (sold items affect facets)
-    revalidateTag("products", "seconds");
+    // Revalidate ISR cache for affected product pages — with 3600s ISR,
+    // stale sold/available status would persist for up to 1 hour without this.
+    const revalidateOrder = order ?? (await db.order.findFirst({
+      where: { paymentId: transId },
+      select: { id: true },
+    }));
+    if (revalidateOrder) {
+      const orderItems = await db.orderItem.findMany({
+        where: { orderId: revalidateOrder.id },
+        select: { productId: true },
+      });
+      const products = await db.product.findMany({
+        where: { id: { in: orderItems.map((i) => i.productId) } },
+        select: { slug: true },
+      });
+      for (const p of products) {
+        revalidatePath(`/products/${p.slug}`);
+      }
+    }
+    revalidatePath("/products");
+    revalidatePath("/");
     revalidatePath("/admin/orders");
     revalidatePath("/admin/dashboard");
 
