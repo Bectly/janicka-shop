@@ -385,6 +385,72 @@ export async function duplicateProduct(id: string) {
   redirect(`/admin/products/${copy.id}/edit`);
 }
 
+// ── Bulk actions ────────────────────────────────────────
+
+const bulkActionSchema = z.object({
+  ids: z.array(z.string().min(1)).min(1).max(100),
+  action: z.enum(["activate", "hide", "feature", "unfeature", "delete"]),
+});
+
+export async function bulkUpdateProducts(ids: string[], action: string) {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
+
+  const parsed = bulkActionSchema.parse({ ids, action });
+  const db = await getDb();
+
+  let affected = 0;
+
+  switch (parsed.action) {
+    case "activate":
+      for (const id of parsed.ids) {
+        await db.product.update({ where: { id }, data: { active: true, sold: false } });
+        affected++;
+      }
+      break;
+
+    case "hide":
+      for (const id of parsed.ids) {
+        await db.product.update({ where: { id }, data: { active: false } });
+        affected++;
+      }
+      break;
+
+    case "feature":
+      for (const id of parsed.ids) {
+        await db.product.update({ where: { id }, data: { featured: true } });
+        affected++;
+      }
+      break;
+
+    case "unfeature":
+      for (const id of parsed.ids) {
+        await db.product.update({ where: { id }, data: { featured: false } });
+        affected++;
+      }
+      break;
+
+    case "delete":
+      for (const id of parsed.ids) {
+        const orderItemCount = await db.orderItem.count({ where: { productId: id } });
+        if (orderItemCount > 0) {
+          await db.product.update({ where: { id }, data: { active: false, sold: true } });
+        } else {
+          await db.product.delete({ where: { id } });
+        }
+        affected++;
+      }
+      break;
+  }
+
+  revalidatePath("/admin/products");
+  revalidatePath("/products");
+  revalidatePath("/");
+
+  return { affected };
+}
+
 export async function deleteProduct(id: string) {
   await requireAdmin();
   const rl = await rateLimitAdmin();

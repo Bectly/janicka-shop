@@ -55,6 +55,11 @@ model Product {
   @@index([sold])
   @@index([reservedUntil])
   @@index([reservedBy])
+  @@index([brand])
+  @@index([createdAt])
+  @@index([price])
+  @@index([active, sold, createdAt]) // Most common listing query
+  @@index([active, sold, featured])  // Featured products query
 }
 
 model Customer {
