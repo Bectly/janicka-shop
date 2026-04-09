@@ -332,6 +332,25 @@ model DevChatMessage {
   @@index([createdAt])
 }
 
+model DevPick {
+  id             String    @id @default(cuid())
+  slug           String    @unique
+  title          String
+  description    String    @default("")
+  pickType       String    @default("choice") // choice | text | rating | image_choice
+  options        String    @default("[]") // JSON array of options
+  selectedOption String? // Selected option value
+  customText     String? // Free-text answer (for text type or comments)
+  status         String    @default("pending") // pending | answered | expired | superseded
+  createdBy      String    @default("lead")
+  createdAt      DateTime  @default(now())
+  answeredAt     DateTime?
+  expiresAt      DateTime?
+
+  @@index([status])
+  @@index([slug])
+}
+
 model ShopSettings {
   id           String   @id @default("singleton")
   shopName     String   @default("Janička")
