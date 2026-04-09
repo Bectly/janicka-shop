@@ -30,7 +30,10 @@ export async function subscribeNewsletter(
     return { success: false, message: "Zadejte platný e-mail." };
   }
 
-  const { email } = parsed.data;
+  // Normalize email to lowercase — SQLite unique lookups are case-sensitive,
+  // so "User@Example.com" and "user@example.com" would be two different records.
+  // Normalizing at write time ensures consistent unsubscribe and duplicate detection.
+  const email = parsed.data.email.toLowerCase();
 
   try {
     const db = await getDb();
