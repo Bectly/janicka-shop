@@ -1,10 +1,12 @@
 {
-  "pause": {},
+  "pause": {
+    "trace": "until_next_bolt_commit"
+  },
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 2755,
-  "paused_at_bolt_cycle": 2746,
+  "paused_at_bolt_cycle": 2755,
   "notes": "C2757 Lead: Task #40 referral verification DONE (Trace C2756 — all 8 points pass). Two non-blocking minors noted (client min-order preview, race scenario) — deferred. ALL tasks complete. Only 3 bectly-blocked remain (#1 R2, #4 Heureka, #14 GMC). All agents hard-paused. Devloop should stop — zero actionable work.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
