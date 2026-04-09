@@ -1,7 +1,6 @@
 "use server";
 
 import { getDb } from "@/lib/db";
-import { getOrCreateVisitorId } from "@/lib/visitor";
 
 export async function getProductQuickView(productId: string) {
   if (!productId || typeof productId !== "string" || productId.length > 128) return null;
@@ -13,13 +12,6 @@ export async function getProductQuickView(productId: string) {
   });
 
   if (!product || !product.active) return null;
-
-  const visitorId = await getOrCreateVisitorId();
-  const now = new Date();
-  const isReservedByOther =
-    !!product.reservedUntil &&
-    product.reservedUntil > now &&
-    product.reservedBy !== visitorId;
 
   return {
     id: product.id,
@@ -36,6 +28,6 @@ export async function getProductQuickView(productId: string) {
     stock: product.stock,
     sold: product.sold,
     categoryName: product.category.name,
-    reservedByOther: isReservedByOther,
+    reservedUntil: product.reservedUntil?.toISOString() ?? null,
   };
 }

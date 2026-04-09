@@ -11,7 +11,6 @@ import { RecentlySoldFeed } from "@/components/shop/recently-sold-feed";
 import { RecentlyViewedSection } from "@/components/shop/recently-viewed";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { getVisitorId } from "@/lib/visitor";
 import { getLowestPrices30d } from "@/lib/price-history";
 import { buildItemListSchema, buildWebSiteSchema, buildOrganizationSchema, jsonLdString } from "@/lib/structured-data";
 
@@ -87,9 +86,6 @@ export default async function HomePage() {
     }),
   ]);
 
-  const visitorId = await getVisitorId();
-  const now = new Date();
-
   // Get 30-day lowest prices for all displayed products
   const allProductIds = [
     ...featuredProducts.map((p) => p.id),
@@ -97,10 +93,6 @@ export default async function HomePage() {
     ...saleProducts.map((p) => p.id),
   ];
   const lowestPricesMap = await getLowestPrices30d(allProductIds);
-
-  function isReservedByOther(p: { reservedUntil: Date | null; reservedBy: string | null }) {
-    return !!p.reservedUntil && p.reservedUntil > now && p.reservedBy !== visitorId;
-  }
 
   // Popular brands — already grouped and sorted by DB
   const popularBrands: [string, number][] = brandProducts
@@ -253,7 +245,7 @@ export default async function HomePage() {
                 sizes={product.sizes}
                 colors={product.colors}
                 isNew
-                isReserved={isReservedByOther(product)}
+                isReserved={false}
                 lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
               />
             ))}
@@ -302,7 +294,7 @@ export default async function HomePage() {
               condition={product.condition}
               sizes={product.sizes}
               colors={product.colors}
-              isReserved={isReservedByOther(product)}
+              isReserved={false}
               lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
             />
           ))}
@@ -349,7 +341,7 @@ export default async function HomePage() {
                   condition={product.condition}
                   sizes={product.sizes}
                   colors={product.colors}
-                  isReserved={isReservedByOther(product)}
+                  isReserved={false}
                   lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
                 />
               ))}

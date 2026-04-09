@@ -7,7 +7,6 @@ import type { Prisma } from "@prisma/client";
 import { ProductCard } from "@/components/shop/product-card";
 import { ProductFilters } from "@/components/shop/product-filters";
 import { Pagination } from "@/components/shop/pagination";
-import { getVisitorId } from "@/lib/visitor";
 import { getLowestPrices30d } from "@/lib/price-history";
 import { buildItemListSchema, buildBreadcrumbSchema, jsonLdString } from "@/lib/structured-data";
 import type { Metadata } from "next";
@@ -300,9 +299,7 @@ export default async function ProductsPage({
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  // Check reservation status and 30-day lowest prices for displayed products
-  const visitorId = await getVisitorId();
-  const now = new Date();
+  // 30-day lowest prices for displayed products (Czech "fake discount" law)
   const lowestPricesMap = await getLowestPrices30d(
     paginatedProducts.map((p) => p.id),
   );
@@ -406,12 +403,7 @@ export default async function ProductsPage({
       <div className="mt-8">
         {paginatedProducts.length > 0 ? (
           <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
-            {paginatedProducts.map((product) => {
-              const isReserved =
-                !!product.reservedUntil &&
-                product.reservedUntil > now &&
-                product.reservedBy !== visitorId;
-              return (
+            {paginatedProducts.map((product) => (
                 <ProductCard
                   key={product.id}
                   id={product.id}
@@ -426,11 +418,10 @@ export default async function ProductsPage({
                   sizes={product.sizes}
                   colors={product.colors}
                   isNew={product.createdAt > sevenDaysAgo}
-                  isReserved={isReserved}
+                  isReserved={false}
                   lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
                 />
-              );
-            })}
+              ))}
           </div>
         ) : (
           <div className="py-20 text-center">

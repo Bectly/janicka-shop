@@ -9,7 +9,6 @@ import { CONDITION_LABELS, CONDITION_COLORS } from "@/lib/constants";
 import { ProductCard } from "@/components/shop/product-card";
 import { ProductGallery } from "@/components/shop/product-gallery";
 import { AddToCartButton } from "@/components/shop/add-to-cart-button";
-import { getVisitorId } from "@/lib/visitor";
 import { getLowestPrices30d } from "@/lib/price-history";
 import { buildProductSchema, buildBreadcrumbSchema, buildFaqSchema, buildVideoObjectSchema, jsonLdString } from "@/lib/structured-data";
 import { ShareButtons } from "@/components/shop/share-buttons";
@@ -200,9 +199,6 @@ export default async function ProductDetailPage({ params }: Props) {
   const allIds = [product.id, ...relatedProducts.map((p) => p.id)];
   const lowestPricesMap = await getLowestPrices30d(allIds);
 
-  // visitorId and now must be declared before the sold-product early return
-  // so they're in scope for related product reservation checks in both branches.
-  const visitorId = await getVisitorId();
   const now = new Date();
 
   // JSON-LD structured data for SEO (Google Shopping + AI search visibility)
@@ -365,12 +361,7 @@ export default async function ProductDetailPage({ params }: Props) {
               Vybrali jsme kousky podobné velikosti, ceny a stylu
             </p>
             <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
-              {relatedProducts.map((p) => {
-                const isRelatedReserved =
-                  !!p.reservedUntil &&
-                  p.reservedUntil > now &&
-                  p.reservedBy !== visitorId;
-                return (
+              {relatedProducts.map((p) => (
                   <ProductCard
                     key={p.id}
                     id={p.id}
@@ -384,11 +375,10 @@ export default async function ProductDetailPage({ params }: Props) {
                     condition={p.condition}
                     sizes={p.sizes}
                     colors={p.colors}
-                    isReserved={isRelatedReserved}
+                    isReserved={false}
                     lowestPrice30d={lowestPricesMap.get(p.id) ?? null}
                   />
-                );
-              })}
+                ))}
             </div>
           </section>
         )}
@@ -409,10 +399,9 @@ export default async function ProductDetailPage({ params }: Props) {
     condition: product.condition,
   };
 
-  const isReservedByOther =
-    !!product.reservedUntil &&
-    product.reservedUntil > now &&
-    product.reservedBy !== visitorId;
+  // Reservation status is computed client-side (in AddToCartButton) to avoid
+  // cookies() call which would force this page to be fully dynamic (no ISR cache).
+  const reservedUntilIso = product.reservedUntil?.toISOString() ?? null;
 
   let sizes: string[] = [];
   let colors: string[] = [];
@@ -590,7 +579,7 @@ export default async function ProductDetailPage({ params }: Props) {
             />
           </div>
 
-          {/* Add to cart */}
+          {/* Add to cart — reservation status computed client-side */}
           <AddToCartButton
             product={{
               id: product.id,
@@ -601,17 +590,13 @@ export default async function ProductDetailPage({ params }: Props) {
               sizes,
               colors,
               stock: product.stock,
-              reservedByOther: isReservedByOther,
+              reservedUntil: reservedUntilIso,
             }}
           />
 
-          {/* Stock info — authentic scarcity: every second-hand item is unique (qty=1) */}
-          {isReservedByOther ? (
-            <p className="mt-4 flex items-center gap-1.5 text-xs font-medium text-violet-600 dark:text-violet-400">
-              <Sparkles className="size-3.5" />
-              Tento kousek si právě někdo prohlíží
-            </p>
-          ) : product.stock > 0 ? (
+          {/* Stock info — delivery + shipping shown unconditionally;
+              AddToCartButton handles the "reserved by other" state client-side */}
+          {product.stock > 0 ? (
             <p className="mt-4 flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400">
               <Sparkles className="size-3.5" />
               Jediný kus — tento kousek existuje jen jednou
@@ -623,7 +608,7 @@ export default async function ProductDetailPage({ params }: Props) {
           )}
 
           {/* Estimated delivery */}
-          {product.stock > 0 && !isReservedByOther && (() => {
+          {product.stock > 0 && (() => {
             const { from, to } = getEstimatedDelivery();
             return (
               <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
@@ -639,7 +624,7 @@ export default async function ProductDetailPage({ params }: Props) {
           })()}
 
           {/* Free shipping progress bar */}
-          {product.stock > 0 && !isReservedByOther && (
+          {product.stock > 0 && (
             <FreeShippingBar productPrice={product.price} />
           )}
 
@@ -655,12 +640,7 @@ export default async function ProductDetailPage({ params }: Props) {
             Mohlo by se vám líbit
           </h2>
           <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
-            {relatedProducts.map((p) => {
-              const isRelatedReserved =
-                !!p.reservedUntil &&
-                p.reservedUntil > now &&
-                p.reservedBy !== visitorId;
-              return (
+            {relatedProducts.map((p) => (
                 <ProductCard
                   key={p.id}
                   id={p.id}
@@ -674,11 +654,10 @@ export default async function ProductDetailPage({ params }: Props) {
                   condition={p.condition}
                   sizes={p.sizes}
                   colors={p.colors}
-                  isReserved={isRelatedReserved}
+                  isReserved={false}
                   lowestPrice30d={lowestPricesMap.get(p.id) ?? null}
                 />
-              );
-            })}
+              ))}
           </div>
         </section>
       )}

@@ -20,7 +20,7 @@ interface AddToCartProps {
     sizes: string[];
     colors: string[];
     stock: number;
-    reservedByOther?: boolean;
+    reservedUntil?: string | null; // ISO date string — computed client-side to avoid server cookies()
   };
 }
 
@@ -34,6 +34,13 @@ export function AddToCartButton({ product }: AddToCartProps) {
   const [isPending, startTransition] = useTransition();
 
   const isInCart = items.some((i) => i.productId === product.id);
+
+  // Compute reservation status client-side: if there's an active reservation
+  // and this user doesn't have the item in cart, it's reserved by someone else.
+  const isReservedByOther =
+    !!product.reservedUntil &&
+    new Date(product.reservedUntil) > new Date() &&
+    !isInCart;
 
   const imageList = getImageUrls(product.images);
 
@@ -134,7 +141,7 @@ export function AddToCartButton({ product }: AddToCartProps) {
           size="lg"
           className="w-full"
           onClick={handleAdd}
-          disabled={product.stock === 0 || isPending || isInCart || product.reservedByOther}
+          disabled={product.stock === 0 || isPending || isInCart || isReservedByOther}
         >
           {isPending ? (
             <>
@@ -151,7 +158,7 @@ export function AddToCartButton({ product }: AddToCartProps) {
               <Check data-icon="inline-start" className="size-4" />
               Již v košíku
             </>
-          ) : product.reservedByOther ? (
+          ) : isReservedByOther ? (
             <>
               <Clock data-icon="inline-start" className="size-4" />
               Rezervováno
@@ -172,7 +179,7 @@ export function AddToCartButton({ product }: AddToCartProps) {
         productName={product.name}
         price={product.price}
         isInCart={isInCart}
-        isReservedByOther={!!product.reservedByOther}
+        isReservedByOther={!!isReservedByOther}
         stock={product.stock}
         isPending={isPending}
         onAdd={handleAdd}

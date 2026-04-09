@@ -5,7 +5,6 @@ import { getDb } from "@/lib/db";
 
 export const revalidate = 30;
 import { ProductCard } from "@/components/shop/product-card";
-import { getVisitorId } from "@/lib/visitor";
 import { getLowestPrices30d } from "@/lib/price-history";
 import { buildItemListSchema, buildBreadcrumbSchema, jsonLdString } from "@/lib/structured-data";
 import type { Metadata } from "next";
@@ -89,8 +88,6 @@ export default async function CollectionPage({ params }: Props) {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  const visitorId = await getVisitorId();
-  const now = new Date();
   const lowestPricesMap = await getLowestPrices30d(
     orderedProducts.map((p) => p.id),
   );
@@ -167,12 +164,7 @@ export default async function CollectionPage({ params }: Props) {
       {/* Product grid */}
       {orderedProducts.length > 0 ? (
         <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
-          {orderedProducts.map((product) => {
-            const isReserved =
-              !!product.reservedUntil &&
-              product.reservedUntil > now &&
-              product.reservedBy !== visitorId;
-            return (
+          {orderedProducts.map((product) => (
               <ProductCard
                 key={product.id}
                 id={product.id}
@@ -187,11 +179,10 @@ export default async function CollectionPage({ params }: Props) {
                 sizes={product.sizes}
                 colors={product.colors}
                 isNew={product.createdAt > sevenDaysAgo}
-                isReserved={isReserved}
+                isReserved={false}
                 lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
               />
-            );
-          })}
+            ))}
         </div>
       ) : (
         <div className="py-20 text-center">

@@ -26,14 +26,22 @@ import { PrismaClient } from "@prisma/client";
 const PRODUCTS_FILE = path.join(__dirname, "vinted-data", "products.json");
 
 // Condition mapping: Vinted CZ → Janička Shop
+// NOTE: Vinted CZ uses masculine adjective forms ("Nový") NOT neuter ("Nové").
+// Both forms are listed to be safe.
 const CONDITION_MAP: Record<string, string> = {
+  // Masculine forms (actual Vinted CZ output)
+  "Nový s visačkou": "new_with_tags",
+  "Nový bez visačky": "new_with_tags",
+  // Neuter forms (fallback)
   "Nové s visačkou": "new_with_tags",
   "Nové bez visačky": "new_with_tags",
+  // Masculine forms
   "Velmi dobrý": "excellent",
-  "Velmi dobré": "excellent",
   "Dobrý": "good",
-  "Dobré": "good",
   "Uspokojivý": "visible_wear",
+  // Neuter forms
+  "Velmi dobré": "excellent",
+  "Dobré": "good",
   "Uspokojivé": "visible_wear",
   // Fallback English terms
   "new with tags": "new_with_tags",
@@ -49,7 +57,9 @@ const CATEGORY_KEYWORDS: [string[], string][] = [
   [["top", "tílko", "halenk", "tričk", "svetr", "mikina", "blůz", "košil", "rolák", "cardigan", "polokošile", "triko", "vesta", "crop"], "topy-halenky"],
   [["kalhot", "sukn", "džín", "jeans", "legín", "šortk", "kraťas", "bermudy"], "kalhoty-sukne"],
   [["bund", "kabát", "sako", "blejzr", "pláštěnk", "vesta", "parka", "coat", "jacket", "blazer"], "bundy-kabaty"],
-  [["kabelk", "šátek", "šátk", "šperky", "náušnic", "náhrdelník", "prsten", "hodinky", "pásek", "čepic", "klobouk", "brýle", "peněženk", "batoh", "tašk", "doplň"], "doplnky"],
+  [["kabelk", "šátek", "šátk", "šperky", "náušnic", "náhrdelník", "prsten", "hodinky", "pásek", "čepic", "klobouk", "brýle", "peněženk", "batoh", "tašk", "doplň",
+    // Footwear — no dedicated shoe category, Doplňky is closest
+    "boty", "lodičk", "tenisky", "sandál", "espadryl", "skor", "střevíc", "pantofle", "kozačk", "baleríny", "pumpy", "sneaker", "loafer"], "doplnky"],
 ];
 
 interface CategoryInfo {

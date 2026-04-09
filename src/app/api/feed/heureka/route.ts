@@ -76,7 +76,7 @@ export async function GET() {
 
       xml += `    <CATEGORYTEXT>${escapeXml(categoryPath)}</CATEGORYTEXT>\n`;
       xml += `    <PRODUCTNO>${escapeXml(product.sku)}</PRODUCTNO>\n`;
-      xml += `    <DELIVERY_DATE>5</DELIVERY_DATE>\n`;
+      xml += `    <DELIVERY_DATE>3</DELIVERY_DATE>\n`;
       xml += `    <ITEM_TYPE>bazaar</ITEM_TYPE>\n`;
 
       // Condition parameter
