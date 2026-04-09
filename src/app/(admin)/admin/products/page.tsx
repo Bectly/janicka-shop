@@ -195,7 +195,7 @@ export default async function AdminProductsPage({
       </div>
 
       {/* Products table with bulk actions */}
-      <BulkProductTable products={products} />
+      <BulkProductTable products={products} query={query || undefined} />
 
       <Suspense fallback={null}>
         <Pagination

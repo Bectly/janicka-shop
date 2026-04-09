@@ -403,45 +403,67 @@ export async function bulkUpdateProducts(ids: string[], action: string) {
   let affected = 0;
 
   switch (parsed.action) {
-    case "activate":
-      for (const id of parsed.ids) {
-        await db.product.update({ where: { id }, data: { active: true, sold: false } });
-        affected++;
-      }
+    case "activate": {
+      const res = await db.product.updateMany({
+        where: { id: { in: parsed.ids } },
+        data: { active: true, sold: false },
+      });
+      affected = res.count;
       break;
+    }
 
-    case "hide":
-      for (const id of parsed.ids) {
-        await db.product.update({ where: { id }, data: { active: false } });
-        affected++;
-      }
+    case "hide": {
+      const res = await db.product.updateMany({
+        where: { id: { in: parsed.ids } },
+        data: { active: false },
+      });
+      affected = res.count;
       break;
+    }
 
-    case "feature":
-      for (const id of parsed.ids) {
-        await db.product.update({ where: { id }, data: { featured: true } });
-        affected++;
-      }
+    case "feature": {
+      const res = await db.product.updateMany({
+        where: { id: { in: parsed.ids } },
+        data: { featured: true },
+      });
+      affected = res.count;
       break;
+    }
 
-    case "unfeature":
-      for (const id of parsed.ids) {
-        await db.product.update({ where: { id }, data: { featured: false } });
-        affected++;
-      }
+    case "unfeature": {
+      const res = await db.product.updateMany({
+        where: { id: { in: parsed.ids } },
+        data: { featured: false },
+      });
+      affected = res.count;
       break;
+    }
 
-    case "delete":
-      for (const id of parsed.ids) {
-        const orderItemCount = await db.orderItem.count({ where: { productId: id } });
-        if (orderItemCount > 0) {
-          await db.product.update({ where: { id }, data: { active: false, sold: true } });
-        } else {
-          await db.product.delete({ where: { id } });
-        }
-        affected++;
-      }
+    case "delete": {
+      // Find which products have associated order items (must soft-delete)
+      const withOrders = await db.orderItem.findMany({
+        where: { productId: { in: parsed.ids } },
+        select: { productId: true },
+        distinct: ["productId"],
+      });
+      const withOrderIds = new Set(withOrders.map((o) => o.productId));
+      const hardDeleteIds = parsed.ids.filter((id) => !withOrderIds.has(id));
+      const softDeleteIds = parsed.ids.filter((id) => withOrderIds.has(id));
+
+      const [softRes, hardRes] = await Promise.all([
+        softDeleteIds.length > 0
+          ? db.product.updateMany({
+              where: { id: { in: softDeleteIds } },
+              data: { active: false, sold: true },
+            })
+          : Promise.resolve({ count: 0 }),
+        hardDeleteIds.length > 0
+          ? db.product.deleteMany({ where: { id: { in: hardDeleteIds } } })
+          : Promise.resolve({ count: 0 }),
+      ]);
+      affected = softRes.count + hardRes.count;
       break;
+    }
   }
 
   revalidatePath("/admin/products");

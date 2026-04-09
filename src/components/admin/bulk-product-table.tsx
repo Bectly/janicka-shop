@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { formatPrice } from "@/lib/format";
 import { CONDITION_LABELS, CONDITION_COLORS } from "@/lib/constants";
-import { ImageIcon, Eye, EyeOff, Star, StarOff, Trash2, X, Check } from "lucide-react";
+import { ImageIcon, Eye, EyeOff, Star, StarOff, Trash2, X, Check, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DeleteProductButton } from "@/components/admin/delete-product-button";
 import { DuplicateProductButton } from "@/components/admin/duplicate-product-button";
@@ -34,7 +34,7 @@ interface BulkProductTableProps {
 export function BulkProductTable({ products, query }: BulkProductTableProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isPending, startTransition] = useTransition();
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ text: string; error: boolean } | null>(null);
 
   const allOnPage = products.map((p) => p.id);
   const allSelected = allOnPage.length > 0 && allOnPage.every((id) => selected.has(id));
@@ -67,11 +67,11 @@ export function BulkProductTable({ products, query }: BulkProductTableProps) {
     startTransition(async () => {
       try {
         const result = await bulkUpdateProducts(ids, action);
-        setMessage(`${label}: ${result.affected} produktů`);
+        setMessage({ text: `${label}: ${result.affected} produktů`, error: false });
         setSelected(new Set());
         setTimeout(() => setMessage(null), 3000);
       } catch (e: unknown) {
-        setMessage(`Chyba: ${e instanceof Error ? e.message : "neznámá"}`);
+        setMessage({ text: `Chyba: ${e instanceof Error ? e.message : "neznámá"}`, error: true });
         setTimeout(() => setMessage(null), 5000);
       }
     });
@@ -126,7 +126,7 @@ export function BulkProductTable({ products, query }: BulkProductTableProps) {
                     colSpan={9}
                     className="px-4 py-12 text-center text-muted-foreground"
                   >
-                    Žádné produkty
+                    {query ? `Žádné produkty pro „${query}"` : "Žádné produkty"}
                   </td>
                 </tr>
               ) : (
@@ -306,10 +306,10 @@ export function BulkProductTable({ products, query }: BulkProductTableProps) {
 
       {/* Success/error message toast */}
       {message && (
-        <div className="fixed bottom-20 left-1/2 z-50 -translate-x-1/2 rounded-lg bg-foreground px-4 py-2 text-sm text-background shadow-lg">
+        <div className={`fixed bottom-20 left-1/2 z-50 -translate-x-1/2 rounded-lg px-4 py-2 text-sm shadow-lg ${message.error ? "bg-destructive text-destructive-foreground" : "bg-foreground text-background"}`}>
           <div className="flex items-center gap-2">
-            <Check className="size-4" />
-            {message}
+            {message.error ? <AlertCircle className="size-4" /> : <Check className="size-4" />}
+            {message.text}
           </div>
         </div>
       )}
