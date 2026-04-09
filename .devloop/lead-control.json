@@ -1,9 +1,15 @@
 {
-  "pause": {},
+  "pause": {
+    "sculptor": "until_lead_directive",
+    "seer": "until_lead_directive",
+    "trace": "until_lead_directive",
+    "bolt": "until_lead_directive",
+    "balancer": "until_lead_directive"
+  },
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2734,
+  "last_bolt_commit_cycle": 2736,
   "paused_at_bolt_cycle": 2734,
   "notes": "C2735 Lead: #35 welcome page DONE (C2731). #38 pick pages DONE (C2733). Both marked done in DB. Trace running #37 pre-launch audit — unpaused to finish. Bolt PAUSED — no open tasks remain. All 3 remaining items (#1 R2, #4 Heureka, #14 GMC) are blocked on bectly. After Trace completes #37: if findings → create Bolt fix tasks. If clean → all agents pause until bectly provides credentials. devChat 0 messages. Monitors OK (none due).",
   "schema": {
