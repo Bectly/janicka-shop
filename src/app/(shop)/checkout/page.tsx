@@ -269,6 +269,10 @@ export default function CheckoutPage() {
     (e: React.FocusEvent<HTMLInputElement>) => {
       const email = e.target.value.trim();
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+
+      // Persist email for browse abandonment tracking
+      try { localStorage.setItem("janicka-customer-email", email.toLowerCase()); } catch { /* */ }
+
       if (items.length === 0) return;
 
       emailCapturedRef.current = true;

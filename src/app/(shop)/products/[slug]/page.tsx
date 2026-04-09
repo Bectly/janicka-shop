@@ -21,6 +21,7 @@ import {
 import { ProductInfoAccordion } from "@/components/shop/product-info-accordion";
 import { FreeShippingBar } from "@/components/shop/free-shipping-bar";
 import { NotifyMeForm } from "@/components/shop/notify-me-form";
+import { BrowseAbandonmentTracker } from "@/components/shop/browse-abandonment-tracker";
 import { Truck, Leaf, Ruler, Sparkles } from "lucide-react";
 import { parseProductImages, parseMeasurements, hasMeasurements } from "@/lib/images";
 import type { Metadata } from "next";
@@ -423,6 +424,15 @@ export default async function ProductDetailPage({ params }: Props) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <TrackProductView product={trackData} />
+      <BrowseAbandonmentTracker
+        productId={product.id}
+        productSlug={product.slug}
+        productName={product.name}
+        productImage={productImages[0]?.url}
+        productPrice={product.price}
+        productBrand={product.brand}
+        productSize={sizes[0] ?? null}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLdString(jsonLd) }}

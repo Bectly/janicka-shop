@@ -730,7 +730,7 @@ function buildNewsletterWelcomeHtml(email: string): string {
 
     <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
       <p style="margin: 0;">Janička Shop — Second hand móda</p>
-      <p style="margin: 4px 0 0;">Tento email byl odeslán na ${escapeHtml(email)}, protože jste se přihlásili k odběru novinek.</p>
+      <p style="margin: 4px 0 0;">Tento email jsi dostala, protože jsi se přihlásila k odběru novinek.</p>
     </div>
   </div>
 </body>
@@ -1321,7 +1321,7 @@ function buildDeliveryCheckHtml(data: DeliveryCheckEmailData): string {
 
     <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
       <p style="margin: 0;">Janička Shop — Second hand móda</p>
-      <p style="margin: 4px 0 0;">Tento email jste obdrželi, protože jste u nás nakoupili.</p>
+      <p style="margin: 4px 0 0;">Tento email jsi dostala, protože jsi u nás nakoupila.</p>
     </div>
   </div>
 </body>
@@ -1503,6 +1503,124 @@ export async function sendNewArrivalEmail(data: NewArrivalEmailData): Promise<bo
     return true;
   } catch (error) {
     console.error(`[Email] Failed to send new arrival email to ${data.email}:`, error);
+    return false;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Browse abandonment email (single email, €3.22 RPR benchmark)
+// ---------------------------------------------------------------------------
+
+export interface BrowseAbandonmentEmailData {
+  email: string;
+  productName: string;
+  productSlug: string;
+  productImage: string | null;
+  productPrice: number;
+  productBrand: string | null;
+  productSize: string | null;
+}
+
+function buildBrowseAbandonmentHtml(data: BrowseAbandonmentEmailData): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const productUrl = `${baseUrl}/products/${encodeURIComponent(data.productSlug)}`;
+  const shopUrl = `${baseUrl}/products?sort=newest`;
+
+  const brandLine = data.productBrand ? ` od ${escapeHtml(data.productBrand)}` : "";
+  const sizeLine = data.productSize ? ` (vel. ${escapeHtml(data.productSize)})` : "";
+  const priceFormatted = new Intl.NumberFormat("cs-CZ", { maximumFractionDigits: 0 }).format(data.productPrice);
+
+  const imageBlock = data.productImage
+    ? `<a href="${productUrl}" style="display: block; text-decoration: none;">
+        <img src="${escapeHtml(data.productImage)}" alt="${escapeHtml(data.productName)}" style="width: 100%; max-width: 400px; height: auto; border-radius: 12px; display: block; margin: 0 auto;" />
+      </a>`
+    : "";
+
+  return `<!DOCTYPE html>
+<html lang="cs">
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/></head>
+<body style="margin: 0; padding: 0; background-color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
+
+    <div style="text-align: center; padding: 24px 0;">
+      <h1 style="margin: 0; font-size: 24px; color: #1a1a1a;">Janička Shop</h1>
+      <p style="margin: 4px 0 0; font-size: 13px; color: #999;">Second hand móda pro tebe</p>
+    </div>
+
+    <div style="background: #fff; border-radius: 12px; padding: 32px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+
+      <div style="text-align: center;">
+        <div style="width: 64px; height: 64px; background: #fdf4ff; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+          <span style="font-size: 32px; line-height: 64px;">&#128140;</span>
+        </div>
+        <h2 style="margin: 0 0 8px; font-size: 20px; color: #1a1a1a;">Pořád čeká — ale jenom pro jednu</h2>
+        <p style="margin: 0 0 20px; color: #666; font-size: 15px; line-height: 1.6;">
+          Prohlížela jsi si <strong style="color: #1a1a1a;">${escapeHtml(data.productName)}</strong>${brandLine}${sizeLine}. Tento kousek je unikát — existuje jen jeden. Kdokoliv ho může koupit dřív než ty.
+        </p>
+      </div>
+
+      ${imageBlock}
+
+      <div style="text-align: center; margin: 20px 0 8px;">
+        <p style="margin: 0; font-size: 22px; font-weight: 700; color: #1a1a1a;">${priceFormatted} Kč</p>
+      </div>
+
+      <div style="text-align: center; margin-top: 24px;">
+        <a href="${productUrl}" style="display: inline-block; background: #1a1a1a; color: #fff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 15px; font-weight: 600;">
+          Koupit teď
+        </a>
+      </div>
+
+      <div style="text-align: center; margin-top: 16px;">
+        <a href="${shopUrl}" style="color: #666; font-size: 13px; text-decoration: underline;">
+          Prohlédnout další kousky
+        </a>
+      </div>
+
+      <p style="margin: 24px 0 0; color: #999; font-size: 12px; text-align: center; line-height: 1.5;">
+        Tento email jsi dostala, protože jsi prohlížela náš eshop. Každý kousek je unikát — chceme, abys nepřišla o ten svůj.
+      </p>
+    </div>
+
+    <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
+      <p style="margin: 0;">Janička Shop — Second hand móda</p>
+      <p style="margin: 4px 0 0;">
+        <a href="${baseUrl}/odhlasit-novinky?email=${encodeURIComponent(data.email)}" style="color: #999; text-decoration: underline;">Odhlásit se z odběru</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+/**
+ * Send a browse abandonment email — single email per viewed product.
+ * Authentic scarcity: each second-hand item genuinely exists only once.
+ * Subject line names the specific product for maximum open rate.
+ */
+export async function sendBrowseAbandonmentEmail(
+  data: BrowseAbandonmentEmailData,
+): Promise<boolean> {
+  const resend = getResendClient();
+  if (!resend) {
+    console.warn("[Email] RESEND_API_KEY not set — skipping browse abandonment email");
+    return false;
+  }
+
+  const brandPart = data.productBrand ? ` ${data.productBrand}` : "";
+  const sizePart = data.productSize ? ` vel. ${data.productSize}` : "";
+  const subject = `Ještě tam je —${brandPart} ${data.productName}${sizePart} — Janička Shop`;
+
+  try {
+    await resend.emails.send({
+      from: NEWSLETTER_FROM_EMAIL,
+      to: data.email,
+      subject,
+      html: buildBrowseAbandonmentHtml(data),
+    });
+    return true;
+  } catch (error) {
+    console.error(`[Email] Failed to send browse abandonment email to ${data.email}:`, error);
     return false;
   }
 }
