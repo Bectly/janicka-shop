@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Trash2, ShoppingBag, ArrowLeft, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCartStore, type CartItem } from "@/lib/cart-store";
@@ -12,11 +13,13 @@ import { CartRecommendations } from "@/components/shop/cart-recommendations";
 import { CartExitIntent } from "@/components/shop/cart-exit-intent";
 import { FreeShippingBar } from "@/components/shop/free-shipping-bar";
 import { CartEmailCapture } from "@/components/shop/cart-email-capture";
+import { ExpressCheckoutButtons } from "@/components/shop/checkout/express-checkout-buttons";
 import { useSyncExternalStore, useState, useEffect, useCallback, useTransition } from "react";
 
 const emptySubscribe = () => () => {};
 
 export default function CartPage() {
+  const router = useRouter();
   const items = useCartStore((s) => s.items);
   const removeItem = useCartStore((s) => s.removeItem);
   const updateReservation = useCartStore((s) => s.updateReservation);
@@ -113,6 +116,11 @@ export default function CartPage() {
         {/* Email capture for abandoned cart recovery — captures email before checkout */}
         <div className="mt-4">
           <CartEmailCapture />
+        </div>
+
+        {/* Express checkout (Apple Pay / Google Pay) — C1496: multiple touchpoints */}
+        <div className="mt-4">
+          <ExpressCheckoutButtons onSelect={() => router.push("/checkout")} />
         </div>
 
         <Button size="lg" className="mt-4 w-full" render={<Link href="/checkout" />}>

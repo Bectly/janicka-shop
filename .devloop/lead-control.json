@@ -4,8 +4,8 @@
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 2688,
-  "paused_at_bolt_cycle": 2695,
-  "notes": "C2695 Lead: Found 2 implementable tasks. (1) GPSR Heureka MANUFACTURER_ELECTRONIC_ADDRESS — brand URL map, no credentials. (2) Apple Pay/Google Pay UI placement at checkout TOP + cart page — Comgate code exists (C2350), just move the elements. Guard→Trace reassigned for security audit. Bolt forced next. Trace waits for Bolt commit. Sage/Aria/Scout/Guard paused — no work for them.",
+  "paused_at_bolt_cycle": 2688,
+  "notes": "C2699 Lead: ROOT CAUSE of C2698 failure \u2014 Bolt was still paused ('until_lead_directive') despite C2696 saying 'Bolt forced next'. Bolt REMOVED from pause map entirely so orchestrator can schedule it. force_next=bolt. Security audit DONE (C2698 Trace: 1 medium MIME spoofing, 4 low). 2 tasks for Bolt: (1) GPSR Heureka brand URLs \u2014 quick, (2) Apple Pay placement at checkout TOP + cart. Trace resumes after Bolt commits.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",

@@ -27,6 +27,31 @@ const HEUREKA_CATEGORIES: Record<string, string> = {
 
 const FALLBACK_CATEGORY = "Oblečení a móda | Dámské oblečení";
 
+/**
+ * GPSR compliance: brand → official website URL for top brands.
+ * Used for Heureka MANUFACTURER_ELECTRONIC_ADDRESS tag (EU GPSR Article 19).
+ * Keys are lowercase for case-insensitive lookup.
+ */
+const BRAND_URLS: Record<string, string> = {
+  "h&m": "https://www.hm.com",
+  "zara": "https://www.zara.com",
+  "adidas": "https://www.adidas.com",
+  "mango": "https://www.mango.com",
+  "amisu": "https://www.new-yorker.com",
+  "street one": "https://www.street-one.com",
+  "nike": "https://www.nike.com",
+  "only": "https://www.only.com",
+  "tom tailor": "https://www.tom-tailor.com",
+  "s.oliver": "https://www.soliver.com",
+  "bodyflirt": "https://www.bonprix.cz",
+  "esprit": "https://www.esprit.com",
+  "massimo dutti": "https://www.massimodutti.com",
+  "opus": "https://www.opus-fashion.com",
+  "tchibo": "https://www.tchibo.cz",
+  "blue motion": "https://www.lidl.com",
+  "clockhouse": "https://www.c-and-a.com",
+};
+
 function escapeXml(str: string): string {
   return str
     .replace(/&/g, "&amp;")
@@ -72,6 +97,10 @@ export async function GET() {
 
       if (product.brand) {
         xml += `    <MANUFACTURER>${escapeXml(product.brand)}</MANUFACTURER>\n`;
+        const brandUrl = BRAND_URLS[product.brand.toLowerCase()];
+        if (brandUrl) {
+          xml += `    <MANUFACTURER_ELECTRONIC_ADDRESS>${escapeXml(brandUrl)}</MANUFACTURER_ELECTRONIC_ADDRESS>\n`;
+        }
       }
 
       xml += `    <CATEGORYTEXT>${escapeXml(categoryPath)}</CATEGORYTEXT>\n`;

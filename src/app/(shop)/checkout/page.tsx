@@ -37,6 +37,7 @@ import {
   type CheckoutState,
 } from "./actions";
 import { ComgatePaymentSection } from "@/components/shop/checkout/comgate-payment-section";
+import { ExpressCheckoutButtons } from "@/components/shop/checkout/express-checkout-buttons";
 import {
   PacketaWidget,
   type PacketaPoint,
@@ -547,6 +548,13 @@ export default function CheckoutPage() {
           {state.error}
         </div>
       )}
+
+      {/* Express checkout buttons — above accordion, C1496: 2x mobile conversion */}
+      <div className="mt-6">
+        <ExpressCheckoutButtons
+          onSelect={() => setPaymentMethod("card")}
+        />
+      </div>
 
       <form action={dispatch} className="mt-8" onKeyDown={handleFormKeyDown}>
         {/* Hidden cart data */}
