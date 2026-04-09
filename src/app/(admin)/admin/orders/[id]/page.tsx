@@ -14,6 +14,7 @@ import {
 import { ArrowLeft } from "lucide-react";
 import { OrderStatusSelect } from "./order-status-select";
 import { TrackingNumberForm } from "./tracking-number-form";
+import { PacketaSection } from "./packeta-section";
 import { InvoiceSection } from "./invoice-section";
 import { CreateReturnForm } from "./create-return-form";
 import {
@@ -237,6 +238,12 @@ export default async function AdminOrderDetailPage({ params }: Props) {
                 currentTrackingNumber={order.trackingNumber}
               />
             </div>
+            {order.shippingMethod?.startsWith("packeta") && order.shippingPointId && (
+              <PacketaSection
+                orderId={order.id}
+                packetId={order.packetId}
+              />
+            )}
           </div>
 
           {/* Payment info */}
