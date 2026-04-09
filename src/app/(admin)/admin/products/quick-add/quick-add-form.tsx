@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CONDITION_LABELS, COLOR_MAP } from "@/lib/constants";
 import { ImageUpload } from "@/components/admin/image-upload";
-import { Zap, ChevronDown, ChevronUp } from "lucide-react";
+import { UploadDropzone } from "@/lib/uploadthing";
+import { Zap, ChevronDown, ChevronUp, Video, X } from "lucide-react";
 
 interface Category {
   id: string;
@@ -27,6 +28,7 @@ export function QuickAddForm({ categories, action }: QuickAddFormProps) {
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [showExtras, setShowExtras] = useState(false);
+  const [videoUrl, setVideoUrl] = useState<string>("");
 
   async function formAction(_prev: string | null, formData: FormData) {
     try {
@@ -66,6 +68,7 @@ export function QuickAddForm({ categories, action }: QuickAddFormProps) {
       <input type="hidden" name="images" value={JSON.stringify(imageUrls)} />
       <input type="hidden" name="sizes" value={selectedSizes.join(", ")} />
       <input type="hidden" name="colors" value={selectedColors.join(", ")} />
+      <input type="hidden" name="videoUrl" value={videoUrl} />
 
       {/* 1. Photos — biggest, most prominent */}
       <div className="space-y-2">
@@ -241,6 +244,48 @@ export function QuickAddForm({ categories, action }: QuickAddFormProps) {
               placeholder="Volitelný — vygeneruje se automaticky z názvu a stavu"
               className="text-base"
             />
+          </div>
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2">
+              <Video className="size-4 text-muted-foreground" />
+              Video
+            </Label>
+            {videoUrl ? (
+              <div className="relative max-w-sm">
+                <video
+                  src={videoUrl}
+                  controls
+                  preload="metadata"
+                  className="w-full rounded-lg border"
+                  style={{ maxHeight: "200px" }}
+                />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  className="absolute top-2 right-2 size-7"
+                  onClick={() => setVideoUrl("")}
+                >
+                  <X className="size-4" />
+                </Button>
+              </div>
+            ) : (
+              <UploadDropzone
+                endpoint="productVideo"
+                onClientUploadComplete={(res) => {
+                  if (res?.[0]) setVideoUrl(res[0].ufsUrl);
+                }}
+                onUploadError={(error: Error) => {
+                  alert(`Chyba nahrávání videa: ${error.message}`);
+                }}
+                config={{ mode: "auto" }}
+                appearance={{
+                  container:
+                    "border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 cursor-pointer hover:border-primary/50 transition-colors ut-uploading:border-primary/30",
+                }}
+              />
+            )}
+            <p className="text-xs text-muted-foreground">Nepovinné — 9:16, 15–30 s</p>
           </div>
         </div>
       )}

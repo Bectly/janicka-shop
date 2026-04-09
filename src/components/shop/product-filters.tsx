@@ -545,7 +545,7 @@ export function ProductFilters({
 
             {/* Scrollable accordion filter sections — research-backed order: Size → Price → Color → Brand → Condition → Sale */}
             <div className="flex-1 overflow-y-auto px-4 py-2">
-              <Accordion defaultValue={[0]}>
+              <Accordion defaultValue={[0]} multiple>
                 {sizes.length > 0 && (
                   <AccordionItem value={0}>
                     <AccordionTrigger className="text-sm font-semibold">

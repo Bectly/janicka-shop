@@ -246,10 +246,12 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                   if (videoRef.current) {
                     if (videoPlaying) {
                       videoRef.current.pause();
+                      setVideoPlaying(false);
                     } else {
-                      videoRef.current.play();
+                      videoRef.current.play()
+                        .then(() => setVideoPlaying(true))
+                        .catch(() => {});
                     }
-                    setVideoPlaying(!videoPlaying);
                   }
                 }}
                 onEnded={() => setVideoPlaying(false)}
@@ -259,8 +261,9 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                   type="button"
                   onClick={() => {
                     if (videoRef.current) {
-                      videoRef.current.play();
-                      setVideoPlaying(true);
+                      videoRef.current.play()
+                        .then(() => setVideoPlaying(true))
+                        .catch(() => {});
                     }
                   }}
                   className="absolute inset-0 z-10 flex items-center justify-center"
