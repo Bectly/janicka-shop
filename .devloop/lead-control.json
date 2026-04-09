@@ -6,7 +6,7 @@
   "force_next": "bolt",
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2639,
+  "last_bolt_commit_cycle": 2640,
   "updated_at_cycle": 2638,
   "dev_focus": "C2635 DIRECTIVE — ZOMBIE BROKEN (C2630-C2635 loop). C2630 fixed cart trash button + checkout step indicators + Comgate iframe (✅ DONE). ONE REMAINING FIX: src/components/shop/product-filters.tsx ONLY. Filter buttons in mobile drawer are still below 44px touch target. EXACT lines to fix: (1) Lines 126+139: category pills py-1.5 → add min-h-11 to both className strings. (2) Line 176: size chips desktop py-1/py-1.5 → add min-h-9 to the className. (3) Line 225: size buttons drawer py-1 → add min-h-11 to className. (4) Line 262: color swatches py-1 → add min-h-11 to className. (5) Line 305: condition chips py-1 → add min-h-11 to className. (6) Lines 452+481: active filter chips at drawer bottom py-1 → add min-h-9 (inline chips, 36px OK). ONLY touch product-filters.tsx. Run `npm run build` — must pass. CRITICAL: If product-filters.tsx already has min-h classes on these lines, DO NOT commit. Check before acting.",
   "qa_focus": "TRACE: After Bolt commits product-filters.tsx fix: (1) Open filter drawer at 375px viewport — category pills, size buttons, color swatches, condition chips must all have ≥44px tap height, (2) Active filter chips at drawer bottom ≥36px, (3) Filter chips still look like chips (not oversized blocks), (4) No horizontal overflow on /products at 375px, (5) npm run build passes clean.",
