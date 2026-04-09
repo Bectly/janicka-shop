@@ -2,7 +2,7 @@
 
 import { getDb } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 import { rateLimitAdmin } from "@/lib/rate-limit";
 
@@ -72,6 +72,7 @@ export async function createCategory(formData: FormData) {
     },
   });
 
+  revalidateTag("products", "seconds");
   revalidatePath("/admin/categories");
   revalidatePath("/products");
   revalidatePath("/");
@@ -121,6 +122,7 @@ export async function updateCategory(id: string, formData: FormData) {
     },
   });
 
+  revalidateTag("products", "seconds");
   revalidatePath("/admin/categories");
   revalidatePath("/products");
   revalidatePath("/");
@@ -146,6 +148,7 @@ export async function deleteCategory(id: string) {
 
   await db.category.delete({ where: { id } });
 
+  revalidateTag("products", "seconds");
   revalidatePath("/admin/categories");
   revalidatePath("/products");
   revalidatePath("/");

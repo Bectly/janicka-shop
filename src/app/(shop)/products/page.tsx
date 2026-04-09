@@ -1,8 +1,9 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { getDb } from "@/lib/db";
+import { unstable_cache } from "next/cache";
 
-export const revalidate = 30; // Revalidate every 30s (was force-dynamic)
+export const revalidate = 30; // ISR fallback — primary caching is via unstable_cache below
 import type { Prisma } from "@prisma/client";
 import { ProductCard } from "@/components/shop/product-card";
 import { ProductFilters } from "@/components/shop/product-filters";
@@ -71,6 +72,32 @@ export async function generateMetadata({
     },
   };
 }
+
+/* ---------- Cached facet data (same for ALL users, biggest query) ---------- */
+const getCachedFacetData = unstable_cache(
+  async () => {
+    const db = await getDb();
+    const [categories, countingProducts] = await Promise.all([
+      db.category.findMany({ orderBy: { sortOrder: "asc" } }),
+      db.product.findMany({
+        where: { active: true, sold: false },
+        select: {
+          brand: true,
+          sizes: true,
+          colors: true,
+          condition: true,
+          price: true,
+          compareAt: true,
+          category: { select: { slug: true } },
+        },
+        take: 2000,
+      }),
+    ]);
+    return { categories, countingProducts };
+  },
+  ["products-facet-data"],
+  { revalidate: 30, tags: ["products"] },
+);
 
 const PRODUCTS_PER_PAGE = 12;
 
@@ -193,23 +220,8 @@ export default async function ProductsPage({
 
   const hasJsFilter = sizeFilter.length > 0 || colorFilter.length > 0 || isDiscountSort;
 
-  // Fetch categories + all products for filter facets in parallel
-  const [categories, countingProducts] = await Promise.all([
-    db.category.findMany({ orderBy: { sortOrder: "asc" } }),
-    db.product.findMany({
-      where: { active: true, sold: false },
-      select: {
-        brand: true,
-        sizes: true,
-        colors: true,
-        condition: true,
-        price: true,
-        compareAt: true,
-        category: { select: { slug: true } },
-      },
-      take: 2000, // Limit facet computation dataset (was 10000)
-    }),
-  ]);
+  // Facet data is cached for 30s — same for all users, avoids re-querying 2000 products per request
+  const { categories, countingProducts } = await getCachedFacetData();
 
   // Extract unique brands (sorted alphabetically)
   const brandSet = new Set<string>();

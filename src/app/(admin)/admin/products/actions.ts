@@ -2,7 +2,7 @@
 
 import { getDb } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { rateLimitAdmin } from "@/lib/rate-limit";
@@ -148,6 +148,7 @@ export async function createProduct(formData: FormData) {
     data: { productId: product.id, price: parsed.price },
   });
 
+  revalidateTag("products", "seconds");
   revalidatePath("/admin/products");
   revalidatePath("/products");
   revalidatePath("/");
@@ -232,6 +233,7 @@ export async function updateProduct(id: string, formData: FormData) {
     },
   });
 
+  revalidateTag("products", "seconds");
   revalidatePath("/admin/products");
   revalidatePath(`/products/${slug}`);
   revalidatePath("/products");
@@ -328,6 +330,7 @@ export async function quickCreateProduct(formData: FormData) {
     data: { productId: product.id, price: parsed.price },
   });
 
+  revalidateTag("products", "seconds");
   revalidatePath("/admin/products");
   revalidatePath("/products");
   revalidatePath("/");
@@ -381,6 +384,7 @@ export async function duplicateProduct(id: string) {
     data: { productId: copy.id, price: copy.price },
   });
 
+  revalidateTag("products", "seconds");
   revalidatePath("/admin/products");
   redirect(`/admin/products/${copy.id}/edit`);
 }
@@ -466,6 +470,7 @@ export async function bulkUpdateProducts(ids: string[], action: string) {
     }
   }
 
+  revalidateTag("products", "seconds");
   revalidatePath("/admin/products");
   revalidatePath("/products");
   revalidatePath("/");
@@ -494,6 +499,7 @@ export async function deleteProduct(id: string) {
     await db.product.delete({ where: { id } });
   }
 
+  revalidateTag("products", "seconds");
   revalidatePath("/admin/products");
   revalidatePath("/products");
   revalidatePath("/");

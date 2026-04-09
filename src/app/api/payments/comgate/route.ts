@@ -4,7 +4,7 @@ import { getDb } from "@/lib/db";
 export const dynamic = "force-dynamic";
 import { getComgatePaymentStatus } from "@/lib/payments/comgate";
 import { ComgateError } from "@/lib/payments/types";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { sendPaymentConfirmedEmail } from "@/lib/email";
 
 /**
@@ -68,7 +68,8 @@ export async function POST(request: NextRequest) {
       await processPaymentStatus(order.id, order.status, paymentStatus.status);
     }
 
-    // Revalidate relevant pages
+    // Revalidate relevant pages + bust products cache (sold items affect facets)
+    revalidateTag("products", "seconds");
     revalidatePath("/admin/orders");
     revalidatePath("/admin/dashboard");
 

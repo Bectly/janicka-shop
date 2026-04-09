@@ -2,7 +2,7 @@
 
 import { getDb } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { rateLimitAdmin } from "@/lib/rate-limit";
 
 const VALID_STATUSES = ["pending", "approved", "rejected", "completed"];
@@ -179,6 +179,7 @@ export async function updateReturnStatus(
       });
     });
 
+    revalidateTag("products", "seconds");
     revalidatePath("/admin/returns");
     revalidatePath(`/admin/returns/${returnId}`);
     revalidatePath(`/admin/orders/${returnRecord.orderId}`);

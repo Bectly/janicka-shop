@@ -2,7 +2,7 @@
 
 import { getDb } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { ORDER_STATUS_LABELS, PAYMENT_METHOD_LABELS, SHIPPING_METHOD_LABELS } from "@/lib/constants";
 import { sendOrderStatusEmail, sendShippingNotificationEmail } from "@/lib/email";
 import { rateLimitAdmin } from "@/lib/rate-limit";
@@ -159,6 +159,7 @@ export async function updateOrderStatus(orderId: string, status: string) {
       });
   }
 
+  revalidateTag("products", "seconds");
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath("/products");
