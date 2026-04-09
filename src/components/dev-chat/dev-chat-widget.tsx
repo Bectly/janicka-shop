@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { MessageCircle, X, Send, Loader2 } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, LogIn } from "lucide-react";
+import Link from "next/link";
 
 interface Message {
   id: string;
@@ -16,6 +17,8 @@ interface Message {
   createdAt: string;
 }
 
+type AuthStatus = "loading" | "authenticated" | "unauthenticated";
+
 export function DevChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -23,9 +26,31 @@ export function DevChatWidget() {
   const [sending, setSending] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [authStatus, setAuthStatus] = useState<AuthStatus>("loading");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const pathname = usePathname();
+
+  // Check auth status on mount
+  useEffect(() => {
+    let cancelled = false;
+    async function checkAuth() {
+      try {
+        const res = await fetch("/api/auth/session");
+        if (cancelled) return;
+        if (!res.ok) {
+          setAuthStatus("unauthenticated");
+          return;
+        }
+        const data = await res.json();
+        setAuthStatus(data?.user ? "authenticated" : "unauthenticated");
+      } catch {
+        if (!cancelled) setAuthStatus("unauthenticated");
+      }
+    }
+    checkAuth();
+    return () => { cancelled = true; };
+  }, []);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
