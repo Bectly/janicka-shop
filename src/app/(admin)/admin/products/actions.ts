@@ -113,7 +113,8 @@ export async function createProduct(formData: FormData) {
   const validatedImages = parseImages(formData);
   const measurements = parseMeasurementsInput(formData);
   const fitNote = ((formData.get("fitNote") as string) || "").trim().slice(0, 120) || null;
-  const videoUrl = ((formData.get("videoUrl") as string) || "").trim() || null;
+  const rawVideoUrl = ((formData.get("videoUrl") as string) || "").trim();
+  const videoUrl = rawVideoUrl && /^https?:\/\//.test(rawVideoUrl) ? rawVideoUrl : null;
 
   const product = await db.product.create({
     data: {
@@ -190,7 +191,8 @@ export async function updateProduct(id: string, formData: FormData) {
   const validatedImages = parseImages(formData);
   const measurements = parseMeasurementsInput(formData);
   const fitNote = ((formData.get("fitNote") as string) || "").trim().slice(0, 120) || null;
-  const videoUrl = ((formData.get("videoUrl") as string) || "").trim() || null;
+  const rawVideoUrl = ((formData.get("videoUrl") as string) || "").trim();
+  const videoUrl = rawVideoUrl && /^https?:\/\//.test(rawVideoUrl) ? rawVideoUrl : null;
 
   // Check if price changed — log old price for 30-day price history (Czech fake discount law)
   const current = await db.product.findUnique({
@@ -287,7 +289,8 @@ export async function quickCreateProduct(formData: FormData) {
   const validatedImages = parseImages(formData);
   const measurements = parseMeasurementsInput(formData);
   const fitNote = ((formData.get("fitNote") as string) || "").trim().slice(0, 120) || null;
-  const videoUrl = ((formData.get("videoUrl") as string) || "").trim() || null;
+  const rawVideoUrl = ((formData.get("videoUrl") as string) || "").trim();
+  const videoUrl = rawVideoUrl && /^https?:\/\//.test(rawVideoUrl) ? rawVideoUrl : null;
 
   // Default description if empty
   const description = parsed.description.trim()

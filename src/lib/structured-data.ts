@@ -128,6 +128,8 @@ export interface ProductForSchema {
   colors?: string;
   sizes?: string;
   compareAt?: number | null;
+  videoUrl?: string | null;
+  createdAt?: Date | string | null;
 }
 
 /** Build a single Product schema object (for use standalone or inside ItemList). */
@@ -168,6 +170,21 @@ export function buildProductSchema(product: ProductForSchema) {
     });
   }
 
+  // VideoObject — Google Shopping uses this for rich results (+22% CTR)
+  const uploadDate = product.createdAt
+    ? new Date(product.createdAt).toISOString().split("T")[0]
+    : undefined;
+  const videoObject = product.videoUrl && /^https?:\/\//.test(product.videoUrl)
+    ? {
+        "@type": "VideoObject" as const,
+        name: `${product.name} — video`,
+        description: product.description,
+        contentUrl: product.videoUrl,
+        thumbnailUrl: productImages.length > 0 ? productImages[0] : undefined,
+        ...(uploadDate ? { uploadDate } : {}),
+      }
+    : undefined;
+
   return {
     "@type": "Product",
     name: product.name,
@@ -183,6 +200,7 @@ export function buildProductSchema(product: ProductForSchema) {
     size: sizes.length > 0 ? sizes.join(", ") : undefined,
     additionalProperty:
       additionalProperty.length > 0 ? additionalProperty : undefined,
+    ...(videoObject ? { subjectOf: videoObject } : {}),
     offers: {
       "@type": "Offer",
       url: `${BASE_URL}/products/${product.slug}`,

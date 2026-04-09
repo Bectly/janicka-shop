@@ -147,13 +147,21 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
     touchRef.current.swiping = false;
   }, [goNext, goPrev]);
 
-  // Keyboard navigation for lightbox
+  // Keyboard navigation for lightbox — clamp within image-only range (video slide is not in lightbox)
   useEffect(() => {
     if (!lightboxOpen) return;
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeLightbox();
-      else if (e.key === "ArrowRight") goNext();
-      else if (e.key === "ArrowLeft") goPrev();
+      if (e.key === "Escape") {
+        closeLightbox();
+      } else if (e.key === "ArrowRight") {
+        setActiveIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+        setZoomed(false);
+        setPanOffset({ x: 0, y: 0 });
+      } else if (e.key === "ArrowLeft") {
+        setActiveIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+        setZoomed(false);
+        setPanOffset({ x: 0, y: 0 });
+      }
     };
     document.addEventListener("keydown", handleKey);
     document.body.style.overflow = "hidden";
@@ -161,7 +169,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
       document.removeEventListener("keydown", handleKey);
       document.body.style.overflow = "";
     };
-  }, [lightboxOpen, closeLightbox, goNext, goPrev]);
+  }, [lightboxOpen, closeLightbox, images.length]);
 
   // Mouse drag for panning when zoomed
   const handlePointerDown = useCallback(

@@ -222,6 +222,7 @@ export default async function ProductDetailPage({ params }: Props) {
       categoryName: product.category.name,
       colors: product.colors,
       sizes: product.sizes,
+      videoUrl: product.videoUrl,
     }),
   };
 
