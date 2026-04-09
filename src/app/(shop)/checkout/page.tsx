@@ -41,6 +41,10 @@ import {
   type PacketaPoint,
 } from "@/components/shop/packeta-widget";
 import {
+  AddressAutocomplete,
+  type AddressSuggestion,
+} from "@/components/shop/address-autocomplete";
+import {
   SHIPPING_PRICES,
   FREE_SHIPPING_THRESHOLD,
   COD_SURCHARGE,
@@ -233,6 +237,29 @@ export default function CheckoutPage() {
     (point: PacketaPoint | null) => {
       setPacketaPoint(point);
       if (point) setShippingError(null);
+    },
+    [],
+  );
+
+  // Auto-fill city + ZIP when user selects an address suggestion
+  const handleAddressSelect = useCallback(
+    (suggestion: AddressSuggestion) => {
+      if (cityRef.current) {
+        const nativeSetter = Object.getOwnPropertyDescriptor(
+          HTMLInputElement.prototype,
+          "value",
+        )?.set;
+        nativeSetter?.call(cityRef.current, suggestion.city);
+        cityRef.current.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+      if (zipRef.current) {
+        const nativeSetter = Object.getOwnPropertyDescriptor(
+          HTMLInputElement.prototype,
+          "value",
+        )?.set;
+        nativeSetter?.call(zipRef.current, suggestion.zip);
+        zipRef.current.dispatchEvent(new Event("input", { bubbles: true }));
+      }
     },
     [],
   );
@@ -803,17 +830,18 @@ export default function CheckoutPage() {
                     </div>
                     <div className="space-y-2 sm:col-span-2">
                       <Label htmlFor="street">Ulice a číslo popisné</Label>
-                      <Input
-                        ref={streetRef}
+                      <AddressAutocomplete
+                        inputRef={streetRef}
                         id="street"
                         name="street"
                         required
-                        placeholder="Květná 15"
+                        placeholder="Začněte psát adresu..."
                         autoComplete="street-address"
                         aria-invalid={!!state.fieldErrors.street}
                         aria-describedby={
                           state.fieldErrors.street ? "street-error" : undefined
                         }
+                        onSelect={handleAddressSelect}
                       />
                       {state.fieldErrors.street && (
                         <p
