@@ -6,7 +6,7 @@
   "force_next": "bolt",
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2622,
+  "last_bolt_commit_cycle": 2623,
   "updated_at_cycle": 2617,
   "dev_focus": "C2617 DIRECTIVE — ReferralCard DONE (marked [x] in TODO). ZOMBIE LOOP ENDED. NEW TASK: MOBILE RESPONSIVE POLISH. Audit ALL shop pages at 375px viewport width and fix layout issues. Priority order: (1) /checkout — accordion sections, form inputs touch targets ≥44px, Packeta widget sizing, payment section overflow. (2) /products/[slug] — gallery tap targets, add-to-cart sticky bar, size selector buttons, similar items grid cols. (3) /products — filter drawer fullscreen, product grid 2-col layout, quick filters horizontal scroll. (4) / — hero section, trust badges row→wrap, collections cards, recently sold horizontal scroll. (5) /cart — item list stacking, totals sidebar→stacked on mobile, exit intent modal. CHECK EACH PAGE: text truncation/overflow, zero horizontal scroll at 375px, touch targets <44px (fix them), z-index conflicts. Fashion = 81% mobile. Run `npm run build` — must pass before commit.",
   "qa_focus": "TRACE: After Bolt commits mobile fixes: (1) Test ALL shop pages at 375px + 430px viewports — zero horizontal overflow, (2) All interactive elements ≥44px touch targets, (3) Checkout accordion flow end-to-end at 375px, (4) Product gallery swipe works on mobile, (5) Mobile nav open/close, (6) No JS errors in console. Security spot-check: all /api/admin/* routes require auth.",
