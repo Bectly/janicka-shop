@@ -495,6 +495,194 @@ export async function sendOrderStatusEmail(
 }
 
 // ---------------------------------------------------------------------------
+// Enhanced shipping notification with cross-sell recommendations
+// ---------------------------------------------------------------------------
+
+interface CrossSellProduct {
+  name: string;
+  slug: string;
+  price: number;
+  compareAt: number | null;
+  brand: string | null;
+  condition: string;
+  image: string | null;
+  sizes: string[];
+}
+
+export interface ShippingNotificationData {
+  orderNumber: string;
+  customerName: string;
+  customerEmail: string;
+  total: number;
+  accessToken: string;
+  trackingNumber?: string | null;
+  items: OrderItem[];
+  crossSellProducts: CrossSellProduct[];
+}
+
+function buildCrossSellProductsHtml(products: CrossSellProduct[]): string {
+  if (products.length === 0) return "";
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+
+  const cards = products
+    .map((p) => {
+      const productUrl = `${baseUrl}/products/${p.slug}`;
+      const imageHtml = p.image
+        ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" style="width: 100%; height: 180px; object-fit: cover; border-radius: 8px 8px 0 0; display: block;" />`
+        : `<div style="width: 100%; height: 180px; background: #f5f5f5; border-radius: 8px 8px 0 0; display: flex; align-items: center; justify-content: center;"><span style="font-size: 40px;">&#128087;</span></div>`;
+
+      const discount = p.compareAt && p.compareAt > p.price
+        ? Math.round(((p.compareAt - p.price) / p.compareAt) * 100)
+        : null;
+
+      const priceHtml = discount
+        ? `<span style="text-decoration: line-through; color: #999; font-size: 11px;">${formatPriceCzk(p.compareAt!)}</span> <strong style="color: #dc2626; font-size: 14px;">${formatPriceCzk(p.price)}</strong>`
+        : `<strong style="color: #1a1a1a; font-size: 14px;">${formatPriceCzk(p.price)}</strong>`;
+
+      const conditionLabel = CONDITION_LABELS_SHIPPING[p.condition] ?? p.condition;
+      const sizesText = p.sizes.length > 0 ? p.sizes.join(", ") : null;
+
+      return `
+        <td style="width: 50%; padding: 6px; vertical-align: top;">
+          <a href="${productUrl}" style="text-decoration: none; display: block; border: 1px solid #f0f0f0; border-radius: 8px; overflow: hidden;">
+            ${imageHtml}
+            <div style="padding: 10px;">
+              <p style="margin: 0; color: #1a1a1a; font-size: 13px; font-weight: 600; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(p.name)}</p>
+              ${p.brand ? `<p style="margin: 2px 0 0; color: #888; font-size: 11px;">${escapeHtml(p.brand)}</p>` : ""}
+              <p style="margin: 2px 0 0; color: #666; font-size: 11px;">${escapeHtml(conditionLabel)}${sizesText ? ` · Vel.: ${escapeHtml(sizesText)}` : ""}</p>
+              <p style="margin: 6px 0 0;">${priceHtml}</p>
+            </div>
+          </a>
+        </td>`;
+    });
+
+  // Build rows of 2 products each
+  const rows: string[] = [];
+  for (let i = 0; i < cards.length; i += 2) {
+    const second = cards[i + 1] ?? '<td style="width: 50%; padding: 6px;"></td>';
+    rows.push(`<tr>${cards[i]}${second}</tr>`);
+  }
+
+  return `
+    <div style="margin-top: 28px; border-top: 1px solid #f0f0f0; padding-top: 24px;">
+      <h3 style="margin: 0 0 12px; font-size: 16px; color: #1a1a1a; text-align: center;">Mohlo by se ti l&iacute;bit</h3>
+      <table style="width: 100%; border-collapse: collapse;">
+        ${rows.join("")}
+      </table>
+      <div style="text-align: center; margin-top: 16px;">
+        <a href="${baseUrl}/products?sort=newest" style="color: #1a1a1a; font-size: 13px; text-decoration: underline;">Prohl&eacute;dnout v&scaron;echny kousky &rarr;</a>
+      </div>
+    </div>`;
+}
+
+const CONDITION_LABELS_SHIPPING: Record<string, string> = {
+  new_with_tags: "Nov\u00e9 s visa\u010dkou",
+  excellent: "V\u00fdborn\u00fd stav",
+  good: "Dobr\u00fd stav",
+  visible_wear: "Viditeln\u00e9 opot\u0159eben\u00ed",
+};
+
+function buildShippingNotificationHtml(data: ShippingNotificationData): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const orderUrl = `${baseUrl}/order/${data.orderNumber}?token=${data.accessToken}`;
+
+  const trackingHtml = data.trackingNumber
+    ? `<div style="background: #f5f3ff; border-radius: 8px; padding: 12px 16px; margin: 16px auto 0; display: inline-block;">
+          <p style="margin: 0; color: #666; font-size: 13px;">Sledovac&iacute; &ccaron;&iacute;slo z&aacute;silky:</p>
+          <p style="margin: 4px 0 0; font-size: 16px; font-weight: 700; color: #1a1a1a; letter-spacing: 0.5px;">${escapeHtml(data.trackingNumber)}</p>
+        </div>`
+    : "";
+
+  const itemsHtml = data.items.length > 0
+    ? `<div style="margin-top: 20px; border-top: 1px solid #f0f0f0; padding-top: 16px;">
+        <p style="margin: 0 0 8px; font-size: 13px; color: #999; text-transform: uppercase; letter-spacing: 0.5px;">Va&scaron;e kousky</p>
+        ${data.items.map((item) => `
+          <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #fafafa;">
+            <span style="color: #333; font-size: 14px;">${escapeHtml(item.name)}${item.size ? ` <span style="color: #999;">(${escapeHtml(item.size)})</span>` : ""}</span>
+            <span style="color: #1a1a1a; font-weight: 600; font-size: 14px;">${formatPriceCzk(item.price)}</span>
+          </div>`).join("")}
+        <div style="display: flex; justify-content: space-between; padding: 10px 0 0; margin-top: 4px;">
+          <span style="color: #1a1a1a; font-weight: 700; font-size: 15px;">Celkem</span>
+          <span style="color: #1a1a1a; font-weight: 700; font-size: 15px;">${formatPriceCzk(data.total)}</span>
+        </div>
+      </div>`
+    : "";
+
+  const crossSellHtml = buildCrossSellProductsHtml(data.crossSellProducts);
+
+  return `<!DOCTYPE html>
+<html lang="cs">
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/></head>
+<body style="margin: 0; padding: 0; background-color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
+
+    <div style="text-align: center; padding: 24px 0;">
+      <h1 style="margin: 0; font-size: 24px; color: #1a1a1a;">Jani&ccaron;ka Shop</h1>
+    </div>
+
+    <div style="background: #fff; border-radius: 12px; padding: 32px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+
+      <div style="text-align: center;">
+        <div style="width: 64px; height: 64px; background: #ede9fe; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+          <span style="font-size: 32px; line-height: 64px;">&#128230;</span>
+        </div>
+        <h2 style="margin: 0 0 8px; font-size: 20px; color: #1a1a1a;">Objedn&aacute;vka odesl&aacute;na!</h2>
+        <p style="margin: 0 0 4px; color: #666;">
+          ${escapeHtml(data.customerName)}, va&scaron;e objedn&aacute;vka
+          <strong style="color: #1a1a1a;">${escapeHtml(data.orderNumber)}</strong>
+          je na cest&ecaron; k v&aacute;m.
+        </p>
+        ${trackingHtml}
+      </div>
+
+      ${itemsHtml}
+
+      <div style="text-align: center; margin-top: 24px;">
+        <a href="${orderUrl}" style="display: inline-block; background: #1a1a1a; color: #fff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
+          Zobrazit objedn&aacute;vku
+        </a>
+      </div>
+
+      ${crossSellHtml}
+    </div>
+
+    <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
+      <p style="margin: 0;">Jani&ccaron;ka Shop &mdash; Second hand m&oacute;da</p>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+/**
+ * Send enhanced shipping notification email with cross-sell product recommendations.
+ * Used instead of generic status email when order transitions to "shipped".
+ * Cross-sell products should be same category + matching sizes from live inventory.
+ * Returns true on success, false on failure.
+ */
+export async function sendShippingNotificationEmail(data: ShippingNotificationData): Promise<boolean> {
+  const resend = getResendClient();
+  if (!resend) {
+    console.warn("[Email] RESEND_API_KEY not set — skipping shipping notification email");
+    return false;
+  }
+
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: data.customerEmail,
+      subject: `Objedn\u00e1vka odesl\u00e1na \u2014 ${data.orderNumber} \u2014 Jani\u010dka Shop`,
+      html: buildShippingNotificationHtml(data),
+    });
+    return true;
+  } catch (error) {
+    console.error(`[Email] Failed to send shipping notification for ${data.orderNumber}:`, error);
+    return false;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Newsletter welcome email
 // ---------------------------------------------------------------------------
 

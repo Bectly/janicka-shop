@@ -4,7 +4,7 @@ import { getDb } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { ORDER_STATUS_LABELS } from "@/lib/constants";
-import { sendOrderStatusEmail } from "@/lib/email";
+import { sendOrderStatusEmail, sendShippingNotificationEmail } from "@/lib/email";
 import { rateLimitAdmin } from "@/lib/rate-limit";
 
 const VALID_STATUSES = [
@@ -123,33 +123,40 @@ export async function updateOrderStatus(orderId: string, status: string) {
   }
 
   // Fire-and-forget status notification email (never blocks admin action)
-  db.order
-    .findUnique({
-      where: { id: orderId },
-      select: {
-        orderNumber: true,
-        accessToken: true,
-        total: true,
-        trackingNumber: true,
-        customer: { select: { firstName: true, lastName: true, email: true } },
-      },
-    })
-    .then((o) => {
-      if (!o || !o.customer.email) return;
-      sendOrderStatusEmail(status, {
-        orderNumber: o.orderNumber,
-        customerName: `${o.customer.firstName} ${o.customer.lastName}`,
-        customerEmail: o.customer.email,
-        total: o.total,
-        accessToken: o.accessToken ?? "",
-        trackingNumber: o.trackingNumber,
-      }).catch((err: unknown) => {
-        console.error(`[Email] Failed to send order status email:`, err);
-      });
-    })
-    .catch((err) => {
-      console.error(`[Email] Failed to fetch order for status email:`, err);
+  if (status === "shipped") {
+    // Enhanced shipping email with cross-sell product recommendations
+    sendShippingEmailWithCrossSell(db, orderId).catch((err) => {
+      console.error("[Email] Failed to send shipping notification:", err);
     });
+  } else {
+    db.order
+      .findUnique({
+        where: { id: orderId },
+        select: {
+          orderNumber: true,
+          accessToken: true,
+          total: true,
+          trackingNumber: true,
+          customer: { select: { firstName: true, lastName: true, email: true } },
+        },
+      })
+      .then((o) => {
+        if (!o || !o.customer.email) return;
+        sendOrderStatusEmail(status, {
+          orderNumber: o.orderNumber,
+          customerName: `${o.customer.firstName} ${o.customer.lastName}`,
+          customerEmail: o.customer.email,
+          total: o.total,
+          accessToken: o.accessToken ?? "",
+          trackingNumber: o.trackingNumber,
+        }).catch((err: unknown) => {
+          console.error(`[Email] Failed to send order status email:`, err);
+        });
+      })
+      .catch((err) => {
+        console.error(`[Email] Failed to fetch order for status email:`, err);
+      });
+  }
 
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${orderId}`);
@@ -256,6 +263,111 @@ export async function exportOrdersCsv(statusFilter?: string): Promise<string> {
 
   // BOM for Excel UTF-8 recognition
   return "\uFEFF" + csv;
+}
+
+/**
+ * Fetch order data + cross-sell product recommendations, then send enhanced shipping email.
+ * Cross-sell: same category + matching sizes from live (unsold) inventory, max 4 products.
+ */
+async function sendShippingEmailWithCrossSell(
+  db: Awaited<ReturnType<typeof getDb>>,
+  orderId: string,
+): Promise<void> {
+  const order = await db.order.findUnique({
+    where: { id: orderId },
+    select: {
+      orderNumber: true,
+      accessToken: true,
+      total: true,
+      trackingNumber: true,
+      customer: { select: { firstName: true, lastName: true, email: true } },
+      items: {
+        select: {
+          name: true,
+          price: true,
+          size: true,
+          color: true,
+          productId: true,
+          product: { select: { categoryId: true, sizes: true } },
+        },
+      },
+    },
+  });
+
+  if (!order || !order.customer.email) return;
+
+  // Gather category IDs and sizes from ordered items for cross-sell matching
+  const categoryIds = [...new Set(order.items.map((i) => i.product.categoryId))];
+  const orderedSizes = [
+    ...new Set(order.items.filter((i) => i.size).map((i) => i.size!)),
+  ];
+  const orderedProductIds = order.items.map((i) => i.productId);
+
+  // Fetch candidate products from same categories (more than needed for size filtering)
+  const candidates = await db.product.findMany({
+    where: {
+      categoryId: { in: categoryIds },
+      id: { notIn: orderedProductIds },
+      active: true,
+      sold: false,
+    },
+    orderBy: { createdAt: "desc" },
+    take: 20,
+    select: {
+      name: true,
+      slug: true,
+      price: true,
+      compareAt: true,
+      brand: true,
+      condition: true,
+      images: true,
+      sizes: true,
+    },
+  });
+
+  // Score candidates: prefer size overlap, then recency (already sorted by createdAt desc)
+  const scored = candidates.map((p) => {
+    const productSizes = JSON.parse(p.sizes) as string[];
+    const sizeMatch =
+      orderedSizes.length > 0 && productSizes.some((s) => orderedSizes.includes(s));
+    return { ...p, sizeMatch };
+  });
+
+  // Size-matched first, then rest — take top 4
+  const sizeMatched = scored.filter((p) => p.sizeMatch);
+  const rest = scored.filter((p) => !p.sizeMatch);
+  const selected = [...sizeMatched, ...rest].slice(0, 4);
+
+  const crossSellProducts = selected.map((p) => {
+    const images = JSON.parse(p.images) as string[];
+    const sizes = JSON.parse(p.sizes) as string[];
+    return {
+      name: p.name,
+      slug: p.slug,
+      price: p.price,
+      compareAt: p.compareAt,
+      brand: p.brand,
+      condition: p.condition,
+      image: images[0] ?? null,
+      sizes,
+    };
+  });
+
+  await sendShippingNotificationEmail({
+    orderNumber: order.orderNumber,
+    customerName: `${order.customer.firstName} ${order.customer.lastName}`,
+    customerEmail: order.customer.email,
+    total: order.total,
+    accessToken: order.accessToken ?? "",
+    trackingNumber: order.trackingNumber,
+    items: order.items.map((i) => ({
+      name: i.name,
+      price: i.price,
+      size: i.size,
+      color: i.color,
+    })),
+    crossSellProducts,
+  });
 }
 
 export async function updateTrackingNumber(orderId: string, trackingNumber: string) {
