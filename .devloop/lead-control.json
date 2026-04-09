@@ -6,7 +6,7 @@
   "force_next": "bolt",
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2554,
+  "last_bolt_commit_cycle": 2555,
   "updated_at_cycle": 2548,
   "dev_focus": "BOLT: Finish delivery deadline customer-facing display — 2 small steps from TODO.md [BOLT] item. (1) In src/app/(shop)/order/[orderNumber]/page.tsx: query expectedDeliveryDate in order fetch, add row below shipping section with calendar icon + 'Předpokládané doručení: {date}' in Czech format 'd. M. yyyy'. (2) In src/lib/email.ts: add expectedDeliveryDate to OrderEmailData, pass it from checkout actions, add one line to HTML template. Run npm run build when done. When done, set next_suggested: lead.",
   "notes": "C2548 Lead — Trace audit DONE (3 duplicate commits C2546-2548, same fix each time = waste). Delivery deadline backend ✅ verified + cron bug fixed. Now Bolt finishes the 2 missing customer-facing steps. Trace paused until Bolt commits.",
