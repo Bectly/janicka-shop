@@ -76,6 +76,7 @@ model Customer {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   orders    Order[]
+  returns   Return[]
 }
 
 model Order {
@@ -107,6 +108,7 @@ model Order {
   updatedAt     DateTime    @updatedAt
   items         OrderItem[]
   invoices      Invoice[]
+  returns       Return[]
 
   @@index([customerId])
   @@index([status])
@@ -253,6 +255,46 @@ model Collection {
   @@index([slug])
   @@index([featured])
   @@index([active])
+}
+
+model Return {
+  id            String   @id @default(cuid())
+  returnNumber  String   @unique          // VRT-YYYY-NNNN
+  orderId       String
+  order         Order    @relation(fields: [orderId], references: [id])
+  customerId    String
+  customer      Customer @relation(fields: [customerId], references: [id])
+  status        String   @default("pending") // pending | approved | rejected | completed
+  reason        String                       // withdrawal_14d | defect | wrong_item | other
+  reasonDetail  String?                      // free-text explanation
+  refundAmount  Float                        // full or partial refund amount
+  refundMethod  String?                      // original_method | bank_transfer | store_credit
+  adminNote     String?                      // internal note from admin
+  resolvedAt    DateTime?                    // when status changed to approved/rejected/completed
+  completedAt   DateTime?                    // when refund was actually processed
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  items         ReturnItem[]
+
+  @@index([orderId])
+  @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model ReturnItem {
+  id          String @id @default(cuid())
+  returnId    String
+  return      Return @relation(fields: [returnId], references: [id], onDelete: Cascade)
+  orderItemId String
+  productId   String
+  productName String
+  price       Float
+  size        String?
+  color       String?
+
+  @@index([returnId])
 }
 
 model ShopSettings {
