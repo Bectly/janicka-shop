@@ -3,9 +3,9 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2715,
+  "last_bolt_commit_cycle": 2719,
   "paused_at_bolt_cycle": 2703,
-  "notes": "C2718 Lead: Marked #3 security audit DONE (Trace C2717 — Comgate accessToken fix confirmed in code). Comgate SDK 30th check: v2.0.15 (6+ months frozen). Bolt running on #9 (Vinted T&C banner, deadline April 27 — 18 days left, on track). After #9: priority is #12 Heureka ORDER_INFO, then #13 use-cache. Trace: verify Bolt's Vinted banner commit (date range April 28-May 1, auto-hide logic, mobile rendering, build). 2 blocked items (#1 R2, #4 Heureka Overeno) await bectly.",
+  "notes": "C2722 Lead: Comgate SDK 32nd check — STILL v2.0.15 (Nov 2025, 6+ months frozen). Vinted T&C banner (#9) COMMITTED (C2719) ✅ marked done. Vinted CZ media: 28th consecutive ZERO coverage (window opens April 28 — 19 days). No new CZ competitors: 18th consecutive clean scan. BACKLOG: 2 open Bolt tasks. Bolt MUST start #12 Heureka ORDER_INFO now (src/lib/heureka.ts — spec in CLAUDE.md: POST https://api.heureka.cz/shop-certification/v2/order/log with apiKey/email/orderId/productItemIds[], call after payment confirmed, graceful skip if HEUREKA_API_KEY not set). Then #13 use-cache (cacheComponents:true in next.config.ts, 'use cache' + cacheLife + cacheTag on homepage/listing/PDP helpers, revalidateTag('products') in admin mutations). NEW: #14 GMC registration BLOCKED on bectly — URGENT April 30 deadline (Doppl VTO). 2 other blocked (#1 R2, #4 Heureka Overeno) await bectly. Email timing verified correct (17 UTC = 19 CET). Trace: verify #12 Heureka ORDER_INFO after Bolt commit.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
