@@ -1,7 +1,9 @@
 import { getDb } from "@/lib/db";
 import { getLowestPrices30d } from "@/lib/price-history";
 import { ProductCard } from "@/components/shop/product-card";
+import { ProductListItem } from "@/components/shop/product-list-item";
 import { buildItemListSchema, jsonLdString } from "@/lib/structured-data";
+import type { ViewMode } from "@/components/shop/grid-view-switcher";
 import type { Prisma } from "@prisma/client";
 
 const PRODUCTS_PER_PAGE = 12;
@@ -35,9 +37,16 @@ interface ProductGridProps {
     minPrice?: string;
     maxPrice?: string;
     page?: string;
+    view?: string;
   };
   categoryName: string;
 }
+
+const VIEW_GRID_CLASSES: Record<ViewMode, string> = {
+  "grid-2": "grid grid-cols-2 gap-3 sm:gap-4 lg:gap-5",
+  "grid-3": "grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-5",
+  list: "flex flex-col gap-3",
+};
 
 export async function ProductGrid({
   searchParams: params,
@@ -174,15 +183,51 @@ export async function ProductGrid({
     `/products${params.category ? `?category=${params.category}` : ""}`,
   );
 
+  const viewMode: ViewMode =
+    params.view === "grid-2" || params.view === "list"
+      ? params.view
+      : "grid-3";
+  const isListView = viewMode === "list";
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLdString(itemListJsonLd) }}
       />
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
+      <div className={VIEW_GRID_CLASSES[viewMode]}>
         {paginatedProducts.map((product, i) => {
-          const isFeatured = product.featured;
+          const isFeatured = product.featured && !isListView;
+
+          if (isListView) {
+            return (
+              <div
+                key={product.id}
+                className="animate-fade-up-scroll"
+                style={{ animationDelay: `${i * 40}ms` }}
+              >
+                <ProductListItem
+                  id={product.id}
+                  name={product.name}
+                  slug={product.slug}
+                  price={product.price}
+                  compareAt={product.compareAt}
+                  images={product.images}
+                  categoryName={product.category.name}
+                  brand={product.brand}
+                  condition={product.condition}
+                  sizes={product.sizes}
+                  colors={product.colors}
+                  stock={product.stock}
+                  createdAt={product.createdAt.toISOString()}
+                  isReserved={false}
+                  lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
+                  priority={i < 4}
+                />
+              </div>
+            );
+          }
+
           return (
             <div
               key={product.id}

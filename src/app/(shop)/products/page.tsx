@@ -5,6 +5,8 @@ import { cacheLife, cacheTag } from "next/cache";
 import { ProductFilters } from "@/components/shop/product-filters";
 import { Pagination } from "@/components/shop/pagination";
 import { ProductGrid } from "./product-grid";
+import { CategoryHero, CatalogHero } from "@/components/shop/category-hero";
+import { GridViewSwitcher } from "@/components/shop/grid-view-switcher";
 import { buildBreadcrumbSchema, jsonLdString } from "@/lib/structured-data";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Metadata } from "next";
@@ -104,6 +106,7 @@ interface SearchParams {
   minPrice?: string;
   maxPrice?: string;
   page?: string;
+  view?: string;
 }
 
 /** Safely parse a JSON string array, returning [] on failure. */
@@ -209,9 +212,26 @@ function toArray(v: string | string[] | undefined): string[] {
 }
 
 /** Skeleton shown while ProductGrid streams in */
-function ProductGridSkeleton() {
+function ProductGridSkeleton({ view }: { view?: string }) {
+  if (view === "list") {
+    return (
+      <div className="flex flex-col gap-3">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="flex gap-4 rounded-2xl border p-4">
+            <Skeleton className="aspect-[3/4] w-28 shrink-0 rounded-xl sm:w-36" />
+            <div className="flex-1 space-y-3 py-1">
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-5 w-3/4" />
+              <Skeleton className="h-3 w-32" />
+              <Skeleton className="h-6 w-20" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
   return (
-    <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+    <div className={`grid gap-x-4 gap-y-8 ${view === "grid-2" ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4"}`}>
       {Array.from({ length: 12 }).map((_, i) => (
         <div key={i} className="space-y-3">
           <Skeleton className="aspect-[3/4] w-full rounded-xl" />
@@ -287,9 +307,10 @@ export default async function ProductsPage({
   const totalPages = Math.max(1, Math.ceil(totalItems / PRODUCTS_PER_PAGE));
   const safePage = Math.min(currentPage, totalPages);
 
-  const categoryName = params.category
-    ? (categories.find((c) => c.slug === params.category)?.name ?? "Katalog")
-    : "Všechny produkty";
+  const activeCategory = params.category
+    ? categories.find((c) => c.slug === params.category) ?? null
+    : null;
+  const categoryName = activeCategory?.name ?? "Všechny produkty";
 
   // Breadcrumb JSON-LD (only needs category info — no DB query needed)
   const breadcrumbItems = [{ name: "Katalog", url: "/products" }];
@@ -310,6 +331,20 @@ export default async function ProductsPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLdString(breadcrumbJsonLd) }}
       />
+
+      {/* ===== Hero Banner — category-specific mood or generic catalog ===== */}
+      {activeCategory ? (
+        <CategoryHero
+          name={activeCategory.name}
+          slug={activeCategory.slug}
+          description={activeCategory.description}
+          image={activeCategory.image}
+          productCount={totalItems}
+        />
+      ) : (
+        <CatalogHero productCount={totalItems} />
+      )}
+
       {/* Breadcrumb */}
       <nav
         className="mb-4 text-sm text-muted-foreground"
@@ -332,42 +367,46 @@ export default async function ProductsPage({
         )}
       </nav>
 
-      {/* Page heading */}
-      <div className="mb-6">
-        <h1 className="font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
-          {categoryName}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {totalItems}{" "}
-          {totalItems === 1
-            ? "produkt"
-            : totalItems >= 2 && totalItems <= 4
-              ? "produkty"
-              : "produktů"}
-          {totalPages > 1 && (
-            <span>
-              {" "}
-              &middot; stránka {safePage} z {totalPages}
-            </span>
-          )}
-        </p>
+      {/* ===== Sticky filter toolbar ===== */}
+      <div className="sticky top-0 z-30 -mx-4 bg-background/80 px-4 py-3 backdrop-blur-lg sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">
+            {totalItems}{" "}
+            {totalItems === 1
+              ? "produkt"
+              : totalItems >= 2 && totalItems <= 4
+                ? "produkty"
+                : "produktů"}
+            {totalPages > 1 && (
+              <span>
+                {" "}
+                &middot; stránka {safePage} z {totalPages}
+              </span>
+            )}
+          </p>
+          <Suspense fallback={null}>
+            <GridViewSwitcher />
+          </Suspense>
+        </div>
       </div>
 
       {/* Filters */}
-      <Suspense fallback={null}>
-        <ProductFilters
-          brands={brands}
-          sizes={sizes}
-          colors={colors}
-          categories={categories.map((c) => ({ slug: c.slug, name: c.name }))}
-          counts={filterCounts}
-          totalFiltered={totalItems}
-        />
-      </Suspense>
+      <div className="mt-4">
+        <Suspense fallback={null}>
+          <ProductFilters
+            brands={brands}
+            sizes={sizes}
+            colors={colors}
+            categories={categories.map((c) => ({ slug: c.slug, name: c.name }))}
+            counts={filterCounts}
+            totalFiltered={totalItems}
+          />
+        </Suspense>
+      </div>
 
       {/* Product grid — streams in with skeleton fallback on any param change */}
       <div className="mt-8">
-        <Suspense key={gridKey} fallback={<ProductGridSkeleton />}>
+        <Suspense key={gridKey} fallback={<ProductGridSkeleton view={params.view} />}>
           <ProductGrid searchParams={params} categoryName={categoryName} />
         </Suspense>
       </div>

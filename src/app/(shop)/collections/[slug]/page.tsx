@@ -6,6 +6,7 @@ import { connection } from "next/server";
 
 import { ProductCard } from "@/components/shop/product-card";
 import { getLowestPrices30d } from "@/lib/price-history";
+import { CollectionHero } from "@/components/shop/collection-hero";
 import { buildItemListSchema, buildBreadcrumbSchema, jsonLdString } from "@/lib/structured-data";
 import type { Metadata } from "next";
 
@@ -142,8 +143,16 @@ export default async function CollectionPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: jsonLdString(breadcrumbJsonLd) }}
       />
 
+      {/* ===== Collection Hero Banner ===== */}
+      <CollectionHero
+        title={collection.title}
+        description={collection.description || null}
+        image={collection.image}
+        productCount={orderedProducts.length}
+      />
+
       {/* Breadcrumb */}
-      <nav className="mb-4 text-sm text-muted-foreground" aria-label="Navigace">
+      <nav className="mb-6 text-sm text-muted-foreground" aria-label="Navigace">
         <Link href="/" className="hover:text-foreground">
           Domů
         </Link>
@@ -154,26 +163,6 @@ export default async function CollectionPage({ params }: Props) {
         <span className="mx-2">/</span>
         <span className="text-foreground">{collection.title}</span>
       </nav>
-
-      {/* Collection header */}
-      <div className="mb-8">
-        <h1 className="font-heading text-3xl font-bold text-foreground">
-          {collection.title}
-        </h1>
-        {collection.description && (
-          <p className="mt-2 max-w-2xl text-muted-foreground">
-            {collection.description}
-          </p>
-        )}
-        <p className="mt-2 text-sm text-muted-foreground">
-          {orderedProducts.length}{" "}
-          {orderedProducts.length === 1
-            ? "kousek"
-            : orderedProducts.length >= 2 && orderedProducts.length <= 4
-              ? "kousky"
-              : "kousků"}
-        </p>
-      </div>
 
       {/* Product grid */}
       {orderedProducts.length > 0 ? (

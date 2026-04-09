@@ -317,6 +317,16 @@
   box-shadow: 0 0 20px oklch(0.55 0.2 350 / 15%);
 }
 
+/* ─── Sticky filter toolbar border on scroll ─── */
+.sticky-toolbar-border {
+  border-bottom: 1px solid transparent;
+  transition: border-color 200ms ease;
+}
+
+.sticky-toolbar-border[data-stuck="true"] {
+  border-bottom-color: var(--border);
+}
+
 /* ─── Reduced motion: disable custom animations ─── */
 @media (prefers-reduced-motion: reduce) {
   .animate-shimmer,
