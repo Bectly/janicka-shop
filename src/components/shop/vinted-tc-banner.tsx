@@ -75,7 +75,13 @@ export function VintedTcBanner() {
           Nikdy je nepoužijeme k trénování AI.{" "}
           <span className="text-rose-600">
             Na rozdíl od jiných platforem nesdílíme tvoje data s umělou inteligencí.
-          </span>
+          </span>{" "}
+          <Link
+            href="/soukromi"
+            className="inline-flex items-center gap-0.5 font-semibold text-rose-700 underline underline-offset-2 transition-colors hover:text-rose-900"
+          >
+            Zjistit více&nbsp;→
+          </Link>
         </p>
         <button
           type="button"
