@@ -2,7 +2,7 @@
   "pause": {
     "trace": "until_next_bolt_commit"
   },
-  "force_next": "bolt",
+  "force_next": null,
   "interval_override": {
     "trace": 6
   },
