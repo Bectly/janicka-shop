@@ -1,5 +1,9 @@
 # Janička Shop — TODO
 
+## 🔴 BUG: DevChat not working [2026-04-09 — bectly tested on production]
+- [ ] [BOLT] **DevChat widget broken on production** — (1) Messages don't appear in the chat window after sending, (2) No response comes back, (3) API returns 401 for unauthenticated users — widget should detect auth state and prompt login if not logged in (not silently fail), (4) Chat should be persistent (messages saved and visible on reload), (5) Widget should show clear state: "Přihlas se pro komunikaci s týmem" if not logged in. Test the full flow: login as admin → send message → message appears → Lead reads via API → Lead responds → response appears in widget.
+- [ ] [TRACE] **Verify DevChat end-to-end** — Test on production after Bolt fix: (1) unauthenticated → login prompt, (2) authenticated → send message → visible in chat, (3) page reload → messages persist, (4) GET /api/dev-chat?status=new returns new messages.
+
 ## 🔴 URGENT: Performance + Vinted Import + R2 Migration [2026-04-09 — bectly priority]
 
 ### P1: Page Load Performance (CRITICAL UX)
