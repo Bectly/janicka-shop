@@ -28,8 +28,8 @@ export default function ShippingPage() {
                 <span className="font-semibold text-foreground">69 Kč</span>
               </div>
               <p className="mt-1 text-sm">
-                Doručení na vybrané výdejní místo. Obvykle do 2–3 pracovních
-                dnů.
+                Doručení na vybrané výdejní místo nebo Z-BOX. Obvykle do 2–3
+                pracovních dnů. Více než 10 000 výdejních míst v ČR.
               </p>
             </div>
 
@@ -55,6 +55,11 @@ export default function ShippingPage() {
               </p>
             </div>
           </div>
+
+          <div className="mt-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            Při objednávce nad <strong>1 500 Kč</strong> je doprava zdarma u
+            všech způsobů doručení.
+          </div>
         </section>
 
         <section>
@@ -63,19 +68,47 @@ export default function ShippingPage() {
           </h2>
           <div className="mt-4 space-y-4">
             <div className="rounded-lg border bg-card p-4">
-              <h3 className="font-medium text-foreground">Dobírka</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium text-foreground">
+                  Platba kartou online
+                </h3>
+                <span className="text-sm font-medium text-emerald-600">
+                  zdarma
+                </span>
+              </div>
               <p className="mt-1 text-sm">
-                Platba při převzetí zásilky. Příplatek 30 Kč.
+                Visa, Mastercard, Apple Pay, Google Pay. Platba je zpracována
+                zabezpečeně přes platební bránu Comgate — vaše údaje o kartě
+                nikdy nevidíme.
               </p>
             </div>
 
             <div className="rounded-lg border bg-card p-4">
-              <h3 className="font-medium text-foreground">
-                Bankovní převod
-              </h3>
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium text-foreground">
+                  Bankovní převod
+                </h3>
+                <span className="text-sm font-medium text-emerald-600">
+                  zdarma
+                </span>
+              </div>
               <p className="mt-1 text-sm">
-                Po objednání vám zašleme platební údaje e-mailem. Zásilku
-                odesíláme po přijetí platby.
+                Online platba přes vaši banku. Po objednání vám vygenerujeme QR
+                kód pro snadnou platbu v bankovní aplikaci. Zásilku odesíláme po
+                přijetí platby.
+              </p>
+            </div>
+
+            <div className="rounded-lg border bg-card p-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium text-foreground">Dobírka</h3>
+                <span className="text-sm font-medium text-foreground">
+                  +39 Kč
+                </span>
+              </div>
+              <p className="mt-1 text-sm">
+                Platba při převzetí zásilky. K ceně objednávky se připočítá
+                příplatek 39 Kč.
               </p>
             </div>
           </div>
@@ -88,7 +121,8 @@ export default function ShippingPage() {
           <ul className="mt-4 list-inside list-disc space-y-2">
             <li>
               Objednávky odesíláme obvykle do 1–2 pracovních dnů od přijetí
-              platby.
+              platby (u platby kartou a převodem) nebo od potvrzení objednávky
+              (u dobírky).
             </li>
             <li>
               O odeslání zásilky vás informujeme e-mailem včetně čísla pro
@@ -96,6 +130,16 @@ export default function ShippingPage() {
             </li>
             <li>
               Při objednávce nad 1 500 Kč je doprava zdarma.
+            </li>
+            <li>
+              Zásilku si můžete sledovat přes{" "}
+              <a
+                href="/objednavka"
+                className="text-primary underline"
+              >
+                vyhledání objednávky
+              </a>
+              .
             </li>
           </ul>
         </section>

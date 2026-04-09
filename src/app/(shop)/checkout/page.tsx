@@ -199,6 +199,8 @@ export default function CheckoutPage() {
     useState<ShippingMethod>("packeta_pickup");
   const [packetaPoint, setPacketaPoint] = useState<PacketaPoint | null>(null);
   const [marketingConsent, setMarketingConsent] = useState(false);
+  const [shippingError, setShippingError] = useState<string | null>(null);
+  const [contactError, setContactError] = useState<string | null>(null);
   const mounted = useSyncExternalStore(
     emptySubscribe,
     () => true,
@@ -230,6 +232,7 @@ export default function CheckoutPage() {
   const handlePacketaPointSelected = useCallback(
     (point: PacketaPoint | null) => {
       setPacketaPoint(point);
+      if (point) setShippingError(null);
     },
     [],
   );
@@ -328,6 +331,7 @@ export default function CheckoutPage() {
 
     const errorKeys = Object.keys(state.fieldErrors);
     if (errorKeys.some((k) => contactFields.includes(k))) {
+      setContactError(null); // per-field errors will show instead
       setActiveStep(0);
       // Remove step 0 from completed so user can fix
       setCompletedSteps((prev) => {
@@ -336,6 +340,7 @@ export default function CheckoutPage() {
         return next;
       });
     } else if (errorKeys.some((k) => shippingFields.includes(k))) {
+      setShippingError(null); // per-field errors will show instead
       setActiveStep(1);
       setCompletedSteps((prev) => {
         const next = new Set(prev);
@@ -367,22 +372,35 @@ export default function CheckoutPage() {
     const lastName = lastNameRef.current?.value.trim();
     const email = emailRef.current?.value.trim();
 
-    if (!firstName || !lastName || !email) return;
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
-
+    if (!firstName || !lastName || !email) {
+      setContactError("Vyplňte prosím jméno, příjmení a email.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setContactError("Zadejte platnou emailovou adresu.");
+      return;
+    }
+    setContactError(null);
     setCompletedSteps((prev) => new Set(prev).add(0));
     setActiveStep(1);
   }, []);
 
   const advanceFromShipping = useCallback(() => {
-    if (isPacketaPickup && !packetaPoint) return;
+    if (isPacketaPickup && !packetaPoint) {
+      setShippingError("Vyberte prosím výdejní místo Zásilkovny.");
+      return;
+    }
     if (!isPacketaPickup) {
       const street = streetRef.current?.value.trim();
       const city = cityRef.current?.value.trim();
       const zip = zipRef.current?.value.trim();
       const phone = phoneRef.current?.value.trim();
-      if (!street || !city || !zip || !phone) return;
+      if (!street || !city || !zip || !phone) {
+        setShippingError("Vyplňte prosím telefonní číslo a doručovací adresu.");
+        return;
+      }
     }
+    setShippingError(null);
     setCompletedSteps((prev) => new Set(prev).add(1));
     setActiveStep(2);
   }, [isPacketaPickup, packetaPoint]);
@@ -618,6 +636,11 @@ export default function CheckoutPage() {
                 </span>
               </label>
 
+              {contactError && (
+                <p role="alert" className="mt-4 text-sm text-destructive">
+                  {contactError}
+                </p>
+              )}
               <Button
                 type="button"
                 className="mt-6 w-full gap-2"
@@ -836,6 +859,11 @@ export default function CheckoutPage() {
                 </div>
               )}
 
+              {shippingError && (
+                <p role="alert" className="mt-4 text-sm text-destructive">
+                  {shippingError}
+                </p>
+              )}
               <Button
                 type="button"
                 className="mt-6 w-full gap-2"
