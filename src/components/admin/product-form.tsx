@@ -9,8 +9,8 @@ import { CONDITION_LABELS } from "@/lib/constants";
 import { ImageUpload } from "@/components/admin/image-upload";
 import { parseProductImages, parseMeasurements } from "@/lib/images";
 import type { ProductImage, ProductMeasurements } from "@/lib/images";
-import { UploadDropzone } from "@/lib/uploadthing";
-import { Save, Ruler, Video, X } from "lucide-react";
+import { uploadFiles } from "@/lib/uploadthing";
+import { Save, Ruler, Video, X, Loader2 } from "lucide-react";
 
 interface Category {
   id: string;
@@ -52,6 +52,8 @@ export function ProductForm({ categories, product, action }: ProductFormProps) {
 
   // Video URL state
   const [videoUrl, setVideoUrl] = useState<string>(product?.videoUrl ?? "");
+  const [isVideoUploading, setIsVideoUploading] = useState(false);
+  const [videoUploadError, setVideoUploadError] = useState<string | null>(null);
 
   // Measurements state
   const [measurements, setMeasurements] = useState<ProductMeasurements>(() => {
@@ -165,42 +167,61 @@ export function ProductForm({ categories, product, action }: ProductFormProps) {
             </Button>
           </div>
         ) : (
-          <UploadDropzone
-            endpoint="productVideo"
-            onClientUploadComplete={(res) => {
-              if (res?.[0]) {
-                setVideoUrl(res[0].ufsUrl);
-              }
-            }}
-            onUploadError={(error: Error) => {
-              alert(`Chyba nahrávání videa: ${error.message}`);
-            }}
-            config={{ mode: "auto" }}
-            content={{
-              label: () => (
-                <div className="flex flex-col items-center gap-1">
+          <>
+            <label
+              className={`flex cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-dashed p-6 transition-colors ${
+                isVideoUploading
+                  ? "cursor-default border-primary/30 bg-muted/30"
+                  : "border-muted-foreground/25 hover:border-primary/50"
+              }`}
+            >
+              <input
+                type="file"
+                accept="video/mp4,video/webm,video/quicktime"
+                className="hidden"
+                disabled={isVideoUploading}
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  setIsVideoUploading(true);
+                  setVideoUploadError(null);
+                  try {
+                    const [url] = await uploadFiles([file]);
+                    setVideoUrl(url);
+                  } catch (err) {
+                    setVideoUploadError(
+                      err instanceof Error ? err.message : "Nahrávání selhalo"
+                    );
+                  } finally {
+                    setIsVideoUploading(false);
+                    e.target.value = "";
+                  }
+                }}
+              />
+              {isVideoUploading ? (
+                <>
+                  <Loader2 className="size-8 animate-spin text-muted-foreground" />
+                  <span className="text-sm font-medium">Nahrávám video...</span>
+                </>
+              ) : (
+                <>
                   <Video className="size-8 text-muted-foreground" />
                   <span className="text-sm font-medium">
-                    Přetáhněte video sem nebo klikněte
+                    Klikněte pro výběr videa
                   </span>
                   <span className="text-xs text-muted-foreground">
                     Max 32 MB, MP4/WebM, 15–30 sekund
                   </span>
-                </div>
-              ),
-              allowedContent: () => (
-                <span className="text-xs text-muted-foreground">
-                  Krátké video produktu (přední, zadní, pohyb)
-                </span>
-              ),
-            }}
-            appearance={{
-              container:
-                "border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 cursor-pointer hover:border-primary/50 transition-colors ut-uploading:border-primary/30",
-              button:
-                "bg-primary text-primary-foreground text-sm px-4 py-2 rounded-md ut-uploading:bg-primary/70",
-            }}
-          />
+                  <span className="text-xs text-muted-foreground">
+                    Krátké video produktu (přední, zadní, pohyb)
+                  </span>
+                </>
+              )}
+            </label>
+            {videoUploadError && (
+              <p className="text-sm text-destructive">{videoUploadError}</p>
+            )}
+          </>
         )}
         <p className="text-xs text-muted-foreground">
           Nepovinné — krátké video zvyšuje konverzi o 65 %. Ideálně 9:16 na výšku, 15–30 s.

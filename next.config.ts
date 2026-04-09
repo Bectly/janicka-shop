@@ -6,9 +6,9 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
+        // Cloudflare R2 public bucket — janicka-shop-images
         protocol: "https",
-        hostname: "*.ufs.sh",
-        pathname: "/f/*",
+        hostname: "pub-88d95c0ca85d4cb999122434d83fb3c9.r2.dev",
       },
       {
         protocol: "https",
@@ -37,11 +37,11 @@ const nextConfig: NextConfig = {
               // Analytics/marketing scripts: GA4, Pinterest Tag, Meta Pixel
               `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://widget.packeta.com https://www.googletagmanager.com https://s.pinimg.com https://connect.facebook.net`,
               "style-src 'self' 'unsafe-inline'",
-              // img-src: UploadThing images + analytics beacon pixels (Meta, Pinterest)
-              "img-src 'self' data: blob: https://*.ufs.sh https://utfs.io https://images1.vinted.net https://images2.vinted.net https://www.facebook.com https://ct.pinterest.com",
+              // img-src: R2 images + Vinted CDN + analytics beacon pixels (Meta, Pinterest)
+              "img-src 'self' data: blob: https://pub-88d95c0ca85d4cb999122434d83fb3c9.r2.dev https://images1.vinted.net https://images2.vinted.net https://www.facebook.com https://ct.pinterest.com",
               "font-src 'self' data:",
-              // connect-src: GA4 data collection + Pinterest + Meta Pixel events
-              "connect-src 'self' https://*.ufs.sh https://utfs.io https://uploadthing.com https://payments.comgate.cz https://payments.comgate.eu https://widget.packeta.com https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net https://ct.pinterest.com https://www.facebook.com",
+              // connect-src: R2 uploads + GA4 data collection + Pinterest + Meta Pixel events
+              "connect-src 'self' https://pub-88d95c0ca85d4cb999122434d83fb3c9.r2.dev https://payments.comgate.cz https://payments.comgate.eu https://widget.packeta.com https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net https://ct.pinterest.com https://www.facebook.com",
               "frame-src 'self' https://payments.comgate.cz https://payments.comgate.eu https://widget.packeta.com",
               "object-src 'none'",
               "base-uri 'self'",

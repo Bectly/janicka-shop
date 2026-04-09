@@ -7,8 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CONDITION_LABELS, COLOR_MAP } from "@/lib/constants";
 import { ImageUpload } from "@/components/admin/image-upload";
-import { UploadDropzone } from "@/lib/uploadthing";
-import { Zap, ChevronDown, ChevronUp, Video, X } from "lucide-react";
+import { uploadFiles } from "@/lib/uploadthing";
+import { Zap, ChevronDown, ChevronUp, Video, X, Loader2 } from "lucide-react";
 
 interface Category {
   id: string;
@@ -29,6 +29,8 @@ export function QuickAddForm({ categories, action }: QuickAddFormProps) {
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [showExtras, setShowExtras] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string>("");
+  const [isVideoUploading, setIsVideoUploading] = useState(false);
+  const [videoUploadError, setVideoUploadError] = useState<string | null>(null);
 
   async function formAction(_prev: string | null, formData: FormData) {
     try {
@@ -270,20 +272,50 @@ export function QuickAddForm({ categories, action }: QuickAddFormProps) {
                 </Button>
               </div>
             ) : (
-              <UploadDropzone
-                endpoint="productVideo"
-                onClientUploadComplete={(res) => {
-                  if (res?.[0]) setVideoUrl(res[0].ufsUrl);
-                }}
-                onUploadError={(error: Error) => {
-                  alert(`Chyba nahrávání videa: ${error.message}`);
-                }}
-                config={{ mode: "auto" }}
-                appearance={{
-                  container:
-                    "border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 cursor-pointer hover:border-primary/50 transition-colors ut-uploading:border-primary/30",
-                }}
-              />
+              <>
+                <label
+                  className={`flex cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-dashed p-4 transition-colors ${
+                    isVideoUploading
+                      ? "cursor-default border-primary/30 bg-muted/30"
+                      : "border-muted-foreground/25 hover:border-primary/50"
+                  }`}
+                >
+                  <input
+                    type="file"
+                    accept="video/mp4,video/webm,video/quicktime"
+                    className="hidden"
+                    disabled={isVideoUploading}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setIsVideoUploading(true);
+                      setVideoUploadError(null);
+                      try {
+                        const [url] = await uploadFiles([file]);
+                        setVideoUrl(url);
+                      } catch (err) {
+                        setVideoUploadError(
+                          err instanceof Error ? err.message : "Nahrávání selhalo"
+                        );
+                      } finally {
+                        setIsVideoUploading(false);
+                        e.target.value = "";
+                      }
+                    }}
+                  />
+                  {isVideoUploading ? (
+                    <Loader2 className="size-6 animate-spin text-muted-foreground" />
+                  ) : (
+                    <Video className="size-6 text-muted-foreground" />
+                  )}
+                  <span className="text-xs text-muted-foreground">
+                    {isVideoUploading ? "Nahrávám..." : "Klikněte pro výběr videa"}
+                  </span>
+                </label>
+                {videoUploadError && (
+                  <p className="text-xs text-destructive">{videoUploadError}</p>
+                )}
+              </>
             )}
             <p className="text-xs text-muted-foreground">Nepovinné — 9:16, 15–30 s</p>
           </div>

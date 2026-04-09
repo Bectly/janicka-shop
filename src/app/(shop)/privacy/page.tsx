@@ -179,9 +179,9 @@ export default function PrivacyPage() {
               smluvní doložky EU)
             </li>
             <li>
-              <strong className="text-foreground">UploadThing</strong> —
-              ukládání fotografií produktů (sídlo v&nbsp;USA, standardní smluvní
-              doložky EU)
+              <strong className="text-foreground">Cloudflare, Inc.</strong> —
+              ukládání fotografií a&nbsp;videí produktů (sídlo v&nbsp;USA,
+              standardní smluvní doložky EU, data uložena v&nbsp;EU)
             </li>
             <li>
               <strong className="text-foreground">Vercel Inc.</strong> — hosting

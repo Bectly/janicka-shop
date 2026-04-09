@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import Image from "next/image";
-import { UploadDropzone } from "@/lib/uploadthing";
-import { X, GripVertical, ImagePlus } from "lucide-react";
+import { uploadFiles } from "@/lib/uploadthing";
+import { X, GripVertical, ImagePlus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ImageUploadProps {
@@ -14,6 +14,10 @@ interface ImageUploadProps {
 export function ImageUpload({ value, onChange }: ImageUploadProps) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const removeImage = useCallback(
     (index: number) => {
@@ -50,6 +54,36 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
     setDragIndex(null);
     setDragOverIndex(null);
   };
+
+  async function handleFilesSelected(files: FileList | null) {
+    if (!files || files.length === 0) return;
+
+    const remaining = 10 - value.length;
+    if (remaining <= 0) return;
+
+    const filesToUpload = Array.from(files).slice(0, remaining);
+    setIsUploading(true);
+    setUploadError(null);
+
+    try {
+      const urls = await uploadFiles(filesToUpload);
+      onChange([...value, ...urls]);
+    } catch (err) {
+      setUploadError(
+        err instanceof Error ? err.message : "Nahrávání selhalo"
+      );
+    } finally {
+      setIsUploading(false);
+      // Reset file input so same files can be selected again
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  function handleDropzoneFilesDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setIsDragOver(false);
+    handleFilesSelected(e.dataTransfer.files);
+  }
 
   return (
     <div className="space-y-3">
@@ -103,43 +137,57 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
 
       {/* Upload area */}
       {value.length < 10 && (
-        <UploadDropzone
-          endpoint="productImage"
-          onClientUploadComplete={(res) => {
-            if (res) {
-              const newUrls = res.map((file) => file.ufsUrl);
-              onChange([...value, ...newUrls]);
-            }
-          }}
-          onUploadError={(error: Error) => {
-            alert(`Chyba nahrávání: ${error.message}`);
-          }}
-          config={{ mode: "auto" }}
-          content={{
-            label: () => (
-              <div className="flex flex-col items-center gap-1">
+        <>
+          <div
+            onClick={() => !isUploading && fileInputRef.current?.click()}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragOver(true);
+            }}
+            onDragLeave={() => setIsDragOver(false)}
+            onDrop={handleDropzoneFilesDrop}
+            className={`flex cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-dashed p-6 transition-colors ${
+              isUploading
+                ? "cursor-default border-primary/30 bg-muted/30"
+                : isDragOver
+                  ? "border-primary bg-primary/5"
+                  : "border-muted-foreground/25 hover:border-primary/50"
+            }`}
+          >
+            {isUploading ? (
+              <>
+                <Loader2 className="size-8 animate-spin text-muted-foreground" />
+                <span className="text-sm font-medium">Nahrávám...</span>
+              </>
+            ) : (
+              <>
                 <ImagePlus className="size-8 text-muted-foreground" />
                 <span className="text-sm font-medium">
                   Přetáhněte fotky sem nebo klikněte
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  Max 10 fotek, do 4 MB každá
+                  Max 10 fotek, do 4 MB každá — JPEG, PNG, WebP
                 </span>
-              </div>
-            ),
-            allowedContent: () => (
-              <span className="text-xs text-muted-foreground">
-                {value.length}/10 fotek nahráno
-              </span>
-            ),
-          }}
-          appearance={{
-            container:
-              "border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 cursor-pointer hover:border-primary/50 transition-colors ut-uploading:border-primary/30",
-            button:
-              "bg-primary text-primary-foreground text-sm px-4 py-2 rounded-md ut-uploading:bg-primary/70",
-          }}
-        />
+                <span className="text-xs text-muted-foreground">
+                  {value.length}/10 fotek nahráno
+                </span>
+              </>
+            )}
+          </div>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/jpg,image/png,image/webp,image/avif"
+            multiple
+            className="hidden"
+            onChange={(e) => handleFilesSelected(e.target.files)}
+          />
+
+          {uploadError && (
+            <p className="text-sm text-destructive">{uploadError}</p>
+          )}
+        </>
       )}
     </div>
   );
