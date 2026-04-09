@@ -5,7 +5,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2634,
+  "last_bolt_commit_cycle": 2635,
   "updated_at_cycle": 2628,
   "dev_focus": "C2628 DIRECTIVE — MOBILE TOUCH TARGET SWEEP (Phase 2). Trace C2626 fixed PDP sticky ATC, size/color buttons, announcement bar. GOOD. Remaining verified issues: (1) src/components/shop/product-filters.tsx — MANY filter buttons below 44px: category pills (line 126,139: py-1.5), size buttons (line 225: py-1, min-w-[2.5rem]), color swatches (line 262: py-1), condition chips (line 305: py-1). These are in the DRAWER on mobile — touch targets critical. Fix: all interactive filter elements min-h-11 (44px). Active filter chips at bottom (line 452,481: py-1) also need min-h-9. (2) src/app/(shop)/cart/page.tsx line 231-238 — Trash/remove button is bare <button> with only size-4 icon (16px). Must be at least 44×44px touch target. Add min-h-11 min-w-11 flex items-center justify-center. (3) Checkout step indicator circles (src/app/(shop)/checkout/page.tsx) — currently size-8 (32px), should be size-9 (36px) on mobile. SCOPE: Only these 3 files. Do NOT touch anything else. Run `npm run build` — must pass.",
   "qa_focus": "TRACE: After Bolt commits touch target fixes: (1) Open filter drawer at 375px — ALL buttons/chips must be ≥44px touch height, (2) Cart page: trash button tap area ≥44×44px, (3) Checkout: step indicators visually correct after size bump, (4) No horizontal overflow on any page at 375px, (5) Build passes clean.",

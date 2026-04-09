@@ -765,7 +765,7 @@ export function ProductFilters({
                             onClick={() => !isDisabled && toggleMulti("condition", key, activeConditions)}
                             aria-pressed={isActive}
                             aria-disabled={isDisabled}
-                            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                            className={`min-h-11 inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                               isActive
                                 ? "bg-primary text-primary-foreground"
                                 : isDisabled
@@ -794,7 +794,7 @@ export function ProductFilters({
                       <button
                         onClick={() => updateParams({ sale: saleOnly ? null : "true" })}
                         aria-pressed={saleOnly}
-                        className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                        className={`min-h-11 inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                           saleOnly
                             ? "bg-destructive/10 text-destructive"
                             : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -860,11 +860,11 @@ function FilterChip({
   onRemove: () => void;
 }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+    <span className="inline-flex min-h-9 items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
       {label}
       <button
         onClick={onRemove}
-        className="rounded-full p-0.5 transition-colors hover:bg-primary/20"
+        className="flex min-h-7 min-w-7 items-center justify-center rounded-full transition-colors hover:bg-primary/20"
         aria-label={`Odebrat filtr ${label}`}
       >
         <X className="size-3" />

@@ -142,7 +142,7 @@ function CheckoutStep({
       >
         {/* Step indicator */}
         <div
-          className={`flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-bold transition-colors ${
+          className={`flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-bold transition-colors ${
             isCompleted
               ? "bg-emerald-100 text-emerald-700"
               : isActive
