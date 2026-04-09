@@ -163,7 +163,7 @@ export function ProductCard({
   /* ==================== FEATURED VARIANT ==================== */
   if (isFeatured) {
     return (
-      <Link href={`/products/${slug}`} className="group relative block transition-transform duration-500 ease-out hover:-translate-y-1">
+      <Link href={`/products/${slug}`} className="group relative block transition-transform duration-500 ease-out hover:-translate-y-1 haptic-press">
         <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-muted shadow-[0_4px_24px_-6px_rgba(0,0,0,0.1)] transition-shadow duration-500 group-hover:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.18)]">
           {imageBlock}
 
@@ -220,7 +220,7 @@ export function ProductCard({
 
   /* ==================== STANDARD VARIANT ==================== */
   return (
-    <Link href={`/products/${slug}`} className="group block transition-transform duration-300 ease-out hover:-translate-y-1.5">
+    <Link href={`/products/${slug}`} className="group block transition-transform duration-300 ease-out hover:-translate-y-1.5 haptic-press">
       <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-muted shadow-[0_2px_16px_-4px_rgba(0,0,0,0.06)] transition-shadow duration-300 group-hover:shadow-[0_12px_40px_-8px_rgba(0,0,0,0.13)]">
         {imageBlock}
 

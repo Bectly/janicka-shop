@@ -327,15 +327,70 @@
   border-bottom-color: var(--border);
 }
 
+/* ─── Haptic-feel button press (scale-down + spring-back) ─── */
+@utility haptic-press {
+  transition: transform 150ms cubic-bezier(0.17, 0.89, 0.32, 1.49);
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+/* ─── Lightbox open/close transitions ─── */
+@keyframes lightbox-open {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes lightbox-close {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
+
+@utility animate-lightbox-open {
+  animation: lightbox-open 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@utility animate-lightbox-close {
+  animation: lightbox-close 150ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+/* ─── Pull-to-refresh spinner ─── */
+@keyframes ptr-spin {
+  to { transform: rotate(360deg); }
+}
+
+@utility animate-ptr-spin {
+  animation: ptr-spin 600ms linear infinite;
+}
+
 /* ─── Reduced motion: disable custom animations ─── */
 @media (prefers-reduced-motion: reduce) {
   .animate-shimmer,
   .animate-heart-burst,
   .animate-cart-bounce,
-  .announcement-marquee {
+  .announcement-marquee,
+  .animate-lightbox-open,
+  .animate-lightbox-close,
+  .animate-ptr-spin {
     animation: none !important;
   }
-  .btn-fill-hover::after {
+  .btn-fill-hover::after,
+  .haptic-press {
     transition: none !important;
+  }
+  .haptic-press:active {
+    transform: none !important;
   }
 }

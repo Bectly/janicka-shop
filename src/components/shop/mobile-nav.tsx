@@ -26,7 +26,7 @@ export function MobileNav() {
     <Sheet>
       <SheetTrigger
         render={
-          <Button variant="ghost" size="icon" className="md:hidden" />
+          <Button variant="ghost" size="icon" className="min-h-[44px] min-w-[44px] md:hidden" />
         }
       >
         <Menu className="size-5" />

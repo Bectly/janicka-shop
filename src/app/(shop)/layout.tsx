@@ -7,6 +7,8 @@ import { AnnouncementBar } from "@/components/shop/announcement-bar";
 import { VintedTcBanner } from "@/components/shop/vinted-tc-banner";
 import { DevChatWidget } from "@/components/dev-chat/dev-chat-widget";
 import { ReferralTracker } from "@/components/shop/referral-tracker";
+import { BottomNav } from "@/components/shop/bottom-nav";
+import { PullToRefresh } from "@/components/shop/pull-to-refresh";
 
 export default function ShopLayout({
   children,
@@ -22,8 +24,16 @@ export default function ShopLayout({
       <Suspense>
         <Footer />
       </Suspense>
+      {/* Spacer for fixed bottom nav on mobile */}
+      <div className="h-14 lg:hidden" aria-hidden="true" />
       <BackToTop />
       <CookieConsentBanner />
+      <Suspense>
+        <PullToRefresh />
+      </Suspense>
+      <Suspense>
+        <BottomNav />
+      </Suspense>
       <Suspense>
         <ReferralTracker />
       </Suspense>

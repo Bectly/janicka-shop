@@ -49,9 +49,11 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
   const imageSlideIndices = hasVideo
     ? Array.from({ length: images.length }, (_, i) => (i < videoSlideIndex ? i : i + 1))
     : Array.from({ length: images.length }, (_, i) => i);
+  const [lightboxClosing, setLightboxClosing] = useState(false);
   const [zoomed, setZoomed] = useState(false);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [swipeOffset, setSwipeOffset] = useState(0);
+  const [lightboxDismissY, setLightboxDismissY] = useState(0);
   const imgContainerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{
     dragging: boolean;
@@ -68,6 +70,10 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
     swiping: boolean;
     directionLocked: boolean;
   }>({ startX: 0, startY: 0, currentOffset: 0, swiping: false, directionLocked: false });
+  const lbDismissRef = useRef<{
+    startY: number;
+    dismissing: boolean;
+  }>({ startY: 0, dismissing: false });
 
   const openLightbox = useCallback(
     (index: number) => {
@@ -80,9 +86,14 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
   );
 
   const closeLightbox = useCallback(() => {
-    setLightboxOpen(false);
-    setZoomed(false);
-    setPanOffset({ x: 0, y: 0 });
+    setLightboxClosing(true);
+    setTimeout(() => {
+      setLightboxOpen(false);
+      setLightboxClosing(false);
+      setZoomed(false);
+      setPanOffset({ x: 0, y: 0 });
+      setLightboxDismissY(0);
+    }, 150);
   }, []);
 
   const goNext = useCallback(() => {
@@ -198,6 +209,31 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
       videoRef.current.pause();
     }
   }, [isVideoActive, hasVideo]);
+
+  // Lightbox vertical swipe-to-dismiss handlers
+  const handleLbDismissStart = useCallback((e: React.TouchEvent) => {
+    if (zoomed) return;
+    lbDismissRef.current = { startY: e.touches[0].clientY, dismissing: false };
+  }, [zoomed]);
+
+  const handleLbDismissMove = useCallback((e: React.TouchEvent) => {
+    if (zoomed) return;
+    const dy = e.touches[0].clientY - lbDismissRef.current.startY;
+    if (Math.abs(dy) > 15) {
+      lbDismissRef.current.dismissing = true;
+      setLightboxDismissY(dy * 0.6);
+    }
+  }, [zoomed]);
+
+  const handleLbDismissEnd = useCallback(() => {
+    if (!lbDismissRef.current.dismissing) return;
+    lbDismissRef.current.dismissing = false;
+    if (Math.abs(lightboxDismissY) > 100) {
+      closeLightbox();
+    } else {
+      setLightboxDismissY(0);
+    }
+  }, [lightboxDismissY, closeLightbox]);
 
   // Mouse drag for panning when zoomed
   const handlePointerDown = useCallback(
@@ -425,7 +461,9 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
       {/* Lightbox — images only, no video */}
       {lightboxOpen && !isVideoActive && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95"
+          className={`fixed inset-0 z-[100] flex items-center justify-center bg-black/95 ${
+            lightboxClosing ? "animate-lightbox-close" : "animate-lightbox-open"
+          }`}
           role="dialog"
           aria-modal="true"
           aria-label={`${productName} — galerie`}
@@ -483,23 +521,49 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
             </>
           )}
 
-          {/* Main lightbox image — swipeable */}
+          {/* Main lightbox image — swipeable with vertical dismiss */}
           <div
             ref={imgContainerRef}
             className={`relative h-[85vh] w-[90vw] max-w-5xl select-none ${
               zoomed ? "cursor-grab active:cursor-grabbing" : "cursor-zoom-in"
             }`}
+            style={{
+              transform: lightboxDismissY !== 0
+                ? `translateY(${lightboxDismissY}px)`
+                : undefined,
+              opacity: lightboxDismissY !== 0
+                ? Math.max(0.3, 1 - Math.abs(lightboxDismissY) / 300)
+                : undefined,
+              transition: lbDismissRef.current.dismissing
+                ? undefined
+                : "transform 200ms ease, opacity 200ms ease",
+            }}
             onClick={(e) => {
-              if (!dragRef.current.didDrag) toggleZoom();
+              if (!dragRef.current.didDrag && !lbDismissRef.current.dismissing) toggleZoom();
               dragRef.current.didDrag = false;
               e.stopPropagation();
             }}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
-            onTouchStart={!zoomed ? handleTouchStart : undefined}
-            onTouchMove={!zoomed ? handleTouchMove : undefined}
-            onTouchEnd={!zoomed ? handleTouchEnd : undefined}
+            onTouchStart={(e) => {
+              if (!zoomed) {
+                handleTouchStart(e);
+                handleLbDismissStart(e);
+              }
+            }}
+            onTouchMove={(e) => {
+              if (!zoomed) {
+                handleTouchMove(e);
+                handleLbDismissMove(e);
+              }
+            }}
+            onTouchEnd={() => {
+              if (!zoomed) {
+                handleTouchEnd();
+                handleLbDismissEnd();
+              }
+            }}
           >
             <Image
               src={getUrl(images[getImageIndex(activeIndex)])}
