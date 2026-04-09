@@ -8,6 +8,7 @@ import { createComgatePayment } from "@/lib/payments/comgate";
 import { rateLimitCheckout } from "@/lib/rate-limit";
 import { sendOrderConfirmationEmail, sendAdminNewOrderEmail } from "@/lib/email";
 import { sendSimilarItemNotifications } from "@/lib/email/similar-item";
+import { logOrderToHeureka } from "@/lib/heureka";
 import { revalidatePath } from "next/cache";
 import {
   PAYMENT_METHODS,
@@ -403,10 +404,11 @@ export async function createOrder(
         data: { sold: true, stock: 0, reservedUntil: null, reservedBy: null },
       });
 
-      // Collect DB prices, names, and slugs for email + ISR revalidation
+      // Collect DB prices, names, slugs, and SKUs for email + ISR + Heureka
       const dbPrices = new Map(products.map((p) => [p.id, p.price]));
       const dbNames = new Map(products.map((p) => [p.id, p.name]));
       const productSlugs = products.map((p) => p.slug);
+      const productSkus = products.map((p) => p.sku);
       // Sold product data for similar-item notification emails
       const soldProducts = products.map((p) => ({
         id: p.id,
@@ -416,7 +418,7 @@ export async function createOrder(
         sizes: p.sizes,
         images: p.images,
       }));
-      return { ...created, customerEmail: customer.email, dbPrices, dbNames, productSlugs, soldProducts };
+      return { ...created, customerEmail: customer.email, dbPrices, dbNames, productSlugs, productSkus, soldProducts };
     });
   } catch (e) {
     if (e instanceof UnavailableError) {
@@ -486,7 +488,7 @@ export async function createOrder(
     console.error(`[Checkout] Admin notification email failed for ${order.orderNumber}:`, err);
   });
 
-  // For cash on delivery — mark abandoned carts recovered, then go to confirmation
+  // For cash on delivery — mark abandoned carts recovered, log to Heureka, then go to confirmation
   if (isCod) {
     db.abandonedCart
       .updateMany({
@@ -496,6 +498,16 @@ export async function createOrder(
       .catch((err: unknown) => {
         console.error("[Checkout] Failed to mark abandoned carts as recovered:", err);
       });
+
+    // Log to Heureka for "Ověřeno zákazníky" review questionnaire (fire-and-forget)
+    logOrderToHeureka(
+      order.customerEmail,
+      order.orderNumber,
+      order.productSkus,
+    ).catch((err) => {
+      console.error(`[Checkout] Heureka ORDER_INFO failed for ${order.orderNumber}:`, err);
+    });
+
     redirect(`/order/${order.orderNumber}?token=${order.accessToken}`);
   }
 

@@ -6,6 +6,7 @@ import { getComgatePaymentStatus } from "@/lib/payments/comgate";
 import { ComgateError } from "@/lib/payments/types";
 import { revalidatePath } from "next/cache";
 import { sendPaymentConfirmedEmail } from "@/lib/email";
+import { logOrderToHeureka } from "@/lib/heureka";
 
 /**
  * Comgate webhook notification handler.
@@ -136,11 +137,11 @@ async function processPaymentStatus(
           data: { status: "paid" },
         });
 
-        // Send payment confirmed email (fire-and-forget)
+        // Send payment confirmed email + log to Heureka (fire-and-forget)
         if (updated.count > 0) {
           const order = await db.order.findUnique({
             where: { id: orderId },
-            include: { customer: true },
+            include: { customer: true, items: { include: { product: { select: { sku: true } } } } },
           });
           if (order) {
             sendPaymentConfirmedEmail({
@@ -151,6 +152,15 @@ async function processPaymentStatus(
               accessToken: order.accessToken ?? "",
             }).catch((err) => {
               console.error(`[Webhook] Failed to send payment confirmation email for ${order.orderNumber}:`, err);
+            });
+
+            // Log to Heureka for "Ověřeno zákazníky" review questionnaire
+            logOrderToHeureka(
+              order.customer.email,
+              order.orderNumber,
+              order.items.map((i) => i.product.sku),
+            ).catch((err) => {
+              console.error(`[Webhook] Heureka ORDER_INFO failed for ${order.orderNumber}:`, err);
             });
           }
         }
