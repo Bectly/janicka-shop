@@ -1,8 +1,5 @@
 {
-  "pause": {
-    "trace": "until_lead_directive",
-    "bolt": "until_lead_directive"
-  },
+  "pause": {},
   "force_next": "bolt",
   "interval_override": {},
   "session_manager": {},
