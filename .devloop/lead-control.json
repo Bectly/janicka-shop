@@ -1,6 +1,6 @@
 {
   "pause": {
-    "trace": "until_next_bolt_commit"
+    "trace": "until_lead_directive"
   },
   "force_next": "bolt",
   "interval_override": {},
