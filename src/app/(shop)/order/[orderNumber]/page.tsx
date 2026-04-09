@@ -5,7 +5,7 @@ import { getDb } from "@/lib/db";
 export const dynamic = "force-dynamic";
 import { formatPrice } from "@/lib/format";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Clock, ArrowRight, MapPin, Truck } from "lucide-react";
+import { CheckCircle2, Clock, ArrowRight, MapPin, Truck, CalendarClock } from "lucide-react";
 import type { Metadata } from "next";
 import { ClearCartOnMount } from "./clear-cart";
 import { TrackPurchase } from "@/components/shop/track-purchase";
@@ -243,6 +243,20 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
               <Truck className="size-4 shrink-0 text-primary" />
               <span className="text-sm font-medium text-foreground">
                 {order.trackingNumber}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {order.expectedDeliveryDate && (
+          <div className="mt-4 border-t pt-4">
+            <h3 className="text-sm font-semibold text-foreground">
+              Předpokládané doručení
+            </h3>
+            <div className="mt-2 flex items-center gap-2 rounded-lg bg-blue-50 p-3">
+              <CalendarClock className="size-4 shrink-0 text-blue-600" />
+              <span className="text-sm font-medium text-blue-900">
+                do {new Intl.DateTimeFormat("cs-CZ", { day: "numeric", month: "long", year: "numeric" }).format(new Date(order.expectedDeliveryDate))}
               </span>
             </div>
           </div>

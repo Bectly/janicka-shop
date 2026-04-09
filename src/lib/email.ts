@@ -37,6 +37,7 @@ interface OrderEmailData {
   note: string | null;
   accessToken: string;
   isCod: boolean;
+  expectedDeliveryDate: Date | null;
 }
 
 function formatPriceCzk(price: number): string {
@@ -188,6 +189,17 @@ function buildOrderConfirmationHtml(data: OrderEmailData): string {
           </tr>
         </table>
       </div>
+
+      ${
+        data.expectedDeliveryDate
+          ? `<div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #f0f0f0;">
+        <strong style="font-size: 13px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Předpokládané doručení</strong>
+        <div style="margin: 8px 0 0; background: #eff6ff; border-radius: 8px; padding: 10px 14px;">
+          <p style="margin: 0; color: #1e40af; font-size: 14px; font-weight: 500;">do ${new Intl.DateTimeFormat("cs-CZ", { day: "numeric", month: "long", year: "numeric" }).format(new Date(data.expectedDeliveryDate))}</p>
+        </div>
+      </div>`
+          : ""
+      }
 
       ${
         data.note
