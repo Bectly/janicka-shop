@@ -1,4 +1,4 @@
-export const revalidate = 30; // Revalidate every 30 seconds (was force-dynamic — no caching at all)
+export const revalidate = 3600; // 1h — layout (header/footer) rarely changes
 
 import { Header } from "@/components/shop/header";
 import { Footer } from "@/components/shop/footer";

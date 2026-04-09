@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getDb } from "@/lib/db";
 
-export const revalidate = 30; // Revalidate every 30s (was force-dynamic — no caching at all)
+export const revalidate = 300; // 5min — homepage shows new arrivals, needs moderate freshness
 import { ProductCard } from "@/components/shop/product-card";
 import { CategoryCard } from "@/components/shop/category-card";
 import { NewsletterForm } from "@/components/shop/newsletter-form";

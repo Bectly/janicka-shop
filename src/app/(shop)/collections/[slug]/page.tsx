@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getDb } from "@/lib/db";
 
-export const revalidate = 30;
+export const revalidate = 3600; // 1h — collection pages are relatively static
 import { ProductCard } from "@/components/shop/product-card";
 import { getLowestPrices30d } from "@/lib/price-history";
 import { buildItemListSchema, buildBreadcrumbSchema, jsonLdString } from "@/lib/structured-data";

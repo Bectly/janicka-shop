@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
 
-export const revalidate = 30;
+export const revalidate = 3600; // 1h — products barely change (second-hand unique items, sold once)
 import { formatPrice } from "@/lib/format";
 import { CONDITION_LABELS, CONDITION_COLORS } from "@/lib/constants";
 import { ProductCard } from "@/components/shop/product-card";
@@ -70,7 +70,7 @@ const getProduct = cache(async (slug: string) => {
 });
 
 /** Pre-generate the 50 most recent product pages at build time.
- *  ISR (revalidate=30) handles the rest on-demand — avoids SQLite lock contention
+ *  ISR (revalidate=3600) handles the rest on-demand — avoids SQLite lock contention
  *  when Next.js build uses 15 parallel workers with 350+ products. */
 export async function generateStaticParams() {
   try {

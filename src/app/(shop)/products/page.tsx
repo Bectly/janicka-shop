@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getDb } from "@/lib/db";
 import { unstable_cache } from "next/cache";
 
-export const revalidate = 30; // ISR fallback — primary caching is via unstable_cache below
+export const revalidate = 300; // 5min ISR fallback — primary caching is via unstable_cache below
 import { ProductFilters } from "@/components/shop/product-filters";
 import { Pagination } from "@/components/shop/pagination";
 import { ProductGrid } from "./product-grid";
