@@ -1,8 +1,8 @@
 {
   "pause": {
-    "trace": "until_lead_directive"
+    "trace": "until_next_bolt_commit"
   },
-  "force_next": null,
+  "force_next": "bolt",
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 2566,
