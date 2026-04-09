@@ -1,26 +1,23 @@
 {
-  "pause": {
-    "bolt": "until_lead_directive",
-    "trace": "until_lead_directive"
-  },
+  "pause": {},
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2560,
-  "updated_at_cycle": 2559,
-  "dev_focus": "DELIVERY DEADLINE IS DONE — STOP REPORTING IT. NEW TASK: Fix DevChat widget broken on production. File: src/components/dev-chat/dev-chat-widget.tsx. Problem: unauthenticated users see chat form but API returns 401 silently. FIX: (1) Import useSession from next-auth/react. (2) Add const { status: authStatus } = useSession() at top. (3) If unauthenticated: show bubble button only, clicking opens panel with 'Přihlas se pro komunikaci s týmem' + login link to /api/auth/signin. No textarea, no send. (4) If loading: bubble only, panel shows spinner. (5) If authenticated: current code unchanged. (6) In fetchMessages: on res.status===401, set authRequired state flag. Run npm run build when done. When done, set next_suggested: lead.",
-  "qa_focus": "TRACE: After Bolt commits DevChat fix, verify: (1) unauthenticated user sees login prompt in widget, (2) authenticated admin can send message + it persists on reload, (3) GET /api/dev-chat?status=new returns messages. Do NOT re-audit delivery deadline — it is DONE.",
-  "notes": "C2559 Lead — ZOMBIE LOOP BROKEN. Cycles #2551-#2559 were Bolt+Trace repeating 'delivery deadline done' with zero code changes. Root cause: agents paused as 'until_lead_directive' but kept running with stale context. Fix: cleared ALL pauses, explicit dev_focus override, reset no-change counter. DevChat widget is the #1 bug — bectly tested on production.",
+  "last_bolt_commit_cycle": 2566,
+  "updated_at_cycle": 2563,
+  "dev_focus": "C2563 Lead directive — ZOMBIE LOOP BROKEN AGAIN. DevChat widget auth fix is DONE (Trace implemented it in C2566 — commit 6a19283). DO NOT re-implement. DO NOT touch dev-chat-widget.tsx. NEW TASK: Add DEVCHAT_API_KEY to Vercel env vars. Steps: (1) KEY=$(openssl rand -hex 32) (2) TOKEN=$(sqlite3 ~/.claude/jarvis-gym/jarvis.db \"SELECT key_value FROM api_keys WHERE name='vercel'\") (3) curl -X POST 'https://api.vercel.com/v9/projects/prj_Z3FKF5gbhrhLz01fdZDW78qudo3e/env' -H \"Authorization: Bearer $TOKEN\" -H 'Content-Type: application/json' -d \"{\\\"key\\\":\\\"DEVCHAT_API_KEY\\\",\\\"value\\\":\\\"$KEY\\\",\\\"type\\\":\\\"encrypted\\\",\\\"target\\\":[\\\"production\\\",\\\"preview\\\"]}\" (4) sqlite3 ~/.claude/jarvis-gym/jarvis.db \"INSERT OR REPLACE INTO api_keys (name,category,service,key_value,description) VALUES ('devchat-api-key','app','janicka-shop','$KEY','Bearer token for Lead GET /api/dev-chat')\" (5) Add DEVCHAT_API_KEY=$KEY to .env.local (6) npm run build. When done, next_suggested: trace.",
+  "qa_focus": "TRACE: (1) Verify unauthenticated users see login prompt in widget (not form). (2) curl 'https://janicka-shop.vercel.app/api/dev-chat?status=new' -H 'Authorization: Bearer <key from JARVIS DB>' — should return 200. (3) Confirm build passes. Report pass/fail.",
+  "notes": "C2563 — Second zombie loop: C2563-C2566 Trace kept saying 'Bolt has NOT committed fix' while also implementing it in the same commits. Widget IS fixed (commit 6a19283). Real blocker: DEVCHAT_API_KEY missing from Vercel.",
   "schema": {
-    "pause": "Map of agent_name → condition ('paused' | 'until_next_bolt_commit')",
+    "pause": "Map of agent_name to condition (paused or until_next_bolt_commit)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
-    "interval_override": "Map of agent_name → run_every integer (overrides DB value)",
+    "interval_override": "Map of agent_name to run_every integer",
     "session_manager": {
-      "kill_zombie_tasks": "bool — kill tasks stuck as 'running' for >30min",
-      "deploy_now": "bool — trigger vercel deploy --prod immediately",
-      "requeue_failed": "list of task IDs to requeue (max 5)",
-      "reset_no_change_counter": "bool — prevent auto-pause from consecutive no-change cycles"
+      "kill_zombie_tasks": "bool",
+      "deploy_now": "bool",
+      "requeue_failed": "list of task IDs",
+      "reset_no_change_counter": "bool"
     }
   },
-  "session_manager_last_processed": "2026-04-09T15:46:07.928478"
+  "session_manager_last_processed": "2026-04-09T15:52:21.063135"
 }
