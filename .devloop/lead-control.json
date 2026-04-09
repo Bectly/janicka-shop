@@ -1,15 +1,15 @@
 {
   "pause": {
-    "trace": "paused",
-    "seer": "paused",
-    "sculptor": "paused",
-    "balancer": "paused",
-    "bolt": "paused"
+    "trace": "until_lead_directive",
+    "seer": "until_lead_directive",
+    "sculptor": "until_lead_directive",
+    "balancer": "until_lead_directive",
+    "bolt": "until_lead_directive"
   },
   "force_next": "guard",
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2659,
+  "last_bolt_commit_cycle": 2660,
   "updated_at_cycle": 2659,
   "dev_focus": "C2659 DIRECTIVE — GUARD ONLY: Comprehensive security audit (open since Cycle #19, launch-blocking). ALL other agents HARD PAUSED until Guard reports. Scope: (1) CSRF — verify SameSite cookies, Origin header checks on all Server Actions and API routes, (2) Input sanitization — grep for dangerouslySetInnerHTML, raw SQL, unsanitized user input in emails/HTML, (3) Session security — NextAuth config: httpOnly, secure, sameSite cookies, session expiry, (4) Rate limiting — verify auth endpoints (/api/auth/*), checkout, email capture, dev-chat all rate-limited, (5) Content-Security-Policy headers — frame-ancestors, script-src, (6) API auth — verify all admin routes check session, all cron routes check CRON_SECRET, dev-chat API key auth, (7) XSS vectors — product names/descriptions rendered in emails and HTML (especially new similar-item.ts and heureka.ts from C2654-2659). Report findings as JSON with severity (critical/high/medium/low). When done, set next_suggested: lead.",
   "qa_focus": "C2659 DIRECTIVE — GUARD: Security audit is THE SOLE priority. See dev_focus for full scope. DO NOT re-audit similar-items cron or 30-day price — both were verified clean by Trace C2657+C2658. Focus on OWASP top 10 across the ENTIRE codebase. After Guard reports: if critical/high findings → Bolt fixes immediately. If clean → Bolt builds referral backend (StoreCredit model, ref= URL tracking from existing ReferralCard, apply at checkout). 150/100 CZK bilateral structure validated by Scout.",
