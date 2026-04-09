@@ -14,11 +14,15 @@
     },
     {
       "path": "/api/cron/new-arrivals",
-      "schedule": "0 8,20 * * *"
+      "schedule": "0 7,17 * * *"
     },
     {
       "path": "/api/cron/browse-abandonment",
       "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/cross-sell",
+      "schedule": "0 17 * * *"
     }
   ]
 }

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getImageUrls } from "@/lib/images";
 
-export const revalidate = 3600; // Revalidate every hour
+export const dynamic = "force-dynamic";
 import {
   SHIPPING_PRICES,
   COD_SURCHARGE,

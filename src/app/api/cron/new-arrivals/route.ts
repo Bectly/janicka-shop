@@ -69,6 +69,7 @@ export async function GET(request: Request) {
     }
 
     // 2. Find active subscribers not emailed in last 7 days
+    //    Skip paused subscribers (pausedUntil > now) and discount-only subscribers
     const subscribers = await db.newsletterSubscriber.findMany({
       where: {
         active: true,
@@ -76,6 +77,12 @@ export async function GET(request: Request) {
           { lastNewArrivalEmailAt: null },
           { lastNewArrivalEmailAt: { lte: sevenDaysAgo } },
         ],
+        // Exclude subscribers paused until a future date
+        NOT: {
+          pausedUntil: { gt: now },
+        },
+        // Exclude subscribers who only want discounts (not new arrivals)
+        preferenceFilter: { not: "discounts" },
       },
       select: {
         id: true,

@@ -7,7 +7,7 @@ import {
   CONDITION_LABELS,
 } from "@/lib/constants";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://janicka-shop.vercel.app";

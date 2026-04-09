@@ -50,7 +50,7 @@ interface PaymentData {
 
 const IS_TEST = process.env.NEXT_PUBLIC_COMGATE_TEST === "true";
 
-export function ComgatePaymentSection({ orderNumber, accessToken, total, onSuccess }: Props) {
+export function ComgatePaymentSection({ orderNumber, accessToken, onSuccess }: Props) {
   const [phase, setPhase] = useState<Phase>("init");
   const [error, setError] = useState<string | null>(null);
   const [paymentData, setPaymentData] = useState<PaymentData | null>(null);

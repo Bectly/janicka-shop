@@ -102,6 +102,7 @@ model Order {
   shippedAt                DateTime?   // Set when admin changes status to "shipped"
   reviewEmailSentAt        DateTime?   // Set when review request email is sent (prevents duplicates)
   deliveryCheckEmailSentAt DateTime?   // Set when delivery check-in email is sent (ship+4d)
+  crossSellEmailSentAt     DateTime?   // Set when T+14 cross-sell follow-up email is sent
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   items         OrderItem[]
@@ -160,7 +161,9 @@ model NewsletterSubscriber {
   preferredCategories    String    @default("[]") // JSON array of category IDs
   preferredBrands        String    @default("[]") // JSON array of brand name strings
   source                 String    @default("website") // website, checkout, import
-  lastNewArrivalEmailAt  DateTime?                     // Last time a new-arrival email was sent (prevents spam)
+  preferenceFilter       String?                        // Filter type: "new_arrivals" | "discounts" | null (all)
+  pausedUntil            DateTime?                      // If set and > now(), skip this subscriber in crons
+  lastNewArrivalEmailAt  DateTime?                      // Last time a new-arrival email was sent (prevents spam)
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt @default(now())
 }

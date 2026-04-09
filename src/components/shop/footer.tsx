@@ -52,14 +52,21 @@ function FacebookIcon({ className }: { className?: string }) {
 }
 
 export async function Footer() {
-  const db = await getDb();
-  const settings = await db.shopSettings.findUnique({
-    where: { id: "singleton" },
-    select: { instagram: true, facebook: true },
-  });
+  let instagram = "";
+  let facebook = "";
 
-  const instagram = settings?.instagram || "";
-  const facebook = settings?.facebook || "";
+  try {
+    const db = await getDb();
+    const settings = await db.shopSettings.findUnique({
+      where: { id: "singleton" },
+      select: { instagram: true, facebook: true },
+    });
+    instagram = settings?.instagram || "";
+    facebook = settings?.facebook || "";
+  } catch {
+    // DB unavailable during build — render with defaults
+  }
+
   const hasSocial = instagram || facebook;
 
   return (

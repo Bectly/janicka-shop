@@ -18,7 +18,12 @@ async function createClient(): Promise<PrismaClient> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma constructor types don't expose `adapter` without bundler resolution
     return new PrismaClient({ adapter } as any);
   }
-  return new PrismaClient();
+
+  // Local SQLite — enable WAL mode for concurrent readers during build
+  // (prevents SQLITE_CANTOPEN / lock errors when Next.js build workers run in parallel)
+  const client = new PrismaClient();
+  await client.$executeRawUnsafe("PRAGMA journal_mode = WAL;");
+  return client;
 }
 
 export async function getDb(): Promise<PrismaClient> {

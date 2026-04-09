@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Utility scripts — excluded from TS build, exempt from strict linting
+    "scripts/**",
   ]),
 ]);
 

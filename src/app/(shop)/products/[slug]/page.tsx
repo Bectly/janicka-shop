@@ -69,17 +69,22 @@ const getProduct = cache(async (slug: string) => {
   });
 });
 
-/** Pre-generate product pages at build time for faster first loads.
- *  ISR (revalidate=30) handles updates after build. */
+/** Pre-generate the 50 most recent product pages at build time.
+ *  ISR (revalidate=30) handles the rest on-demand — avoids SQLite lock contention
+ *  when Next.js build uses 15 parallel workers with 350+ products. */
 export async function generateStaticParams() {
-  const db = await getDb();
-  const products = await db.product.findMany({
-    where: { active: true },
-    select: { slug: true },
-    orderBy: { createdAt: "desc" },
-    take: 500,
-  });
-  return products.map((p) => ({ slug: p.slug }));
+  try {
+    const db = await getDb();
+    const products = await db.product.findMany({
+      where: { active: true },
+      select: { slug: true },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    });
+    return products.map((p) => ({ slug: p.slug }));
+  } catch {
+    return [];
+  }
 }
 
 interface Props {

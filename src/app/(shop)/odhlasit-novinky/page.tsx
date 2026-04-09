@@ -3,6 +3,7 @@ export const revalidate = 300;
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
+import { PreferenceCenter } from "./preference-center";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -75,6 +76,7 @@ export default async function UnsubscribeNewsletterPage({ searchParams }: Props)
             Nebudeme tě už informovat o nových kouscích. Pokud se rozhodneš
             nakoupit, vždy tě rádi uvítáme.
           </p>
+          <PreferenceCenter email={email} />
         </>
       ) : (
         <>

@@ -76,8 +76,6 @@ export async function POST(req: NextRequest) {
   // Reuse existing transId if we already created one for this order
   // This prevents duplicate payment creation if user clicks twice
   if (order.paymentId) {
-    const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
     return NextResponse.json({
       transactionId: order.paymentId,
       redirect: `https://payments.comgate.cz/client/instructions/index?id=${order.paymentId}`,
@@ -85,9 +83,6 @@ export async function POST(req: NextRequest) {
       reused: true,
     });
   }
-
-  const baseUrl =
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
 
   try {
     const payment = await createComgatePayment({
