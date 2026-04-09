@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
 import { useCartStore } from "@/lib/cart-store";
-import { useSyncExternalStore } from "react";
+import { useSyncExternalStore, useRef, useState, useEffect } from "react";
 
 const emptySubscribe = () => () => {};
 
@@ -13,15 +13,34 @@ export function CartButton() {
 
   const count = mounted ? totalItems() : 0;
 
+  const hasHydrated = useRef(false);
+  const prevCount = useRef(0);
+  const [bouncing, setBouncing] = useState(false);
+
+  useEffect(() => {
+    if (!hasHydrated.current) {
+      hasHydrated.current = true;
+      prevCount.current = count;
+      return;
+    }
+    if (count > prevCount.current) {
+      setBouncing(true);
+      const timer = setTimeout(() => setBouncing(false), 500);
+      prevCount.current = count;
+      return () => clearTimeout(timer);
+    }
+    prevCount.current = count;
+  }, [count]);
+
   return (
     <Link
       href="/cart"
       className="relative inline-flex items-center justify-center rounded-lg p-2 text-foreground/80 transition-colors hover:bg-muted hover:text-foreground"
       aria-label={`Košík${count > 0 ? ` (${count})` : ""}`}
     >
-      <ShoppingBag className="size-5" />
+      <ShoppingBag className={`size-5 ${bouncing ? "animate-cart-bounce" : ""}`} />
       {count > 0 && (
-        <span className="absolute -top-0.5 -right-0.5 flex size-4.5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+        <span className={`absolute -top-0.5 -right-0.5 flex size-4.5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground ${bouncing ? "animate-cart-bounce" : ""}`}>
           {count > 99 ? "99+" : count}
         </span>
       )}

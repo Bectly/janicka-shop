@@ -21,7 +21,7 @@ export function WishlistButton({
   const toggle = useWishlistStore((s) => s.toggle);
   const has = useWishlistStore((s) => s.has);
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
-  const [bouncing, setBouncing] = useState(false);
+  const [animating, setAnimating] = useState(false);
 
   const isWishlisted = mounted ? has(productId) : false;
 
@@ -30,8 +30,8 @@ export function WishlistButton({
       e.preventDefault();
       e.stopPropagation();
       toggle(productId);
-      setBouncing(true);
-      setTimeout(() => setBouncing(false), 400);
+      setAnimating(true);
+      setTimeout(() => setAnimating(false), 500);
     },
     [toggle, productId]
   );
@@ -49,7 +49,7 @@ export function WishlistButton({
         aria-label={isWishlisted ? "Odebrat z oblíbených" : "Přidat do oblíbených"}
       >
         <Heart
-          className={`size-4 transition-transform ${bouncing ? "scale-125" : "scale-100"} ${
+          className={`size-4 transition-colors ${animating ? "animate-heart-burst" : ""} ${
             isWishlisted ? "fill-red-500 text-red-500" : ""
           }`}
         />
@@ -67,9 +67,9 @@ export function WishlistButton({
       aria-label={isWishlisted ? "Odebrat z oblíbených" : "Přidat do oblíbených"}
     >
       <Heart
-        className={`size-4 transition-transform duration-300 ${
-          bouncing ? "scale-125" : "scale-100"
-        } ${isWishlisted ? "fill-red-500 text-red-500" : "text-foreground/70"}`}
+        className={`size-4 transition-colors ${animating ? "animate-heart-burst" : ""} ${
+          isWishlisted ? "fill-red-500 text-red-500" : "text-foreground/70"
+        }`}
       />
     </button>
   );

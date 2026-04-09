@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowRight } from "lucide-react";
 import { getLowestPrices30d } from "@/lib/price-history";
 import { buildItemListSchema, buildWebSiteSchema, buildOrganizationSchema, jsonLdString } from "@/lib/structured-data";
+import { ScrollReveal } from "@/components/shop/scroll-reveal";
 
 /* ---------- Cached DB fetches (cross-request via "use cache") ---------- */
 
@@ -616,69 +617,89 @@ export default async function HomePage() {
       </Suspense>
 
       {/* New products — streams independently */}
-      <Suspense fallback={<SectionSkeleton title="Nově přidané" subtitle="Čerstvé kousky za poslední týden" />}>
-        <NewProductsSection />
-      </Suspense>
+      <ScrollReveal>
+        <Suspense fallback={<SectionSkeleton title="Nově přidané" subtitle="Čerstvé kousky za poslední týden" />}>
+          <NewProductsSection />
+        </Suspense>
+      </ScrollReveal>
 
       {/* Featured products — streams independently */}
-      <Suspense fallback={<SectionSkeleton title="Doporučujeme" subtitle="Ručně vybrané kousky za nejlepší ceny" />}>
-        <FeaturedProductsSection />
-      </Suspense>
+      <ScrollReveal>
+        <Suspense fallback={<SectionSkeleton title="Doporučujeme" subtitle="Ručně vybrané kousky za nejlepší ceny" />}>
+          <FeaturedProductsSection />
+        </Suspense>
+      </ScrollReveal>
 
       {/* Sale products — streams independently */}
-      <Suspense fallback={<SectionSkeleton title="Výprodej" subtitle="Skvělé kousky za ještě lepší ceny" />}>
-        <SaleProductsSection />
-      </Suspense>
+      <ScrollReveal>
+        <Suspense fallback={<SectionSkeleton title="Výprodej" subtitle="Skvělé kousky za ještě lepší ceny" />}>
+          <SaleProductsSection />
+        </Suspense>
+      </ScrollReveal>
 
       {/* Popular brands — streams independently */}
-      <Suspense fallback={
-        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="font-heading text-2xl font-bold text-foreground">Populární značky</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Oblíbené značky v naší nabídce</p>
-          </div>
-          <BrandsSkeleton />
-        </section>
-      }>
-        <PopularBrandsSection />
-      </Suspense>
+      <ScrollReveal>
+        <Suspense fallback={
+          <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+            <div className="text-center">
+              <h2 className="font-heading text-2xl font-bold text-foreground">Populární značky</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Oblíbené značky v naší nabídce</p>
+            </div>
+            <BrandsSkeleton />
+          </section>
+        }>
+          <PopularBrandsSection />
+        </Suspense>
+      </ScrollReveal>
 
       {/* Collections — streams independently */}
-      <Suspense fallback={null}>
-        <FeaturedCollectionsSection />
-      </Suspense>
+      <ScrollReveal>
+        <Suspense fallback={null}>
+          <FeaturedCollectionsSection />
+        </Suspense>
+      </ScrollReveal>
 
       {/* Trust badges — no data, renders instantly */}
-      <TrustBadges />
+      <ScrollReveal>
+        <TrustBadges />
+      </ScrollReveal>
 
       {/* Vinted trust comparison — no data, renders instantly */}
-      <VintedComparisonSection />
+      <ScrollReveal>
+        <VintedComparisonSection />
+      </ScrollReveal>
 
       {/* Recently sold — streams independently */}
-      <Suspense fallback={null}>
-        <RecentlySoldSection />
-      </Suspense>
+      <ScrollReveal>
+        <Suspense fallback={null}>
+          <RecentlySoldSection />
+        </Suspense>
+      </ScrollReveal>
 
       {/* Recently viewed — client-side, renders instantly */}
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <RecentlyViewedSection />
-      </section>
+      <ScrollReveal>
+        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+          <RecentlyViewedSection />
+        </section>
+      </ScrollReveal>
 
       {/* Newsletter — no data, renders instantly */}
-      <section className="bg-primary/5">
-        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-lg text-center">
-            <h2 className="font-heading text-2xl font-bold text-foreground">
-              Buďte v obraze
-            </h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Přihlaste se k odběru novinek a získejte slevu 10&nbsp;% na první
-              nákup.
-            </p>
-            <NewsletterForm />
+      <ScrollReveal>
+        <section className="bg-primary/5">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-lg text-center">
+              <h2 className="font-heading text-2xl font-bold text-foreground">
+                Buďte v obraze
+              </h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Přihlaste se k odběru novinek a získejte slevu 10&nbsp;% na první
+                nákup.
+              </p>
+              <NewsletterForm />
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </ScrollReveal>
     </>
   );
 }
