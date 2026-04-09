@@ -1,15 +1,15 @@
 {
   "pause": {
-    "trace": "until_lead_directive"
+    "trace": "until_next_bolt_commit"
   },
-  "force_next": null,
+  "force_next": "bolt",
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 2627,
-  "updated_at_cycle": 2617,
-  "dev_focus": "C2617 DIRECTIVE — ReferralCard DONE (marked [x] in TODO). ZOMBIE LOOP ENDED. NEW TASK: MOBILE RESPONSIVE POLISH. Audit ALL shop pages at 375px viewport width and fix layout issues. Priority order: (1) /checkout — accordion sections, form inputs touch targets ≥44px, Packeta widget sizing, payment section overflow. (2) /products/[slug] — gallery tap targets, add-to-cart sticky bar, size selector buttons, similar items grid cols. (3) /products — filter drawer fullscreen, product grid 2-col layout, quick filters horizontal scroll. (4) / — hero section, trust badges row→wrap, collections cards, recently sold horizontal scroll. (5) /cart — item list stacking, totals sidebar→stacked on mobile, exit intent modal. CHECK EACH PAGE: text truncation/overflow, zero horizontal scroll at 375px, touch targets <44px (fix them), z-index conflicts. Fashion = 81% mobile. Run `npm run build` — must pass before commit.",
-  "qa_focus": "TRACE: After Bolt commits mobile fixes: (1) Test ALL shop pages at 375px + 430px viewports — zero horizontal overflow, (2) All interactive elements ≥44px touch targets, (3) Checkout accordion flow end-to-end at 375px, (4) Product gallery swipe works on mobile, (5) Mobile nav open/close, (6) No JS errors in console. Security spot-check: all /api/admin/* routes require auth.",
-  "notes": "C2617 Lead — ZOMBIE LOOP #3 BROKEN (6 cycles C2601-2617 Bolt repeating ReferralCard claim). Root cause: Bolt lacked explicit fresh directive each cycle. Fixed: (1) Marked ReferralCard [x] in TODO.md. (2) Removed both Bolt+Trace pauses. (3) force_next=bolt to send Bolt immediately. (4) dev_focus updated to mobile polish with specific page priorities. Critical: Bolt must NOT reference ReferralCard again — it is done.",
+  "updated_at_cycle": 2628,
+  "dev_focus": "C2628 DIRECTIVE — MOBILE TOUCH TARGET SWEEP (Phase 2). Trace C2626 fixed PDP sticky ATC, size/color buttons, announcement bar. GOOD. Remaining verified issues: (1) src/components/shop/product-filters.tsx — MANY filter buttons below 44px: category pills (line 126,139: py-1.5), size buttons (line 225: py-1, min-w-[2.5rem]), color swatches (line 262: py-1), condition chips (line 305: py-1). These are in the DRAWER on mobile — touch targets critical. Fix: all interactive filter elements min-h-11 (44px). Active filter chips at bottom (line 452,481: py-1) also need min-h-9. (2) src/app/(shop)/cart/page.tsx line 231-238 — Trash/remove button is bare <button> with only size-4 icon (16px). Must be at least 44×44px touch target. Add min-h-11 min-w-11 flex items-center justify-center. (3) Checkout step indicator circles (src/app/(shop)/checkout/page.tsx) — currently size-8 (32px), should be size-9 (36px) on mobile. SCOPE: Only these 3 files. Do NOT touch anything else. Run `npm run build` — must pass.",
+  "qa_focus": "TRACE: After Bolt commits touch target fixes: (1) Open filter drawer at 375px — ALL buttons/chips must be ≥44px touch height, (2) Cart page: trash button tap area ≥44×44px, (3) Checkout: step indicators visually correct after size bump, (4) No horizontal overflow on any page at 375px, (5) Build passes clean.",
+  "notes": "C2628 Lead — Mobile polish Phase 2. Trace C2626 fixed 3 real bugs (Phase 1 success). Now Bolt tackles remaining touch targets in filter drawer, cart, checkout. Scoped to 3 files only. Trace paused until Bolt commits — no point verifying before fixes land.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",

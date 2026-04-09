@@ -707,6 +707,7 @@ export default function CheckoutPage() {
               )}
               <Button
                 type="button"
+                size="lg"
                 className="mt-6 w-full gap-2"
                 onClick={advanceFromContact}
               >
@@ -940,6 +941,7 @@ export default function CheckoutPage() {
               )}
               <Button
                 type="button"
+                size="lg"
                 className="mt-6 w-full gap-2"
                 onClick={advanceFromShipping}
               >
@@ -1031,6 +1033,7 @@ export default function CheckoutPage() {
 
               <Button
                 type="button"
+                size="lg"
                 className="mt-6 w-full gap-2"
                 onClick={advanceFromPayment}
               >

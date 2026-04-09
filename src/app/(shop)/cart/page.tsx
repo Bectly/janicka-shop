@@ -231,7 +231,7 @@ function CartItemRow({
           <button
             onClick={() => startTransition(() => { onRemove(); })}
             disabled={isRemoving}
-            className="text-muted-foreground transition-colors hover:text-destructive disabled:opacity-50"
+            className="flex size-11 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-destructive disabled:opacity-50"
             aria-label="Odebrat z košíku"
           >
             <Trash2 className="size-4" />

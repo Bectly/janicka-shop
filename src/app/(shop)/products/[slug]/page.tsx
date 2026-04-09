@@ -560,7 +560,7 @@ export default async function ProductDetailPage({ params }: Props) {
                 <Ruler className="size-3.5" />
                 Rozměry kusu
               </div>
-              <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-4">
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-sm sm:grid-cols-4 sm:gap-x-6">
                 {measurements.chest && (
                   <div className="flex justify-between sm:flex-col sm:gap-0.5">
                     <span className="text-muted-foreground">Prsa</span>

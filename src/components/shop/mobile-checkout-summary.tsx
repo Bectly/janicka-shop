@@ -38,9 +38,9 @@ export function MobileCheckoutSummary({
   freeShipping,
 }: MobileCheckoutSummaryProps) {
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur-sm lg:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm lg:hidden">
       <Sheet>
-        <SheetTrigger className="flex w-full items-center justify-between px-4 py-3">
+        <SheetTrigger className="flex min-h-12 w-full items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
             <ShoppingBag className="size-4 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">

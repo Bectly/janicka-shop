@@ -319,7 +319,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                   );
 
                 }}
-                className="absolute top-1/2 left-2 z-20 -translate-y-1/2 rounded-full bg-white/80 p-1.5 opacity-0 shadow transition-opacity hover:bg-white group-hover:opacity-100"
+                className="absolute top-1/2 left-2 z-20 -translate-y-1/2 rounded-full bg-white/80 p-2.5 opacity-0 shadow transition-opacity hover:bg-white group-hover:opacity-100"
                 aria-label="Předchozí fotka"
               >
                 <ChevronLeft className="size-5" />
@@ -334,7 +334,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                   );
 
                 }}
-                className="absolute top-1/2 right-2 z-20 -translate-y-1/2 rounded-full bg-white/80 p-1.5 opacity-0 shadow transition-opacity hover:bg-white group-hover:opacity-100"
+                className="absolute top-1/2 right-2 z-20 -translate-y-1/2 rounded-full bg-white/80 p-2.5 opacity-0 shadow transition-opacity hover:bg-white group-hover:opacity-100"
                 aria-label="Další fotka"
               >
                 <ChevronRight className="size-5" />
@@ -453,7 +453,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                   setZoomed(false);
                   setPanOffset({ x: 0, y: 0 });
                 }}
-                className="absolute top-1/2 left-2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20 sm:left-4 sm:p-3"
+                className="absolute top-1/2 left-2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-2.5 text-white transition-colors hover:bg-white/20 sm:left-4 sm:p-3"
                 aria-label="Předchozí fotka"
               >
                 <ChevronLeft className="size-6 sm:size-8" />
@@ -468,7 +468,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                   setZoomed(false);
                   setPanOffset({ x: 0, y: 0 });
                 }}
-                className="absolute top-1/2 right-2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20 sm:right-4 sm:p-3"
+                className="absolute top-1/2 right-2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-2.5 text-white transition-colors hover:bg-white/20 sm:right-4 sm:p-3"
                 aria-label="Další fotka"
               >
                 <ChevronRight className="size-6 sm:size-8" />

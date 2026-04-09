@@ -96,6 +96,7 @@ export function PacketaWidget({
         <Button
           type="button"
           variant="outline"
+          size="lg"
           className="w-full gap-2"
           onClick={openWidget}
           disabled={!scriptLoaded}

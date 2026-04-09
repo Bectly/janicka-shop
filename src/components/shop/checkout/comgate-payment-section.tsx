@@ -253,25 +253,24 @@ export function ComgatePaymentSection({ orderNumber, accessToken, onSuccess }: P
             <CreditCard className="size-4" />
             Platba kartou
           </div>
-          {/* Comgate inline iframe — fixed size required by Comgate spec: 504×679px */}
-          <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
-            <iframe
-              ref={iframeRef}
-              id="comgate-iframe"
-              src={paymentData.redirect}
-              allow="payment"
-              frameBorder="0"
-              width="504"
-              height="679"
-              className="w-full"
-              style={{ minHeight: 679 }}
-              title="Comgate platební brána"
-            />
+          {/* Comgate inline iframe — scales down from 504×679px on mobile */}
+          <div className="mx-auto w-full max-w-[504px] overflow-hidden rounded-xl border bg-white shadow-sm">
+            <div className="relative w-full" style={{ paddingBottom: `${(679 / 504) * 100}%` }}>
+              <iframe
+                ref={iframeRef}
+                id="comgate-iframe"
+                src={paymentData.redirect}
+                allow="payment"
+                frameBorder="0"
+                className="absolute inset-0 h-full w-full"
+                title="Comgate platební brána"
+              />
+            </div>
           </div>
           <button
             type="button"
             onClick={() => setPhase("express")}
-            className="text-xs text-muted-foreground underline-offset-2 hover:underline"
+            className="min-h-11 px-2 text-xs text-muted-foreground underline-offset-2 hover:underline"
           >
             ← Zpět na výběr platby
           </button>
@@ -307,6 +306,7 @@ export function ComgatePaymentSection({ orderNumber, accessToken, onSuccess }: P
           {/* Card payment button */}
           <Button
             type="button"
+            size="lg"
             className="w-full gap-2"
             onClick={() => {
               if (paymentData) {
