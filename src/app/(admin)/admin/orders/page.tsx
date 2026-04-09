@@ -56,6 +56,26 @@ export default async function AdminOrdersPage({
     },
   });
 
+  // Compute delivery deadline urgency for active orders
+  const now = new Date();
+  const ordersWithDeadline = orders.map((order) => {
+    let deadlineUrgency: "ok" | "approaching" | "urgent" | "overdue" | null = null;
+    if (
+      order.expectedDeliveryDate &&
+      order.status !== "delivered" &&
+      order.status !== "cancelled"
+    ) {
+      const daysRemaining = Math.ceil(
+        (order.expectedDeliveryDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)
+      );
+      if (daysRemaining < 0) deadlineUrgency = "overdue";
+      else if (daysRemaining <= 5) deadlineUrgency = "urgent";
+      else if (daysRemaining <= 10) deadlineUrgency = "approaching";
+      else deadlineUrgency = "ok";
+    }
+    return { ...order, deadlineUrgency };
+  });
+
   const statusFilters = [
     { value: "all", label: "Všechny" },
     { value: "pending", label: "Čeká" },

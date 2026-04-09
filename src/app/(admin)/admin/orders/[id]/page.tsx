@@ -395,3 +395,77 @@ export default async function AdminOrderDetailPage({ params }: Props) {
     </>
   );
 }
+
+/** Delivery deadline card with visual urgency levels */
+function DeliveryDeadlineCard({
+  expectedDeliveryDate,
+  status,
+}: {
+  expectedDeliveryDate: Date;
+  status: string;
+}) {
+  const now = new Date();
+  const daysRemaining = Math.ceil(
+    (expectedDeliveryDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)
+  );
+  const isOverdue = daysRemaining < 0;
+  const isUrgent = daysRemaining >= 0 && daysRemaining <= 5;
+  const isApproaching = daysRemaining > 5 && daysRemaining <= 10;
+
+  const dateStr = new Intl.DateTimeFormat("cs-CZ", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(expectedDeliveryDate);
+
+  let borderColor = "border-border";
+  let icon = <Clock className="size-4 text-muted-foreground" />;
+  let statusText = `${daysRemaining} dní zbývá`;
+  let statusColor = "text-muted-foreground";
+
+  if (isOverdue) {
+    borderColor = "border-red-300";
+    icon = <AlertTriangle className="size-4 text-red-600" />;
+    statusText = `Po termínu (${Math.abs(daysRemaining)} dní)`;
+    statusColor = "text-red-600 font-medium";
+  } else if (isUrgent) {
+    borderColor = "border-amber-300";
+    icon = <AlertTriangle className="size-4 text-amber-600" />;
+    statusText =
+      daysRemaining === 0
+        ? "Dnes je termín!"
+        : daysRemaining === 1
+          ? "Zbývá 1 den"
+          : `Zbývá ${daysRemaining} dní`;
+    statusColor = "text-amber-600 font-medium";
+  } else if (isApproaching) {
+    borderColor = "border-sky-200";
+    icon = <Clock className="size-4 text-sky-600" />;
+    statusText = `${daysRemaining} dní zbývá`;
+    statusColor = "text-sky-600";
+  }
+
+  const notShipped = status !== "shipped";
+
+  return (
+    <div className={`rounded-xl border ${borderColor} bg-card p-5 shadow-sm`}>
+      <h2 className="font-heading text-base font-semibold text-foreground">
+        Termín doručení
+      </h2>
+      <div className="mt-3 space-y-2 text-sm">
+        <div className="flex items-center gap-2">
+          {icon}
+          <span className={statusColor}>{statusText}</span>
+        </div>
+        <p className="text-muted-foreground">
+          Doručit do: <span className="font-medium text-foreground">{dateStr}</span>
+        </p>
+        {notShipped && (isUrgent || isOverdue) && (
+          <p className="text-xs text-red-600">
+            Objednávka dosud nebyla odeslána!
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
