@@ -7,9 +7,9 @@
     "trace": 6
   },
   "session_manager": {},
-  "last_bolt_commit_cycle": 2439,
+  "last_bolt_commit_cycle": 2440,
   "updated_at_cycle": 2427,
-  "notes": "C2427 Lead: Both prior directives (scarcity badge + DevChat backend) confirmed DONE by Trace C2408. Bolt now has 2 new tasks: (1) DevChat widget — floating bubble component (src/components/dev-chat/), wire into root layout (admin-session-gated), (2) Increase revalidate on product/collection pages from 30s→3600s (one-line fix). Trace stays paused until Bolt commits.",
+  "notes": "C2427 Lead: Scarcity badge + DevChat backend confirmed DONE (C2408). New Bolt directives: (1) DevChat widget → src/components/dev-chat/dev-chat-widget.tsx, add to admin layout (NOT root). 56px bubble, fixed div panel (not Drawer), 30s poll, see TODO spec. (2) revalidate 30→3600 on product+collection pages. (3) Time-elapsed badge replacing static Novinka (see TODO). Trace paused until Bolt commits.",
   "schema": {
     "pause": "Map of agent_name → condition ('paused' | 'until_next_bolt_commit')",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
