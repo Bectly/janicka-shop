@@ -61,6 +61,8 @@ export function ProductFilters({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [showAllBrands, setShowAllBrands] = useState(false);
+  const [showAllBrandsDrawer, setShowAllBrandsDrawer] = useState(false);
 
   const activeCategory = searchParams.get("category") ?? "";
   const activeSort = searchParams.get("sort") ?? "newest";
@@ -146,36 +148,61 @@ export function ProductFilters({
     </div>
   );
 
+  const BRANDS_VISIBLE = 20;
+  // Sort brands by product count descending; always surface active brands
+  const brandsSortedByCount = [...brands].sort((a, b) => (counts.brands[b] ?? 0) - (counts.brands[a] ?? 0));
+  const visibleBrands = showAllBrands
+    ? brandsSortedByCount
+    : brandsSortedByCount.slice(0, BRANDS_VISIBLE).concat(
+        activeBrands.filter((b) => !brandsSortedByCount.slice(0, BRANDS_VISIBLE).includes(b))
+      );
+  const visibleBrandsDrawer = showAllBrandsDrawer
+    ? brandsSortedByCount
+    : brandsSortedByCount.slice(0, BRANDS_VISIBLE).concat(
+        activeBrands.filter((b) => !brandsSortedByCount.slice(0, BRANDS_VISIBLE).includes(b))
+      );
+  const hasMoreBrands = brands.length > BRANDS_VISIBLE;
+
+  function renderBrandButton(brand: string, size: "sm" | "base") {
+    const count = counts.brands[brand] ?? 0;
+    const isActive = activeBrands.includes(brand);
+    const isDisabled = count === 0 && !isActive;
+    return (
+      <button
+        key={brand}
+        onClick={() => !isDisabled && toggleMulti("brand", brand, activeBrands)}
+        aria-pressed={isActive}
+        aria-disabled={isDisabled}
+        className={`rounded-lg px-3 ${size === "base" ? "py-1.5 text-sm" : "py-1 text-xs"} font-medium transition-colors ${
+          isActive
+            ? "bg-primary text-primary-foreground"
+            : isDisabled
+              ? "bg-muted/50 text-muted-foreground/40 cursor-not-allowed"
+              : "bg-muted text-muted-foreground hover:bg-muted/80"
+        }`}
+      >
+        {brand}
+        <span className="ml-1 opacity-60">({count})</span>
+      </button>
+    );
+  }
+
   const brandFilter = brands.length > 0 && (
     <fieldset>
       <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         Značka
       </legend>
       <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filtr podle značky">
-        {brands.map((brand) => {
-          const count = counts.brands[brand] ?? 0;
-          const isActive = activeBrands.includes(brand);
-          const isDisabled = count === 0 && !isActive;
-          return (
-            <button
-              key={brand}
-              onClick={() => !isDisabled && toggleMulti("brand", brand, activeBrands)}
-              aria-pressed={isActive}
-              aria-disabled={isDisabled}
-              className={`rounded-lg px-3 py-1 text-xs font-medium transition-colors ${
-                isActive
-                  ? "bg-primary text-primary-foreground"
-                  : isDisabled
-                    ? "bg-muted/50 text-muted-foreground/40 cursor-not-allowed"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
-              }`}
-            >
-              {brand}
-              <span className="ml-1 opacity-60">({count})</span>
-            </button>
-          );
-        })}
+        {visibleBrands.map((brand) => renderBrandButton(brand, "sm"))}
       </div>
+      {hasMoreBrands && (
+        <button
+          onClick={() => setShowAllBrands((v) => !v)}
+          className="mt-2 text-xs text-primary underline-offset-2 hover:underline"
+        >
+          {showAllBrands ? "Zobrazit méně" : `Zobrazit všechny (${brands.length})`}
+        </button>
+      )}
     </fieldset>
   );
 
@@ -703,30 +730,16 @@ export function ProductFilters({
                     </AccordionTrigger>
                     <AccordionContent>
                       <div className="flex flex-wrap gap-1.5 pb-2" role="group" aria-label="Filtr podle značky">
-                        {brands.map((brand) => {
-                          const count = counts.brands[brand] ?? 0;
-                          const isActive = activeBrands.includes(brand);
-                          const isDisabled = count === 0 && !isActive;
-                          return (
-                            <button
-                              key={brand}
-                              onClick={() => !isDisabled && toggleMulti("brand", brand, activeBrands)}
-                              aria-pressed={isActive}
-                              aria-disabled={isDisabled}
-                              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                                isActive
-                                  ? "bg-primary text-primary-foreground"
-                                  : isDisabled
-                                    ? "bg-muted/50 text-muted-foreground/40 cursor-not-allowed"
-                                    : "bg-muted text-muted-foreground hover:bg-muted/80"
-                              }`}
-                            >
-                              {brand}
-                              <span className="ml-1 opacity-60">({count})</span>
-                            </button>
-                          );
-                        })}
+                        {visibleBrandsDrawer.map((brand) => renderBrandButton(brand, "base"))}
                       </div>
+                      {hasMoreBrands && (
+                        <button
+                          onClick={() => setShowAllBrandsDrawer((v) => !v)}
+                          className="mt-1 mb-2 text-sm text-primary underline-offset-2 hover:underline"
+                        >
+                          {showAllBrandsDrawer ? "Zobrazit méně" : `Zobrazit všechny (${brands.length})`}
+                        </button>
+                      )}
                     </AccordionContent>
                   </AccordionItem>
                 )}
