@@ -855,6 +855,93 @@ export async function sendAdminNewOrderEmail(data: AdminOrderNotificationData): 
   }
 }
 
+// ---------------------------------------------------------------------------
+// Delivery deadline alert emails (admin notification)
+// ---------------------------------------------------------------------------
+
+export interface DeadlineAlertOrder {
+  orderNumber: string;
+  customerName: string;
+  total: number;
+  daysRemaining: number;
+  expectedDeliveryDate: Date;
+  status: string;
+}
+
+export async function sendAdminDeadlineAlertEmail(
+  orders: DeadlineAlertOrder[],
+): Promise<boolean> {
+  const resend = getResendClient();
+  if (!resend) return false;
+
+  const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL;
+  if (!adminEmail) return false;
+  if (orders.length === 0) return true;
+
+  const overdueCount = orders.filter((o) => o.daysRemaining < 0).length;
+  const urgentCount = orders.filter((o) => o.daysRemaining >= 0 && o.daysRemaining <= 5).length;
+
+  const subject = overdueCount > 0
+    ? `Termín doručení: ${overdueCount} po termínu, ${urgentCount} blízko termínu`
+    : `Termín doručení: ${urgentCount} objednávek blízko termínu`;
+
+  const formatDate = (d: Date) =>
+    new Intl.DateTimeFormat("cs-CZ", { day: "numeric", month: "long" }).format(d);
+
+  const rows = orders
+    .sort((a, b) => a.daysRemaining - b.daysRemaining)
+    .map((o) => {
+      const urgency =
+        o.daysRemaining < 0
+          ? `<span style="color:#dc2626;font-weight:600">Po termínu (${Math.abs(o.daysRemaining)} dní)</span>`
+          : o.daysRemaining === 0
+            ? `<span style="color:#d97706;font-weight:600">Dnes!</span>`
+            : `<span style="color:#d97706">Zbývá ${o.daysRemaining} dní</span>`;
+      return `<tr>
+        <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb">${o.orderNumber}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb">${o.customerName}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb">${formatPriceCzk(o.total)}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb">${formatDate(o.expectedDeliveryDate)}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb">${urgency}</td>
+      </tr>`;
+    })
+    .join("");
+
+  const html = `
+    <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
+      <h2 style="color:#1f2937">Upozornění na termín doručení</h2>
+      <p style="color:#6b7280">Podle českého zákona musí být objednávky doručeny do 30 dní od uzavření smlouvy.</p>
+      <table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:16px">
+        <thead>
+          <tr style="background:#f9fafb">
+            <th style="padding:8px 12px;text-align:left;border-bottom:2px solid #e5e7eb">Objednávka</th>
+            <th style="padding:8px 12px;text-align:left;border-bottom:2px solid #e5e7eb">Zákazník</th>
+            <th style="padding:8px 12px;text-align:left;border-bottom:2px solid #e5e7eb">Celkem</th>
+            <th style="padding:8px 12px;text-align:left;border-bottom:2px solid #e5e7eb">Termín</th>
+            <th style="padding:8px 12px;text-align:left;border-bottom:2px solid #e5e7eb">Stav</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <p style="margin-top:16px;color:#6b7280;font-size:13px">
+        Zkontrolujte tyto objednávky v <a href="${process.env.NEXT_PUBLIC_BASE_URL ?? "https://janicka-shop.vercel.app"}/admin/orders">admin panelu</a>.
+      </p>
+    </div>`;
+
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: adminEmail,
+      subject,
+      html,
+    });
+    return true;
+  } catch (error) {
+    console.error("[Email] Failed to send deadline alert:", error);
+    return false;
+  }
+}
+
 export async function sendNewsletterWelcomeEmail(email: string): Promise<void> {
   const resend = getResendClient();
   if (!resend) {

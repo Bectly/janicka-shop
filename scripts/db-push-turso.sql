@@ -40,4 +40,7 @@
 -- If adding fresh: ALTER TABLE "Order" ADD COLUMN "crossSellEmailSentAt" DATETIME;
 --                  ALTER TABLE "NewsletterSubscriber" ADD COLUMN "preferenceFilter" TEXT;
 --                  ALTER TABLE "NewsletterSubscriber" ADD COLUMN "pausedUntil" DATETIME;
+-- Cycle #2534: expectedDeliveryDate on Order (Czech law delivery deadline tracking)
+ALTER TABLE "Order" ADD COLUMN "expectedDeliveryDate" DATETIME;
+
 SELECT 1; -- no-op so the file is never empty
