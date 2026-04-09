@@ -35,5 +35,9 @@
 -- CREATE INDEX IF NOT EXISTS "BrowseAbandonment_status_idx" ON "BrowseAbandonment"("status");
 
 -- === NEW MIGRATIONS (add here after each schema change cycle) ===
--- (none pending as of 2026-04-09)
+-- ✓ Cycle #2348: DB indexes (brand, createdAt, price + 2 composites on Product) — applied via Turso CLI
+-- ✓ Cycle #2351: crossSellEmailSentAt on Order, preferenceFilter + pausedUntil on NewsletterSubscriber — applied
+-- If adding fresh: ALTER TABLE "Order" ADD COLUMN "crossSellEmailSentAt" DATETIME;
+--                  ALTER TABLE "NewsletterSubscriber" ADD COLUMN "preferenceFilter" TEXT;
+--                  ALTER TABLE "NewsletterSubscriber" ADD COLUMN "pausedUntil" DATETIME;
 SELECT 1; -- no-op so the file is never empty
