@@ -1,19 +1,19 @@
 {
   "pause": {
-    "trace": "until_lead_directive",
-    "seer": "until_lead_directive",
-    "sculptor": "until_lead_directive",
-    "balancer": "until_lead_directive",
-    "bolt": "until_lead_directive"
+    "trace": "paused",
+    "seer": "paused",
+    "sculptor": "paused",
+    "balancer": "paused",
+    "bolt": "paused"
   },
   "force_next": "guard",
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 2659,
-  "updated_at_cycle": 2658,
-  "dev_focus": "C2658 DIRECTIVE — GUARD: Run the comprehensive security audit (open since Cycle #19, launch-blocking). Check ALL mutation endpoints (Server Actions + API routes) for: (1) CSRF protection — verify SameSite cookies, Origin header checks, (2) Input sanitization — grep for dangerouslySetInnerHTML, raw SQL, unsanitized user input in emails/HTML, (3) Session security — NextAuth config: httpOnly, secure, sameSite cookies, session expiry, (4) Rate limiting — verify auth endpoints (/api/auth/*), checkout, email capture are rate-limited, (5) Content-Security-Policy headers — frame-ancestors, script-src, (6) API auth — verify all admin routes check session, all cron routes check CRON_SECRET, (7) XSS vectors — product names/descriptions rendered in emails and HTML. Report findings with severity (critical/high/medium/low). When done, set next_suggested: lead.",
-  "qa_focus": "C2658 DIRECTIVE — GUARD: Security audit is THE priority. See dev_focus for full scope. TRACE: Paused until Bolt commits. After Guard reports, if security findings need fixes, Bolt addresses them. If Guard finds no critical issues, Bolt builds referral backend: store credit Prisma model (StoreCredit: userId, amount, reason, referralOrderId, usedAt), referral tracking (track ref= URL param from existing ReferralCard component at components/shop/referral-card.tsx), apply credit at checkout. The ReferralCard UI already works — needs backend to make 150/100 CZK bilateral real.",
-  "notes": "C2658 Lead — CORRECTION: Checkout autocomplete was ALREADY DONE (autoComplete attributes found on all 7 fields: given-name, family-name, email, tel, street-address, address-level2, postal-code). Previous C2657 directive was based on incorrect grep result. Bolt had nothing to do — redirecting to Guard security audit (open since C19, never run). 3 TODO items confirmed DONE (Heureka ORDER_INFO C2658, 30-day price C2657, similar-items C2654). Mobile instant search also confirmed done in mobile-nav.tsx. Effective backlog: 2 actionable items (Guard audit + GPSR check), 3 blocked on bectly.",
+  "updated_at_cycle": 2659,
+  "dev_focus": "C2659 DIRECTIVE — GUARD ONLY: Comprehensive security audit (open since Cycle #19, launch-blocking). ALL other agents HARD PAUSED until Guard reports. Scope: (1) CSRF — verify SameSite cookies, Origin header checks on all Server Actions and API routes, (2) Input sanitization — grep for dangerouslySetInnerHTML, raw SQL, unsanitized user input in emails/HTML, (3) Session security — NextAuth config: httpOnly, secure, sameSite cookies, session expiry, (4) Rate limiting — verify auth endpoints (/api/auth/*), checkout, email capture, dev-chat all rate-limited, (5) Content-Security-Policy headers — frame-ancestors, script-src, (6) API auth — verify all admin routes check session, all cron routes check CRON_SECRET, dev-chat API key auth, (7) XSS vectors — product names/descriptions rendered in emails and HTML (especially new similar-item.ts and heureka.ts from C2654-2659). Report findings as JSON with severity (critical/high/medium/low). When done, set next_suggested: lead.",
+  "qa_focus": "C2659 DIRECTIVE — GUARD: Security audit is THE SOLE priority. See dev_focus for full scope. DO NOT re-audit similar-items cron or 30-day price — both were verified clean by Trace C2657+C2658. Focus on OWASP top 10 across the ENTIRE codebase. After Guard reports: if critical/high findings → Bolt fixes immediately. If clean → Bolt builds referral backend (StoreCredit model, ref= URL tracking from existing ReferralCard, apply at checkout). 150/100 CZK bilateral structure validated by Scout.",
+  "notes": "C2659 Lead — WASTE CYCLE DETECTED: C2659 Bolt and Trace BOTH only modified lead-control.json (zero production code changes). They re-ran C2658's completed tasks verbatim. Guard was force_next but never ran — orchestrator queued Bolt+Trace before processing control file. Fix: kill_zombie_tasks + hard pause ALL non-Guard agents. 3 TODO items confirmed DONE and need marking: (1) Heureka ORDER_INFO [line 238] — done C2658 Bolt, (2) 30-day price [line 239] — verified C2657-2658 Trace, (3) Similar items cron [line 287] — done C2653 Bolt. Effective backlog: 2 actionable (Guard audit + GPSR check), 3 blocked on bectly (R2, Comgate, Heureka registration).",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
@@ -25,5 +25,5 @@
       "reset_no_change_counter": "bool"
     }
   },
-  "session_manager_last_processed": "2026-04-09T17:11:29.784196"
+  "session_manager_last_processed": "2026-04-09T17:32:37.226943"
 }
