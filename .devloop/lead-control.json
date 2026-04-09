@@ -1,11 +1,11 @@
 {
   "pause": {},
-  "force_next": "trace",
+  "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2751,
+  "last_bolt_commit_cycle": 2752,
   "paused_at_bolt_cycle": 2746,
-  "notes": "C2750 Lead: Trace unpaused + force_next for #40 (referral verification — LAST code task). Bolt HARD PAUSED — zero implementable work. 14/15 complete. After #40 completes: ALL code done. Only 3 bectly-blocked remain (R2 #1, Heureka #4, GMC #14). No monitors due.",
+  "notes": "C2753 Lead: Zombie Trace task #7271 cleaned (PID 922215 dead, no result). Trace UNPAUSED (removed from pause map) + force_next for retry on #40 referral verification. Bolt HARD PAUSED. 3 bectly-blocked remain. No monitors due.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
@@ -17,5 +17,5 @@
       "reset_no_change_counter": "bool"
     }
   },
-  "session_manager_last_processed": "2026-04-09T18:49:06.337225"
+  "session_manager_last_processed": "2026-04-09T21:47:24.534388"
 }
