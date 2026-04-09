@@ -180,33 +180,37 @@ export async function ProductGrid({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLdString(itemListJsonLd) }}
       />
-      <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
-        {paginatedProducts.map((product, i) => (
-          <div
-            key={product.id}
-            className="animate-fade-up-scroll"
-            style={{ animationDelay: `${i * 60}ms` }}
-          >
-            <ProductCard
-              id={product.id}
-              name={product.name}
-              slug={product.slug}
-              price={product.price}
-              compareAt={product.compareAt}
-              images={product.images}
-              categoryName={product.category.name}
-              brand={product.brand}
-              condition={product.condition}
-              sizes={product.sizes}
-              colors={product.colors}
-              stock={product.stock}
-              createdAt={product.createdAt.toISOString()}
-              isReserved={false}
-              lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
-              priority={i < 4}
-            />
-          </div>
-        ))}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
+        {paginatedProducts.map((product, i) => {
+          const isFeatured = product.featured;
+          return (
+            <div
+              key={product.id}
+              className={`animate-fade-up-scroll${isFeatured ? " col-span-2" : ""}`}
+              style={{ animationDelay: `${i * 60}ms` }}
+            >
+              <ProductCard
+                id={product.id}
+                name={product.name}
+                slug={product.slug}
+                price={product.price}
+                compareAt={product.compareAt}
+                images={product.images}
+                categoryName={product.category.name}
+                brand={product.brand}
+                condition={product.condition}
+                sizes={product.sizes}
+                colors={product.colors}
+                stock={product.stock}
+                createdAt={product.createdAt.toISOString()}
+                isReserved={false}
+                lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
+                priority={i < 4}
+                variant={isFeatured ? "featured" : "standard"}
+              />
+            </div>
+          );
+        })}
       </div>
     </>
   );

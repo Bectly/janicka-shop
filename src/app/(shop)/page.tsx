@@ -52,12 +52,16 @@ async function getFeaturedProductsForPage() {
 
 function ProductGridSkeleton({ count = 8 }: { count?: number }) {
   return (
-    <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+    <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="space-y-3">
-          <Skeleton className="aspect-[3/4] w-full rounded-xl" />
-          <Skeleton className="h-4 w-3/4" />
-          <Skeleton className="h-4 w-1/2" />
+        <div key={i} className={`space-y-3${i === 0 ? " col-span-2" : ""}`}>
+          <Skeleton className="aspect-[3/4] w-full rounded-2xl" />
+          {i > 0 && (
+            <>
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+            </>
+          )}
         </div>
       ))}
     </div>
@@ -152,27 +156,29 @@ async function NewProductsSection() {
           Zobrazit vše &rarr;
         </Link>
       </div>
-      <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
         {newProducts.map((product, i) => (
-          <ProductCard
-            key={product.id}
-            id={product.id}
-            name={product.name}
-            slug={product.slug}
-            price={product.price}
-            compareAt={product.compareAt}
-            images={product.images}
-            categoryName={product.category.name}
-            brand={product.brand}
-            condition={product.condition}
-            sizes={product.sizes}
-            colors={product.colors}
-            stock={product.stock}
-            createdAt={product.createdAt.toISOString()}
-            isReserved={false}
-            lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
-            priority={i < 4}
-          />
+          <div key={product.id} className={i === 0 ? "col-span-2" : undefined}>
+            <ProductCard
+              id={product.id}
+              name={product.name}
+              slug={product.slug}
+              price={product.price}
+              compareAt={product.compareAt}
+              images={product.images}
+              categoryName={product.category.name}
+              brand={product.brand}
+              condition={product.condition}
+              sizes={product.sizes}
+              colors={product.colors}
+              stock={product.stock}
+              createdAt={product.createdAt.toISOString()}
+              isReserved={false}
+              lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
+              priority={i < 4}
+              variant={i === 0 ? "featured" : "standard"}
+            />
+          </div>
         ))}
       </div>
       <div className="mt-8 text-center sm:hidden">
@@ -210,26 +216,28 @@ async function FeaturedProductsSection() {
           Zobrazit vše &rarr;
         </Link>
       </div>
-      <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
         {featuredProducts.map((product, i) => (
-          <ProductCard
-            key={product.id}
-            id={product.id}
-            name={product.name}
-            slug={product.slug}
-            price={product.price}
-            compareAt={product.compareAt}
-            images={product.images}
-            categoryName={product.category.name}
-            brand={product.brand}
-            condition={product.condition}
-            sizes={product.sizes}
-            colors={product.colors}
-            stock={product.stock}
-            isReserved={false}
-            lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
-            priority={i < 4}
-          />
+          <div key={product.id} className={i === 0 ? "col-span-2" : undefined}>
+            <ProductCard
+              id={product.id}
+              name={product.name}
+              slug={product.slug}
+              price={product.price}
+              compareAt={product.compareAt}
+              images={product.images}
+              categoryName={product.category.name}
+              brand={product.brand}
+              condition={product.condition}
+              sizes={product.sizes}
+              colors={product.colors}
+              stock={product.stock}
+              isReserved={false}
+              lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
+              priority={i < 4}
+              variant={i === 0 ? "featured" : "standard"}
+            />
+          </div>
         ))}
       </div>
       <div className="mt-8 text-center sm:hidden">
@@ -280,25 +288,27 @@ async function SaleProductsSection() {
             Zobrazit vše &rarr;
           </Link>
         </div>
-        <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
-          {saleProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              id={product.id}
-              name={product.name}
-              slug={product.slug}
-              price={product.price}
-              compareAt={product.compareAt}
-              images={product.images}
-              categoryName={product.category.name}
-              brand={product.brand}
-              condition={product.condition}
-              sizes={product.sizes}
-              colors={product.colors}
-              stock={product.stock}
-              isReserved={false}
-              lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
-            />
+        <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
+          {saleProducts.map((product, i) => (
+            <div key={product.id} className={i === 0 ? "col-span-2" : undefined}>
+              <ProductCard
+                id={product.id}
+                name={product.name}
+                slug={product.slug}
+                price={product.price}
+                compareAt={product.compareAt}
+                images={product.images}
+                categoryName={product.category.name}
+                brand={product.brand}
+                condition={product.condition}
+                sizes={product.sizes}
+                colors={product.colors}
+                stock={product.stock}
+                isReserved={false}
+                lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
+                variant={i === 0 ? "featured" : "standard"}
+              />
+            </div>
           ))}
         </div>
         <div className="mt-8 text-center sm:hidden">
