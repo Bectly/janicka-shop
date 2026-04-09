@@ -219,6 +219,8 @@ export default function CheckoutPage() {
   const streetRef = useRef<HTMLInputElement>(null);
   const cityRef = useRef<HTMLInputElement>(null);
   const zipRef = useRef<HTMLInputElement>(null);
+  // Track whether email has been captured to trigger marketingConsent re-capture
+  const emailCapturedRef = useRef(false);
 
   const [state, dispatch, isPending] = useActionState<CheckoutState, FormData>(
     createOrder,
@@ -239,8 +241,15 @@ export default function CheckoutPage() {
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
       if (items.length === 0) return;
 
+      emailCapturedRef.current = true;
+      const firstName = firstNameRef.current?.value.trim();
+      const lastName = lastNameRef.current?.value.trim();
+      const customerName =
+        firstName && lastName ? `${firstName} ${lastName}` : undefined;
+
       captureAbandonedCart({
         email,
+        customerName,
         cartItems: items.map((i) => ({
           productId: i.productId,
           name: i.name,
@@ -267,6 +276,40 @@ export default function CheckoutPage() {
       totalPrice(),
     );
   }, [mounted, items, totalPrice]);
+
+  // Re-capture abandoned cart with updated marketingConsent when user checks/unchecks
+  // the opt-in box AFTER blurring the email field. Without this, the captured record
+  // always has marketingConsent=false because the blur fires before onChange.
+  useEffect(() => {
+    if (!emailCapturedRef.current) return; // email not entered yet
+    const email = emailRef.current?.value.trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+    if (items.length === 0) return;
+
+    const firstName = firstNameRef.current?.value.trim();
+    const lastName = lastNameRef.current?.value.trim();
+    const customerName =
+      firstName && lastName ? `${firstName} ${lastName}` : undefined;
+
+    captureAbandonedCart({
+      email,
+      customerName,
+      cartItems: items.map((i) => ({
+        productId: i.productId,
+        name: i.name,
+        price: i.price,
+        size: i.size,
+        color: i.color,
+        image: i.image,
+        slug: i.slug,
+      })),
+      cartTotal: totalPrice(),
+      marketingConsent,
+    }).catch(() => {});
+    // Intentionally only marketingConsent in deps — fires only when consent changes,
+    // not on every cart/price update (those are captured at email blur).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [marketingConsent]);
 
   // If server action returned field errors, open the relevant step
   useEffect(() => {
@@ -349,6 +392,24 @@ export default function CheckoutPage() {
     setActiveStep(3);
   }, []);
 
+  // Prevent Enter from bypassing accordion steps and submitting prematurely.
+  // Instead, Enter advances the current active step (same as clicking "Pokračovat").
+  const handleFormKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLFormElement>) => {
+      if (
+        e.key !== "Enter" ||
+        (e.target as HTMLElement).tagName === "TEXTAREA" ||
+        (e.target as HTMLElement).tagName === "BUTTON"
+      )
+        return;
+      e.preventDefault();
+      if (activeStep === 0) advanceFromContact();
+      else if (activeStep === 1) advanceFromShipping();
+      else if (activeStep === 2) advanceFromPayment();
+    },
+    [activeStep, advanceFromContact, advanceFromShipping, advanceFromPayment],
+  );
+
   // Build inline summaries for completed steps
   const contactSummary =
     (firstNameRef.current?.value || "") +
@@ -414,7 +475,7 @@ export default function CheckoutPage() {
         </div>
       )}
 
-      <form action={dispatch} className="mt-8">
+      <form action={dispatch} className="mt-8" onKeyDown={handleFormKeyDown}>
         {/* Hidden cart data */}
         <input
           type="hidden"
