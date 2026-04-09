@@ -5,6 +5,7 @@ import { Footer } from "@/components/shop/footer";
 import { CookieConsentBanner } from "@/components/shop/cookie-consent";
 import { BackToTop } from "@/components/shop/back-to-top";
 import { AnnouncementBar } from "@/components/shop/announcement-bar";
+import { DevChatWidget } from "@/components/dev-chat/dev-chat-widget";
 
 export default function ShopLayout({
   children,
@@ -19,6 +20,7 @@ export default function ShopLayout({
       <Footer />
       <BackToTop />
       <CookieConsentBanner />
+      <DevChatWidget />
     </>
   );
 }
