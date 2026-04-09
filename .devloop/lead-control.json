@@ -6,7 +6,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2580,
+  "last_bolt_commit_cycle": 2581,
   "updated_at_cycle": 2563,
   "dev_focus": "C2563 Lead directive — ZOMBIE LOOP BROKEN AGAIN. DevChat widget auth fix is DONE (Trace implemented it in C2566 — commit 6a19283). DO NOT re-implement. DO NOT touch dev-chat-widget.tsx. NEW TASK: Add DEVCHAT_API_KEY to Vercel env vars. Steps: (1) KEY=$(openssl rand -hex 32) (2) TOKEN=$(sqlite3 ~/.claude/jarvis-gym/jarvis.db \"SELECT key_value FROM api_keys WHERE name='vercel'\") (3) curl -X POST 'https://api.vercel.com/v9/projects/prj_Z3FKF5gbhrhLz01fdZDW78qudo3e/env' -H \"Authorization: Bearer $TOKEN\" -H 'Content-Type: application/json' -d \"{\\\"key\\\":\\\"DEVCHAT_API_KEY\\\",\\\"value\\\":\\\"$KEY\\\",\\\"type\\\":\\\"encrypted\\\",\\\"target\\\":[\\\"production\\\",\\\"preview\\\"]}\" (4) sqlite3 ~/.claude/jarvis-gym/jarvis.db \"INSERT OR REPLACE INTO api_keys (name,category,service,key_value,description) VALUES ('devchat-api-key','app','janicka-shop','$KEY','Bearer token for Lead GET /api/dev-chat')\" (5) Add DEVCHAT_API_KEY=$KEY to .env.local (6) npm run build. When done, next_suggested: trace.",
   "qa_focus": "TRACE: (1) Verify unauthenticated users see login prompt in widget (not form). (2) curl 'https://janicka-shop.vercel.app/api/dev-chat?status=new' -H 'Authorization: Bearer <key from JARVIS DB>' — should return 200. (3) Confirm build passes. Report pass/fail.",
