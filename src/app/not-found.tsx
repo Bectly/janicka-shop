@@ -116,6 +116,7 @@ export default async function NotFound() {
                     condition={product.condition}
                     sizes={product.sizes}
                     colors={product.colors}
+                    stock={product.stock}
                     lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
                   />
                 ))}

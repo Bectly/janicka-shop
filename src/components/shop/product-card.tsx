@@ -19,6 +19,7 @@ interface ProductCardProps {
   condition?: string;
   sizes?: string;
   colors?: string;
+  stock?: number;
   isNew?: boolean;
   isReserved?: boolean;
   lowestPrice30d?: number | null;
@@ -38,6 +39,7 @@ export function ProductCard({
   condition,
   sizes,
   colors,
+  stock = 1,
   isNew,
   isReserved,
   lowestPrice30d,
@@ -114,8 +116,8 @@ export function ProductCard({
               Rezervováno
             </span>
           )}
-          {!isReserved && (
-            <span className="flex items-center gap-0.5 rounded-md bg-amber-500 px-2 py-0.5 text-xs font-semibold text-white">
+          {stock === 1 && !isReserved && (
+            <span className="flex items-center gap-0.5 rounded-md bg-amber-500 px-2 py-0.5 text-xs font-semibold text-white shadow-sm">
               <Flame className="size-3" />
               Poslední kus
             </span>

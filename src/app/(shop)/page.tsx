@@ -157,6 +157,7 @@ async function NewProductsSection() {
             condition={product.condition}
             sizes={product.sizes}
             colors={product.colors}
+            stock={product.stock}
             isNew
             isReserved={false}
             lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
@@ -214,6 +215,7 @@ async function FeaturedProductsSection() {
             condition={product.condition}
             sizes={product.sizes}
             colors={product.colors}
+            stock={product.stock}
             isReserved={false}
             lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
             priority={i < 4}
@@ -280,6 +282,7 @@ async function SaleProductsSection() {
               condition={product.condition}
               sizes={product.sizes}
               colors={product.colors}
+              stock={product.stock}
               isReserved={false}
               lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
             />

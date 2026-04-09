@@ -132,6 +132,7 @@ export async function getCartRecommendations(
     condition: string;
     sizes: string;
     colors: string;
+    stock: number;
   }[]
 > {
   if (productIds.length === 0) return [];
@@ -174,5 +175,6 @@ export async function getCartRecommendations(
     condition: p.condition,
     sizes: p.sizes,
     colors: p.colors,
+    stock: p.stock,
   }));
 }

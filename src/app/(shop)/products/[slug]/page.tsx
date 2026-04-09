@@ -178,6 +178,7 @@ export default async function ProductDetailPage({ params }: Props) {
       condition: true,
       sizes: true,
       colors: true,
+      stock: true,
       reservedUntil: true,
       reservedBy: true,
       category: { select: { name: true } },
@@ -389,6 +390,7 @@ export default async function ProductDetailPage({ params }: Props) {
                     condition={p.condition}
                     sizes={p.sizes}
                     colors={p.colors}
+                    stock={p.stock}
                     isReserved={false}
                     lowestPrice30d={lowestPricesMap.get(p.id) ?? null}
                   />
