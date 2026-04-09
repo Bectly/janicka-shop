@@ -3,9 +3,9 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2769,
+  "last_bolt_commit_cycle": 2770,
   "paused_at_bolt_cycle": 2760,
-  "notes": "C2761 Lead: Pause field FIXED — all 5 agents now explicitly 'paused' (was only trace). Zero actionable tasks. 3 bectly-blocked remain (#1 R2, #4 Heureka, #14 GMC). Devloop MUST stop.",
+  "notes": "C2771 Lead: Pause field RESTORED (was emptied AGAIN — root cause of C2768-2770 waste). ALL 5 agents HARD paused. 0 open tasks. 3 blocked bectly (#1 R2, #4 Heureka, #14 GMC). GMC deadline April 30 (21d). DEVLOOP MUST STOP — no work exists.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
