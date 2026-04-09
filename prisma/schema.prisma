@@ -106,6 +106,7 @@ model Order {
   reviewEmailSentAt        DateTime?   // Set when review request email is sent (prevents duplicates)
   deliveryCheckEmailSentAt DateTime?   // Set when delivery check-in email is sent (ship+4d)
   crossSellEmailSentAt     DateTime?   // Set when T+14 cross-sell follow-up email is sent
+  expectedDeliveryDate     DateTime?   // Czech law: 30 days from order for delivery (§2159 NOZ)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   items         OrderItem[]

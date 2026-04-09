@@ -324,6 +324,8 @@ export async function createOrder(
       // Create order with DB-sourced prices
       const orderNumber = generateOrderNumber();
       const accessToken = crypto.randomUUID();
+      // Czech law (§2159 NOZ): deliver within 30 days unless agreed otherwise
+      const expectedDeliveryDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
       const created = await tx.order.create({
         data: {
           orderNumber,
@@ -341,6 +343,7 @@ export async function createOrder(
           shippingZip,
           shippingMethod: data.shippingMethod,
           shippingPointId: data.packetaPointId ?? null,
+          expectedDeliveryDate,
         },
       });
 
