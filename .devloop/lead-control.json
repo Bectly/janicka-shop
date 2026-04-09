@@ -1,10 +1,12 @@
 {
-  "pause": {},
+  "pause": {
+    "trace": "until_next_bolt_commit"
+  },
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 2673,
-  "paused_at_bolt_cycle": 0,
+  "paused_at_bolt_cycle": 2673,
   "notes": "C2667 Lead: CRITICAL FIX — changed ALL pauses from 'until_lead_directive' to HARD 'paused'. Root cause of 20+ cycle waste loop: 'until_lead_directive' condition self-defeats when Lead runs (Lead runs → condition clears → Bolt/Trace unpause → identical commits). Killed zombie task #7152. Bolt committed IDENTICAL Heureka code 10+ times, Trace ran IDENTICAL audit 10+ times — ZERO production file changes (only lead-control.json touched). 3 TODO items DONE in code (heureka.ts, similar-items cron, 30-day price) but unmarked. 5 remaining items ALL blocked on bectly: R2 credentials, Apple Pay/Comgate credentials, GPSR (research only), Guard (never instantiated), Heureka widget (bectly registration). ALL AGENTS HARD PAUSED. DEVLOOP MUST STOP.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
