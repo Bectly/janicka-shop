@@ -389,9 +389,10 @@ export async function createOrder(
         data: { sold: true, stock: 0, reservedUntil: null, reservedBy: null },
       });
 
-      // Collect DB prices for the email (never use client prices)
+      // Collect DB prices and names for the email (never use client-submitted values)
       const dbPrices = new Map(products.map((p) => [p.id, p.price]));
-      return { ...created, customerEmail: customer.email, dbPrices };
+      const dbNames = new Map(products.map((p) => [p.id, p.name]));
+      return { ...created, customerEmail: customer.email, dbPrices, dbNames };
     });
   } catch (e) {
     if (e instanceof UnavailableError) {
@@ -407,10 +408,11 @@ export async function createOrder(
     customerEmail: order.customerEmail,
     items: data.items.map((item) => {
       const dbPrice = order.dbPrices.get(item.productId);
-      if (dbPrice === undefined) {
-        console.error(`[Checkout] Missing DB price for product ${item.productId} in email — using order subtotal as fallback`);
+      const dbName = order.dbNames.get(item.productId);
+      if (dbPrice === undefined || dbName === undefined) {
+        console.error(`[Checkout] Missing DB data for product ${item.productId} in email`);
       }
-      return { name: item.name, price: dbPrice ?? item.price, size: item.size, color: item.color };
+      return { name: dbName ?? item.name, price: dbPrice ?? item.price, size: item.size, color: item.color };
     }),
     subtotal: order.subtotal,
     shipping: order.shipping,
@@ -436,7 +438,8 @@ export async function createOrder(
     customerEmail: order.customerEmail,
     items: data.items.map((item) => {
       const dbPrice = order.dbPrices.get(item.productId);
-      return { name: item.name, price: dbPrice ?? item.price, size: item.size, color: item.color };
+      const dbName = order.dbNames.get(item.productId);
+      return { name: dbName ?? item.name, price: dbPrice ?? item.price, size: item.size, color: item.color };
     }),
     total: order.total,
     paymentMethod: data.paymentMethod,
