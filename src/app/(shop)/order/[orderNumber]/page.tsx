@@ -11,6 +11,7 @@ import { ClearCartOnMount } from "./clear-cart";
 import { TrackPurchase } from "@/components/shop/track-purchase";
 import { generateOrderQrPayment, orderNumberToVariableSymbol } from "@/lib/payments/qr-platba";
 import { QrPaymentCode } from "@/components/shop/qr-payment-code";
+import { PaymentStatusPoller } from "@/components/shop/payment-status-poller";
 
 interface Props {
   params: Promise<{ orderNumber: string }>;
@@ -113,10 +114,16 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
         </div>
       )}
       {isPending && (
-        <div className="mt-4 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-700">
-          Čekáme na potvrzení platby. Jakmile bude platba přijata, pošleme vám
-          email.
-        </div>
+        <>
+          <div className="mt-4 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-700">
+            Čekáme na potvrzení platby. Jakmile bude platba přijata, pošleme vám
+            email.
+          </div>
+          <PaymentStatusPoller
+            orderNumber={order.orderNumber}
+            accessToken={token!}
+          />
+        </>
       )}
 
       {/* QR payment code for bank transfer */}

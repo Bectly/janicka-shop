@@ -7,6 +7,7 @@ import { getComgatePaymentStatus } from "@/lib/payments/comgate";
 import { sendPaymentConfirmedEmail } from "@/lib/email";
 import { Button } from "@/components/ui/button";
 import { XCircle, Clock, ArrowRight } from "lucide-react";
+import { PaymentStatusPoller } from "@/components/shop/payment-status-poller";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -148,6 +149,10 @@ export default async function PaymentReturnPage({ searchParams }: Props) {
       <p className="mt-1 text-sm text-muted-foreground">
         Číslo objednávky: <strong>{order.orderNumber}</strong>
       </p>
+      <PaymentStatusPoller
+        orderNumber={order.orderNumber}
+        accessToken={order.accessToken!}
+      />
       <p className="mt-4 text-xs text-muted-foreground">
         Potvrzení vám přijde na email. Pokud platba neproběhne do několika
         minut, kontaktujte nás.
