@@ -285,6 +285,9 @@ sqlite3 ~/.claude/jarvis-gym/jarvis.db "SELECT name, service, key_value, endpoin
 - **Integration**: XML product feed for Heureka zbožák + "Ověřeno zákazníky" review widget on site. ✅ Feed DONE (api/feed/heureka/route.ts).
 - **Start with free tier** — 15 reviews/month is enough for launch phase. Upgrade to Profi when volume exceeds 15/month (effectively free marketing via PPC credit).
 - **Brumla** (main competitor) has 99% Heureka rating — we need this certification.
+- **Certificate thresholds (C2640 Scout CONFIRMED)**: Blue = ~30-50+ reviews + ≥90% recommendation rate (last 90d, auto-revokes at 88%). Gold = hundreds of reviews + ≥97% (revokes at 95%).
+- **ORDER_INFO API v2 (C2640 Scout CONFIRMED)**: `POST https://api.heureka.cz/shop-certification/v2/order/log` — JSON body: `{apiKey, email, orderId, productItemIds[]}`. `apiKey` = 32-char key from Heureka admin. `productItemIds` = product IDs from XML Heureka feed. No npm package — raw `fetch`. Call after payment confirmed. GDPR: add to privacy policy as legitimate interest. Implementation: `src/lib/heureka.ts` (graceful skip if env not set).
+- **Widget (C2640 Scout CONFIRMED)**: SVG-based embed from Heureka admin. Use `next/script strategy="afterInteractive"`. Add AFTER earning certificate — auto-revokes if rating drops.
 - **⚠️ "Real Discounts" feature (NEW C1499)**: Heureka can now verify/compare merchant discounts in real-time. Makes our 30-day price history tracking (✅ DONE) essential for Heureka compliance.
 - **⚠️ OPERATIONAL WARNING (NEW C1499)**: Shops can be **BLOCKED by Heureka** for outdated shipping costs in XML feed. Our feed must stay in sync with `constants.ts` shipping prices. Currently generated dynamically from SHIPPING_PRICES constant — this is correct architecture.
 
