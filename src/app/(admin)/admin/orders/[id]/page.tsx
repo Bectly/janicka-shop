@@ -11,7 +11,7 @@ import {
   PAYMENT_METHOD_LABELS,
   SHIPPING_METHOD_LABELS,
 } from "@/lib/constants";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Clock, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { OrderStatusSelect } from "./order-status-select";
 import { TrackingNumberForm } from "./tracking-number-form";
 import { PacketaSection } from "./packeta-section";
@@ -245,6 +245,27 @@ export default async function AdminOrderDetailPage({ params }: Props) {
               />
             )}
           </div>
+
+          {/* Delivery deadline — Czech law §2159 NOZ: 30 days */}
+          {order.expectedDeliveryDate &&
+            order.status !== "delivered" &&
+            order.status !== "cancelled" && (
+              <DeliveryDeadlineCard
+                expectedDeliveryDate={order.expectedDeliveryDate}
+                status={order.status}
+              />
+            )}
+          {order.status === "delivered" && order.expectedDeliveryDate && (
+            <div className="rounded-xl border bg-card p-5 shadow-sm">
+              <h2 className="font-heading text-base font-semibold text-foreground">
+                Termín doručení
+              </h2>
+              <div className="mt-3 flex items-center gap-2 text-sm text-emerald-700">
+                <CheckCircle2 className="size-4" />
+                <span>Doručeno v termínu</span>
+              </div>
+            </div>
+          )}
 
           {/* Payment info */}
           <div className="rounded-xl border bg-card p-5 shadow-sm">
