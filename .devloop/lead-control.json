@@ -5,7 +5,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2719,
+  "last_bolt_commit_cycle": 2726,
   "paused_at_bolt_cycle": 2719,
   "notes": "C2724 Lead: #12 Heureka ORDER_INFO confirmed DONE (Trace C2723 discovered it was already fully implemented). #13 use-cache IN PROGRESS — Bolt running. No code changes yet (cacheComponents not in next.config.ts, no 'use cache' directives in src/). IMPLEMENTATION SPEC (from CLAUDE.md): (1) Add cacheComponents:true to next.config.ts TOP-LEVEL (NOT experimental). (2) Homepage helper: 'use cache' + cacheLife('minutes') + cacheTag('products'). (3) Product listing helper: 'use cache' + cacheLife('minutes') + cacheTag('products') — wrap data-fetch function NOT the page (searchParams makes page dynamic). (4) PDP helper: 'use cache' + cacheLife('minutes') + cacheTag('product-${id}'). (5) Admin mutations (create/update/hide/delete): revalidateTag('products'). Build MUST pass. Trace: audit use-cache after Bolt commits. BACKLOG: 3 blocked on bectly (#1 R2, #4 Heureka Overeno, #14 GMC registration URGENT April 30). All monitors OK — Comgate 32nd v2.0.15, Vinted CZ 28th zero-coverage, no new competitors 18th scan.",
   "schema": {
