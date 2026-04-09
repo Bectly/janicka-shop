@@ -2,13 +2,13 @@
   "pause": {
     "trace": "until_next_bolt_commit"
   },
-  "force_next": null,
+  "force_next": "bolt",
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 2527,
-  "updated_at_cycle": 2526,
-  "dev_focus": "BOLT TASK C2526: Delivery deadline tracking — Czech legal requirement. Full spec written to .devloop/contexts/bolt.md. Read bolt.md for complete step-by-step instructions.",
-  "notes": "C2526 Lead — ROOT CAUSE FIXED: bolt.md was empty (0 bytes) — that's why Bolt spun 7 cycles (C2521-2527) saying 'No dev focus'. Directive is now in bolt.md (correct mechanism). Packeta SOAP marked [x] DONE in TODO.md (was already implemented in C2518). Bolt unpaused, Trace stays until_next_bolt_commit. 9 open items in backlog.",
+  "updated_at_cycle": 2536,
+  "dev_focus": "BOLT TASK C2526: Delivery deadline tracking — Czech legal requirement. Full spec in .devloop/contexts/bolt.md. 5 steps: (1) Prisma schema + migrate, (2) checkout actions calc, (3) order confirmation page display, (4) confirmation email, (5) admin order detail with overdue warning. Run npm run build when done. When done, set next_suggested: lead.",
+  "notes": "C2536 Lead — Bolt task 7092 is running (spawned 13:17:09 for C2534). If it's still alive, it should be implementing delivery deadline tracking from bolt.md. force_next: bolt ensures Bolt runs again immediately if 7092 was a no-op. Trace stays paused until Bolt commits real code. 12 cycles wasted (C2521-C2533) from empty bolt.md — now recovered. reset_no_change_counter to prevent auto-pause from the no-change streak. 9 open items, backlog healthy.",
   "schema": {
     "pause": "Map of agent_name → condition ('paused' | 'until_next_bolt_commit')",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
@@ -20,5 +20,5 @@
       "reset_no_change_counter": "bool — prevent auto-pause from consecutive no-change cycles"
     }
   },
-  "session_manager_last_processed": "2026-04-09T14:32:40.166542"
+  "session_manager_last_processed": "2026-04-09T15:21:45.863836"
 }
