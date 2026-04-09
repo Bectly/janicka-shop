@@ -1,17 +1,11 @@
 {
-  "pause": {
-    "trace": "until_lead_directive",
-    "sculptor": "until_lead_directive",
-    "seer": "until_lead_directive",
-    "balancer": "until_lead_directive",
-    "bolt": "until_lead_directive"
-  },
+  "pause": {},
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2703,
+  "last_bolt_commit_cycle": 2709,
   "paused_at_bolt_cycle": 2703,
-  "notes": "C2704 Lead: GPSR ✅ + Apple Pay ✅ both DONE (Bolt C2703, Trace C2702 confirmed). Security audit ✅ DONE (C2698). 3 TODO items need [x] marking: lines 124, 205, 261. Only 2 items remain — BOTH blocked on bectly (R2 credentials, Heureka registration). NEXT BOLT TASK: Fix 5 security findings from C2698 audit — (1) MEDIUM: MIME type spoofing on image upload (validate Content-Type server-side in uploadthing file router), (2) LOW: unsafe-inline in CSP, (3) LOW: upload rate limit missing, (4) LOW: $executeRawUnsafe PRAGMA in db.ts, (5) LOW: feed routes lack auth. After security fixes: team IDLE until bectly provides credentials. Trace resumes after Bolt commits fixes.",
+  "notes": "C2711 Lead: Research cycle. Backlog was 3 items (very lean) → added 2 new Bolt tasks. (1) Image optimization: blur placeholder + AVIF format (Scout C2711) — product-card.tsx + product-gallery.tsx + next.config.ts, zero credentials needed. (2) Vinted T&C April 28 banner — time-sensitive, implement by April 27 to be live for April 28-May 1 peak window. Comgate 28th check: still v2.0.15 (no action). Vinted T&C: Czech media STILL zero coverage (20th consecutive scan) — window fully intact. No new CZ competitors (20th scan). force_next=bolt confirmed for PWA manifest. After PWA manifest done, Bolt should tackle image optimization, then Vinted banner. Trace: after each Bolt commit, verify build passes + correct runtime behavior.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",

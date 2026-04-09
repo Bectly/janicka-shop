@@ -6,6 +6,9 @@ import { ChevronLeft, ChevronRight, X, ZoomIn, Play } from "lucide-react";
 
 const SWIPE_THRESHOLD = 50;
 
+const BLUR_DATA_URL =
+  "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNlNWUwZGIiLz48L3N2Zz4=";
+
 interface ProductImage {
   url: string;
   alt: string;
@@ -301,7 +304,9 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                 }`}
                 style={swipeOffset !== 0 ? { transform: `translateX(${swipeOffset}px)` } : undefined}
                 sizes="(max-width: 1024px) 100vw, 50vw"
-                priority
+                priority={activeIndex === 0}
+                placeholder="blur"
+                blurDataURL={BLUR_DATA_URL}
                 onAnimationEnd={() => setSlideDirection(null)}
               />
             </>

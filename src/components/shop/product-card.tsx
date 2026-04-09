@@ -7,6 +7,9 @@ import { WishlistButton } from "./wishlist-button";
 import { QuickViewButton } from "./quick-view-modal";
 import { Flame } from "lucide-react";
 
+const BLUR_DATA_URL =
+  "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNlNWUwZGIiLz48L3N2Zz4=";
+
 /** Format how long ago a product was added — returns null for items older than 7 days */
 function formatTimeElapsed(date: Date | string): string | null {
   const created = typeof date === "string" ? new Date(date) : date;
@@ -85,6 +88,8 @@ export function ProductCard({
               className="object-cover transition-all duration-500 group-hover:scale-105"
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               priority={priority}
+              placeholder="blur"
+              blurDataURL={BLUR_DATA_URL}
             />
             {secondImage && (
               <Image
