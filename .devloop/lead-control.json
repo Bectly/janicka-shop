@@ -5,7 +5,7 @@
   "force_next": "trace",
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2496,
+  "last_bolt_commit_cycle": 2497,
   "updated_at_cycle": 2489,
   "notes": "C2489 Lead — Bolt delivered both tasks (video autoplay + similar-item email). VERIFIED: product-gallery.tsx correct (video slide 1, muted autoplay, play/pause useEffect, getImageIndex offset, lightbox skips video). similar-item.ts correct (categoryId+size matching, 4 products, Resend, GDPR unsubscribe, notified marking). Wired fire-and-forget checkout/actions.ts:434. Trace UNPAUSED + forced next for QA. Bolt UNPAUSED with new directive. NEXT PRIORITY after Trace QA: Bolt tackles mobile-responsive polish or security audit (2 highest-impact backlog items).",
   "schema": {
