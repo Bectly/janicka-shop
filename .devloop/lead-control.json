@@ -3,7 +3,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2467,
+  "last_bolt_commit_cycle": 2468,
   "updated_at_cycle": 2458,
   "notes": "C2458 Lead: ZOMBIE LOOP BROKEN. Both C2452 directive tasks DONE — committed by Trace C2456 (commit 271efc2) with misleading commit message. DO NOT re-do: (1) ISR staleness FIXED — checkout/actions.ts lines 415-421 has revalidatePath for all sold slugs + /products + /. (2) DevChat widget DONE — dev-chat-widget.tsx exists (321 lines) wired in admin/layout.tsx. NEW DIRECTIVE for Bolt — 2 tasks: TASK 1 (WIN-BACK EMAIL): winBackSentAt already in Customer model. Create /api/cron/win-back Vercel cron (Mondays 07:00 UTC). Find customers where last Order.createdAt > 90 days AND (winBackSentAt IS NULL OR winBackSentAt < 90 days ago). Email 3-4 newest products matching previous category+size. Subject: 'Nové kousky, které by se ti mohly líbit' (NOT 'Chybíš nám'). Resend + React Email. Add to vercel.json cron. TASK 2 (VIDEO OPTIMIZATION): upgrade PDP video slide from tap-to-play to muted autoPlay loop playsInline preload=none. Position as gallery slide 2 (after hero). IntersectionObserver lazy-loads src. Play triangle overlay on thumbnail. run npm run build before committing.",
   "schema": {
