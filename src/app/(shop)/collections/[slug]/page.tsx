@@ -192,7 +192,7 @@ export default async function CollectionPage({ params }: Props) {
                 sizes={product.sizes}
                 colors={product.colors}
                 stock={product.stock}
-                isNew={product.createdAt > sevenDaysAgo}
+                createdAt={product.createdAt.toISOString()}
                 isReserved={false}
                 lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
               />

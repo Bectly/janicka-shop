@@ -158,7 +158,7 @@ async function NewProductsSection() {
             sizes={product.sizes}
             colors={product.colors}
             stock={product.stock}
-            isNew
+            createdAt={product.createdAt.toISOString()}
             isReserved={false}
             lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
             priority={i < 4}

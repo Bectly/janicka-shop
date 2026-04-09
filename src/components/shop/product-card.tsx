@@ -7,6 +7,20 @@ import { WishlistButton } from "./wishlist-button";
 import { QuickViewButton } from "./quick-view-modal";
 import { Flame } from "lucide-react";
 
+/** Format how long ago a product was added — returns null for items older than 7 days */
+function formatTimeElapsed(date: Date | string): string | null {
+  const created = typeof date === "string" ? new Date(date) : date;
+  const diffMs = Date.now() - created.getTime();
+  if (diffMs < 0) return null;
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffHours < 1) return "Právě přidáno";
+  if (diffHours < 24) return `Před ${diffHours}h`;
+  if (diffDays < 7) return `Před ${diffDays}d`;
+  return null;
+}
+
 interface ProductCardProps {
   id: string;
   name: string;
@@ -20,7 +34,7 @@ interface ProductCardProps {
   sizes?: string;
   colors?: string;
   stock?: number;
-  isNew?: boolean;
+  createdAt?: Date | string;
   isReserved?: boolean;
   lowestPrice30d?: number | null;
   /** Pass true for above-the-fold cards (first 4) to preload with high priority — improves LCP */
@@ -40,7 +54,7 @@ export function ProductCard({
   sizes,
   colors,
   stock = 1,
-  isNew,
+  createdAt,
   isReserved,
   lowestPrice30d,
   priority = false,
@@ -94,11 +108,15 @@ export function ProductCard({
           <QuickViewButton productId={id} />
         </div>
         <div className="absolute top-2 left-2 flex flex-col gap-1">
-          {isNew && (
-            <span className="rounded-md bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
-              Novinka
-            </span>
-          )}
+          {createdAt && (() => {
+            const label = formatTimeElapsed(createdAt);
+            if (!label) return null;
+            return (
+              <span className="rounded-md bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
+                {label}
+              </span>
+            );
+          })()}
           {hasDiscount && (
             <span className="rounded-md bg-destructive/90 px-2 py-0.5 text-xs font-semibold text-white">
               -{discountPercent} %

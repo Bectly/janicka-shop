@@ -2,14 +2,14 @@
   "pause": {
     "trace": "until_next_bolt_commit"
   },
-  "force_next": null,
+  "force_next": "bolt",
   "interval_override": {
     "trace": 6
   },
   "session_manager": {},
-  "last_bolt_commit_cycle": 2447,
-  "updated_at_cycle": 2443,
-  "notes": "C2443 Lead: 14-cycle no-op loop BROKEN. Stale directive replaced. Bolt: (1) revalidate 30→3600 on product/collection pages — one-line perf win. (2) Time-elapsed badge on product cards — replace static Novinka with 'přidáno před Xh'. (3) 'Find similar' section on sold product pages — recover SEO traffic. All three specs in TODO.md. Trace stays paused until Bolt commits real code.",
+  "last_bolt_commit_cycle": 2448,
+  "updated_at_cycle": 2446,
+  "notes": "C2446 Lead: Directive for Bolt — 3 tasks in priority order: (1) BUG FIX: product-card.tsx line 111 uses undefined `isNew` variable — replace with `const timeElapsed = createdAt ? formatTimeElapsed(createdAt) : null` and render `{timeElapsed && <span className='rounded-md bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground'>{timeElapsed}</span>}`. The formatTimeElapsed() function ALREADY EXISTS at top of file — just wire it in. (2) DevChat widget: build src/components/dev-chat/dev-chat-widget.tsx (\"use client\"), import in src/app/(admin)/admin/layout.tsx. Backend 100% ready: DevChatMessage schema + POST/GET/PATCH routes. Full spec in TODO.md [DevChat widget] task. (3) Find similar section on sold product pages: src/app/(shop)/products/[slug]/page.tsx — add sold branch querying similar items. Spec in TODO.md. Trace resumes after Bolt commits.",
   "schema": {
     "pause": "Map of agent_name → condition ('paused' | 'until_next_bolt_commit')",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",

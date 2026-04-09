@@ -133,6 +133,7 @@ export async function getCartRecommendations(
     sizes: string;
     colors: string;
     stock: number;
+    createdAt: string;
   }[]
 > {
   if (productIds.length === 0) return [];
@@ -176,5 +177,6 @@ export async function getCartRecommendations(
     sizes: p.sizes,
     colors: p.colors,
     stock: p.stock,
+    createdAt: p.createdAt.toISOString(),
   }));
 }

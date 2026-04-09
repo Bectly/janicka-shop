@@ -179,6 +179,7 @@ export default async function ProductDetailPage({ params }: Props) {
       sizes: true,
       colors: true,
       stock: true,
+      createdAt: true,
       reservedUntil: true,
       reservedBy: true,
       category: { select: { name: true } },
@@ -391,6 +392,7 @@ export default async function ProductDetailPage({ params }: Props) {
                     sizes={p.sizes}
                     colors={p.colors}
                     stock={p.stock}
+                    createdAt={p.createdAt.toISOString()}
                     isReserved={false}
                     lowestPrice30d={lowestPricesMap.get(p.id) ?? null}
                   />
@@ -670,6 +672,7 @@ export default async function ProductDetailPage({ params }: Props) {
                   condition={p.condition}
                   sizes={p.sizes}
                   colors={p.colors}
+                  createdAt={p.createdAt.toISOString()}
                   isReserved={false}
                   lowestPrice30d={lowestPricesMap.get(p.id) ?? null}
                 />

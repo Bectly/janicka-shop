@@ -190,6 +190,7 @@ export default async function SearchPage({
                     sizes={product.sizes}
                     colors={product.colors}
                     stock={product.stock}
+                    createdAt={product.createdAt.toISOString()}
                     lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
                   />
                 ))}
@@ -237,6 +238,7 @@ export default async function SearchPage({
                           colors={product.colors}
                           lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
                           stock={product.stock}
+                          createdAt={product.createdAt.toISOString()}
                         />
                       ))}
                     </div>
@@ -289,6 +291,7 @@ export default async function SearchPage({
                       sizes={product.sizes}
                       colors={product.colors}
                       lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
+                      createdAt={product.createdAt.toISOString()}
                     />
                   ))}
                 </div>

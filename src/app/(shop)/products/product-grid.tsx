@@ -203,7 +203,7 @@ export async function ProductGrid({
               sizes={product.sizes}
               colors={product.colors}
               stock={product.stock}
-              isNew={product.createdAt > sevenDaysAgo}
+              createdAt={product.createdAt.toISOString()}
               isReserved={false}
               lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
               priority={i < 4}
