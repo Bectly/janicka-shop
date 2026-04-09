@@ -26,6 +26,17 @@ export function ReferralCard({ orderNumber }: ReferralCardProps) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
       trackShare("copy");
+    }).catch(() => {
+      // Fallback for insecure contexts or permission denied
+      const input = document.createElement("input");
+      input.value = referralUrl;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand("copy");
+      document.body.removeChild(input);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+      trackShare("copy");
     });
   }
 
