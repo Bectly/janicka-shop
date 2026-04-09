@@ -646,6 +646,14 @@ export default async function ProductDetailPage({ params }: Props) {
             <FreeShippingBar productPrice={product.price} />
           )}
 
+          {/* Notify me — similar items opt-in for warm leads */}
+          <NotifyMeForm
+            categoryId={product.categoryId}
+            sizes={product.sizes}
+            brand={product.brand}
+            categoryName={product.category.name}
+          />
+
           {/* Shipping, returns & quality guarantee info */}
           <ProductInfoAccordion />
         </div>
