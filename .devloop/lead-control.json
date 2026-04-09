@@ -6,7 +6,7 @@
   "force_next": "bolt",
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2526,
+  "last_bolt_commit_cycle": 2527,
   "updated_at_cycle": 2521,
   "dev_focus": "BOLT TASK C2521: Delivery deadline tracking — Czech legal requirement (30-day delivery deadline from contract). (1) Add `expectedDeliveryDate DateTime?` to Order model in `prisma/schema.prisma` (line ~109, after crossSellEmailSentAt). Run `npx prisma migrate dev --name add-expected-delivery-date`. (2) Set `expectedDeliveryDate` automatically in checkout `actions.ts` when order is created — calculate as `createdAt + 5 business days` for Packeta pickup, `createdAt + 7 business days` for home delivery/Czech Post. Use a simple helper: skip weekends, add N days. (3) Show expected delivery on order confirmation page (`src/app/(shop)/order/[orderNumber]/page.tsx`) — add a row below shipping info: calendar icon + 'Předpokládané doručení: {date}' formatted as 'dd. MM. yyyy'. (4) Show in order confirmation email (find `sendOrderConfirmationEmail` in `src/lib/email.ts`) — add line 'Předpokládané doručení: {date}'. (5) Show in admin order detail (`src/app/(admin)/admin/orders/[id]/page.tsx`) — display expected delivery date, highlight red if overdue (past date + status not delivered/shipped). (6) ALSO: Mark Packeta SOAP as [x] DONE in TODO.md line 167 — it was completed in C2518 (bc65b73). Run `npm run build` before claiming done.",
   "notes": "C2521 Lead — Packeta SOAP ✅ completed C2518 but TODO still shows [ ]. Bolt was spinning 3 cycles with no work (C2519-C2521) because dev_focus was stale. New task: delivery deadline tracking — Czech legal requirement, concrete schema+UI work. Trace stays paused until Bolt commits. Backlog 10 items (9 after marking Packeta done).",
