@@ -135,13 +135,14 @@ model OrderItem {
 }
 
 model Admin {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String
-  role      String   @default("admin")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String    @id @default(cuid())
+  email       String    @unique
+  password    String
+  name        String
+  role        String    @default("admin")
+  onboardedAt DateTime? // Set on first admin welcome page CTA click
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model Invoice {

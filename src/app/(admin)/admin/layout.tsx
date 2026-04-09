@@ -2,6 +2,7 @@ import { connection } from "next/server";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { auth } from "@/lib/auth";
+import { getDb } from "@/lib/db";
 import { AdminSidebar } from "@/components/admin/sidebar";
 import { DevChatWidget } from "@/components/dev-chat/dev-chat-widget";
 
@@ -15,6 +16,17 @@ async function AdminAuthGate({
 
   if (!session?.user) {
     redirect("/admin/login");
+  }
+
+  // Check onboarding status — redirect to welcome if not completed
+  const db = await getDb();
+  const admin = await db.admin.findUnique({
+    where: { id: session.user.id! },
+    select: { onboardedAt: true },
+  });
+
+  if (!admin?.onboardedAt) {
+    redirect("/admin/welcome");
   }
 
   return (
