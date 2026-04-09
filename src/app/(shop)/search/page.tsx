@@ -236,6 +236,7 @@ export default async function SearchPage({
                           sizes={product.sizes}
                           colors={product.colors}
                           lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
+                          stock={product.stock}
                         />
                       ))}
                     </div>
