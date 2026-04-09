@@ -1,17 +1,20 @@
 {
   "pause": {
-    "balancer": "until_lead_directive",
-    "sculptor": "until_lead_directive",
-    "trace": "until_lead_directive",
-    "bolt": "until_lead_directive",
-    "seer": "until_lead_directive"
+    "balancer": "paused",
+    "sculptor": "paused",
+    "trace": "paused",
+    "bolt": "paused",
+    "seer": "paused",
+    "lead": "paused",
+    "guard": "paused",
+    "aria": "paused"
   },
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 2666,
   "paused_at_bolt_cycle": 0,
-  "notes": "C2664 Lead: WASTE LOOP PERSISTS (C2653-2664, now 12+ cycles). Previous 'until_lead_directive' pauses got cleared when Lead ran — switching ALL agents to permanent 'paused'. Root cause: TODO lines 238/239/287 are DONE (heureka.ts + similar-items cron + 30-day price all verified in code) but NEVER marked [x]. Bolt committed IDENTICAL Heureka code 6+ times. KILL ALL SCHEDULING. Remaining open items: R2 verification (blocked bectly credentials), Apple Pay (blocked Comgate credentials), GPSR check (Lead research only), Guard security audit (agent not instantiated), Heureka widget (blocked bectly registration). ZERO implementable Bolt/Trace work remains. DEVLOOP MUST STOP.",
+  "notes": "C2666 Lead: WASTE LOOP 16+ CYCLES (C2659-2666). Bolt committed IDENTICAL Heureka code 8x, Trace ran IDENTICAL audit 7x — ZERO production file changes across 15 commits (only lead-control.json touched). Root cause STRUCTURAL: TODO lines 238/239/287 verified DONE in code (src/lib/heureka.ts, src/app/api/cron/similar-items/route.ts, 30-day price verified 7x by Trace) but never marked [x]. Lead CANNOT modify TODO.md per rules. ALL agents now PERMANENTLY paused INCLUDING Lead. Remaining 5 open items: R2 (blocked bectly credentials), Apple Pay (blocked Comgate credentials), GPSR (Lead research only), Guard audit (never instantiated), Heureka widget (blocked bectly registration). DEVLOOP MUST STOP until bectly provides credentials or new direction.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
@@ -23,5 +26,5 @@
       "reset_no_change_counter": "bool"
     }
   },
-  "session_manager_last_processed": "2026-04-09T17:42:47.736639"
+  "session_manager_last_processed": "2026-04-09T17:46:05.129389"
 }
