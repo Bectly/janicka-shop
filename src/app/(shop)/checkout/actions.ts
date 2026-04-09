@@ -16,9 +16,18 @@ import {
   SHIPPING_PRICES,
   FREE_SHIPPING_THRESHOLD,
   COD_SURCHARGE,
+  REFERRAL_MIN_ORDER_CZK,
   type PaymentMethod,
   type ShippingMethod,
 } from "@/lib/constants";
+import {
+  validateReferralCode,
+  redeemReferralCode,
+  applyStoreCredit,
+  createReferralCode,
+  getAvailableStoreCredit,
+  getCheckoutDiscounts,
+} from "@/lib/referral";
 
 const checkoutSchema = z
   .object({
@@ -44,6 +53,7 @@ const checkoutSchema = z
     packetaPointId: z.string().max(64).optional(),
     packetaPointName: z.string().max(256).optional(),
     packetaPointAddress: z.string().max(512).optional(),
+    referralCode: z.string().max(20).optional(),
     items: z
       .array(
         z.object({
@@ -208,6 +218,7 @@ export async function createOrder(
     packetaPointName: (formData.get("packetaPointName") as string) || undefined,
     packetaPointAddress:
       (formData.get("packetaPointAddress") as string) || undefined,
+    referralCode: (formData.get("referralCode") as string) || undefined,
     items,
   };
 
@@ -275,7 +286,36 @@ export async function createOrder(
       const shipping =
         subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : baseShipping;
       const codFee = isCod ? COD_SURCHARGE : 0;
-      const total = subtotal + shipping + codFee;
+
+      // --- Referral discount ---
+      let referralDiscount = 0;
+      if (data.referralCode) {
+        // Cannot use referral if subtotal below minimum
+        if (subtotal >= REFERRAL_MIN_ORDER_CZK) {
+          const referralResult = await validateReferralCode(
+            data.referralCode,
+            data.email,
+          );
+          if (referralResult.valid) {
+            referralDiscount = referralResult.discountCzk;
+          }
+          // If invalid at this point, silently ignore — don't block checkout.
+          // Client already showed validation feedback.
+        }
+      }
+
+      // --- Store credit ---
+      // Check available credit for this email (before deducting)
+      const availableCreditCzk = await getAvailableStoreCredit(data.email);
+      const preDiscountTotal = subtotal + shipping + codFee - referralDiscount;
+      // Apply store credit up to the remaining total (never go below 0)
+      const maxCreditToApply = Math.min(availableCreditCzk, Math.max(0, preDiscountTotal));
+      let storeCreditUsed = 0;
+      if (maxCreditToApply > 0) {
+        storeCreditUsed = await applyStoreCredit(tx, data.email, maxCreditToApply);
+      }
+
+      const total = Math.max(0, subtotal + shipping + codFee - referralDiscount - storeCreditUsed);
 
       // For Packeta pickup: use point address; for home delivery: use form address
       const shippingName = `${data.firstName} ${data.lastName}`;
@@ -345,6 +385,9 @@ export async function createOrder(
           shippingMethod: data.shippingMethod,
           shippingPointId: data.packetaPointId ?? null,
           expectedDeliveryDate,
+          referralCode: referralDiscount > 0 ? data.referralCode : null,
+          referralDiscount,
+          storeCreditUsed,
         },
       });
 
@@ -404,6 +447,11 @@ export async function createOrder(
         data: { sold: true, stock: 0, reservedUntil: null, reservedBy: null },
       });
 
+      // Redeem referral code if one was applied
+      if (referralDiscount > 0 && data.referralCode) {
+        await redeemReferralCode(tx, data.referralCode.trim().toUpperCase(), orderNumber);
+      }
+
       // Collect DB prices, names, slugs, and SKUs for email + ISR + Heureka
       const dbPrices = new Map(products.map((p) => [p.id, p.price]));
       const dbNames = new Map(products.map((p) => [p.id, p.name]));
@@ -418,7 +466,17 @@ export async function createOrder(
         sizes: p.sizes,
         images: p.images,
       }));
-      return { ...created, customerEmail: customer.email, dbPrices, dbNames, productSlugs, productSkus, soldProducts };
+      return {
+        ...created,
+        customerEmail: customer.email,
+        dbPrices,
+        dbNames,
+        productSlugs,
+        productSkus,
+        soldProducts,
+        referralDiscountApplied: referralDiscount,
+        storeCreditApplied: storeCreditUsed,
+      };
     });
   } catch (e) {
     if (e instanceof UnavailableError) {
@@ -434,6 +492,11 @@ export async function createOrder(
   }
   revalidatePath("/products");
   revalidatePath("/");
+
+  // Generate a referral code for this order (fire-and-forget)
+  createReferralCode(order.orderNumber, order.customerEmail).catch((e) =>
+    console.error("[Checkout] Referral code generation failed:", e),
+  );
 
   // Notify subscribers about similar items when their watched category sells (fire-and-forget)
   sendSimilarItemNotifications(order.soldProducts).catch((e) =>
@@ -587,6 +650,22 @@ export async function createOrder(
   }
 
   redirect(paymentRedirectUrl);
+}
+
+// ---------------------------------------------------------------------------
+// Checkout discount validation — called from client for preview
+// ---------------------------------------------------------------------------
+
+export async function validateCheckoutDiscounts(input: {
+  referralCode: string | null;
+  email: string | null;
+}): Promise<{
+  referralDiscount: number;
+  referralCode: string | null;
+  referralError: string | null;
+  storeCredit: number;
+}> {
+  return getCheckoutDiscounts(input.referralCode, input.email);
 }
 
 // ---------------------------------------------------------------------------

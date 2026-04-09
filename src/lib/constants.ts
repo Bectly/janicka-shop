@@ -96,6 +96,25 @@ export const FREE_SHIPPING_THRESHOLD = 1500;
 /** Cash on delivery surcharge in CZK */
 export const COD_SURCHARGE = 39;
 
+// ---------------------------------------------------------------------------
+// Referral & store credit constants
+// ---------------------------------------------------------------------------
+
+/** Referral credit for the referrer in CZK */
+export const REFERRAL_CREDIT_CZK = 150;
+
+/** Referral discount for the friend (new customer) in CZK */
+export const REFERRAL_DISCOUNT_CZK = 100;
+
+/** Minimum order subtotal (CZK) to use a referral code */
+export const REFERRAL_MIN_ORDER_CZK = 400;
+
+/** Referral code validity in days */
+export const REFERRAL_CODE_EXPIRY_DAYS = 90;
+
+/** Store credit validity in days */
+export const STORE_CREDIT_EXPIRY_DAYS = 180;
+
 /** Czech color names → hex values for visual swatches */
 export const COLOR_MAP: Record<string, string> = {
   "Černá": "#000000",

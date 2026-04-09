@@ -63,6 +63,12 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
   const isPending = order.status === "pending" && !isCod;
   const showAccountCreation = !order.customer.password;
 
+  // Look up referral code generated for this order
+  const referralEntry = await db.referralCode.findFirst({
+    where: { orderNumber: order.orderNumber },
+    select: { code: true },
+  });
+
   // Generate QR payment code for bank transfer orders that are still pending
   const isBankTransfer = order.paymentMethod === "bank_transfer";
   const showQr = isPending && isBankTransfer;
@@ -184,6 +190,18 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
               <span>{formatPrice(order.total - order.subtotal - order.shipping)}</span>
             </div>
           )}
+          {order.referralDiscount > 0 && (
+            <div className="mt-1 flex justify-between text-sm text-emerald-600">
+              <span>Sleva z doporučení</span>
+              <span>-{formatPrice(order.referralDiscount)}</span>
+            </div>
+          )}
+          {order.storeCreditUsed > 0 && (
+            <div className="mt-1 flex justify-between text-sm text-emerald-600">
+              <span>Kredit z doporučení</span>
+              <span>-{formatPrice(order.storeCreditUsed)}</span>
+            </div>
+          )}
           <div className="mt-3 flex justify-between border-t pt-3 text-lg font-bold">
             <span>Celkem</span>
             <span>{formatPrice(order.total)}</span>
@@ -280,7 +298,7 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
       )}
 
       {/* Referral prompt — bilateral: 150 CZK credit for referrer, 100 CZK off for friend */}
-      <ReferralCard orderNumber={order.orderNumber} />
+      <ReferralCard orderNumber={order.orderNumber} referralCode={referralEntry?.code} />
 
       <div className="mt-8">
         <Button render={<Link href="/products" />}>

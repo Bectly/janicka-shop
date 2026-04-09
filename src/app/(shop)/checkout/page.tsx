@@ -7,7 +7,9 @@ import {
   useEffect,
   useRef,
   useSyncExternalStore,
+  useTransition,
 } from "react";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -23,6 +25,8 @@ import {
   Lock,
   Check,
   ChevronRight,
+  Gift,
+  Tag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +38,7 @@ import { trackBeginCheckout } from "@/lib/analytics";
 import {
   createOrder,
   captureAbandonedCart,
+  validateCheckoutDiscounts,
   type CheckoutState,
 } from "./actions";
 import { ComgatePaymentSection } from "@/components/shop/checkout/comgate-payment-section";
@@ -202,6 +207,7 @@ export default function CheckoutPage() {
   const items = useCartStore((s) => s.items);
   const totalPrice = useCartStore((s) => s.totalPrice);
   const clearCart = useCartStore((s) => s.clearCart);
+  const searchParams = useSearchParams();
   const [paymentMethod, setPaymentMethod] = useState<string>("card");
   const [shippingMethod, setShippingMethod] =
     useState<ShippingMethod>("packeta_pickup");
@@ -209,6 +215,16 @@ export default function CheckoutPage() {
   const [marketingConsent, setMarketingConsent] = useState(false);
   const [shippingError, setShippingError] = useState<string | null>(null);
   const [contactError, setContactError] = useState<string | null>(null);
+
+  // Referral & store credit
+  const [referralCode, setReferralCode] = useState<string | null>(
+    () => searchParams.get("ref")?.trim().toUpperCase() || null,
+  );
+  const [referralDiscount, setReferralDiscount] = useState(0);
+  const [referralError, setReferralError] = useState<string | null>(null);
+  const [storeCredit, setStoreCredit] = useState(0);
+  const [, startDiscountTransition] = useTransition();
+  const discountFetchedForRef = useRef<string | null>(null);
   const mounted = useSyncExternalStore(
     emptySubscribe,
     () => true,
@@ -399,7 +415,10 @@ export default function CheckoutPage() {
   const baseShipping = shippingOption?.price ?? 0;
   const shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : baseShipping;
   const codFee = isCod ? COD_SURCHARGE : 0;
-  const total = subtotal + shippingCost + codFee;
+  // Apply store credit up to the remaining amount after other discounts
+  const preDiscountTotal = subtotal + shippingCost + codFee - referralDiscount;
+  const effectiveStoreCredit = Math.min(storeCredit, Math.max(0, preDiscountTotal));
+  const total = Math.max(0, preDiscountTotal - effectiveStoreCredit);
 
   // Step validation + advance
   const advanceFromContact = useCallback(() => {
@@ -418,7 +437,22 @@ export default function CheckoutPage() {
     setContactError(null);
     setCompletedSteps((prev) => new Set(prev).add(0));
     setActiveStep(1);
-  }, []);
+
+    // Validate referral code + check store credit once we have the email
+    startDiscountTransition(async () => {
+      const result = await validateCheckoutDiscounts({
+        referralCode: referralCode,
+        email: email,
+      });
+      setReferralDiscount(result.referralDiscount);
+      setReferralError(result.referralError);
+      setStoreCredit(result.storeCredit);
+      if (result.referralCode) {
+        setReferralCode(result.referralCode);
+      }
+      discountFetchedForRef.current = referralCode;
+    });
+  }, [referralCode]);
 
   const advanceFromShipping = useCallback(() => {
     if (isPacketaPickup && !packetaPoint) {
@@ -574,6 +608,9 @@ export default function CheckoutPage() {
         />
         <input type="hidden" name="paymentMethod" value={paymentMethod} />
         <input type="hidden" name="shippingMethod" value={shippingMethod} />
+        {referralCode && referralDiscount > 0 && (
+          <input type="hidden" name="referralCode" value={referralCode} />
+        )}
         {packetaPoint && (
           <>
             <input
@@ -592,6 +629,23 @@ export default function CheckoutPage() {
               value={`${packetaPoint.street}, ${packetaPoint.zip} ${packetaPoint.city}`}
             />
           </>
+        )}
+
+        {/* Referral banner */}
+        {referralCode && !referralError && referralDiscount > 0 && (
+          <div className="mb-4 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400">
+            <Gift className="size-4 shrink-0" />
+            <span>
+              Kód doporučení <strong>{referralCode}</strong> — sleva{" "}
+              {formatPrice(referralDiscount)} na objednávku
+            </span>
+          </div>
+        )}
+        {referralError && (
+          <div className="mb-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+            <Tag className="size-4 shrink-0" />
+            <span>{referralError}</span>
+          </div>
         )}
 
         <div className="grid gap-8 lg:grid-cols-3">
@@ -1112,6 +1166,18 @@ export default function CheckoutPage() {
                     <span>{formatPrice(COD_SURCHARGE)}</span>
                   </div>
                 )}
+                {referralDiscount > 0 && (
+                  <div className="flex justify-between text-sm text-emerald-600">
+                    <span>Sleva z doporučení</span>
+                    <span>-{formatPrice(referralDiscount)}</span>
+                  </div>
+                )}
+                {effectiveStoreCredit > 0 && (
+                  <div className="flex justify-between text-sm text-emerald-600">
+                    <span>Kredit z doporučení</span>
+                    <span>-{formatPrice(effectiveStoreCredit)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between border-t pt-2 text-lg font-bold">
                   <span>Celkem</span>
                   <span>{formatPrice(total)}</span>
@@ -1212,6 +1278,18 @@ export default function CheckoutPage() {
                   <div className="mt-1 flex justify-between text-sm">
                     <span className="text-muted-foreground">Dobírka</span>
                     <span>{formatPrice(COD_SURCHARGE)}</span>
+                  </div>
+                )}
+                {referralDiscount > 0 && (
+                  <div className="mt-1 flex justify-between text-sm text-emerald-600">
+                    <span>Sleva z doporučení</span>
+                    <span>-{formatPrice(referralDiscount)}</span>
+                  </div>
+                )}
+                {effectiveStoreCredit > 0 && (
+                  <div className="mt-1 flex justify-between text-sm text-emerald-600">
+                    <span>Kredit z doporučení</span>
+                    <span>-{formatPrice(effectiveStoreCredit)}</span>
                   </div>
                 )}
                 <div className="mt-3 flex justify-between border-t pt-3 text-lg font-bold">

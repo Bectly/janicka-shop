@@ -107,6 +107,9 @@ model Order {
   deliveryCheckEmailSentAt DateTime? // Set when delivery check-in email is sent (ship+4d)
   crossSellEmailSentAt     DateTime? // Set when T+14 cross-sell follow-up email is sent
   expectedDeliveryDate     DateTime? // Czech law: 30 days from order for delivery (§2159 NOZ)
+  referralCode             String? // Referral code used at checkout (e.g. "REF-A1B2C3D4")
+  referralDiscount         Float     @default(0) // Discount from referral code in CZK
+  storeCreditUsed          Float     @default(0) // Store credit applied in CZK
   createdAt                DateTime    @default(now())
   updatedAt                DateTime    @updatedAt
   items                    OrderItem[]
@@ -349,6 +352,40 @@ model DevPick {
 
   @@index([status])
   @@index([slug])
+}
+
+model ReferralCode {
+  id                String    @id @default(cuid())
+  code              String    @unique // e.g. "REF-A1B2C3D4"
+  orderNumber       String // order that generated this referral code
+  customerEmail     String // email of the referrer (code owner)
+  creditAmount      Int       @default(15000) // referrer reward in hellers (150 CZK)
+  discountAmount    Int       @default(10000) // friend discount in hellers (100 CZK)
+  usedByOrderNumber String? // order that redeemed this code
+  status            String    @default("pending") // pending | redeemed | expired
+  createdAt         DateTime  @default(now())
+  redeemedAt        DateTime?
+  expiresAt         DateTime // +90 days from creation
+
+  @@index([code])
+  @@index([orderNumber])
+  @@index([customerEmail])
+  @@index([status])
+}
+
+model StoreCredit {
+  id                 String    @id @default(cuid())
+  customerEmail      String
+  amount             Int // total amount in hellers
+  remainingAmount    Int // remaining balance in hellers
+  reason             String // e.g. "Referral reward for order JN-..."
+  sourceOrderNumber  String? // order that triggered this credit
+  createdAt          DateTime  @default(now())
+  expiresAt          DateTime // +180 days from creation
+  usedAt             DateTime? // set when fully consumed
+
+  @@index([customerEmail])
+  @@index([expiresAt])
 }
 
 model ShopSettings {

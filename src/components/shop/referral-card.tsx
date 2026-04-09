@@ -7,16 +7,17 @@ import { trackReferralShare } from "@/lib/analytics";
 
 interface ReferralCardProps {
   orderNumber: string;
+  referralCode?: string | null;
 }
 
-export function ReferralCard({ orderNumber }: ReferralCardProps) {
+export function ReferralCard({ orderNumber, referralCode }: ReferralCardProps) {
   const [copied, setCopied] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
-  if (dismissed) return null;
+  if (dismissed || !referralCode) return null;
 
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
-  const referralUrl = `${baseUrl}/products?ref=${encodeURIComponent(orderNumber)}&utm_source=referral&utm_medium=share&utm_campaign=order-referral`;
+  const referralUrl = `${baseUrl}/products?ref=${encodeURIComponent(referralCode)}&utm_source=referral&utm_medium=share&utm_campaign=order-referral`;
 
   const shareText =
     "Mám pro tebe slevu 100 Kč na Janičku — second hand oblečení v skvělém stavu! Nakup tady:";
