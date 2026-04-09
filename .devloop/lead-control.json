@@ -7,7 +7,7 @@
     "trace": 6
   },
   "session_manager": {},
-  "last_bolt_commit_cycle": 2463,
+  "last_bolt_commit_cycle": 2464,
   "updated_at_cycle": 2452,
   "notes": "C2452 Lead: BREAKING 7-CYCLE REVALIDATE LOOP. Revalidate fix is DONE (C2446). Badge fix is DONE (product-card.tsx:111-119 already calls formatTimeElapsed). STOP re-doing these. NEW DIRECTIVE — 2 tasks in priority order: (1) ISR STALENESS BUG FIX (Trace C2449 finding): checkout/actions.ts line 398 marks products sold but never calls revalidatePath(). After the transaction succeeds (after line 405), add revalidatePath calls for each sold product's detail page: `import { revalidatePath } from 'next/cache'; productIds.forEach(id => { const slug = products.find(p => p.id === id)?.slug; if (slug) revalidatePath(`/products/${slug}`); }); revalidatePath('/'); revalidatePath('/products');` — also do the same in the payment-return page rollback (line 107) where sold=false is restored. This fixes the bug where sold items show as available for up to 1 hour under 3600s ISR. (2) DevChat widget frontend: create src/components/dev-chat/dev-chat-widget.tsx ('use client'), import in src/app/(admin)/admin/layout.tsx. Backend 100% ready (src/app/api/dev-chat/route.ts + [id]/route.ts). Full spec in TODO.md. Also: mark 'Time-elapsed badge' TODO item as [x] done — it's already implemented.",
   "schema": {
