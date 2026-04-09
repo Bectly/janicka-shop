@@ -1,16 +1,13 @@
 {
-  "pause": {
-    "trace": "until_lead_directive",
-    "bolt": "until_lead_directive"
-  },
+  "pause": {},
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 2614,
-  "updated_at_cycle": 2600,
-  "dev_focus": "⚠️ C2600 FRESH DIRECTIVE — DO NOT READ GIT HISTORY AS CONTEXT. ⚠️ TASK: CREATE src/components/shop/referral-card.tsx (THIS FILE DOES NOT EXIST YET). Then EDIT src/app/(shop)/order/[orderNumber]/page.tsx to render it. VERIFY FIRST: run `ls src/components/shop/referral-card.tsx` — it should NOT exist. If it doesn't exist, BUILD IT NOW. SPEC: (1) 'use client' component ReferralCard({ orderNumber: string }). (2) const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://janicka-shop.vercel.app'; const referralUrl = `${appUrl}/?ref=${orderNumber}&utm_source=referral&utm_medium=share&utm_campaign=order-referral`. (3) Header: 'Pošli kamarádce slevu — a odměníme tě'. Subtitle: 'Kamarádka dostane 100 Kč slevu na první nákup. Ty dostaneš 150 Kč kredit, jakmile nakoupí.' (4) TWO buttons: [Kopírovat odkaz] (clipboard copy, 2s checkmark feedback) and [Sdílet přes WhatsApp] (href `https://wa.me/?text=${encodeURIComponent('Hele, koukni na Janička Shop — krásné second hand oblečení. Tady máš 100 Kč slevu na první nákup: ' + referralUrl)}` target=_blank). (5) GA4: window.gtag?.('event','referral_share',{method:'clipboard'/'whatsapp',order_number:orderNumber}). (6) Design: Gift icon (lucide-react), rose/pink card (rose-50 bg, rose-200 border), similar visual weight to CreateAccountCard. (7) In page.tsx insert `<ReferralCard orderNumber={order.orderNumber} />` AFTER line 278 (after </CreateAccountCard>). NO DB changes. Run npm run build — must pass.",
-  "qa_focus": "TRACE: After Bolt commits: (1) Verify src/components/shop/referral-card.tsx EXISTS in git, (2) Visit order confirmation page — ReferralCard renders below CreateAccountCard, (3) Copy button copies referral URL with correct order number, (4) WhatsApp button opens wa.me with Czech message, (5) Build passes.",
-  "notes": "C2600 Lead — ZOMBIE LOOP BROKEN (7 cycles C2593-C2599 of Bolt saying 'abandoned cart done, no changes needed'). Root cause: dev_focus started with 'CONTEXT: Abandoned cart...' — Bolt read 'abandoned cart' and concluded task was done. FIX: dev_focus now starts with task name. Bolt unpause removed (was blocking). kill_zombie_tasks + reset_no_change_counter set. ReferralCard CONFIRMED not in codebase.",
+  "updated_at_cycle": 2605,
+  "dev_focus": "⚠️ C2605 FRESH DIRECTIVE — ReferralCard is DONE (commit 89ca593). Mark TODO.md line 177 as [x]. TASK: MOBILE RESPONSIVE POLISH — audit ALL shop pages at 375px viewport width and fix layout issues. Priority: (1) /checkout — accordion sections, form inputs touch targets, Packeta widget sizing, payment section. (2) /products/[slug] — gallery, add-to-cart sticky bar, size selector buttons, similar items grid. (3) /products — filter drawer, product grid 2-col, quick filters scroll. (4) / — hero section, trust badges wrap, collections cards, recently sold scroll. (5) /cart — item list, totals sidebar→stacked, exit intent modal. CHECK: text truncation, overflow, touch targets <44px, z-index conflicts, horizontal scroll. Fashion = 81% mobile — this is THE highest-impact remaining work. npm run build must pass.",
+  "qa_focus": "TRACE: After Bolt commits mobile fixes: (1) Test ALL shop pages at 375px + 430px viewports — zero horizontal overflow, (2) All buttons/links ≥44px touch targets, (3) Checkout flow end-to-end at mobile width, (4) Product gallery swipe + zoom works, (5) Mobile nav menu open/close, (6) Security spot-check — verify all /api/admin/* routes require auth, Server Actions validate inputs.",
+  "notes": "C2605 Lead — ZOMBIE LOOP #2 BROKEN (4 cycles C2602-2605 Bolt repeating 'ReferralCard done'). Root cause: dev_focus still had old C2600 ReferralCard task. ReferralCard confirmed done (component + page.tsx:282). Killed zombie tasks 7123+7124 via SQL. New task: mobile responsive polish — project is feature-complete, this is highest-impact remaining UX work. Main LAUNCH BLOCKERS are now OPERATIONAL: Comgate credentials, R2 API tokens, Mapy.com API key, Packeta sandbox credentials — all need bectly manual setup.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
@@ -22,5 +19,5 @@
       "reset_no_change_counter": "bool"
     }
   },
-  "session_manager_last_processed": "2026-04-09T16:17:22.221034"
+  "session_manager_last_processed": "2026-04-09T16:25:32.042554"
 }
