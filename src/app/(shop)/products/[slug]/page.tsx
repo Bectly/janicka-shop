@@ -212,8 +212,6 @@ export default async function ProductDetailPage({ params }: Props) {
   const allIds = [product.id, ...relatedProducts.map((p) => p.id)];
   const lowestPricesMap = await getLowestPrices30d(allIds);
 
-  const now = new Date();
-
   // JSON-LD structured data for SEO (Google Shopping + AI search visibility)
   // "Golden Record" — complete attributes for 3-4x higher AI visibility
   const jsonLd = {

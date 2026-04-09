@@ -731,6 +731,7 @@ function buildNewsletterWelcomeHtml(email: string): string {
     <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
       <p style="margin: 0;">Janička Shop — Second hand móda</p>
       <p style="margin: 4px 0 0;">Tento email jsi dostala, protože jsi se přihlásila k odběru novinek.</p>
+      <p style="margin: 4px 0 0;"><a href="${baseUrl}/odhlasit-novinky?email=${encodeURIComponent(email)}" style="color: #999; text-decoration: underline;">Odhlásit se z odběru</a></p>
     </div>
   </div>
 </body>
