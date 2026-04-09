@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getImageUrls, parseJsonStringArray } from "@/lib/images";
+import { validateFeedToken } from "@/lib/feed-auth";
 import {
   SHIPPING_PRICES,
   FREE_SHIPPING_THRESHOLD,
@@ -56,7 +57,10 @@ function escapeXml(str: string): string {
  *
  * Spec: https://support.google.com/merchants/answer/7052112
  */
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const tokenError = validateFeedToken(req);
+  if (tokenError) return tokenError;
+
   try {
     const db = await getDb();
     const products = await db.product.findMany({

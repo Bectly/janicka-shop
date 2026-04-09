@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getImageUrls } from "@/lib/images";
+import { validateFeedToken } from "@/lib/feed-auth";
 
 export const dynamic = "force-dynamic";
 import {
@@ -61,7 +62,10 @@ function escapeXml(str: string): string {
     .replace(/'/g, "&apos;");
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const tokenError = validateFeedToken(req);
+  if (tokenError) return tokenError;
+
   try {
     const db = await getDb();
     const products = await db.product.findMany({

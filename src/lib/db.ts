@@ -22,7 +22,7 @@ async function createClient(): Promise<PrismaClient> {
   // Local SQLite — enable WAL mode for concurrent readers during build
   // (prevents SQLITE_CANTOPEN / lock errors when Next.js build workers run in parallel)
   const client = new PrismaClient();
-  await client.$executeRawUnsafe("PRAGMA journal_mode = WAL;");
+  await client.$executeRaw`PRAGMA journal_mode = WAL`;
   return client;
 }
 
