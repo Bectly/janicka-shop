@@ -1,16 +1,13 @@
 {
-  "pause": {
-    "trace": "until_lead_directive",
-    "bolt": "until_lead_directive"
-  },
-  "force_next": "bolt",
+  "pause": {},
+  "force_next": null,
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 2640,
-  "updated_at_cycle": 2638,
-  "dev_focus": "C2635 DIRECTIVE — ZOMBIE BROKEN (C2630-C2635 loop). C2630 fixed cart trash button + checkout step indicators + Comgate iframe (✅ DONE). ONE REMAINING FIX: src/components/shop/product-filters.tsx ONLY. Filter buttons in mobile drawer are still below 44px touch target. EXACT lines to fix: (1) Lines 126+139: category pills py-1.5 → add min-h-11 to both className strings. (2) Line 176: size chips desktop py-1/py-1.5 → add min-h-9 to the className. (3) Line 225: size buttons drawer py-1 → add min-h-11 to className. (4) Line 262: color swatches py-1 → add min-h-11 to className. (5) Line 305: condition chips py-1 → add min-h-11 to className. (6) Lines 452+481: active filter chips at drawer bottom py-1 → add min-h-9 (inline chips, 36px OK). ONLY touch product-filters.tsx. Run `npm run build` — must pass. CRITICAL: If product-filters.tsx already has min-h classes on these lines, DO NOT commit. Check before acting.",
-  "qa_focus": "TRACE: After Bolt commits product-filters.tsx fix: (1) Open filter drawer at 375px viewport — category pills, size buttons, color swatches, condition chips must all have ≥44px tap height, (2) Active filter chips at drawer bottom ≥36px, (3) Filter chips still look like chips (not oversized blocks), (4) No horizontal overflow on /products at 375px, (5) npm run build passes clean.",
-  "notes": "C2635 Lead — Zombie loop C2630-C2636 broken (Bolt was only changing last_bolt_commit_cycle). C2630 was the real work commit (7 files: cart+checkout+comgate+gallery+packeta+input+PDP). Last remaining: product-filters.tsx drawer touch targets. Single file, exact line numbers. Trace re-paused until Bolt commits the real fix.",
+  "updated_at_cycle": 2640,
+  "dev_focus": "C2640 DIRECTIVE — NEW TASK. Mobile polish sprint IS DONE: product-filters.tsx already has min-h-11 on all buttons (Lead confirmed by reading file). ALL MOBILE FIXES COMPLETE. NEW BOLT TASK: Implement 'similar item arrived' notification email cron. ProductNotifyRequest model: {id, email, categoryId, sizes (JSON String[]), brand?, notified Boolean, createdAt}. Table is populated by PDP opt-in form (done C2500). NO cron processes it. IMPLEMENT: (1) src/app/api/cron/similar-items/route.ts — GET handler with CRON_SECRET auth (same pattern as /api/cron/new-arrivals/route.ts). (2) Logic: find all ProductNotifyRequest WHERE notified=false. For each: query Product WHERE categoryId=req.categoryId AND sold=false AND active=true AND createdAt > NOW()-48h. Parse sizes JSON, filter products with size overlap (JSON.parse both sides, check intersection). If matches found: send Resend email (subject: 'Právě přidáno: kousky, které by se vám mohly líbit', product cards max 3, CTA to product URL, Czech copy). Mark notified=true. (3) Add to vercel.json: {\"path\": \"/api/cron/similar-items\", \"schedule\": \"0 */2 * * *\"}. (4) npm run build must pass. See existing crons for pattern (abandoned-carts, new-arrivals). Sizes parsing: JSON.parse(req.sizes) = string[], JSON.parse(product.sizes) = string[], overlap = req.sizes.some(s => productSizes.includes(s)).",
+  "qa_focus": "TRACE C2640: (1) Verify all mobile touch targets are done — read product-filters.tsx lines 126,139,225,262,305,452,481 confirm min-h-11 present, (2) Read cart/page.tsx confirm trash button has min-h-11 min-w-11, (3) Run npm run build — must pass clean, (4) After Bolt commits similar-items cron: verify CRON_SECRET auth present in new route, vercel.json has cron registered, build still clean. Report what you found.",
+  "notes": "C2640 Lead — Root cause of zombie: product-filters.tsx was already fixed. Bolt had nothing to do → zombie. New real task: similar-items cron (high-intent email flow, 58-70% open rate). Both trace and bolt UNPAUSED.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
@@ -22,5 +19,5 @@
       "reset_no_change_counter": "bool"
     }
   },
-  "session_manager_last_processed": "2026-04-09T17:01:28.333552"
+  "session_manager_last_processed": "2026-04-09T17:03:29.574180"
 }

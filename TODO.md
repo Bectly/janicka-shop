@@ -191,7 +191,7 @@ Spec: interactive `/pick/[slug]` pages where Lead creates choices (image_choice/
 Spec preserved. Fullscreen welcome page `/admin/welcome` with JARVIS dedication, team cards (Lead/Bolt/Trace/Scout), real stats from DB (cykly/commity/řádky/dny), canvas-confetti efekt, rose/pink gradient. Triggers once on first admin login. Implement as a gift milestone — AFTER core shop features are launched and first orders come in.
 
 ## Phase 8: Polish, SEO & Conversion [UPDATED — LEAD RESEARCH C19]
-- [ ] [SAGE] Mobile-first responsive polish — every page (fashion e-commerce is 70%+ mobile)
+- [x] [SAGE] Mobile-first responsive polish — DONE (C2627+C2630+C2640 Lead audit). All touch targets verified: filter drawer buttons min-h-11 ✅, cart trash button ≥44px ✅, checkout step indicators ✅, sticky ATC ✅, gallery arrows ✅, size/color buttons ✅, announcement bar close ✅, Comgate iframe fluid ✅, safe-area-inset-bottom ✅. Trace verification pending.
 - [x] [SAGE] Swipeable product image gallery on mobile — DONE Cycle #1497 (touch swipe gestures with direction-locked handling, swipe-follow feedback, mobile image counter "1/5", lightbox swipe support). Fixed Cycle #1499 (pan-drag zoom toggle bug, stale closure in swipe handler).
 - [x] [BOLT] SEO structured data — Product JSON-LD with itemCondition, offers, brand, category, image on product detail pages. XSS-safe (\\u003c escaping). — done Cycle #22, hardened Cycle #24
 - [x] [BOLT] SEO basics: Open Graph tags (og:image), sitemap.xml (dynamic from products/categories), robots.txt — done Cycle #22
