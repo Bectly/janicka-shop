@@ -1,0 +1,39 @@
+-- Janička Shop — Turso (production) schema sync
+-- Run after any Prisma schema change: npm run db:push-turso
+-- (requires ~/.turso/turso CLI installed and authenticated)
+--
+-- ⚠️  NOT IDEMPOTENT: ALTER TABLE ADD COLUMN fails if column already exists.
+--     Mark applied migrations with [APPLIED] so you know what to skip.
+--     New cycles: append new DDL at the bottom under the latest comment.
+--
+-- APPLIED (already in production as of 2026-04-09):
+--   ✓ Cycle #2328: shippedAt, reviewEmailSentAt on Order
+--   ✓ Cycle #2330: lastNewArrivalEmailAt on NewsletterSubscriber
+--   ✓ Cycle #2331: password on Customer
+--   ✓ Cycle #2338: BrowseAbandonment table + indexes
+--
+-- If you need to re-run from scratch (new DB), uncomment these:
+-- ALTER TABLE "Order" ADD COLUMN "shippedAt" DATETIME;
+-- ALTER TABLE "Order" ADD COLUMN "reviewEmailSentAt" DATETIME;
+-- ALTER TABLE "NewsletterSubscriber" ADD COLUMN "lastNewArrivalEmailAt" DATETIME;
+-- ALTER TABLE "Customer" ADD COLUMN "password" TEXT;
+-- CREATE TABLE IF NOT EXISTS "BrowseAbandonment" (
+--   "id" TEXT NOT NULL PRIMARY KEY,
+--   "email" TEXT NOT NULL,
+--   "productId" TEXT NOT NULL,
+--   "productSlug" TEXT NOT NULL,
+--   "productName" TEXT NOT NULL,
+--   "productImage" TEXT,
+--   "productPrice" REAL NOT NULL,
+--   "productBrand" TEXT,
+--   "productSize" TEXT,
+--   "sentAt" DATETIME,
+--   "status" TEXT NOT NULL DEFAULT 'pending',
+--   "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+-- );
+-- CREATE INDEX IF NOT EXISTS "BrowseAbandonment_email_idx" ON "BrowseAbandonment"("email");
+-- CREATE INDEX IF NOT EXISTS "BrowseAbandonment_status_idx" ON "BrowseAbandonment"("status");
+
+-- === NEW MIGRATIONS (add here after each schema change cycle) ===
+-- (none pending as of 2026-04-09)
+SELECT 1; -- no-op so the file is never empty
