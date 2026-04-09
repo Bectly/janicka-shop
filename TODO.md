@@ -329,7 +329,7 @@ Spec preserved. Fullscreen welcome page `/admin/welcome` with JARVIS dedication,
 - ~~Browse abandonment email system~~ (C2338) — BrowseAbandonment model, 5s dwell tracker, 4h delay cron, authentic scarcity copy, 7d frequency cap
 - ~~Abandoned cart recovery emails~~ (C2303) — AbandonedCart model, captureAbandonedCart() on email blur, 3-email sequence cron, GDPR unsubscribe
 
-### NEXT SPRINT — Phase 3 Checkout + Vinted Import (UPDATED C2341)
+### NEXT SPRINT — April 2026 (UPDATED C2378)
 ~~0. Next.js CVE patch~~ ✅ DONE (C2312 — already at 16.2.3)
 ~~0b. shadcn/ui Radix migration~~ ✅ NOT APPLICABLE (project uses @base-ui/react, no legacy radix packages)
 1. ~~**Mobile filter drawer**~~ ✅ DONE (C2308)
@@ -337,13 +337,13 @@ Spec preserved. Fullscreen welcome page `/admin/welcome` with JARVIS dedication,
 ~~2b. Instant search: desktop + mobile~~  ✅ DONE (C2289 desktop, C2296 mobile-nav)
 3. **`nuqs` adoption** (Phase 2) — v2.8.9 confirmed stable. Type-safe URL params, debounced price input. Eliminates ~50 lines of manual parsing. LOW priority given other open items.
 ~~4. Color filter + filter counts~~ ✅ DONE (C2308 — color swatches + counts in filter drawer)
-6. **Server-side cart validation** (Phase 3) — `validateCart()` Server Action at checkout initiation. Never trust client cart.
+~~6. Server-side cart validation~~ ✅ DONE — `createOrder` validates server-side in DB transaction (prices, stock, reservations). See Phase 3.
 ~~7. Accordion checkout + Mapy.com autocomplete~~ ✅ DONE (C2312 accordion + C2326 Mapy.com autocomplete). **Remaining**: Packeta widget + Comgate payment.
-8. **Comgate payment** (Phase 3) — THE single biggest missing feature. Hybrid: Apple/Google Pay via SDK, cards via iframe (504×679px, `embedded=true`), bank/BNPL redirect. SDK v2.0.15 (18th consecutive check — C2341). **CSP**: `frame-src https://payments.comgate.cz`. Full spec in Phase 3 item.
+8. **Comgate payment** (Phase 3) — THE single biggest missing feature. Hybrid: Apple/Google Pay via SDK, cards via iframe (504×679px, `embedded=true`), bank/BNPL redirect. ⚠️ SDK still v2.0.15 (**20th consecutive check — C2378**). **CSP**: `frame-src https://payments.comgate.cz`. Full spec in Phase 3 item.
 ~~9. QR code payment~~ ✅ DONE (C2293). **Remaining**: admin order detail + email PNG.
 ~~11. Abandoned cart recovery emails~~ ✅ DONE (C2303 — 3-email sequence, cron, GDPR unsubscribe)
 ~~12. Browse abandonment email~~ ✅ DONE (C2338 — BrowseAbandonment model, 5s tracker, cron, Czech copy)
-12b. **⏰ TIME-SENSITIVE: Vinted T&C April 30 messaging** — prep Instagram Stories copy + homepage trust update for April 28–May 1 window. Angles: (1) AI training data clause — perpetual non-opt-out license for user photos, (2) AI-generated photos explicitly allowed on Vinted (buyers can't tell real from AI), (3) Vinted.cz Trustpilot 2.1/5 (76% one-star). Janicka copy: "Tvoje fotky jsou tvoje. Nikdy je nepoužijeme k trénování AI." **21 days away (April 9 → April 30).** This is the strongest competitive messaging window of Q2 2026. **C2329 Scout**: Czech media still ZERO coverage as of April 9 — window 100% open. Vinted sends T&C notification emails ~2 days before deadline = April 28 is the peak awareness moment.
+12b. **⏰ TIME-SENSITIVE: Vinted T&C April 30 messaging** — prep Instagram Stories copy + homepage trust update for April 28–May 1 window. Angles: (1) AI training data clause — perpetual non-opt-out license for user photos, (2) AI-generated photos explicitly allowed on Vinted (buyers can't tell real from AI), (3) Vinted.cz Trustpilot 2.1/5 (76% one-star, 13 reviews — C2378 Scout: unchanged). Janicka copy: "Tvoje fotky jsou tvoje. Nikdy je nepoužijeme k trénování AI." **⚠️ 19 DAYS (April 9 → IMPLEMENT APRIL 28).** This is the strongest competitive messaging window of Q2 2026. **C2378 Scout**: Czech media still ZERO coverage (15th consecutive scan, window WIDE OPEN). Vinted sends T&C notification emails ~2 days before deadline = April 28 is peak awareness. **See TODO Phase 2 for full implementation spec → [BOLT] item.**
 12c. **Google Search Console shipping/returns setup (NEW C2311)** — 30 min, zero coding, unlocks Google Shopping snippets + Merchant Center eligibility. See Phase 8c item.
 12d. **Pinterest Business account + catalog submission (NEW C2311)** — zero dev work, feed is ready. See Phase 8c item. Do BEFORE Instagram Shopping.
 
