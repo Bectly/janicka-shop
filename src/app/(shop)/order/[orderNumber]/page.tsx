@@ -12,6 +12,7 @@ import { TrackPurchase } from "@/components/shop/track-purchase";
 import { generateOrderQrPayment, orderNumberToVariableSymbol } from "@/lib/payments/qr-platba";
 import { QrPaymentCode } from "@/components/shop/qr-payment-code";
 import { PaymentStatusPoller } from "@/components/shop/payment-status-poller";
+import { CreateAccountCard } from "@/components/shop/create-account-card";
 
 interface Props {
   params: Promise<{ orderNumber: string }>;
@@ -58,6 +59,7 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
   const isPaid = order.status === "paid";
   const isCod = order.paymentMethod === "cod";
   const isPending = order.status === "pending" && !isCod;
+  const showAccountCreation = !order.customer.password;
 
   // Generate QR payment code for bank transfer orders that are still pending
   const isBankTransfer = order.paymentMethod === "bank_transfer";
@@ -254,6 +256,11 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
           </div>
         )}
       </div>
+
+      {/* Post-purchase account creation — only for guests without password */}
+      {showAccountCreation && token && (
+        <CreateAccountCard orderNumber={order.orderNumber} accessToken={token} />
+      )}
 
       <div className="mt-8">
         <Button render={<Link href="/products" />}>
