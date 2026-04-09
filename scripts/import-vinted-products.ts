@@ -23,6 +23,21 @@ import * as fs from "fs";
 import * as path from "path";
 import { PrismaClient } from "@prisma/client";
 
+async function createDb(): Promise<PrismaClient> {
+  const tursoUrl = process.env.TURSO_DATABASE_URL;
+  const tursoToken = process.env.TURSO_AUTH_TOKEN;
+  if (tursoUrl && tursoToken) {
+    const { PrismaLibSQL } = await import("@prisma/adapter-libsql");
+    const adapter = new PrismaLibSQL({
+      url: tursoUrl.trim(),
+      authToken: tursoToken.trim(),
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return new PrismaClient({ adapter } as any);
+  }
+  return new PrismaClient();
+}
+
 const PRODUCTS_FILE = path.join(__dirname, "vinted-data", "products.json");
 
 // Condition mapping: Vinted CZ → Janička Shop
@@ -165,7 +180,7 @@ async function main() {
     `Skipped (no title/price): ${rawProducts.length - products.length}`
   );
 
-  const db = new PrismaClient();
+  const db = await createDb();
 
   try {
     // Get all categories

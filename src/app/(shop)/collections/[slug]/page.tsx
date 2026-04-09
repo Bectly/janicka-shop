@@ -27,6 +27,15 @@ const getCollection = cache(async (slug: string) => {
   });
 });
 
+export async function generateStaticParams() {
+  const db = await getDb();
+  const collections = await db.collection.findMany({
+    where: { active: true },
+    select: { slug: true },
+  });
+  return collections.map((c) => ({ slug: c.slug }));
+}
+
 interface Props {
   params: Promise<{ slug: string }>;
 }
