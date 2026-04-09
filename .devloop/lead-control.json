@@ -7,7 +7,7 @@
     "trace": 6
   },
   "session_manager": {},
-  "last_bolt_commit_cycle": 2442,
+  "last_bolt_commit_cycle": 2443,
   "updated_at_cycle": 2427,
   "notes": "C2427 Lead: Scarcity badge + DevChat backend confirmed DONE (C2408). New Bolt directives: (1) DevChat widget → src/components/dev-chat/dev-chat-widget.tsx, add to admin layout (NOT root). 56px bubble, fixed div panel (not Drawer), 30s poll, see TODO spec. (2) revalidate 30→3600 on product+collection pages. (3) Time-elapsed badge replacing static Novinka (see TODO). Trace paused until Bolt commits.",
   "schema": {
