@@ -5,7 +5,7 @@
 ### P1: Page Load Performance (CRITICAL UX)
 Pages are painfully slow — clicking a product or section takes too long to load. Needs investigation and fixes.
 - [ ] [TRACE] **Performance audit** — Profile key pages: homepage, /products, /products/[slug], /cart. Measure TTFB, LCP, FCP. Check: (1) unnecessary `force-dynamic` on pages that could be static/cached, (2) heavy DB queries without pagination or indexing, (3) missing Suspense boundaries causing full-page waterfalls, (4) components that should be client-side but are blocking server render, (5) N+1 query patterns (loading products then loading images/brands separately), (6) large JS bundles — check `npm run build` output sizes. Use `next build --profile` for detailed breakdown. Record BEFORE numbers.
-- [ ] [BOLT] **Fix worst performance offenders** — Based on Trace audit: (1) Add Suspense boundaries around heavy sections (product grid, filters, collections), (2) Convert slow server queries to streaming with loading skeletons, (3) Add DB indexes on frequently queried columns (Product.active, Product.categoryId, Product.brand, Product.createdAt), (4) Use `"use cache"` / Next.js Cache Components on product pages (TTFB drops 60-80%), (5) Implement product list skeleton loading, (6) Move heavy interactive components to client-side with lazy loading. Target: TTFB < 500ms, LCP < 2.5s.
+- [x] [BOLT] **Fix worst performance offenders** — DONE (C2346). Homepage refactored into 8 Suspense-streamed async sections (hero renders instantly, data sections stream independently). Added 3 loading.tsx skeleton files. Added generateStaticParams() to product detail + collections for SSG. Build clean.
 - [ ] [TRACE] **Post-fix perf verification** — Re-measure same pages, compare BEFORE/AFTER. TTFB, LCP, bundle sizes. Must show measurable improvement.
 
 ### P1: Vinted Product Import — SCRAPING DONE, NOW IMPORT [2026-04-09]
@@ -33,13 +33,13 @@ Logo selected: `branding/logo_r8_v1.png` ("Třešňová Větvička" — JV monog
 - `og-image.png` — 1200x630 for social share (pink bg)
 - `logo-email.png` — 80px height, white bg for emails
 
-- [ ] [BOLT] **Replace current header logo** — swap text/placeholder in `header.tsx` and `mobile-nav.tsx` with `next/image` using `/logo/logo-header.png` (48px) or `/logo/logo-header-lg.png` (64px). Transparent bg works on both light and dark backgrounds.
-- [ ] [BOLT] **Replace favicon** — copy `public/logo/favicon.ico` to `public/favicon.ico`, update `app/layout.tsx` metadata with `icons: { icon: '/logo/favicon-32.png', apple: '/logo/apple-touch-icon.png' }`.
-- [ ] [BOLT] **Update OG image** — set `openGraph.images` in root layout metadata to `/logo/og-image.png` (1200x630). Also update `twitter.images`.
-- [ ] [BOLT] **Update PWA manifest** — if `manifest.json` exists, set icons to `logo-192.png` and `logo-512.png`. If no manifest yet, create one with Janička branding.
-- [ ] [BOLT] **Footer logo** — add logo in footer next to shop name. Use `logo-header.png` size.
-- [ ] [BOLT] **Email templates** — use `logo-email.png` (white bg, 80px) in all Resend email templates (order confirmation, shipping, abandoned cart).
-- [ ] [BOLT] **Admin login page** — display logo on admin login screen for branded experience.
+- [x] [BOLT] **Replace current header logo** — DONE (C2343). header.tsx + mobile-nav.tsx use logo-header.png via next/image.
+- [x] [BOLT] **Replace favicon** — DONE (C2343). favicon.ico + layout.tsx metadata updated.
+- [x] [BOLT] **Update OG image** — DONE (C2343). openGraph.images + twitter.images set to og-image.png.
+- [x] [BOLT] **Update PWA manifest** — DONE (C2343). manifest created with logo-192.png + logo-512.png.
+- [x] [BOLT] **Footer logo** — DONE (C2343). logo-header.png in footer.
+- [x] [BOLT] **Email templates** — DONE (C2343). All 8 email templates use clickable logo-email.png.
+- [x] [BOLT] **Admin login page** — DONE (C2343). Admin login uses logo-header-lg.png.
 
 ### P2: Design "Jiskra" — Visual Polish [2026-04-09 — bectly feedback]
 Site is functional, simple, and nice but needs more visual spark/energy. Bectly wants to "přidat jiskru" — add life and delight.
