@@ -2,8 +2,19 @@
   "pause": {},
   "force_next": null,
   "interval_override": {},
+  "session_manager": {},
   "last_bolt_commit_cycle": 0,
-  "notes": "Lead control file — Lead writes here, orchestrator reads every tick.",
-  "updated_by": "init",
-  "updated_at": "2026-04-09"
+  "updated_at_cycle": 0,
+  "notes": "Lead control file. Lead reads and writes this. Orchestrator reads every tick and applies overrides.",
+  "schema": {
+    "pause": "Map of agent_name → condition ('paused' | 'until_next_bolt_commit')",
+    "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
+    "interval_override": "Map of agent_name → run_every integer (overrides DB value)",
+    "session_manager": {
+      "kill_zombie_tasks": "bool — kill tasks stuck as 'running' for >30min",
+      "deploy_now": "bool — trigger vercel deploy --prod immediately",
+      "requeue_failed": "list of task IDs to requeue (max 5)",
+      "reset_no_change_counter": "bool — prevent auto-pause from consecutive no-change cycles"
+    }
+  }
 }
