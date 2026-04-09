@@ -18,6 +18,14 @@ Pages are painfully slow — clicking a product or section takes too long to loa
 Scripts ready in `scripts/`. Janičky products MUST be migrated from Vinted. See Phase 8b below for full task breakdown.
 - [ ] [BOLT] **Run the Vinted scraper NOW** — `scripts/scrape-vinted.ts` is ready. Test it, fix any broken selectors against live Vinted DOM, scrape ALL products from https://www.vinted.cz/member/149371637. ALL photos, ALL details. See Phase 8b for full spec.
 
+### P1: Replace UploadThing with Cloudflare R2 [2026-04-09 — bectly decision]
+UploadThing is $25/month and was NEVER configured (no token on Vercel, no .env.local). Switch ALL image storage to Cloudflare R2 (10GB free, no egress fees). R2 account already exists in JARVIS DB (`cloudflare-r2` key). Public bucket URL: `https://pub-5652e5e0857941e69e29ee64c66905dd.r2.dev`
+
+- [ ] [BOLT] **Create R2 bucket for janicka-shop** — Use existing Cloudflare account. Create bucket `janicka-shop-images`. Set up public access (custom domain or R2.dev subdomain). Get S3-compatible API credentials (Access Key ID + Secret). Store in JARVIS DB as `r2-janicka` and add to Vercel env vars.
+- [ ] [BOLT] **Replace UploadThing with R2 in codebase** — Remove `uploadthing`, `@uploadthing/react` packages. Replace `app/api/uploadthing/` routes with new `app/api/upload/` route using `@aws-sdk/client-s3` (S3-compatible with R2). Update `image-upload.tsx` admin component to upload via new endpoint. Update `next.config.ts` remotePatterns for R2 domain. Update `product-form.tsx` and `quick-add-form.tsx`. All existing product image URLs that point to `ufs.sh` need migration or are seed data (check which).
+- [ ] [BOLT] **Update Vinted import script** — `scripts/import-vinted-products.ts` currently says "upload to UploadThing". Change to upload to R2 bucket via S3 API. Batch upload with concurrency limit (5 parallel).
+- [ ] [TRACE] **Verify R2 integration** — upload test image, verify public URL works, verify `next/image` optimization works with R2 URLs, verify admin product form upload works end-to-end.
+
 ### P2: Logo Integration — Třešňová Větvička [2026-04-09 — bectly selected]
 Logo selected: `branding/logo_r8_v1.png` ("Třešňová Větvička" — JV monogram with cherry branch). All variants generated in `public/logo/`:
 - `logo-transparent.png` — full size, transparent bg (1408x768)

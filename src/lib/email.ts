@@ -596,7 +596,7 @@ function buildShippingNotificationHtml(data: ShippingNotificationData): string {
 
   const itemsHtml = data.items.length > 0
     ? `<div style="margin-top: 20px; border-top: 1px solid #f0f0f0; padding-top: 16px;">
-        <p style="margin: 0 0 8px; font-size: 13px; color: #999; text-transform: uppercase; letter-spacing: 0.5px;">Va&scaron;e kousky</p>
+        <p style="margin: 0 0 8px; font-size: 13px; color: #999; text-transform: uppercase; letter-spacing: 0.5px;">Tvoje kousky</p>
         ${data.items.map((item) => `
           <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #fafafa;">
             <span style="color: #333; font-size: 14px;">${escapeHtml(item.name)}${item.size ? ` <span style="color: #999;">(${escapeHtml(item.size)})</span>` : ""}</span>
@@ -629,9 +629,9 @@ function buildShippingNotificationHtml(data: ShippingNotificationData): string {
         </div>
         <h2 style="margin: 0 0 8px; font-size: 20px; color: #1a1a1a;">Objedn&aacute;vka odesl&aacute;na!</h2>
         <p style="margin: 0 0 4px; color: #666;">
-          ${escapeHtml(data.customerName)}, va&scaron;e objedn&aacute;vka
+          ${escapeHtml(data.customerName)}, tvoje objedn&aacute;vka
           <strong style="color: #1a1a1a;">${escapeHtml(data.orderNumber)}</strong>
-          je na cest&ecaron; k v&aacute;m.
+          je na cest&ecaron; k tob&ecaron;.
         </p>
         ${trackingHtml}
       </div>
@@ -954,7 +954,7 @@ function buildAbandonedCartEmailWrapper(
     <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
       <p style="margin: 0;">Janička Shop — Second hand móda</p>
       <p style="margin: 4px 0 0;">
-        Nechcete dostávat tyto emaily?
+        Nechceš dostávat tyto emaily?
         <a href="${unsubscribeUrl}" style="color: #999; text-decoration: underline;">Odhlásit se</a>
       </p>
     </div>
@@ -1585,7 +1585,7 @@ function buildBrowseAbandonmentHtml(data: BrowseAbandonmentEmailData): string {
     <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
       <p style="margin: 0;">Janička Shop — Second hand móda</p>
       <p style="margin: 4px 0 0;">
-        <a href="${baseUrl}/odhlasit-novinky?email=${encodeURIComponent(data.email)}" style="color: #999; text-decoration: underline;">Odhlásit se z odběru</a>
+        <a href="${baseUrl}/api/unsubscribe/browse-abandonment?email=${encodeURIComponent(data.email)}" style="color: #999; text-decoration: underline;">Odhlásit se z odběru</a>
       </p>
     </div>
   </div>

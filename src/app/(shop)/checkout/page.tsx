@@ -50,6 +50,7 @@ import {
   COD_SURCHARGE,
 } from "@/lib/constants";
 import { MobileCheckoutSummary } from "@/components/shop/mobile-checkout-summary";
+import { CUSTOMER_EMAIL_KEY } from "@/components/shop/browse-abandonment-tracker";
 
 const emptySubscribe = () => () => {};
 
@@ -271,7 +272,7 @@ export default function CheckoutPage() {
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
 
       // Persist email for browse abandonment tracking
-      try { localStorage.setItem("janicka-customer-email", email.toLowerCase()); } catch { /* */ }
+      try { localStorage.setItem(CUSTOMER_EMAIL_KEY, email.toLowerCase()); } catch { /* */ }
 
       if (items.length === 0) return;
 
