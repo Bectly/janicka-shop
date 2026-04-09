@@ -98,10 +98,10 @@ export default async function AdminOrdersPage({
             Objednávky
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {orders.length}{" "}
-            {orders.length === 1
+            {ordersWithDeadline.length}{" "}
+            {ordersWithDeadline.length === 1
               ? "objednávka"
-              : orders.length >= 2 && orders.length <= 4
+              : ordersWithDeadline.length >= 2 && ordersWithDeadline.length <= 4
                 ? "objednávky"
                 : "objednávek"}
             {isFiltered && " (filtrováno)"}
@@ -172,7 +172,7 @@ export default async function AdminOrdersPage({
               </tr>
             </thead>
             <tbody>
-              {orders.length === 0 ? (
+              {ordersWithDeadline.length === 0 ? (
                 <tr>
                   <td
                     colSpan={7}
@@ -182,18 +182,30 @@ export default async function AdminOrdersPage({
                   </td>
                 </tr>
               ) : (
-                orders.map((order) => (
+                ordersWithDeadline.map((order) => (
                   <tr
                     key={order.id}
                     className="border-b last:border-0 hover:bg-muted/30"
                   >
                     <td className="px-4 py-3">
-                      <Link
-                        href={`/admin/orders/${order.id}`}
-                        className="font-medium text-primary hover:underline"
-                      >
-                        {order.orderNumber}
-                      </Link>
+                      <div className="flex items-center gap-1.5">
+                        <Link
+                          href={`/admin/orders/${order.id}`}
+                          className="font-medium text-primary hover:underline"
+                        >
+                          {order.orderNumber}
+                        </Link>
+                        {order.deadlineUrgency === "overdue" && (
+                          <span title="Po termínu doručení!">
+                            <AlertTriangle className="size-3.5 text-red-500" />
+                          </span>
+                        )}
+                        {order.deadlineUrgency === "urgent" && (
+                          <span title="Termín doručení do 5 dní">
+                            <Clock className="size-3.5 text-amber-500" />
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       <div>
