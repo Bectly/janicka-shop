@@ -114,7 +114,11 @@ export async function updateOrderStatus(orderId: string, status: string) {
   } else {
     await db.order.update({
       where: { id: orderId },
-      data: { status },
+      data: {
+        status,
+        // Record shipping timestamp when order transitions to shipped
+        ...(status === "shipped" ? { shippedAt: new Date() } : {}),
+      },
     });
   }
 

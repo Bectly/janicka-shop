@@ -93,6 +93,8 @@ model Order {
   shippingMethod String?
   shippingPointId String?
   trackingNumber String?
+  shippedAt         DateTime?   // Set when admin changes status to "shipped"
+  reviewEmailSentAt DateTime?   // Set when review request email is sent (prevents duplicates)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   items         OrderItem[]

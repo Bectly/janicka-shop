@@ -69,6 +69,9 @@ export default async function AdminOrderDetailPage({ params }: Props) {
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Vytvořena {formatDate(order.createdAt)}
+            {order.shippedAt && (
+              <> · Odesláno {formatDate(order.shippedAt)}</>
+            )}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -245,6 +248,25 @@ export default async function AdminOrderDetailPage({ params }: Props) {
               </p>
             </div>
           </div>
+
+          {/* Email status */}
+          {order.shippedAt && (
+            <div className="rounded-xl border bg-card p-5 shadow-sm">
+              <h2 className="font-heading text-base font-semibold text-foreground">
+                Emaily
+              </h2>
+              <div className="mt-3 space-y-1 text-sm text-muted-foreground">
+                <p>
+                  <span className="font-medium text-foreground">Odeslání: </span>
+                  {order.shippedAt ? formatDate(order.shippedAt) : "—"}
+                </p>
+                <p>
+                  <span className="font-medium text-foreground">Žádost o recenzi: </span>
+                  {order.reviewEmailSentAt ? formatDate(order.reviewEmailSentAt) : "Čeká (7 dní po odeslání)"}
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Note */}
           {order.note && (

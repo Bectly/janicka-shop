@@ -954,3 +954,108 @@ export async function sendAbandonedCartEmail(
     return false;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Review request email (sent 7 days after shipping)
+// ---------------------------------------------------------------------------
+
+interface ReviewRequestEmailData {
+  orderNumber: string;
+  customerName: string;
+  customerEmail: string;
+  accessToken: string;
+  items: { name: string; size?: string | null; color?: string | null }[];
+}
+
+function buildReviewRequestHtml(data: ReviewRequestEmailData): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const orderUrl = `${baseUrl}/order/${data.orderNumber}?token=${data.accessToken}`;
+  const shopUrl = `${baseUrl}/products?sort=newest`;
+
+  const itemsList = data.items
+    .map((item) => {
+      const detail = [item.size, item.color].filter(Boolean).join(" · ");
+      return `<li style="padding: 4px 0; color: #333;">${escapeHtml(item.name)}${detail ? ` <span style="color: #666; font-size: 13px;">(${escapeHtml(detail)})</span>` : ""}</li>`;
+    })
+    .join("");
+
+  return `<!DOCTYPE html>
+<html lang="cs">
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/></head>
+<body style="margin: 0; padding: 0; background-color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
+
+    <div style="text-align: center; padding: 24px 0;">
+      <h1 style="margin: 0; font-size: 24px; color: #1a1a1a;">Janička Shop</h1>
+      <p style="margin: 4px 0 0; font-size: 13px; color: #999;">Second hand móda pro tebe</p>
+    </div>
+
+    <div style="background: #fff; border-radius: 12px; padding: 32px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+
+      <div style="text-align: center;">
+        <div style="width: 64px; height: 64px; background: #fdf4ff; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+          <span style="font-size: 32px; line-height: 64px;">&#11088;</span>
+        </div>
+        <h2 style="margin: 0 0 8px; font-size: 20px; color: #1a1a1a;">Jak jsi spokojená?</h2>
+        <p style="margin: 0 0 16px; color: #666; font-size: 15px; line-height: 1.6;">
+          ${escapeHtml(data.customerName)}, tvoje objednávka <strong style="color: #1a1a1a;">${escapeHtml(data.orderNumber)}</strong> je u tebe už týden. Rádi bychom věděli, jak jsi spokojená!
+        </p>
+      </div>
+
+      <div style="background: #fdf4ff; border-radius: 8px; padding: 16px 20px; margin: 16px 0;">
+        <p style="margin: 0 0 8px; font-weight: 600; color: #1a1a1a; font-size: 14px;">Tvoje kousky:</p>
+        <ul style="margin: 0; padding: 0 0 0 20px; font-size: 14px; line-height: 1.6;">
+          ${itemsList}
+        </ul>
+      </div>
+
+      <p style="margin: 16px 0 0; color: #666; font-size: 14px; line-height: 1.6; text-align: center;">
+        Tvůj názor nám pomáhá zlepšovat služby a pomůže dalším zákaznicím s rozhodováním.
+      </p>
+
+      <div style="text-align: center; margin-top: 24px;">
+        <a href="${orderUrl}" style="display: inline-block; background: #1a1a1a; color: #fff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
+          Zobrazit objednávku
+        </a>
+      </div>
+
+      <div style="text-align: center; margin-top: 16px;">
+        <a href="${shopUrl}" style="color: #666; font-size: 13px; text-decoration: underline;">
+          Prohlédnout novinky
+        </a>
+      </div>
+    </div>
+
+    <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
+      <p style="margin: 0;">Janička Shop — Second hand móda</p>
+      <p style="margin: 4px 0 0;">Tento email jste obdrželi, protože jste u nás nakoupili.</p>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+/**
+ * Send review request email 7 days after shipping.
+ * Non-blocking: logs errors instead of throwing.
+ */
+export async function sendReviewRequestEmail(data: ReviewRequestEmailData): Promise<boolean> {
+  const resend = getResendClient();
+  if (!resend) {
+    console.warn("[Email] RESEND_API_KEY not set — skipping review request email");
+    return false;
+  }
+
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: data.customerEmail,
+      subject: `Jak jsi spokojená? — ${data.orderNumber} — Janička Shop`,
+      html: buildReviewRequestHtml(data),
+    });
+    return true;
+  } catch (error) {
+    console.error(`[Email] Failed to send review request email for ${data.orderNumber}:`, error);
+    return false;
+  }
+}
