@@ -464,6 +464,7 @@ export async function createOrder(
     note: data.note ?? null,
     accessToken: order.accessToken ?? "",
     isCod,
+    expectedDeliveryDate: order.expectedDeliveryDate ?? null,
   }).catch((err: unknown) => {
     console.error(`[Checkout] Order confirmation email failed for ${order.orderNumber}:`, err);
   });

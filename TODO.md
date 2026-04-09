@@ -258,6 +258,7 @@ Spec preserved. Fullscreen welcome page `/admin/welcome` with JARVIS dedication,
 (2) **Google Search Console** — Verify domain → Shopping experience → Shipping (flat 69 CZK / free ≥1500 CZK, 2-5 days) + Returns (14 days). 30 min, unlocks Google Shopping snippets.
 (3) **Pinterest Business** — business.pinterest.com → create account → Rich Pins validator (paste product URL) → Catalogs → connect `/api/feed/pinterest`. Feed is ready ✅.
 (4) **Instagram Shopping** — Meta Business Manager → Commerce Manager → connect Heureka XML feed as catalog. Zero dev work.
+(5) **Comgate sandbox credentials** — Email podpora@comgate.cz or call +420 288 288 700 to request test/sandbox credentials. Required before end-to-end payment testing (no public test keys exist). Typical response: 1 business day. Also set R2_ACCESS_KEY_ID + R2_SECRET_ACCESS_KEY in Vercel env vars (R2 bucket `janicka-shop-images` already created — see item above).
 
 ## Phase 10c: EU Regulatory & Market Opportunity
 **⏰ SCHEDULED JUNE 2026**: EU customs duty messaging — From July 1, 2026: €3 flat duty on sub-€150 non-EU parcels (Shein/Temu +15-50%). Copy ready: "Nakupuj lokálně — bez cla, bez čekání, bez překvapení." Add to homepage trust section + marketing. Create task when we're 3-4 weeks from July 1.
