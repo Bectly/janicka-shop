@@ -1,5 +1,8 @@
+"use client";
+
+import { useCallback, useState } from "react";
 import Image from "next/image";
-import { Landmark } from "lucide-react";
+import { Landmark, Copy, Check, Smartphone } from "lucide-react";
 
 interface QrPaymentCodeProps {
   /** Base64 data URL of the QR code image */
@@ -10,16 +13,64 @@ interface QrPaymentCodeProps {
   totalCzk: number;
   /** Variable symbol (for display) */
   variableSymbol: string;
+  /** IBAN for display (passed from server) */
+  iban: string;
+}
+
+function CopyButton({ value, label }: { value: string; label: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback for older browsers
+      const textarea = document.createElement("textarea");
+      textarea.value = value;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }, [value]);
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      aria-label={`Kopírovat ${label}`}
+      title={`Kopírovat ${label}`}
+    >
+      {copied ? (
+        <Check className="size-3 text-emerald-600" />
+      ) : (
+        <Copy className="size-3" />
+      )}
+    </button>
+  );
 }
 
 export function QrPaymentCode({
   qrDataUrl,
   totalCzk,
   variableSymbol,
+  iban,
 }: QrPaymentCodeProps) {
-  const iban = process.env.SHOP_IBAN ?? "";
   // Format IBAN for display: CZ## #### #### #### #### ####
   const formattedIban = iban.replace(/(.{4})/g, "$1 ").trim();
+
+  const formattedAmount = new Intl.NumberFormat("cs-CZ", {
+    style: "currency",
+    currency: "CZK",
+    maximumFractionDigits: 0,
+  }).format(totalCzk);
 
   return (
     <div className="rounded-xl border bg-card p-6 shadow-sm">
@@ -29,14 +80,39 @@ export function QrPaymentCode({
           QR platba bankovním převodem
         </h3>
       </div>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Naskenujte QR kód svou bankovní aplikací — platební údaje se vyplní
-        automaticky.
-      </p>
 
-      <div className="mt-4 flex flex-col items-center gap-4 sm:flex-row sm:items-start">
+      {/* Step-by-step instructions */}
+      <ol className="mt-4 space-y-2 text-sm text-muted-foreground">
+        <li className="flex items-start gap-2">
+          <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+            1
+          </span>
+          <span>
+            Otevřete svou <strong className="text-foreground">bankovní aplikaci</strong> v telefonu
+          </span>
+        </li>
+        <li className="flex items-start gap-2">
+          <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+            2
+          </span>
+          <span>
+            Zvolte <strong className="text-foreground">platbu QR kódem</strong>{" "}
+            <Smartphone className="mb-0.5 inline size-3.5" /> a naskenujte kód níže
+          </span>
+        </li>
+        <li className="flex items-start gap-2">
+          <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+            3
+          </span>
+          <span>
+            Údaje se vyplní automaticky — stačí <strong className="text-foreground">potvrdit platbu</strong>
+          </span>
+        </li>
+      </ol>
+
+      <div className="mt-5 flex flex-col items-center gap-5 sm:flex-row sm:items-start">
         {/* QR Code */}
-        <div className="shrink-0 rounded-lg border bg-white p-2">
+        <div className="shrink-0 rounded-lg border-2 border-dashed border-primary/20 bg-white p-3">
           <Image
             src={qrDataUrl}
             alt="QR kód pro bankovní převod"
@@ -47,38 +123,49 @@ export function QrPaymentCode({
         </div>
 
         {/* Payment details */}
-        <div className="w-full space-y-2 text-sm">
-          <div className="flex justify-between gap-2">
-            <span className="text-muted-foreground">Číslo účtu (IBAN)</span>
-            <span className="font-mono text-xs font-medium">
-              {formattedIban}
-            </span>
+        <div className="w-full space-y-3 text-sm">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Platební údaje
+          </p>
+          <div className="space-y-2 rounded-lg bg-muted/50 p-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-muted-foreground">IBAN</span>
+              <span className="flex items-center gap-1">
+                <span className="font-mono text-xs font-medium">
+                  {formattedIban}
+                </span>
+                <CopyButton value={iban} label="IBAN" />
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-muted-foreground">Částka</span>
+              <span className="font-semibold text-foreground">
+                {formattedAmount}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-muted-foreground">Variabilní symbol</span>
+              <span className="flex items-center gap-1">
+                <span className="font-mono font-medium">{variableSymbol}</span>
+                <CopyButton value={variableSymbol} label="variabilní symbol" />
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-muted-foreground">Měna</span>
+              <span className="font-medium">CZK</span>
+            </div>
           </div>
-          <div className="flex justify-between gap-2">
-            <span className="text-muted-foreground">Částka</span>
-            <span className="font-medium">
-              {new Intl.NumberFormat("cs-CZ", {
-                style: "currency",
-                currency: "CZK",
-                maximumFractionDigits: 0,
-              }).format(totalCzk)}
-            </span>
-          </div>
-          <div className="flex justify-between gap-2">
-            <span className="text-muted-foreground">Variabilní symbol</span>
-            <span className="font-mono font-medium">{variableSymbol}</span>
-          </div>
-          <div className="flex justify-between gap-2">
-            <span className="text-muted-foreground">Měna</span>
-            <span className="font-medium">CZK</span>
-          </div>
+
+          <p className="text-xs text-muted-foreground">
+            Nemáte QR skener? Opište údaje výše do své internetové banky.
+          </p>
         </div>
       </div>
 
-      <p className="mt-4 text-xs text-muted-foreground">
-        Po připsání platby na účet vám pošleme potvrzení emailem. Zpracování
-        převodu obvykle trvá 1–2 pracovní dny.
-      </p>
+      <div className="mt-4 rounded-lg bg-amber-50 px-3 py-2.5 text-xs text-amber-700">
+        Po připsání platby vám pošleme potvrzení emailem. Okamžité převody
+        dorazí během pár sekund, standardní převody do 1–2 pracovních dnů.
+      </div>
     </div>
   );
 }

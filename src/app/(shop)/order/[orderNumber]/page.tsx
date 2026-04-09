@@ -136,6 +136,7 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
             spaydString={qrPayment.spaydString}
             totalCzk={order.total}
             variableSymbol={orderNumberToVariableSymbol(order.orderNumber)}
+            iban={process.env.SHOP_IBAN ?? ""}
           />
         </div>
       )}
