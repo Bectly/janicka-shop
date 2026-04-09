@@ -3,9 +3,9 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2713,
+  "last_bolt_commit_cycle": 2715,
   "paused_at_bolt_cycle": 2703,
-  "notes": "C2711 Lead: Research cycle. Backlog was 3 items (very lean) → added 2 new Bolt tasks. (1) Image optimization: blur placeholder + AVIF format (Scout C2711) — product-card.tsx + product-gallery.tsx + next.config.ts, zero credentials needed. (2) Vinted T&C April 28 banner — time-sensitive, implement by April 27 to be live for April 28-May 1 peak window. Comgate 28th check: still v2.0.15 (no action). Vinted T&C: Czech media STILL zero coverage (20th consecutive scan) — window fully intact. No new CZ competitors (20th scan). force_next=bolt confirmed for PWA manifest. After PWA manifest done, Bolt should tackle image optimization, then Vinted banner. Trace: after each Bolt commit, verify build passes + correct runtime behavior.",
+  "notes": "C2716 Lead: Verified+marked 4 tasks DONE (#5 GPSR, #8 PWA manifest, #10 image optimization, #11 Apple Pay — all code-confirmed). Backlog was critically lean (1 open) → added 2 new tasks: Heureka ORDER_INFO v2 (graceful no-op pattern) + Next.js 16 use-cache on homepage/listing/PDP. Scans: Comgate 29th v2.0.15 (no change), Vinted CZ media 21st zero (window intact, 21 days to April 30), 21st no new CZ competitor. Bolt priority: (1) Vinted T&C April 28 banner — TIME-SENSITIVE, must be live by April 27. (2) Heureka ORDER_INFO integration. (3) use-cache. Trace: running security audit #3, continue — after next Bolt commit verify build.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",

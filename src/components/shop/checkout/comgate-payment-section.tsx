@@ -90,7 +90,7 @@ export function ComgatePaymentSection({ orderNumber, accessToken, onSuccess }: P
       const res = await fetch("/api/payments/comgate/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderNumber, method }),
+        body: JSON.stringify({ orderNumber, method, accessToken }),
       });
 
       if (!res.ok) {
@@ -142,7 +142,7 @@ export function ComgatePaymentSection({ orderNumber, accessToken, onSuccess }: P
         const res = await fetch("/api/payments/comgate/create", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ orderNumber, method: "CARD" }),
+          body: JSON.stringify({ orderNumber, method: "CARD", accessToken }),
         });
 
         if (!res.ok) {

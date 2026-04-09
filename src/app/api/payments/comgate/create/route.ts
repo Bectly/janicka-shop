@@ -21,6 +21,7 @@ export const dynamic = "force-dynamic";
 const requestSchema = z.object({
   orderNumber: z.string().min(1).max(64).regex(/^JN-/),
   method: z.enum(["CARD", "APPLE_PAY", "GOOGLE_PAY"]),
+  accessToken: z.string().min(1).max(256),
 });
 
 // Comgate method codes per payment type
@@ -46,7 +47,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { orderNumber, method } = parsed.data;
+  const { orderNumber, method, accessToken } = parsed.data;
 
   const db = await getDb();
   const order = await db.order.findUnique({
@@ -62,8 +63,9 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  if (!order) {
-    return NextResponse.json({ error: "Objednávka nenalezena" }, { status: 404 });
+  // Return generic 403 for both missing and token-mismatch to prevent enumeration
+  if (!order || order.accessToken !== accessToken) {
+    return NextResponse.json({ error: "Přístup odepřen" }, { status: 403 });
   }
 
   if (order.status !== "pending") {
