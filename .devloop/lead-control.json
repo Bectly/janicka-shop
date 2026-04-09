@@ -1,13 +1,11 @@
 {
-  "pause": {
-    "trace": "until_next_bolt_commit"
-  },
-  "force_next": "trace",
+  "pause": {},
+  "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2745,
-  "paused_at_bolt_cycle": 2740,
-  "notes": "C2741 Lead: #39 referral DONE (C2739). 13/15 complete. New #40 Trace: verify referral logic. New #41 Bolt: admin referral/credit management UI. After #40+#41: ALL code tasks complete — only 3 blocked bectly items remain (R2/Heureka/GMC). Trace first (verify), then Bolt (admin UI). Monitors OK. 19 days to Vinted window.",
+  "last_bolt_commit_cycle": 2746,
+  "paused_at_bolt_cycle": 2746,
+  "notes": "C2747 Lead: #41 admin referrals marked DONE (built C2743, 3 waste cycles unmarked). 14/15 complete. LAST task: #40 Trace verify referral flow (ReferralCode+StoreCredit+checkout ?ref=+sessionStorage persistence from C2744). Bolt HARD PAUSED — zero implementable work. After #40: ALL code complete. Only 3 bectly-blocked remain (R2 #1, Heureka #4, GMC #14). Monitors OK.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
