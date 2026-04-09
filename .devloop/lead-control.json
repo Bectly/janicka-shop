@@ -6,7 +6,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2521,
+  "last_bolt_commit_cycle": 2522,
   "updated_at_cycle": 2508,
   "dev_focus": "BOLT TASK C2508: Packeta SOAP shipment creation — core shipping integration needed for launch. `src/lib/shipping/` dir does NOT exist yet — start fresh. (1) `npm install soap`. (2) Create `src/lib/shipping/packeta.ts` — SOAP client for `https://www.zasilkovna.cz/api/soap`. Implement: `createPacket(order)` → packetId, `getPacketLabel(packetId)` → base64 PDF, `getPacketStatus(packetId)` → status, `cancelPacket(packetId)`. Env: `PACKETA_API_PASSWORD`. Required fields: apiPassword, number (orderId), name, surname, value (CZK decimal), weight (0.5 default kg for clothing), addressId (numeric string from widget point.id), eshop (sender label). Optional: email, phone, cod, currency='CZK'. (3) Add `packetId String?` to Order in schema.prisma + migrate dev + push to Turso shell. (4) Admin order detail: 'Vytvořit zásilku' button (Server Action), visible when shippingMethod='packeta' + shippingPointId set + no packetId. On success: store packetId, show 'Stáhnout štítek' PDF link. (5) Gotchas: weight=0 rejected, addressId MUST be numeric string. Run `npm run build` before claiming done.",
   "notes": "C2508 Lead — NotifyMeForm ✅ marked DONE in TODO (was incorrectly left open). Trace switched to until_next_bolt_commit — fires automatically once Bolt commits Packeta. Comgate 26th check: still v2.0.15 (5+ months frozen, no ETA). Vinted T&C April 30: 21 days left, CZ media still zero coverage — trust copy live since C2379 retains full advantage. No new CZ competitors (27th scan). Brumla 59,386 pieces. Backlog 10 items (healthy).",
