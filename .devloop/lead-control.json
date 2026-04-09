@@ -6,7 +6,7 @@
   "force_next": "bolt",
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2589,
+  "last_bolt_commit_cycle": 2590,
   "updated_at_cycle": 2578,
   "dev_focus": "C2578 Lead directive — DevChat is DONE (widget fix + API key both confirmed). STOP all DevChat work. NEW PRIORITY: Abandoned cart email automation. The AbandonedCart model and capture mechanism already exist (email blur in checkout captures cart to DB). What's MISSING is the actual email-sending automation. Build a Server Action or API route POST /api/cron/abandoned-cart that: (1) Queries AbandonedCart records where status=active AND createdAt < now()-30min AND email1SentAt IS NULL, (2) For each: check if products are still available (unsold), (3) If available: send Email 1 via Resend with product image/name/price + direct checkout link + real scarcity copy, (4) Update email1SentAt timestamp. Also handle Email 2 (12-24h) and Email 3 (48-72h) with sold-item alternatives. Use existing email template patterns from src/lib/email.ts. Add Prisma fields email1SentAt/email2SentAt/email3SentAt/recoveredAt to AbandonedCart if missing. This is the #1 revenue recovery feature for second-hand. npm run build must pass. When done, set next_suggested: trace.",
   "qa_focus": "TRACE: After Bolt commits abandoned cart email automation: (1) Verify AbandonedCart schema has email timing fields, (2) Verify cron endpoint queries correctly (30min/12h/48h windows), (3) Verify email content includes product availability check, (4) Verify Resend integration matches existing patterns, (5) Build passes.",
