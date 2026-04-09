@@ -8,6 +8,7 @@ import { ProductCard } from "@/components/shop/product-card";
 import { CategoryCard } from "@/components/shop/category-card";
 import { NewsletterForm } from "@/components/shop/newsletter-form";
 import { TrustBadges } from "@/components/shop/trust-badges";
+import { VintedComparisonSection } from "@/components/shop/vinted-comparison";
 import { RecentlySoldFeed } from "@/components/shop/recently-sold-feed";
 import { RecentlyViewedSection } from "@/components/shop/recently-viewed";
 import { Button } from "@/components/ui/button";
@@ -606,6 +607,9 @@ export default function HomePage() {
 
       {/* Trust badges — no data, renders instantly */}
       <TrustBadges />
+
+      {/* Vinted trust comparison — no data, renders instantly */}
+      <VintedComparisonSection />
 
       {/* Recently sold — streams independently */}
       <Suspense fallback={null}>

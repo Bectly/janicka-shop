@@ -1,4 +1,4 @@
-import { ShieldCheck, Truck, RotateCcw, Sparkles } from "lucide-react";
+import { ShieldCheck, Truck, RotateCcw, Camera, Sparkles } from "lucide-react";
 
 const badges = [
   {
@@ -17,6 +17,11 @@ const badges = [
     description: "Nesedí? Vrátíme peníze bez otázek",
   },
   {
+    icon: Camera,
+    title: "Reálné foto — žádné AI",
+    description: "Každý kousek fotografujeme my — přesně to, co dostaneš",
+  },
+  {
     icon: Sparkles,
     title: "Unikátní kousky",
     description: "Každý kus je originál — značková móda za zlomek ceny",
@@ -27,7 +32,7 @@ export function TrustBadges() {
   return (
     <section className="border-y border-border bg-muted/30">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 gap-6 sm:gap-8 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-6 sm:gap-8 lg:grid-cols-5">
           {badges.map((badge) => (
             <div key={badge.title} className="text-center">
               <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary sm:size-12">
