@@ -145,16 +145,17 @@ model Invoice {
 }
 
 model NewsletterSubscriber {
-  id                  String   @id @default(cuid())
-  email               String   @unique
-  active              Boolean  @default(true)
-  firstName           String?
-  preferredSizes      String   @default("[]") // JSON array of size strings e.g. ["S","M","38"]
-  preferredCategories String   @default("[]") // JSON array of category IDs
-  preferredBrands     String   @default("[]") // JSON array of brand name strings
-  source              String   @default("website") // website, checkout, import
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt @default(now())
+  id                     String    @id @default(cuid())
+  email                  String    @unique
+  active                 Boolean   @default(true)
+  firstName              String?
+  preferredSizes         String    @default("[]") // JSON array of size strings e.g. ["S","M","38"]
+  preferredCategories    String    @default("[]") // JSON array of category IDs
+  preferredBrands        String    @default("[]") // JSON array of brand name strings
+  source                 String    @default("website") // website, checkout, import
+  lastNewArrivalEmailAt  DateTime?                     // Last time a new-arrival email was sent (prevents spam)
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt @default(now())
 }
 
 model PriceHistory {

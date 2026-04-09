@@ -80,9 +80,13 @@ export function AddressAutocomplete({
     (e: ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
 
-      // Skip fetch if user just selected (avoids refetching for the filled value)
+      // Skip fetch if user just selected (avoids refetching for the filled value).
+      // Also clear any pending debounce — without this, a timer started by typing
+      // just before clicking a suggestion would fire after selection and re-open
+      // the dropdown with stale results.
       if (justSelectedRef.current) {
         justSelectedRef.current = false;
+        if (debounceRef.current) clearTimeout(debounceRef.current);
         return;
       }
 

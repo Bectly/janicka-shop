@@ -10,7 +10,7 @@ const MAPY_TIMEOUT_MS = 5_000;
  */
 export async function GET(req: NextRequest) {
   const query = req.nextUrl.searchParams.get("q")?.trim();
-  if (!query || query.length < 2) {
+  if (!query || query.length < 2 || query.length > 200) {
     return NextResponse.json({ items: [] });
   }
 
