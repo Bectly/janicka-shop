@@ -326,11 +326,13 @@ async function sendShippingEmailWithCrossSell(
   });
 
   // Score candidates: prefer size overlap, then recency (already sorted by createdAt desc)
+  // Guard against malformed JSON in sizes/images columns (stored as plain String in Prisma)
   const scored = candidates.map((p) => {
-    const productSizes = JSON.parse(p.sizes) as string[];
+    let parsedSizes: string[] = [];
+    try { parsedSizes = JSON.parse(p.sizes) as string[]; } catch { /* treat as no sizes */ }
     const sizeMatch =
-      orderedSizes.length > 0 && productSizes.some((s) => orderedSizes.includes(s));
-    return { ...p, sizeMatch };
+      orderedSizes.length > 0 && parsedSizes.some((s) => orderedSizes.includes(s));
+    return { ...p, sizeMatch, parsedSizes };
   });
 
   // Size-matched first, then rest — take top 4
@@ -339,8 +341,8 @@ async function sendShippingEmailWithCrossSell(
   const selected = [...sizeMatched, ...rest].slice(0, 4);
 
   const crossSellProducts = selected.map((p) => {
-    const images = JSON.parse(p.images) as string[];
-    const sizes = JSON.parse(p.sizes) as string[];
+    let images: string[] = [];
+    try { images = JSON.parse(p.images) as string[]; } catch { /* no images */ }
     return {
       name: p.name,
       slug: p.slug,
@@ -349,7 +351,7 @@ async function sendShippingEmailWithCrossSell(
       brand: p.brand,
       condition: p.condition,
       image: images[0] ?? null,
-      sizes,
+      sizes: p.parsedSizes,
     };
   });
 

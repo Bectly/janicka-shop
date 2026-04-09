@@ -207,6 +207,26 @@ model AbandonedCart {
   @@index([createdAt])
 }
 
+model BrowseAbandonment {
+  id           String    @id @default(cuid())
+  email        String
+  productId    String
+  productSlug  String
+  productName  String
+  productImage String?   // First image URL for email
+  productPrice Float
+  productBrand String?
+  productSize  String?   // Primary size string for email copy
+  sentAt       DateTime? // Set when email is sent (null = pending)
+  status       String    @default("pending") // pending | sent | sold | cart_added
+  createdAt    DateTime  @default(now())
+
+  @@index([email])
+  @@index([status])
+  @@index([createdAt])
+  @@index([productId])
+}
+
 model Collection {
   id          String    @id @default(cuid())
   title       String
