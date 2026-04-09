@@ -61,8 +61,6 @@ export async function PATCH(
     data.response = parsed.data.response;
     // Auto-resolve when Lead responds (if not explicitly set)
     if (!parsed.data.status) data.status = "resolved";
-    // Set sender context for the response
-    data.sender = isLead ? "lead" : existing.sender;
   }
   if (parsed.data.priority) data.priority = parsed.data.priority;
 
