@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Menu } from "lucide-react";
@@ -39,6 +39,14 @@ export function MobileNav({ categoryCounts }: MobileNavProps) {
   const searchParams = useSearchParams();
   const activeCategory = searchParams.get("category");
   const activeSort = searchParams.get("sort");
+
+  // Close sheet on any route/search-param change (handles cases where
+  // onClick={() => setOpen(false)} on Link doesn't propagate through
+  // Base UI Dialog, or when the user navigates via browser back/forward).
+  const searchParamsStr = searchParams.toString();
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname, searchParamsStr]);
 
   function topLinkActive(href: string) {
     if (href === "/products?sort=newest") return pathname === "/products" && activeSort === "newest" && !activeCategory;
