@@ -3,7 +3,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2879,
+  "last_bolt_commit_cycle": 2886,
   "paused_at_bolt_cycle": 2879,
   "notes": "C2884 Lead: 6 tasks verified DONE (#48/#74/#75/#76/#80/#81). Bolt wasted 4 cycles on completed #48/#76. Bolt PRIORITY: #72 hero alt text (trivial 1-liner: hero-section.tsx line 90, change alt from 'Janička — Třešňová Větvička' to 'Janička') → #82 clean Vinted products (popisky, atributy, kategorie) → #77 remove mock/seed data. Trace running #57 mobile responsive, then #73 horizontal scroll. Sage paused until Bolt commits. 3 blocked bectly: R2 (#1), Heureka (#4), GMC (#14). 18 days to April 28 window.",
   "schema": {
