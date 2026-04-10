@@ -545,7 +545,7 @@ export default function CheckoutPage() {
         <p className="mt-2 text-muted-foreground">
           Nejdříve si přidejte něco do košíku.
         </p>
-        <Button className="mt-6" render={<Link href="/products" />}>
+        <Button size="lg" className="mt-6" render={<Link href="/products" />}>
           Prohlédnout produkty
         </Button>
       </div>

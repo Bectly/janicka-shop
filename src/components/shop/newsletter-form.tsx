@@ -43,14 +43,14 @@ export function NewsletterForm({ variant = "default" }: { variant?: "default" | 
                 name="email"
                 placeholder="váš@email.cz"
                 autoComplete="email"
-                className="w-full rounded-full bg-transparent py-3 pl-5 pr-14 text-sm text-white placeholder:text-white/30 outline-none"
+                className="w-full rounded-full bg-transparent py-3.5 pl-5 pr-14 text-sm text-white placeholder:text-white/30 outline-none"
                 required
               />
               <Button
                 type="submit"
                 disabled={isPending}
                 size="icon"
-                className="absolute right-1.5 size-9 rounded-full bg-brand text-white shadow-lg transition-all hover:bg-brand-light hover:shadow-brand/30 disabled:opacity-50"
+                className="absolute right-2 size-11 rounded-full bg-brand text-white shadow-lg transition-all hover:bg-brand-light hover:shadow-brand/30 disabled:opacity-50"
               >
                 {isPending ? (
                   <span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />

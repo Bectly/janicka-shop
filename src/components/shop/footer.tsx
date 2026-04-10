@@ -224,12 +224,12 @@ export async function Footer() {
               <h3 className="text-[11px] font-semibold uppercase tracking-[0.15em] text-white/50">
                 {section.title}
               </h3>
-              <ul className="mt-4 space-y-2.5">
+              <ul className="mt-2 space-y-0">
                 {section.links.map((link) => (
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="footer-link inline-block py-1.5 text-sm text-white/55 transition-colors duration-200 hover:text-white"
+                      className="footer-link block py-3 text-sm text-white/55 transition-colors duration-200 hover:text-white"
                     >
                       {link.name}
                     </Link>
@@ -303,12 +303,12 @@ export async function Footer() {
         {/* Bottom bar — legal */}
         <div className="space-y-2.5 py-6">
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-white/25">
-            <CookieSettingsButton className="transition-colors duration-200 hover:text-white/50" />
+            <CookieSettingsButton className="min-h-[44px] inline-flex items-center transition-colors duration-200 hover:text-white/50" />
             <a
               href="https://ec.europa.eu/consumers/odr"
               target="_blank"
               rel="noopener noreferrer"
-              className="transition-colors duration-200 hover:text-white/50"
+              className="min-h-[44px] inline-flex items-center transition-colors duration-200 hover:text-white/50"
             >
               Řešení sporů online (ODR)
             </a>

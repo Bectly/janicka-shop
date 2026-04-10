@@ -3,7 +3,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2895,
+  "last_bolt_commit_cycle": 2897,
   "paused_at_bolt_cycle": 2892,
   "notes": "C2895+ Lead: #50 DONE (Bolt confirmed 2x). #72 DONE (Sage C2892 commit 311583e). Bolt PRIORITY: #82 clean Vinted products (popisky, atributy, kategorie) → #77 remove mock/seed data. Trace: running #57 mobile responsive + #73 horizontal scroll audit. Sage: held until next Bolt commit on #82. 3 blocked bectly: R2 (#1), Heureka (#4), GMC (#14). 18 days to April 28 campaign. ACK feedback 1086+1084+1080.",
   "schema": {
