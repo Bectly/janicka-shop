@@ -32,30 +32,34 @@ export function NewsletterForm({ variant = "default" }: { variant?: "default" | 
   if (variant === "footer") {
     return (
       <div className="mt-5">
-        <form action={action} className="newsletter-form-footer group relative mx-auto flex max-w-md items-center">
+        <form action={action} className="group mx-auto max-w-md">
           <label htmlFor="newsletter-email-footer" className="sr-only">Emailová adresa pro odběr novinek</label>
-          <input
-            ref={emailRef}
-            id="newsletter-email-footer"
-            type="email"
-            name="email"
-            placeholder="váš@email.cz"
-            autoComplete="email"
-            className="newsletter-input-footer w-full rounded-full border border-white/15 bg-white/5 py-3 pl-5 pr-14 text-sm text-white placeholder:text-white/30 outline-none transition-all duration-300 focus:border-brand-light focus:bg-white/10 focus:ring-2 focus:ring-brand-light/20"
-            required
-          />
-          <Button
-            type="submit"
-            disabled={isPending}
-            size="icon"
-            className="absolute right-1.5 size-9 rounded-full bg-brand text-white shadow-lg transition-all hover:bg-brand-light hover:shadow-brand/30 disabled:opacity-50"
-          >
-            {isPending ? (
-              <span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-            ) : (
-              <ArrowRight className="size-4" />
-            )}
-          </Button>
+          <div className="newsletter-border-animate">
+            <div className="relative flex items-center rounded-full bg-charcoal">
+              <input
+                ref={emailRef}
+                id="newsletter-email-footer"
+                type="email"
+                name="email"
+                placeholder="váš@email.cz"
+                autoComplete="email"
+                className="w-full rounded-full bg-transparent py-3 pl-5 pr-14 text-sm text-white placeholder:text-white/30 outline-none"
+                required
+              />
+              <Button
+                type="submit"
+                disabled={isPending}
+                size="icon"
+                className="absolute right-1.5 size-9 rounded-full bg-brand text-white shadow-lg transition-all hover:bg-brand-light hover:shadow-brand/30 disabled:opacity-50"
+              >
+                {isPending ? (
+                  <span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                ) : (
+                  <ArrowRight className="size-4" />
+                )}
+              </Button>
+            </div>
+          </div>
         </form>
         {state && !state.success && (
           <p role="alert" className="mt-2 text-center text-xs text-red-400">{state.message}</p>

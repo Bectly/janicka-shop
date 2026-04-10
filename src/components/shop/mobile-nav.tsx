@@ -22,6 +22,12 @@ const categories = [
   { name: "Doplňky", href: "/products?category=doplnky" },
 ];
 
+const topLinks = [
+  { name: "Novinky", href: "/products?sort=newest" },
+  { name: "Všechny produkty", href: "/products" },
+  { name: "Oblíbené", href: "/oblibene" },
+];
+
 export function MobileNav() {
   const [open, setOpen] = useState(false);
 
@@ -55,20 +61,20 @@ export function MobileNav() {
         </div>
 
         <nav aria-label="Hlavní navigace" className="flex flex-col gap-1 px-4">
-          <Link
-            href="/products"
-            onClick={() => setOpen(false)}
-            className="rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
-          >
-            Všechny produkty
-          </Link>
-          <Link
-            href="/oblibene"
-            onClick={() => setOpen(false)}
-            className="rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
-          >
-            Oblíbené
-          </Link>
+          {topLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setOpen(false)}
+              className="rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+            >
+              {link.name}
+            </Link>
+          ))}
+          <div className="my-1 border-t" />
+          <p className="px-3 pt-1 pb-0.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Kategorie
+          </p>
           {categories.map((cat) => (
             <Link
               key={cat.href}

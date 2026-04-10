@@ -177,12 +177,14 @@ export async function Footer() {
   }
 
   return (
-    <footer className="relative mt-auto border-t border-white/5 bg-charcoal text-white" role="contentinfo">
+    <footer className="relative mt-auto bg-charcoal text-white" role="contentinfo">
+      {/* Decorative brand gradient accent */}
+      <div className="h-[2px] bg-gradient-to-r from-transparent via-brand/40 to-transparent" aria-hidden="true" />
       <CherryBlossomPattern />
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Top section — centered logo + tagline */}
-        <div className="flex flex-col items-center pb-8 pt-14 sm:pb-10 sm:pt-16">
+        <div className="flex flex-col items-center pb-10 pt-16 sm:pb-12 sm:pt-20">
           <Link href="/" className="group inline-block">
             <Image
               src="/logo/logo-header-lg.png"
@@ -192,10 +194,10 @@ export async function Footer() {
               className="h-10 w-auto brightness-0 invert transition-opacity group-hover:opacity-80 sm:h-12"
             />
           </Link>
-          <p className="mt-4 max-w-sm text-center text-sm leading-relaxed text-white/50">
-            Stylové oblečení pro moderní ženy.
-            <br className="hidden sm:block" />
-            Kvalita, elegance a udržitelnost v&nbsp;každém kousku.
+          <p className="mt-5 max-w-xs text-center text-sm leading-relaxed text-white/40">
+            Každý kousek je unikát.
+            <br />
+            Kvalita, elegance a&nbsp;udržitelnost.
           </p>
         </div>
 
@@ -285,8 +287,8 @@ export async function Footer() {
 
         {/* Payment badges */}
         <div className="flex flex-col items-center gap-3 py-8">
-          <p className="text-[11px] uppercase tracking-[0.12em] text-white/25">Bezpečné platební metody</p>
-          <div className="flex flex-wrap items-center justify-center gap-2.5 opacity-60 transition-opacity duration-300 hover:opacity-80">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-white/20">Platební metody</p>
+          <div className="flex flex-wrap items-center justify-center gap-2.5 opacity-50 grayscale transition-all duration-500 hover:opacity-75 hover:grayscale-0">
             <VisaIcon />
             <MastercardIcon />
             <ApplePayIcon />

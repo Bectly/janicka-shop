@@ -832,8 +832,11 @@ export function ProductFilters({
           </DrawerContent>
         </Drawer>
 
-        {/* Sticky bottom filter button — pinned to thumb zone */}
-        <div className="fixed bottom-4 left-1/2 z-40 -translate-x-1/2 pb-[env(safe-area-inset-bottom)]">
+        {/* Sticky bottom filter button — positioned above the bottom nav bar (h-14 = 3.5rem) */}
+        <div
+          className="fixed left-1/2 z-30 -translate-x-1/2"
+          style={{ bottom: "calc(3.5rem + env(safe-area-inset-bottom, 0px) + 0.75rem)" }}
+        >
           <button
             onClick={() => setIsDrawerOpen(true)}
             className="inline-flex items-center gap-2 rounded-full border bg-background px-5 py-3 text-sm font-semibold text-foreground shadow-lg transition-colors hover:bg-muted active:scale-95"

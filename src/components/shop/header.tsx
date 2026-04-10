@@ -1,18 +1,11 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { CartButton } from "./cart-button";
 import { WishlistHeaderButton } from "./wishlist-header-button";
 import { MobileNav } from "./mobile-nav";
 import { InstantSearch } from "./instant-search";
-
-const navLinks = [
-  { name: "Novinky", href: "/products?sort=newest" },
-  { name: "Šaty", href: "/products?category=saty" },
-  { name: "Topy & Halenky", href: "/products?category=topy-halenky" },
-  { name: "Kalhoty & Sukně", href: "/products?category=kalhoty-sukne" },
-  { name: "Bundy & Kabáty", href: "/products?category=bundy-kabaty" },
-  { name: "Doplňky", href: "/products?category=doplnky" },
-];
+import { DesktopNavLinks } from "./desktop-nav-links";
 
 export function Header() {
   return (
@@ -33,17 +26,21 @@ export function Header() {
           />
         </Link>
 
-        {/* Desktop nav */}
+        {/* Desktop nav — Suspense needed because DesktopNavLinks reads searchParams */}
         <nav aria-label="Hlavní navigace" className="hidden flex-1 items-center gap-1 md:flex">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
-            >
-              {link.name}
-            </Link>
-          ))}
+          <Suspense
+            fallback={
+              <div className="flex items-center gap-1">
+                {["Novinky","Šaty","Topy & Halenky","Kalhoty & Sukně","Bundy & Kabáty","Doplňky"].map((name) => (
+                  <span key={name} className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-foreground/70">
+                    {name}
+                  </span>
+                ))}
+              </div>
+            }
+          >
+            <DesktopNavLinks />
+          </Suspense>
         </nav>
 
         {/* Right side: search + cart */}

@@ -66,7 +66,7 @@ export function AnnouncementBar() {
 
   return (
     <div
-      className={`announcement-bar relative overflow-hidden bg-gradient-to-r from-brand via-brand-dark to-brand text-white ${dismissing ? "announcement-bar-dismiss" : ""}`}
+      className={`announcement-bar relative overflow-hidden bg-gradient-to-r from-brand via-brand-dark to-brand text-white ${dismissing ? "announcement-bar-dismiss" : "announcement-bar-enter"}`}
     >
       {/* Subtle shimmer overlay */}
       <div className="announcement-shimmer pointer-events-none absolute inset-0" aria-hidden="true" />
