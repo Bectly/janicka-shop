@@ -271,7 +271,7 @@ async function SaleProductsSection() {
   const lowestPricesMap = await getLowestPrices30d(saleProducts.map((p) => p.id));
 
   return (
-    <section className="bg-rose-50/50">
+    <section className="bg-brand/[0.04]">
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="flex items-end justify-between">
           <div>

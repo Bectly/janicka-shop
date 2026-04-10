@@ -225,7 +225,7 @@ export async function Footer() {
 
           {/* Social + contact column */}
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-white/40">
+            <h3 className="text-xs font-semibold uppercase tracking-widest text-white/60">
               Sledujte nás
             </h3>
             <div className="mt-4 flex gap-3">
