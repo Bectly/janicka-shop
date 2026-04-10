@@ -384,7 +384,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
               <div className="absolute right-3 top-3 z-20 rounded-full bg-black/50 px-2.5 py-1 text-xs font-medium text-white lg:hidden">
                 {activeIndex + 1} / {totalSlides}
               </div>
-              <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2">
+              <div className="absolute bottom-3 left-1/2 z-20 flex max-w-[90%] -translate-x-1/2">
                 {Array.from({ length: totalSlides }).map((_, i) => (
                   <button
                     key={i}
@@ -395,7 +395,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                       setActiveIndex(i);
 
                     }}
-                    className="inline-flex size-11 items-center justify-center"
+                    className={`inline-flex shrink-0 items-center justify-center ${totalSlides > 8 ? "size-8" : "size-11"}`}
                     aria-label={i === videoSlideIndex ? "Video" : `Fotka ${i + 1}`}
                   >
                     <span className={`size-2 rounded-full transition-all ${

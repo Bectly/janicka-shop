@@ -447,19 +447,19 @@ export default async function ProductDetailPage({ params }: Props) {
         />
       )}
       {/* Breadcrumb */}
-      <nav className="mb-6 text-sm text-muted-foreground">
-        <Link href="/products" className="hover:text-foreground">
+      <nav className="mb-6 flex min-w-0 flex-wrap items-center gap-y-1 text-sm text-muted-foreground">
+        <Link href="/products" className="shrink-0 hover:text-foreground">
           Katalog
         </Link>
-        <span className="mx-2">/</span>
+        <span className="mx-2 shrink-0">/</span>
         <Link
           href={`/products?category=${product.category.slug}`}
-          className="hover:text-foreground"
+          className="shrink-0 hover:text-foreground"
         >
           {product.category.name}
         </Link>
-        <span className="mx-2">/</span>
-        <span className="text-foreground">{product.name}</span>
+        <span className="mx-2 shrink-0">/</span>
+        <span className="min-w-0 truncate text-foreground">{product.name}</span>
       </nav>
 
       <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
