@@ -533,15 +533,15 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
           )}
 
           {/* Main lightbox image — swipeable with vertical dismiss */}
-          {/* DO NOT REMOVE: h-[60vh] w-[80vw] max-w-lg constrains lightbox size — without it the image goes fullscreen */}
           <div
             ref={imgContainerRef}
-            className={`relative h-[60vh] w-[80vw] max-w-lg select-none ${
-              zoomed
-                ? "cursor-grab active:cursor-grabbing overflow-hidden"
-                : "cursor-zoom-in overflow-visible"
+            className={`relative flex items-center justify-center select-none overflow-hidden ${
+              zoomed ? "cursor-grab active:cursor-grabbing" : "cursor-zoom-in"
             }`}
             style={{
+              width: "80vw",
+              height: "70vh",
+              maxWidth: "32rem",
               transform: lightboxDismissY !== 0
                 ? `translateY(${lightboxDismissY}px)`
                 : undefined,
