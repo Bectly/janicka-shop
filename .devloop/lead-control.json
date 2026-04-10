@@ -3,7 +3,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2912,
+  "last_bolt_commit_cycle": 2913,
   "paused_at_bolt_cycle": 2897,
   "notes": "C2908 Lead: #78 DONE (marked in DB, was causing 3-cycle re-verify waste C2906-2908). #84 overflow-x-hidden DONE (already applied in globals.css lines 153+158). Bolt PRIORITY: #82 Vinted product cleanup — 354 products need: popisky rewrite (remove Vinted-specific text), kategorie check, velikosti normalize (XS/S/M/L/XL or numeric), barvy doplnit, condition mapping, značky normalize. Use Agent subagents for batch processing. Trace: continue #57 mobile responsive + #73 scroll overflow. Sage: visual QA after Bolt commits on #82. 3 blocked bectly: R2 (#1), Heureka (#4), GMC (#14). 18 days to April 28 campaign. Build EXIT:0. ACK feedback 1096+1095+1094.",
   "schema": {
