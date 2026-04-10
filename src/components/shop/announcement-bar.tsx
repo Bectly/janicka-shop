@@ -71,6 +71,24 @@ export function AnnouncementBar() {
       {/* Subtle shimmer overlay */}
       <div className="announcement-shimmer pointer-events-none absolute inset-0" aria-hidden="true" />
 
+      {/* Cherry blossom accents */}
+      <svg className="ann-blossom pointer-events-none absolute -left-3 top-1/2 size-10 -translate-y-1/2 text-white/10" viewBox="0 0 200 200" fill="currentColor" aria-hidden="true">
+        <ellipse cx="100" cy="82" rx="10" ry="20" transform="rotate(0 100 100)" />
+        <ellipse cx="100" cy="82" rx="10" ry="20" transform="rotate(72 100 100)" />
+        <ellipse cx="100" cy="82" rx="10" ry="20" transform="rotate(144 100 100)" />
+        <ellipse cx="100" cy="82" rx="10" ry="20" transform="rotate(216 100 100)" />
+        <ellipse cx="100" cy="82" rx="10" ry="20" transform="rotate(288 100 100)" />
+        <circle cx="100" cy="100" r="5" />
+      </svg>
+      <svg className="ann-blossom pointer-events-none absolute -right-3 top-1/2 size-8 -translate-y-1/2 text-white/10" viewBox="0 0 200 200" fill="currentColor" aria-hidden="true">
+        <ellipse cx="100" cy="84" rx="8" ry="16" transform="rotate(15 100 100)" />
+        <ellipse cx="100" cy="84" rx="8" ry="16" transform="rotate(87 100 100)" />
+        <ellipse cx="100" cy="84" rx="8" ry="16" transform="rotate(159 100 100)" />
+        <ellipse cx="100" cy="84" rx="8" ry="16" transform="rotate(231 100 100)" />
+        <ellipse cx="100" cy="84" rx="8" ry="16" transform="rotate(303 100 100)" />
+        <circle cx="100" cy="100" r="4" />
+      </svg>
+
       <div className="flex min-h-10 items-center sm:min-h-11">
         {/* Marquee track — two copies for seamless loop */}
         <div

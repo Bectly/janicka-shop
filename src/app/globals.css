@@ -420,6 +420,51 @@
               0 0 6px oklch(from var(--color-brand) l c h / 0.08);
 }
 
+/* ─── Footer cherry blossom drift animation ─── */
+@keyframes blossom-drift {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(3px, -5px) rotate(4deg); }
+  50% { transform: translate(-2px, -3px) rotate(-2deg); }
+  75% { transform: translate(4px, -6px) rotate(3deg); }
+}
+
+.footer-blossom {
+  animation: blossom-drift 12s ease-in-out infinite;
+}
+.footer-blossom:nth-child(2) { animation-delay: -3s; animation-duration: 15s; }
+.footer-blossom:nth-child(3) { animation-delay: -6s; animation-duration: 18s; }
+.footer-blossom:nth-child(4) { animation-delay: -9s; animation-duration: 14s; }
+
+/* ─── Footer link hover underline ─── */
+.footer-link {
+  position: relative;
+}
+.footer-link::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: linear-gradient(to right, var(--color-brand-light), transparent);
+  transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.footer-link:hover::after {
+  width: 100%;
+}
+
+/* ─── Announcement bar cherry blossom accent ─── */
+@keyframes ann-petal-drift {
+  0%, 100% { transform: rotate(0deg) scale(1); opacity: 0.15; }
+  50% { transform: rotate(8deg) scale(1.05); opacity: 0.25; }
+}
+.ann-blossom {
+  animation: ann-petal-drift 8s ease-in-out infinite;
+}
+.ann-blossom:nth-child(2) {
+  animation-delay: -4s;
+}
+
 /* ─── Sticky filter toolbar border on scroll ─── */
 .sticky-toolbar-border {
   border-bottom: 1px solid transparent;
@@ -592,9 +637,12 @@
   .animate-lightbox-open,
   .animate-lightbox-close,
   .animate-ptr-spin,
-  .hero-petal {
+  .hero-petal,
+  .footer-blossom,
+  .ann-blossom {
     animation: none !important;
   }
+  .footer-link::after,
   .btn-fill-hover::after,
   .haptic-press {
     transition: none !important;

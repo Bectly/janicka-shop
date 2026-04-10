@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getDb } from "@/lib/db";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Flower2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // Visible May 1–10, 2026 (CEST)
@@ -25,7 +25,7 @@ export async function MothersDayBanner() {
   return (
     <section className="bg-gradient-to-r from-brand-light/20 via-blush-dark/40 to-brand-light/20">
       <div className="mx-auto max-w-7xl px-4 py-10 text-center sm:px-6 sm:py-14 lg:px-8">
-        <p className="text-3xl sm:text-4xl">🌷</p>
+        <Flower2 className="mx-auto size-10 text-brand sm:size-12" aria-hidden="true" />
         <h2 className="mt-3 font-heading text-2xl font-bold text-brand-dark sm:text-3xl">
           Najdi mámě jedinečný kousek
         </h2>

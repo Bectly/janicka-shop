@@ -227,7 +227,7 @@ export async function Footer() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm text-white/55 transition-colors duration-200 hover:text-white"
+                      className="footer-link text-sm text-white/55 transition-colors duration-200 hover:text-white"
                     >
                       {link.name}
                     </Link>
@@ -286,7 +286,7 @@ export async function Footer() {
         {/* Payment badges */}
         <div className="flex flex-col items-center gap-3 py-8">
           <p className="text-[11px] uppercase tracking-[0.12em] text-white/25">Bezpečné platební metody</p>
-          <div className="flex flex-wrap items-center justify-center gap-2 opacity-70">
+          <div className="flex flex-wrap items-center justify-center gap-2.5 opacity-60 transition-opacity duration-300 hover:opacity-80">
             <VisaIcon />
             <MastercardIcon />
             <ApplePayIcon />

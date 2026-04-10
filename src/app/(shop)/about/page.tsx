@@ -90,7 +90,8 @@ export default function AboutPage() {
         </section>
 
         <p>
-          Děkujeme, že nakupujete u nás a podporujete udržitelnou módu. 💚
+          Děkujeme, že nakupujete u nás a podporujete udržitelnou módu.{" "}
+          <Leaf className="inline-block size-4 align-text-bottom text-sage-dark" aria-hidden="true" />
         </p>
       </div>
     </div>

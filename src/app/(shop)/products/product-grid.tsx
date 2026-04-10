@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Search } from "lucide-react";
 import { getDb } from "@/lib/db";
 import { getLowestPrices30d } from "@/lib/price-history";
 import { ProductCard } from "@/components/shop/product-card";
@@ -152,7 +153,7 @@ export async function ProductGrid({
     return (
       <div className="py-16 text-center">
         <div className="mx-auto mb-5 inline-flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-brand/10 via-champagne-light/30 to-blush-light/40">
-          <span className="text-2xl" aria-hidden="true">🔍</span>
+          <Search className="size-7 text-brand/50" aria-hidden="true" />
         </div>
         <h3 className="font-heading text-lg font-semibold text-foreground">
           Nic nenalezeno
