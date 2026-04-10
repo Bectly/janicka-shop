@@ -256,7 +256,7 @@ export async function Footer() {
                   <InstagramIcon className="size-[18px]" />
                 </a>
               ) : (
-                <span className="inline-flex size-10 items-center justify-center rounded-full bg-white/[0.04] text-white/30">
+                <span className="inline-flex size-10 items-center justify-center rounded-full bg-white/[0.08] text-white/50">
                   <InstagramIcon className="size-[18px]" />
                 </span>
               )}
@@ -271,11 +271,11 @@ export async function Footer() {
                   <FacebookIcon className="size-[18px]" />
                 </a>
               ) : (
-                <span className="inline-flex size-10 items-center justify-center rounded-full bg-white/[0.04] text-white/30">
+                <span className="inline-flex size-10 items-center justify-center rounded-full bg-white/[0.08] text-white/50">
                   <FacebookIcon className="size-[18px]" />
                 </span>
               )}
-              <span className="inline-flex size-10 items-center justify-center rounded-full bg-white/[0.04] text-white/30">
+              <span className="inline-flex size-10 items-center justify-center rounded-full bg-white/[0.08] text-white/50">
                 <TikTokIcon className="size-[18px]" />
               </span>
             </div>
