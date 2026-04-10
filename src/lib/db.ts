@@ -10,7 +10,7 @@ async function createClient(): Promise<PrismaClient> {
   const tursoToken = process.env.TURSO_AUTH_TOKEN;
 
   if (tursoUrl && tursoToken) {
-    const { PrismaLibSQL } = await import("@prisma/adapter-libsql");
+    const { PrismaLibSQL } = await import("@prisma/adapter-libsql/web");
     const adapter = new PrismaLibSQL({
       url: tursoUrl.trim(),
       authToken: tursoToken.trim(),
