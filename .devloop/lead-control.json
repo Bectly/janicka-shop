@@ -1,11 +1,14 @@
 {
-  "pause": {},
+  "pause": {
+    "bolt": "paused",
+    "trace": "paused"
+  },
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 3107,
-  "paused_at_bolt_cycle": 3097,
-  "notes": "C3103 Lead: Task #100 DONE (committed 5516ee4). Bolt now on #101 — checkout Doprava broken padding + Zásilkovna. TWO issues: (1) Content clipping on right side in accordion — check overflow-hidden on card container line 138 + Packeta ml-9 on line 904 pushing content. (2) Zásilkovna widget shows 'nedostupné' because NEXT_PUBLIC_PACKETA_API_KEY is empty (packeta-widget.tsx:37,77-83). If key not in .env.local → blocked on bectly. Sage/Trace wait for commit. Feedback #1203 ACK.",
+  "last_bolt_commit_cycle": 3108,
+  "paused_at_bolt_cycle": 3108,
+  "notes": "C3109 Lead: Task #101 DONE (committed b8c94e1, marked done). ALL remaining tasks BLOCKED on bectly: Packeta API key, R2 credentials, Heureka registration, GMC registration, SITE_URL. Bolt+Trace PAUSED — zero implementable work. Sage running visual QA. Bolt wasted 3 cycles (3106-3108) re-reporting #101 done — now stopped. Feedback #1208-1210 ACK.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
