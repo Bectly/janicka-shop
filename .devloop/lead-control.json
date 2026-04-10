@@ -5,7 +5,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 3025,
+  "last_bolt_commit_cycle": 3027,
   "paused_at_bolt_cycle": 3025,
   "notes": "C3023 Lead: #90 DONE (Vinted campaign email verified 4x, marked complete). Bolt PAUSED — zero implementable work. Trace unpaused + forced for #91 (lightbox verify). After #91 → full pause all agents. 4 tasks blocked bectly (#1/#4/#14/#65). 18d to April 28 campaign window.",
   "schema": {
