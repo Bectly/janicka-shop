@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { execSync } from "child_process";
 import { connection } from "next/server";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
@@ -20,6 +21,14 @@ interface ProjectStats {
   qaCommits: number;
 }
 
+function git(cmd: string, timeoutMs = 10000): string | null {
+  try {
+    return execSync(cmd, { encoding: "utf8", timeout: timeoutMs }).trim();
+  } catch {
+    return null;
+  }
+}
+
 function getProjectStats(): ProjectStats {
   const startDate = new Date("2026-04-03");
   const now = new Date();
@@ -30,15 +39,39 @@ function getProjectStats(): ProjectStats {
     )
   );
 
+  const totalCommits = parseInt(git("git rev-list --count HEAD") ?? "", 10) || 0;
+
+  let linesAdded = 0;
+  let linesDeleted = 0;
+  const diffstat = git(
+    "git log --shortstat --format='' | awk '{ins+=$4; del+=$6} END {print ins, del}'",
+    30000
+  );
+  if (diffstat) {
+    const [added, deleted] = diffstat.split(/\s+/);
+    linesAdded = parseInt(added, 10) || 0;
+    linesDeleted = parseInt(deleted, 10) || 0;
+  }
+
+  const leadDirectives = parseInt(git("git log --oneline | grep -c Lead || echo 0") ?? "", 10) || 0;
+  const devCommits = parseInt(git("git log --oneline | grep -cE ': (Bolt|Sage|Aria) ' || echo 0") ?? "", 10) || 0;
+  const qaCommits = parseInt(git("git log --oneline | grep -cE ': (Trace|Guard) ' || echo 0") ?? "", 10) || 0;
+
+  let totalCycles = totalCommits;
+  const cycleMatch = git("git log --oneline -1 | grep -oP 'Cycle #\\K[0-9]+'");
+  if (cycleMatch) {
+    totalCycles = parseInt(cycleMatch, 10) || totalCommits;
+  }
+
   return {
-    totalCycles: 2840,
-    totalCommits: 458,
-    linesAdded: 81159,
-    linesDeleted: 9976,
+    totalCycles,
+    totalCommits,
+    linesAdded,
+    linesDeleted,
     daysSinceStart,
-    leadDirectives: 131,
-    devCommits: 306,
-    qaCommits: 198,
+    leadDirectives,
+    devCommits,
+    qaCommits,
   };
 }
 
