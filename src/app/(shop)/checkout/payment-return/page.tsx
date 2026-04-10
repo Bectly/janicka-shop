@@ -6,7 +6,7 @@ import { getDb } from "@/lib/db";
 import { getComgatePaymentStatus } from "@/lib/payments/comgate";
 import { sendPaymentConfirmedEmail } from "@/lib/email";
 import { Button } from "@/components/ui/button";
-import { XCircle, Clock, ArrowRight } from "lucide-react";
+import { XCircle, Clock, ArrowRight, AlertCircle } from "lucide-react";
 import { PaymentStatusPoller } from "@/components/shop/payment-status-poller";
 import type { Metadata } from "next";
 
@@ -119,8 +119,14 @@ export default async function PaymentReturnPage({ searchParams }: Props) {
   if (paymentStatus === "CANCELLED" || order.status === "cancelled") {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center sm:px-6 lg:px-8">
-        <XCircle className="mx-auto size-16 text-red-500" />
-        <h1 className="mt-6 font-heading text-2xl font-bold">
+        <div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-full bg-gradient-to-br from-destructive/10 to-destructive/5 ring-1 ring-destructive/20">
+          <XCircle className="size-10 text-destructive" />
+        </div>
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-destructive/20 bg-destructive/[0.06] px-3 py-1 text-xs font-semibold tracking-wide text-destructive">
+          <AlertCircle className="size-3" />
+          Platba zrušena
+        </span>
+        <h1 className="mt-3 font-heading text-2xl font-bold text-foreground">
           Platba byla zrušena
         </h1>
         <p className="mt-2 text-muted-foreground">
@@ -140,8 +146,14 @@ export default async function PaymentReturnPage({ searchParams }: Props) {
   // Payment still pending — show waiting state
   return (
     <div className="mx-auto max-w-lg px-4 py-16 text-center sm:px-6 lg:px-8">
-      <Clock className="mx-auto size-16 text-champagne-dark" />
-      <h1 className="mt-6 font-heading text-2xl font-bold">
+      <div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-full bg-gradient-to-br from-champagne-light/60 to-champagne/20 ring-1 ring-champagne-dark/20">
+        <Clock className="size-10 text-champagne-dark" />
+      </div>
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-champagne-dark/30 bg-champagne-light/40 px-3 py-1 text-xs font-semibold tracking-wide text-charcoal">
+        <Clock className="size-3" />
+        Zpracováváme platbu
+      </span>
+      <h1 className="mt-3 font-heading text-2xl font-bold text-foreground">
         Čekáme na potvrzení platby
       </h1>
       <p className="mt-2 text-muted-foreground">

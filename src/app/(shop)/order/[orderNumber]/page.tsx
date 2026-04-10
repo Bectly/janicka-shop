@@ -5,7 +5,7 @@ import { getDb } from "@/lib/db";
 
 import { formatPrice } from "@/lib/format";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Clock, ArrowRight, MapPin, Truck, CalendarClock } from "lucide-react";
+import { CheckCircle2, Clock, ArrowRight, MapPin, Truck, CalendarClock, Package } from "lucide-react";
 import type { Metadata } from "next";
 import { ClearCartOnMount } from "./clear-cart";
 import { TrackPurchase } from "@/components/shop/track-purchase";
@@ -95,12 +95,21 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
       />
 
       {isPending ? (
-        <Clock className="mx-auto size-16 text-champagne-dark" />
+        <div className="mx-auto mb-2 flex size-20 items-center justify-center rounded-full bg-gradient-to-br from-champagne-light/60 to-champagne/20 ring-1 ring-champagne-dark/20">
+          <Clock className="size-10 text-champagne-dark" />
+        </div>
       ) : (
-        <CheckCircle2 className="mx-auto size-16 text-sage" />
+        <div className="mx-auto mb-2 flex size-20 items-center justify-center rounded-full bg-gradient-to-br from-sage-light/60 to-sage/20 ring-1 ring-sage/30">
+          <CheckCircle2 className="size-10 text-sage-dark" />
+        </div>
       )}
 
-      <h1 className="mt-6 font-heading text-3xl font-bold text-foreground">
+      <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold tracking-wide ${isPending ? "border-champagne-dark/30 bg-champagne-light/40 text-charcoal" : "border-sage/30 bg-sage-light/40 text-sage-dark"}`}>
+        <Package className="size-3" />
+        {isPending ? "Čeká na platbu" : "Objednávka potvrzena"}
+      </span>
+
+      <h1 className="mt-3 font-heading text-3xl font-bold text-foreground">
         {isPending ? "Objednávka přijata" : "Děkujeme za objednávku!"}
       </h1>
       <p className="mt-2 text-muted-foreground">

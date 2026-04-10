@@ -521,7 +521,13 @@ export default function CheckoutPage() {
   if (!mounted) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
-        <h1 className="font-heading text-3xl font-bold">Objednávka</h1>
+        <div className="mb-6 flex flex-col gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1 text-xs font-semibold tracking-wide text-primary self-start">
+            <Lock className="size-3" />
+            Bezpečná objednávka
+          </span>
+          <h1 className="font-heading text-3xl font-bold text-foreground">Objednávka</h1>
+        </div>
         <p className="mt-4 text-muted-foreground">Načítání...</p>
       </div>
     );
@@ -530,8 +536,10 @@ export default function CheckoutPage() {
   if (items.length === 0) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-16 text-center sm:px-6 lg:px-8">
-        <ShoppingBag className="mx-auto size-12 text-muted-foreground/40" />
-        <h1 className="mt-4 font-heading text-2xl font-bold">
+        <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-gradient-to-br from-brand/10 to-blush/30">
+          <ShoppingBag className="size-7 text-brand" />
+        </div>
+        <h1 className="font-heading text-2xl font-bold text-foreground">
           Košík je prázdný
         </h1>
         <p className="mt-2 text-muted-foreground">
@@ -549,7 +557,13 @@ export default function CheckoutPage() {
     const { orderNumber, accessToken } = state.pendingPayment;
     return (
       <div className="mx-auto max-w-lg px-4 py-8 sm:px-6 lg:px-8">
-        <h1 className="font-heading text-2xl font-bold">Platba</h1>
+        <div className="mb-4 flex flex-col gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-champagne-dark/30 bg-champagne-light/40 px-3 py-1 text-xs font-semibold tracking-wide text-charcoal self-start">
+            <CreditCard className="size-3" />
+            Dokončení platby
+          </span>
+          <h1 className="font-heading text-2xl font-bold text-foreground">Platba</h1>
+        </div>
         <p className="mt-1 text-sm text-muted-foreground">
           Objednávka <strong>{orderNumber}</strong> vytvořena — dokončete platbu
         </p>
@@ -575,7 +589,13 @@ export default function CheckoutPage() {
         Zpět do košíku
       </Link>
 
-      <h1 className="font-heading text-3xl font-bold">Objednávka</h1>
+      <div className="mb-6 flex flex-col gap-2">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1 text-xs font-semibold tracking-wide text-primary self-start">
+          <Lock className="size-3" />
+          Bezpečná objednávka
+        </span>
+        <h1 className="font-heading text-3xl font-bold text-foreground">Objednávka</h1>
+      </div>
 
       {state.error && (
         <div
