@@ -79,7 +79,7 @@ export function PasswordChangeForm() {
       </div>
 
       <div className="flex justify-end pt-2">
-        <Button type="submit" disabled={isPending} variant="outline">
+        <Button type="submit" disabled={isPending}>
           <Lock className="size-4" data-icon="inline-start" />
           {isPending ? "Měním heslo..." : "Změnit heslo"}
         </Button>
