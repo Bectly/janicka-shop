@@ -1,47 +1,79 @@
-import { ShieldCheck, Truck, RotateCcw, Camera, Sparkles } from "lucide-react";
+import { ShieldCheck, Truck, RotateCcw, Camera, Sparkles, Star } from "lucide-react";
 
 const badges = [
   {
     icon: ShieldCheck,
     title: "Ověřená kvalita",
     description: "Každý kousek pečlivě kontrolujeme a fotografujeme",
+    cardBg: "from-sage-light/20 to-sage/[0.06]",
+    iconBg: "from-sage-light/50 to-sage/20",
+    border: "border-sage/20",
   },
   {
     icon: Truck,
     title: "Rychlé doručení",
     description: "Odesíláme do 1–2 pracovních dnů po celé ČR",
+    cardBg: "from-champagne/25 to-champagne-light/[0.08]",
+    iconBg: "from-champagne/55 to-champagne-dark/15",
+    border: "border-champagne-dark/20",
   },
   {
     icon: RotateCcw,
     title: "14 dní na vrácení",
     description: "Nesedí? Vrátíme peníze bez otázek",
+    cardBg: "from-brand-light/15 to-brand/[0.04]",
+    iconBg: "from-brand-light/35 to-brand/15",
+    border: "border-brand/15",
   },
   {
     icon: Camera,
     title: "Reálné foto — žádné AI",
     description: "Každý kousek fotografujeme my — přesně to, co dostaneš",
+    cardBg: "from-blush-dark/20 to-blush/[0.05]",
+    iconBg: "from-blush-dark/45 to-brand-light/20",
+    border: "border-blush-dark/20",
   },
   {
     icon: Sparkles,
     title: "Unikátní kousky",
     description: "Každý kus je originál — značková móda za zlomek ceny",
+    cardBg: "from-champagne-light/35 to-champagne/[0.06]",
+    iconBg: "from-champagne-light/65 to-champagne/25",
+    border: "border-champagne/25",
   },
 ];
 
 export function TrustBadges() {
   return (
-    <section className="border-y border-border bg-muted/30">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 gap-6 sm:gap-8 lg:grid-cols-5">
+    <section className="border-y border-border/60 bg-gradient-to-br from-brand/[0.02] via-background to-champagne/[0.03]">
+      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-16 lg:px-8">
+        {/* Section header */}
+        <div className="mb-10 text-center sm:mb-12">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1 text-xs font-semibold tracking-wide text-primary">
+            <Star className="size-3 fill-current" />
+            Naše sliby
+          </span>
+          <h2 className="mt-3 font-heading text-[1.5rem] font-bold text-foreground sm:text-[1.75rem]">
+            Proč nakupovat u nás
+          </h2>
+        </div>
+
+        {/* Badges grid */}
+        <div className="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-5">
           {badges.map((badge) => (
-            <div key={badge.title} className="text-center">
-              <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-gradient-to-br from-brand-light/20 to-brand/10 text-primary ring-1 ring-primary/10 sm:size-12">
-                <badge.icon className="size-5 sm:size-6" />
+            <div
+              key={badge.title}
+              className={`flex flex-col items-center rounded-2xl border ${badge.border} bg-gradient-to-br ${badge.cardBg} p-5 text-center`}
+            >
+              <div
+                className={`flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br ${badge.iconBg} text-primary ring-1 ring-inset ring-black/[0.06]`}
+              >
+                <badge.icon className="size-6" />
               </div>
-              <h3 className="mt-3 text-sm font-semibold text-foreground">
+              <h3 className="mt-3.5 text-sm font-semibold leading-snug text-foreground">
                 {badge.title}
               </h3>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground sm:text-sm">
+              <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
                 {badge.description}
               </p>
             </div>

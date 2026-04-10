@@ -23,7 +23,14 @@ export function RecentlySoldFeed({ products }: RecentlySoldFeedProps) {
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="text-center">
-        <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
+        <span className="inline-flex items-center gap-2 rounded-full border border-foreground/10 bg-foreground/[0.04] px-3 py-1 text-xs font-medium text-muted-foreground">
+          <span className="relative flex size-1.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-60" />
+            <span className="relative inline-flex size-1.5 rounded-full bg-rose-400" />
+          </span>
+          Živý přehled
+        </span>
+        <h2 className="section-heading mt-3 font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
           Právě prodáno
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
