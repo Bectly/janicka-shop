@@ -539,9 +539,9 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
               zoomed ? "cursor-grab active:cursor-grabbing" : "cursor-zoom-in"
             }`}
             style={{
-              width: "80vw",
-              height: "70vh",
-              maxWidth: "32rem",
+              width: "92vw",
+              height: "85vh",
+              maxWidth: "40rem",
               transform: lightboxDismissY !== 0
                 ? `translateY(${lightboxDismissY}px)`
                 : undefined,
