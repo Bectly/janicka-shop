@@ -153,7 +153,7 @@ export function QuickViewButton({ productId }: QuickViewButtonProps) {
                   )}
                 </DialogDescription>
 
-                <DialogTitle className="mt-1 text-lg leading-snug">
+                <DialogTitle className="mt-1 font-heading text-lg leading-snug">
                   {product.name}
                 </DialogTitle>
 

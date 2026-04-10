@@ -80,7 +80,7 @@ export function CategoryCard({
         {categoryIcons[slug] ?? "🏷️"}
       </span>
       <div>
-        <h3 className="font-medium text-foreground transition-colors group-hover:text-primary">
+        <h3 className="font-heading font-medium text-foreground transition-colors group-hover:text-primary">
           {name}
         </h3>
         {description && (

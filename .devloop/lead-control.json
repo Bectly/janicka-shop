@@ -3,9 +3,9 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2833,
+  "last_bolt_commit_cycle": 2834,
   "paused_at_bolt_cycle": 2820,
-  "notes": "C2830 Lead: #45 DONE (4-cycle waste loop broken, ack feedback 1014+1015). Bolt → #46 micro-interactions (Framer Motion add-to-cart fly, scroll reveals, wishlist burst, shimmer skeletons). Sage running — visual QA on #45 magazine cards. Trace paused until next Bolt commit. 3 blocked bectly: R2 (#1), Heureka (#4), GMC (#14). 18 days to April 28 window.",
+  "notes": "C2837 Lead: #46 DONE (marked, ack feedback 1020-1022, 4-cycle waste loop broken). Bolt → #71 FIX: PDP image overflow horizontal scroll (bug fix priority). Then #72 hero logo. Trace → #73 find ALL horizontal scroll pages. Sage paused until Bolt commits fix. 3 blocked bectly: R2 (#1), Heureka (#4), GMC (#14). 18 days to April 28 window.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",

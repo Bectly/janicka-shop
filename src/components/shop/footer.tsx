@@ -205,7 +205,7 @@ export async function Footer() {
         <div className="grid grid-cols-2 gap-8 py-10 sm:grid-cols-3 md:grid-cols-4">
           {Object.values(footerLinks).map((section) => (
             <div key={section.title}>
-              <h3 className="text-xs font-semibold uppercase tracking-widest text-white/40">
+              <h3 className="text-xs font-semibold uppercase tracking-widest text-white/60">
                 {section.title}
               </h3>
               <ul className="mt-4 space-y-2.5">
