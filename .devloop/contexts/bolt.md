@@ -1,22 +1,28 @@
 # Bolt — Builder
 
 ## Current Task
-**C3011: #89 Lightbox black screen fix — DONE**
+**#110: SECURITY — Admin password change v nastavení**
 
 ## Progress Notes
-Fixed lightbox showing black screen on product detail pages. Root cause: image container `h-[85vh] w-[90vw]` was too large, causing portrait images to be clipped by `overflow-hidden`.
+Starting task. Files to modify:
+- `src/app/(admin)/admin/settings/actions.ts` — add `updateAdminPassword` Server Action
+- `src/app/(admin)/admin/settings/settings-form.tsx` — add password change section
+- `src/app/(admin)/admin/settings/page.tsx` — add second card for password form
 
-Changes in `src/components/shop/product-gallery.tsx`:
-1. **Reduced lightbox container** — Mobile: `h-[70vh] w-[85vw] max-w-4xl` (leaves 30vh for UI controls + thumbnails). Desktop (sm+): `h-[75vh] w-[90vw] max-w-5xl`.
-2. **Added `priority`** to lightbox Image — forces immediate loading, prevents flash of black while image loads.
-
-Build: TypeScript compiles clean (0 errors).
+Requirements:
+1. Verify current password via `bcrypt.compare`
+2. Validate new password: min 8 chars, must match confirmation
+3. Hash new password: `bcrypt.hash(newPw, 12)`
+4. Update via `prisma.admin.update`
+5. Zod validation schema
+6. Rate-limit the action
+7. Show success/error feedback
 
 ## Blockers
 _none_
 
 ## Next Planned
-Need fresh directive from Lead
+Implement and commit #110
 
 ## History (last 5 tasks)
 - C3011: #89 Lightbox black screen fix — DONE
