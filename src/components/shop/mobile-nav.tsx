@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Menu } from "lucide-react";
@@ -22,8 +23,10 @@ const categories = [
 ];
 
 export function MobileNav() {
+  const [open, setOpen] = useState(false);
+
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
         render={
           <Button variant="ghost" size="icon" className="min-h-[44px] min-w-[44px] md:hidden" />
@@ -35,7 +38,7 @@ export function MobileNav() {
       <SheetContent side="left" className="w-72">
         <SheetHeader>
           <SheetTitle>
-            <Link href="/" className="inline-block">
+            <Link href="/" onClick={() => setOpen(false)} className="inline-block">
               <Image
                 src="/logo/logo-header.png"
                 alt="Janička"
@@ -54,12 +57,14 @@ export function MobileNav() {
         <nav aria-label="Hlavní navigace" className="flex flex-col gap-1 px-4">
           <Link
             href="/products"
+            onClick={() => setOpen(false)}
             className="rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
           >
             Všechny produkty
           </Link>
           <Link
             href="/oblibene"
+            onClick={() => setOpen(false)}
             className="rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
           >
             Oblíbené
@@ -68,6 +73,7 @@ export function MobileNav() {
             <Link
               key={cat.href}
               href={cat.href}
+              onClick={() => setOpen(false)}
               className="rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               {cat.name}
