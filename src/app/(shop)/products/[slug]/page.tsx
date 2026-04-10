@@ -20,7 +20,7 @@ import { ProductInfoAccordion } from "@/components/shop/product-info-accordion";
 import { FreeShippingBar } from "@/components/shop/free-shipping-bar";
 import { NotifyMeForm } from "@/components/shop/notify-me-form";
 import { BrowseAbandonmentTracker } from "@/components/shop/browse-abandonment-tracker";
-import { Truck, Leaf, Ruler, Sparkles } from "lucide-react";
+import { Truck, Leaf, Ruler, Sparkles, Heart } from "lucide-react";
 import { parseProductImages, parseMeasurements, hasMeasurements } from "@/lib/images";
 import type { Metadata } from "next";
 
@@ -330,18 +330,21 @@ export default async function ProductDetailPage({ params }: Props) {
               {product.name}
             </h1>
 
-            <div className="mt-6 rounded-xl border border-dashed border-muted-foreground/30 bg-muted/30 p-6 text-center">
-              <p className="text-lg font-medium text-foreground">
+            <div className="mt-6 rounded-2xl bg-gradient-to-br from-brand-light/15 via-blush/25 to-champagne/20 p-8 text-center">
+              <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-light/40 to-brand/15 ring-1 ring-brand/10">
+                <Heart className="size-6 text-brand" />
+              </div>
+              <p className="font-heading text-lg font-semibold text-foreground">
                 Tento kousek už má novou majitelku
               </p>
               <p className="mt-2 text-sm text-muted-foreground">
-                Každý náš kousek je unikát. Podívejte se na podobné kousky níže.
+                Každý náš kousek je unikát — žádné kopie, žádné série.
               </p>
               <Link
                 href={`/products?category=${product.category.slug}`}
-                className="mt-4 inline-block rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-brand-dark"
               >
-                Prohlédnout {product.category.name.toLowerCase()}
+                Prohlédnout {product.category.name.toLowerCase()} →
               </Link>
             </div>
 
@@ -358,6 +361,9 @@ export default async function ProductDetailPage({ params }: Props) {
         {/* Smart similar products — scored by size/price/brand match */}
         {relatedProducts.length > 0 && (
           <section className="mt-16">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-sage-light/60 px-3 py-1 text-xs font-semibold tracking-wider text-sage-dark uppercase mb-3">
+              <span aria-hidden="true">◈</span> Podobné
+            </span>
             <h2 className="font-heading text-xl font-bold text-foreground">
               Podobné dostupné kousky
             </h2>
@@ -603,10 +609,12 @@ export default async function ProductDetailPage({ params }: Props) {
           {/* Stock info — delivery + shipping shown unconditionally;
               AddToCartButton handles the "reserved by other" state client-side */}
           {product.stock > 0 ? (
-            <p className="mt-4 flex items-center gap-1.5 text-xs font-medium text-brand-dark">
-              <Sparkles className="size-3.5" />
-              Jediný kus — tento kousek existuje jen jednou
-            </p>
+            <div className="mt-4">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/8 px-3 py-1.5 text-xs font-semibold text-brand-dark">
+                <Sparkles className="size-3" />
+                Jediný kus — existuje jen jednou
+              </span>
+            </div>
           ) : (
             <p className="mt-4 text-xs text-muted-foreground">
               Momentálně nedostupné
@@ -650,10 +658,15 @@ export default async function ProductDetailPage({ params }: Props) {
       {/* Related products */}
       {relatedProducts.length > 0 && (
         <section className="mt-16">
-          <h2 className="font-heading text-xl font-bold text-foreground">
-            Mohlo by se vám líbit
-          </h2>
-          <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="mb-6">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-champagne/50 px-3 py-1 text-xs font-semibold tracking-wider text-champagne-dark uppercase mb-3">
+              <span aria-hidden="true">★</span> Výběr
+            </span>
+            <h2 className="font-heading text-xl font-bold text-foreground">
+              Mohlo by se vám líbit
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
             {relatedProducts.map((p) => (
                 <ProductCard
                   key={p.id}
