@@ -1,12 +1,13 @@
 {
   "pause": {
-    "sage": "until_next_bolt_commit"
+    "sage": "until_next_bolt_commit",
+    "trace": "until_next_bolt_commit"
   },
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 3219,
-  "paused_at_bolt_cycle": 3215,
+  "paused_at_bolt_cycle": 3219,
   "notes": "C3216 Lead: PERMANENT PAUSE — changed all agents from 'until_lead_directive' (self-defeats on Lead run, root cause C2667) to 'paused' (true hard pause). 8 tasks ALL blocked on bectly. ZERO implementable work. Devloop MUST stop cycling.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
