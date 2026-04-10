@@ -5,7 +5,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 3130,
+  "last_bolt_commit_cycle": 3133,
   "paused_at_bolt_cycle": 3130,
   "notes": "C3131 Lead: ROOT CAUSE FOUND for 6th-recurrence pause map bug. devloop_orchestrator.py line 2096-2101 deletes agents with 'until_lead_directive' from pause map after Lead completes, but line 730-735 only re-adds QA_AGENTS (trace) — Bolt is DEV_AGENT and never gets re-added. FIX: use hard 'paused' (not 'until_lead_directive') to avoid deletion logic. Permanent fix needed in orchestrator.py. All 3 agents hard-paused. Zero open tasks. 7 blocked on bectly. Feedback #1220-1221 ACK. No monitors due. DEVLOOP MUST STOP.",
   "schema": {
