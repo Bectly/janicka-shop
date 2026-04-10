@@ -1,11 +1,14 @@
 {
-  "pause": {},
+  "pause": {
+    "sage": "until_next_bolt_commit",
+    "trace": "until_next_bolt_commit"
+  },
   "force_next": "bolt",
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 3101,
   "paused_at_bolt_cycle": 3097,
-  "notes": "C3102 Lead: ROOT CAUSE FOUND for task #100 lightbox (16 failed attempts). product-gallery.tsx lines 542-543 have TWO style={{}} props on same div — JSX silently drops first (sizing: width/height/maxWidth). Container has NO dimensions → image unpositioned on mobile. FIX: merge both style objects into one. Bolt unpaused + force_next. Sage/Trace wait for commit. Feedback #1203 ACK.",
+  "notes": "C3103 Lead: Task #100 DONE (committed 5516ee4). Bolt now on #101 — checkout Doprava broken padding + Zásilkovna. TWO issues: (1) Content clipping on right side in accordion — check overflow-hidden on card container line 138 + Packeta ml-9 on line 904 pushing content. (2) Zásilkovna widget shows 'nedostupné' because NEXT_PUBLIC_PACKETA_API_KEY is empty (packeta-widget.tsx:37,77-83). If key not in .env.local → blocked on bectly. Sage/Trace wait for commit. Feedback #1203 ACK.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
