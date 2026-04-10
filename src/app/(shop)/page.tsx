@@ -14,8 +14,8 @@ import { RecentlySoldFeed } from "@/components/shop/recently-sold-feed";
 import { RecentlyViewedSection } from "@/components/shop/recently-viewed";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight } from "lucide-react";
 import { getLowestPrices30d } from "@/lib/price-history";
+import { HeroSection } from "@/components/shop/hero-section";
 import { buildItemListSchema, buildWebSiteSchema, buildOrganizationSchema, jsonLdString } from "@/lib/structured-data";
 import { ScrollReveal } from "@/components/shop/scroll-reveal";
 
@@ -567,36 +567,8 @@ export default async function HomePage() {
         <JsonLdSection />
       </Suspense>
 
-      {/* Hero — renders instantly, no data dependency */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/30">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8 lg:py-36">
-          <div className="max-w-2xl">
-            <p className="text-sm font-medium text-primary">
-              Second hand &amp; vintage
-            </p>
-            <h1 className="mt-2 font-heading text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-[4rem]">
-              Unikátní kousky za&nbsp;zlomek ceny
-            </h1>
-            <p className="mt-4 text-lg leading-relaxed text-muted-foreground sm:text-xl">
-              Každý kus je originál. Značkové oblečení v&nbsp;skvělém stavu,
-              udržitelná móda pro moderní ženy.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Button size="lg" render={<Link href="/products" />}>
-                Prohlédnout kolekci
-                <ArrowRight data-icon="inline-end" className="size-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                render={<Link href="/products?sale=true" />}
-              >
-                Výprodej
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Hero — dominant logo + brand statement + cherry blossom particles */}
+      <HeroSection />
 
       {/* Mother's Day banner — date-gated May 1–10, 2026 */}
       <Suspense fallback={null}>
