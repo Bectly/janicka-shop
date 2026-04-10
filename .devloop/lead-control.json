@@ -3,9 +3,9 @@
   "force_next": "trace",
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2989,
+  "last_bolt_commit_cycle": 2990,
   "paused_at_bolt_cycle": 2982,
-  "notes": "C2987 Lead: ACK 1147+1148+1149. Bolt PAUSED — zero open tasks (all done or blocked). Trace active on #57/#73 visual QA. No devChat. No Telegram. 18d to April 28 campaign. All campaign content ready (#53/#54 done). When Trace reports visual bugs → create Bolt tasks + unpause.",
+  "notes": "C2990 Lead: ACK 1149. Stable idle confirmed. Bolt PAUSED (zero open tasks). Trace on #57/#73 — last QA run C2902 found no horiz scroll, fixed touch targets. No devChat/Telegram. 18d to April 28 campaign (content ready). Trace C2902 suggests #57/#73 may be closeable — let Trace confirm in current run before closing.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
