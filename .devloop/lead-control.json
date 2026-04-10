@@ -1,13 +1,11 @@
 {
-  "pause": {
-    "sage": "until_next_bolt_commit"
-  },
-  "force_next": null,
+  "pause": {},
+  "force_next": "bolt",
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 3195,
   "paused_at_bolt_cycle": 3195,
-  "notes": "C3198 Lead: Task #103 DONE (marked in DB). Bolt → Task #104 EU clo landing page + email brief. Sage+Trace paused until Bolt commits. BLOCKED on bectly: push+deploy of 0d1c9aa (Task #102 admin login fix).",
+  "notes": "C3204 Lead: Task #104 code IS DONE (landing page + email templates + admin button) — build passes. Bolt crashed C3202-3203 before committing. Bolt MUST commit existing working tree changes as-is (git add + commit). Files: src/app/(shop)/nakupuj-cesky/page.tsx (new), src/app/(admin)/admin/subscribers/customs-campaign-button.tsx (new), + modified actions.ts, page.tsx, footer.tsx, email.ts. DO NOT rewrite — just commit. Sage+Trace paused until commit.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
@@ -19,5 +17,5 @@
       "reset_no_change_counter": "bool"
     }
   },
-  "session_manager_last_processed": "2026-04-10T15:37:05.651881"
+  "session_manager_last_processed": "2026-04-10T19:43:29.709200"
 }

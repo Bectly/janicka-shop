@@ -22,6 +22,10 @@ const footerLinks = {
       { name: "Obchodní podmínky", href: "/terms" },
       { name: "Ochrana osobních údajů", href: "/privacy" },
       { name: "Tvoje soukromí", href: "/soukromi" },
+      // Date-gated: visible from June 15, 2026 (EU customs duty messaging)
+      ...(new Date() >= new Date("2026-06-15T00:00:00+02:00")
+        ? [{ name: "Nakupuj česky", href: "/nakupuj-cesky" }]
+        : []),
     ],
   },
   kontakt: {

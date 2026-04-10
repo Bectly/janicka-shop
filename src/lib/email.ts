@@ -2568,3 +2568,271 @@ export async function sendMothersDayEmail(
     return false;
   }
 }
+
+// ---------------------------------------------------------------------------
+// EU Customs Duty 2026 — 2-email campaign (Task #104)
+// ---------------------------------------------------------------------------
+
+export type CustomsEmailNumber = 1 | 2;
+
+const CUSTOMS_SUBJECTS: Record<CustomsEmailNumber, string> = {
+  1: "Tipy pro chytré nakupování léto 2026",
+  2: "Než se změní pravidla dovozu — nakup dnes",
+};
+
+const CUSTOMS_PREVIEWS: Record<CustomsEmailNumber, string> = {
+  1: "Od července se mění dovozní pravidla. My jsme tu doma.",
+  2: "Od 1. července platí nová cla. U Janičky se nic nemění.",
+};
+
+function buildCustomsProductGridHtml(products: CampaignProduct[]): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+
+  const cells = products.map((p) => {
+    const productUrl = `${baseUrl}/products/${p.slug}`;
+    const imageHtml = p.image
+      ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" style="width: 100%; height: 180px; object-fit: cover; border-radius: 8px; border: 1px solid #f0f0f0;" />`
+      : `<div style="width: 100%; height: 180px; background: #f5f5f5; border-radius: 8px; display: flex; align-items: center; justify-content: center;"><span style="font-size: 32px;">👗</span></div>`;
+
+    const discount = p.compareAt && p.compareAt > p.price
+      ? Math.round(((p.compareAt - p.price) / p.compareAt) * 100)
+      : null;
+
+    const priceHtml = discount
+      ? `<span style="text-decoration: line-through; color: #999; font-size: 12px;">${formatPriceCzk(p.compareAt!)}</span><br/><strong style="color: #dc2626;">${formatPriceCzk(p.price)}</strong> <span style="background: #dc2626; color: #fff; font-size: 11px; padding: 1px 5px; border-radius: 4px;">-${discount}%</span>`
+      : `<strong style="color: #1a1a1a;">${formatPriceCzk(p.price)}</strong>`;
+
+    const conditionLabel = CONDITION_LABELS_EMAIL[p.condition] ?? p.condition;
+
+    return `
+      <td style="width: 50%; padding: 8px; vertical-align: top;">
+        <a href="${productUrl}" style="text-decoration: none; color: inherit; display: block;">
+          ${imageHtml}
+          <p style="margin: 8px 0 2px; font-size: 13px; font-weight: 600; color: #1a1a1a; line-height: 1.3;">${escapeHtml(p.name)}</p>
+          ${p.brand ? `<p style="margin: 0 0 2px; font-size: 12px; color: #888;">${escapeHtml(p.brand)}</p>` : ""}
+          <p style="margin: 0 0 2px; font-size: 11px; color: #666;">${escapeHtml(conditionLabel)}</p>
+          <p style="margin: 0; font-size: 11px; color: #16a34a;">Bez cla — domácí zboží</p>
+          <div style="margin-top: 4px;">${priceHtml}</div>
+        </a>
+      </td>`;
+  });
+
+  const rows: string[] = [];
+  for (let i = 0; i < cells.length; i += 2) {
+    const cell2 = cells[i + 1] ?? '<td style="width: 50%; padding: 8px;"></td>';
+    rows.push(`<tr>${cells[i]}${cell2}</tr>`);
+  }
+
+  return `<table style="width: 100%; border-collapse: collapse; margin-top: 16px;">${rows.join("")}</table>`;
+}
+
+function buildCustomsEmailShell(
+  previewText: string,
+  recipientEmail: string,
+  innerHtml: string,
+): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const unsubscribeUrl = `${baseUrl}/odhlasit-novinky?email=${encodeURIComponent(recipientEmail)}`;
+
+  return `<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <span style="display: none; max-height: 0; overflow: hidden; mso-hide: all;">${escapeHtml(previewText)}</span>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f0fdf4; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
+
+    <div style="text-align: center; padding: 24px 0;">
+      <a href="${baseUrl}" style="display: inline-block;"><img src="${baseUrl}/logo/logo-email.png" alt="Janička Shop" style="height: 40px; width: auto; border: 0;" /></a>
+      <p style="margin: 4px 0 0; font-size: 13px; color: #999;">Second hand móda pro tebe</p>
+    </div>
+
+    <div style="background: #fff; border-radius: 12px; padding: 32px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+      ${innerHtml}
+    </div>
+
+    <div style="text-align: center; padding: 20px 0 4px;">
+      <p style="margin: 0; font-size: 12px; color: #16a34a; font-style: italic;">Nakupuj lokálně — bez cel, bez překvapení.</p>
+    </div>
+
+    <div style="text-align: center; padding: 4px 0 24px; font-size: 12px; color: #999;">
+      <p style="margin: 0;">Janička Shop — Second hand móda</p>
+      <p style="margin: 8px 0 0;">
+        <a href="${unsubscribeUrl}" style="color: #999; text-decoration: underline;">Odhlásit se z odběru</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+// --- Email 1: Soft tease (June 15) ---
+
+function buildCustomsEmail1Html(
+  products: CampaignProduct[],
+  recipientEmail: string,
+): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const infoUrl = `${baseUrl}/nakupuj-cesky`;
+  const shopUrl = `${baseUrl}/products?sort=newest`;
+
+  const productsHtml = products.length > 0
+    ? buildCustomsProductGridHtml(products)
+    : "";
+
+  const innerHtml = `
+    <div style="text-align: center; margin-bottom: 20px;">
+      <div style="display: inline-block; font-size: 40px;">🇨🇿</div>
+    </div>
+
+    <h2 style="margin: 0 0 16px; font-size: 22px; color: #1a1a1a; text-align: center; line-height: 1.3;">
+      Chytré nakupování léto 2026
+    </h2>
+
+    <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.7; color: #444; text-align: center;">
+      Věděla jsi, že od <strong style="color: #1a1a1a;">1.&nbsp;července 2026</strong>
+      se mění pravidla dovozu do EU? Zásilky ze zahraničí
+      (Shein, Temu, Aliexpress) budou nově podléhat clu — minimálně
+      <strong style="color: #1a1a1a;">75&nbsp;Kč navíc</strong> za každou kategorii zboží.
+    </p>
+
+    <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.7; color: #444; text-align: center;">
+      U&nbsp;Janičky se nic nemění. Jsme český eshop — žádná cla,
+      žádné čekání na celnici, žádná překvapení.
+    </p>
+
+    <table style="width: 100%; border-collapse: collapse; margin: 24px 0; border-radius: 8px; overflow: hidden;">
+      <tr>
+        <td style="width: 50%; padding: 16px; background: #fef2f2; vertical-align: top;">
+          <p style="margin: 0 0 6px; font-size: 12px; font-weight: 700; color: #991b1b; text-transform: uppercase; letter-spacing: 0.5px;">Ze zahraničí</p>
+          <p style="margin: 0; font-size: 13px; color: #7f1d1d; line-height: 1.5;">
+            Cena + clo + DPH.<br/>2–6 týdnů čekání.<br/>Kvalita nejistá.
+          </p>
+        </td>
+        <td style="width: 50%; padding: 16px; background: #f0fdf4; vertical-align: top;">
+          <p style="margin: 0 0 6px; font-size: 12px; font-weight: 700; color: #166534; text-transform: uppercase; letter-spacing: 0.5px;">Janička</p>
+          <p style="margin: 0; font-size: 13px; color: #14532d; line-height: 1.5;">
+            Cena = finální cena.<br/>Doručení do 3 dnů.<br/>Ověřená kvalita.
+          </p>
+        </td>
+      </tr>
+    </table>
+
+    ${productsHtml}
+
+    <div style="text-align: center; margin-top: 28px; margin-bottom: 12px;">
+      <a href="${infoUrl}" style="display: inline-block; background: #1a1a1a; color: #fff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 15px; font-weight: 600;">
+        Zjistit víc o&nbsp;změnách
+      </a>
+    </div>
+
+    <div style="text-align: center;">
+      <a href="${shopUrl}" style="color: #666; font-size: 13px; text-decoration: underline;">
+        Nebo se rovnou podívej na nové kousky →
+      </a>
+    </div>
+  `;
+
+  return buildCustomsEmailShell(CUSTOMS_PREVIEWS[1], recipientEmail, innerHtml);
+}
+
+// --- Email 2: Final push (June 28) ---
+
+function buildCustomsEmail2Html(
+  products: CampaignProduct[],
+  recipientEmail: string,
+): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const shopUrl = `${baseUrl}/products?sort=newest`;
+  const infoUrl = `${baseUrl}/nakupuj-cesky`;
+
+  const productsHtml = products.length > 0
+    ? buildCustomsProductGridHtml(products)
+    : "";
+
+  const innerHtml = `
+    <div style="text-align: center; margin-bottom: 20px;">
+      <div style="display: inline-block; font-size: 40px;">📦</div>
+    </div>
+
+    <h2 style="margin: 0 0 16px; font-size: 22px; color: #1a1a1a; text-align: center; line-height: 1.3;">
+      Za 3 dny se mění pravidla dovozu
+    </h2>
+
+    <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.7; color: #444; text-align: center;">
+      Od <strong style="color: #1a1a1a;">1.&nbsp;července</strong> platí nová cla
+      na všechny zásilky ze zahraničí pod 150&nbsp;€. Oblečení z&nbsp;Číny
+      zdraží o&nbsp;15–50&nbsp;%.
+    </p>
+
+    <div style="background: #fefce8; border-radius: 8px; padding: 16px; margin: 0 0 20px; text-align: center;">
+      <p style="margin: 0; font-size: 14px; color: #854d0e; line-height: 1.5;">
+        <strong>Šaty z&nbsp;Aliexpresu za 400&nbsp;Kč?</strong><br/>
+        Od července + 75&nbsp;Kč clo + týdny čekání.<br/>
+        U&nbsp;Janičky: kvalitní šaty od <strong>350&nbsp;Kč</strong>,
+        doručení do 3&nbsp;dnů, <strong>žádné clo</strong>.
+      </p>
+    </div>
+
+    <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.7; color: #444; text-align: center;">
+      Nakupuj chytře — lokálně, bez poplatků navíc.
+      Každý kousek u&nbsp;nás je unikát, pečlivě zkontrolovaný
+      a&nbsp;vyfocený. Víš přesně, co dostaneš.
+    </p>
+
+    ${productsHtml}
+
+    <div style="text-align: center; margin-top: 28px; margin-bottom: 12px;">
+      <a href="${shopUrl}" style="display: inline-block; background: #16a34a; color: #fff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 15px; font-weight: 600;">
+        Prohlédnout nabídku
+      </a>
+    </div>
+
+    <div style="text-align: center;">
+      <a href="${infoUrl}" style="color: #666; font-size: 13px; text-decoration: underline;">
+        Přečíst si víc o&nbsp;změnách →
+      </a>
+    </div>
+  `;
+
+  return buildCustomsEmailShell(CUSTOMS_PREVIEWS[2], recipientEmail, innerHtml);
+}
+
+const CUSTOMS_BUILDERS: Record<
+  CustomsEmailNumber,
+  (products: CampaignProduct[], email: string) => string
+> = {
+  1: buildCustomsEmail1Html,
+  2: buildCustomsEmail2Html,
+};
+
+/**
+ * Send an EU customs duty campaign email to one recipient.
+ * Returns true on success, false on failure (non-throwing for batch use).
+ */
+export async function sendCustomsCampaignEmail(
+  emailNumber: CustomsEmailNumber,
+  products: CampaignProduct[],
+  recipientEmail: string,
+): Promise<boolean> {
+  const resend = getResendClient();
+  if (!resend) {
+    console.warn("[Email] RESEND_API_KEY not set — skipping customs campaign");
+    return false;
+  }
+
+  try {
+    await resend.emails.send({
+      from: NEWSLETTER_FROM_EMAIL,
+      to: recipientEmail,
+      subject: CUSTOMS_SUBJECTS[emailNumber],
+      html: CUSTOMS_BUILDERS[emailNumber](products, recipientEmail),
+    });
+    return true;
+  } catch (error) {
+    console.error(`[Email] Failed to send customs email ${emailNumber} to ${recipientEmail}:`, error);
+    return false;
+  }
+}

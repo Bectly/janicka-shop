@@ -3,8 +3,8 @@
 import { getDb } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { rateLimitAdmin } from "@/lib/rate-limit";
-import { sendCampaignEmail, sendVintedCampaignEmail, sendMothersDayEmail } from "@/lib/email";
-import type { CampaignEmailData, CampaignProduct, VintedCampaignSegment, MothersDayEmailNumber, MothersDaySegment } from "@/lib/email";
+import { sendCampaignEmail, sendVintedCampaignEmail, sendMothersDayEmail, sendCustomsCampaignEmail } from "@/lib/email";
+import type { CampaignEmailData, CampaignProduct, VintedCampaignSegment, MothersDayEmailNumber, MothersDaySegment, CustomsEmailNumber } from "@/lib/email";
 import { getImageUrls } from "@/lib/images";
 import { parseJsonStringArray } from "@/lib/images";
 
@@ -341,6 +341,116 @@ export async function sendVintedTcCampaign(
     }
 
     if (i + BATCH_SIZE < tagged.length) {
+      await new Promise((resolve) => setTimeout(resolve, BATCH_DELAY_MS));
+    }
+  }
+
+  await db.campaignLog.update({
+    where: { id: campaign.id },
+    data: { status: "completed", sentCount, failedCount },
+  });
+
+  return { success: true, sentCount, failedCount };
+}
+
+// ---------------------------------------------------------------------------
+// EU Customs Duty 2026 — 2-email campaign (Task #104)
+// ---------------------------------------------------------------------------
+
+const CUSTOMS_LABELS: Record<CustomsEmailNumber, string> = {
+  1: "EU clo #1 — Soft tease (15. června)",
+  2: "EU clo #2 — Final push (28. června)",
+};
+
+interface CustomsCampaignResult {
+  success: boolean;
+  sentCount: number;
+  failedCount: number;
+  error?: string;
+}
+
+/**
+ * Send one of the 2 EU customs duty campaign emails.
+ * Loads up to 5 featured/newest available products to include.
+ */
+export async function sendCustomsDutyCampaign(
+  emailNumber: CustomsEmailNumber,
+): Promise<CustomsCampaignResult> {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) {
+    return { success: false, sentCount: 0, failedCount: 0, error: "Příliš mnoho požadavků. Zkuste to za chvíli." };
+  }
+
+  const db = await getDb();
+  const now = new Date();
+
+  // Load products for the email (featured first, then newest available)
+  const productCount = emailNumber === 1 ? 4 : 5;
+  const dbProducts = await db.product.findMany({
+    where: { active: true, sold: false },
+    orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+    select: {
+      name: true,
+      slug: true,
+      price: true,
+      compareAt: true,
+      brand: true,
+      condition: true,
+      images: true,
+    },
+    take: productCount,
+  });
+
+  const products: CampaignProduct[] = dbProducts.map((p) => ({
+    name: p.name,
+    slug: p.slug,
+    price: p.price,
+    compareAt: p.compareAt,
+    brand: p.brand,
+    condition: p.condition,
+    image: getImageUrls(p.images)[0] ?? null,
+  }));
+
+  // Fetch active, non-paused subscribers
+  const subscribers = await db.newsletterSubscriber.findMany({
+    where: {
+      active: true,
+      OR: [
+        { pausedUntil: null },
+        { pausedUntil: { lt: now } },
+      ],
+    },
+    select: { email: true },
+  });
+
+  if (subscribers.length === 0) {
+    return { success: true, sentCount: 0, failedCount: 0 };
+  }
+
+  // Log campaign
+  const campaign = await db.campaignLog.create({
+    data: {
+      subject: CUSTOMS_LABELS[emailNumber],
+      previewText: `EU clo email ${emailNumber}/2`,
+      status: "sending",
+    },
+  });
+
+  let sentCount = 0;
+  let failedCount = 0;
+
+  for (let i = 0; i < subscribers.length; i += BATCH_SIZE) {
+    const batch = subscribers.slice(i, i + BATCH_SIZE);
+    const results = await Promise.all(
+      batch.map((sub) => sendCustomsCampaignEmail(emailNumber, products, sub.email)),
+    );
+    for (const ok of results) {
+      if (ok) sentCount++;
+      else failedCount++;
+    }
+
+    if (i + BATCH_SIZE < subscribers.length) {
       await new Promise((resolve) => setTimeout(resolve, BATCH_DELAY_MS));
     }
   }
