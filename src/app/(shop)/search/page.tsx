@@ -220,7 +220,7 @@ export default async function SearchPage({
                       <Link
                         key={cat.slug}
                         href={`/products?category=${cat.slug}`}
-                        className="rounded-full border px-4 py-1.5 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                        className="inline-flex min-h-[44px] items-center rounded-full border px-4 py-1.5 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
                       >
                         {cat.name}
                       </Link>
@@ -277,7 +277,7 @@ export default async function SearchPage({
                     <Link
                       key={cat.slug}
                       href={`/products?category=${cat.slug}`}
-                      className="rounded-full border px-4 py-1.5 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                      className="inline-flex min-h-[44px] items-center rounded-full border px-4 py-1.5 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
                     >
                       {cat.name}
                     </Link>

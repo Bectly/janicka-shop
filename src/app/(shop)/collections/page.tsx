@@ -54,7 +54,7 @@ export default async function CollectionsPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-brand/[0.08] via-champagne-light/50 to-blush/60" />
         <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
           <nav className="mb-4 text-sm text-muted-foreground" aria-label="Navigace">
-            <Link href="/" className="hover:text-foreground">
+            <Link href="/" className="inline-flex min-h-[44px] items-center hover:text-foreground">
               Domů
             </Link>
             <span className="mx-2">/</span>
@@ -102,7 +102,7 @@ export default async function CollectionsPage() {
           </p>
           <Link
             href="/products"
-            className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-4 py-1.5 text-sm font-semibold text-primary transition-colors hover:bg-primary/[0.10]"
+            className="mt-4 inline-flex min-h-[44px] items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-4 py-1.5 text-sm font-semibold text-primary transition-colors hover:bg-primary/[0.10]"
           >
             <Layers className="size-3.5" />
             Prohlédnout celý katalog

@@ -237,7 +237,7 @@ export function ProductFilters({
               onClick={() => !isDisabled && toggleMulti("size", size, activeSizes)}
               aria-pressed={isActive}
               aria-disabled={isDisabled}
-              className={`min-h-11 min-w-[2.5rem] inline-flex items-center justify-center rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
+              className={`min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
                 isActive
                   ? "bg-primary text-primary-foreground"
                   : isDisabled
