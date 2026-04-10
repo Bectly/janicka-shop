@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { getShopSettings } from "./actions";
 import { SettingsForm } from "./settings-form";
+import { PasswordChangeForm } from "./password-form";
 
 export const metadata: Metadata = {
   title: "Nastavení obchodu",
@@ -22,6 +23,18 @@ export default async function AdminSettingsPage() {
 
       <div className="mt-6 rounded-xl border bg-card p-6 shadow-sm">
         <SettingsForm settings={settings} />
+      </div>
+
+      <div className="mt-6 rounded-xl border bg-card p-6 shadow-sm">
+        <h2 className="font-heading text-lg font-semibold text-foreground">
+          Změna hesla
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Změňte přihlašovací heslo do administrace.
+        </p>
+        <div className="mt-4">
+          <PasswordChangeForm />
+        </div>
       </div>
     </>
   );

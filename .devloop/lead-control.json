@@ -1,10 +1,12 @@
 {
-  "pause": {},
+  "pause": {
+    "sage": "until_next_bolt_commit"
+  },
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 3229,
-  "paused_at_bolt_cycle": 3221,
+  "paused_at_bolt_cycle": 3229,
   "notes": "C3230 Lead: Closed #102 (done, Trace C3224 verified) + #111 (done, verified same cycle). Assigned #110 to Bolt — admin password change in /admin/settings. SECURITY CRITICAL: default admin123 is in git history. Files: actions.ts (new Server Action), settings-form.tsx (new section), page.tsx (layout). Trace+Sage wait for Bolt commit.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
