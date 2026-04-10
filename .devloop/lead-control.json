@@ -1,14 +1,11 @@
 {
-  "pause": {
-    "sage": "until_next_bolt_commit",
-    "trace": "until_next_bolt_commit"
-  },
+  "pause": {},
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 3095,
+  "last_bolt_commit_cycle": 3097,
   "paused_at_bolt_cycle": 3095,
-  "notes": "C3093 Lead: #98/#99 DONE (lightbox fix verified 4x, deployed). ALL agents PAUSED — zero implementable work. Remaining tasks ALL blocked on bectly: #1 R2 tokens, #4 Heureka key, #14 GMC registration, #65 SITE_URL. Low-priority features #85/#86/#87 blocked until bugs done. Feedback #1201/#1199/#1198 ACK. 18d to Apr 28 campaign window.",
+  "notes": "C3097 Lead: Bolt was NOT in pause map — fixed (root cause of C3094-3096 waste). ALL 3 agents HARD paused (status:'paused'). Zero implementable work. Blocked on bectly: #1 R2, #4 Heureka, #14 GMC (Apr 30 deadline), #65 SITE_URL. Low-pri #85-87 deferred. Feedback #1201/#1202 ACK. 18d to Apr 28 campaign.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
