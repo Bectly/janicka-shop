@@ -3,9 +3,9 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2963,
+  "last_bolt_commit_cycle": 2964,
   "paused_at_bolt_cycle": 2917,
-  "notes": "C2958 Lead: 11th pause re-apply. #74 marked DONE (fd8aade). Bolt/Sage/Guard/Aria HARD PAUSED. Trace only active (#57/#73). ZERO actionable Bolt work — all blocked on bectly. ACK 1126+1127+1128. 18d to April 28 campaign. STOP DEVLOOP — every cycle past this point is pure token waste.",
+  "notes": "C2965 Lead: #76 MARKED DONE (4 waste cycles C2962-2964). ACK 1132+1133+1134. Bolt UNPAUSED → #84 (horizontal overflow root cause), then #88 (gallery images). Trace active on #57/#73. Sage/Guard/Aria paused. 5 actionable Bolt tasks. 18d to April 28 campaign.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
