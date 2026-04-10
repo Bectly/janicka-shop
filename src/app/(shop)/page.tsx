@@ -548,7 +548,7 @@ function SectionSkeleton({ title, subtitle }: { title: string; subtitle: string 
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div>
-        <h2 className="font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">{title}</h2>
+        <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">{title}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
       </div>
       <ProductGridSkeleton />
@@ -579,7 +579,7 @@ export default async function HomePage() {
       <Suspense fallback={
         <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
           <div>
-            <h2 className="font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">Kategorie</h2>
+            <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">Kategorie</h2>
             <p className="mt-1 text-sm text-muted-foreground">Najděte přesně to, co hledáte</p>
           </div>
           <CategoriesSkeleton />
@@ -614,7 +614,7 @@ export default async function HomePage() {
         <Suspense fallback={
           <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
             <div className="text-center">
-              <h2 className="font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">Populární značky</h2>
+              <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">Populární značky</h2>
               <p className="mt-1 text-sm text-muted-foreground">Oblíbené značky v naší nabídce</p>
             </div>
             <BrandsSkeleton />
