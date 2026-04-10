@@ -7,8 +7,12 @@ import { MobileNav } from "./mobile-nav";
 import { InstantSearch } from "./instant-search";
 import { DesktopNavLinks } from "./desktop-nav-links";
 import { getCategoriesWithCounts } from "@/lib/category-counts";
+import { connection } from "next/server";
 
-export async function Header() {
+const NAV_NAMES = ["Novinky", "Šaty", "Topy & Halenky", "Kalhoty & Sukně", "Bundy & Kabáty", "Doplňky"];
+
+async function HeaderNav() {
+  await connection();
   const categories = await getCategoriesWithCounts();
   const categoryCounts: Record<string, number> = {};
   for (const c of categories) {
@@ -16,11 +20,53 @@ export async function Header() {
   }
 
   return (
+    <>
+      {/* Mobile menu */}
+      <Suspense fallback={<div className="size-11 md:hidden" />}>
+        <MobileNav categoryCounts={categoryCounts} />
+      </Suspense>
+
+      {/* Desktop nav — DesktopNavLinks reads searchParams so needs Suspense */}
+      <nav aria-label="Hlavní navigace" className="hidden flex-1 items-center gap-1 md:flex">
+        <Suspense
+          fallback={
+            <div className="flex items-center gap-1">
+              {NAV_NAMES.map((name) => (
+                <span key={name} className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-foreground/70">
+                  {name}
+                </span>
+              ))}
+            </div>
+          }
+        >
+          <DesktopNavLinks categoryCounts={categoryCounts} />
+        </Suspense>
+      </nav>
+    </>
+  );
+}
+
+export function Header() {
+  return (
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80">
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
-        {/* Mobile menu — Suspense needed because MobileNav reads searchParams */}
-        <Suspense fallback={<div className="size-11 md:hidden" />}>
-          <MobileNav categoryCounts={categoryCounts} />
+        <Suspense
+          fallback={
+            <>
+              <div className="size-11 md:hidden" />
+              <nav aria-label="Hlavní navigace" className="hidden flex-1 items-center gap-1 md:flex">
+                <div className="flex items-center gap-1">
+                  {NAV_NAMES.map((name) => (
+                    <span key={name} className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-foreground/70">
+                      {name}
+                    </span>
+                  ))}
+                </div>
+              </nav>
+            </>
+          }
+        >
+          <HeaderNav />
         </Suspense>
 
         {/* Logo */}
@@ -35,22 +81,8 @@ export async function Header() {
           />
         </Link>
 
-        {/* Desktop nav — Suspense needed because DesktopNavLinks reads searchParams */}
-        <nav aria-label="Hlavní navigace" className="hidden flex-1 items-center gap-1 md:flex">
-          <Suspense
-            fallback={
-              <div className="flex items-center gap-1">
-                {["Novinky","Šaty","Topy & Halenky","Kalhoty & Sukně","Bundy & Kabáty","Doplňky"].map((name) => (
-                  <span key={name} className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-foreground/70">
-                    {name}
-                  </span>
-                ))}
-              </div>
-            }
-          >
-            <DesktopNavLinks categoryCounts={categoryCounts} />
-          </Suspense>
-        </nav>
+        {/* Spacer to push right-side icons when nav is loading */}
+        <div className="hidden flex-1 md:block" />
 
         {/* Right side: search + cart */}
         <div className="ml-auto flex items-center gap-1">

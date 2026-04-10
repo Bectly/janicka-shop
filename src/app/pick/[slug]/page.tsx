@@ -18,13 +18,17 @@ export async function generateStaticParams() {
   }
 }
 
+
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  await connection();
   const { slug } = await params;
+  if (slug === "_placeholder") {
+    return { title: "Výběr | Janička" };
+  }
+  await connection();
   const db = await getDb();
   const pick = await db.devPick.findUnique({ where: { slug } });
   return {

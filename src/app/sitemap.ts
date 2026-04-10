@@ -1,6 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getDb } from "@/lib/db";
-
+import { PrismaClient } from "@prisma/client";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://janicka-shop.vercel.app";
@@ -42,10 +41,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // Graceful degradation: if DB is unavailable (Turso cold start, network error),
-  // return static pages only so crawlers don't get a 500 on /sitemap.xml
+  // Use a short-lived, isolated client so the engine process is fully
+  // torn down before returning — prevents HANGING_PROMISE_REJECTION from
+  // Prisma's query engine contaminating other build workers.
+  const db = new PrismaClient();
   try {
-    const db = await getDb();
     const [activeProducts, soldProducts, categories, collections] = await Promise.all([
       db.product.findMany({
         where: { active: true, sold: false },
@@ -105,5 +105,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   } catch {
     console.error("[Sitemap] DB query failed, returning static pages only");
     return staticPages;
+  } finally {
+    // Explicitly disconnect to resolve Prisma engine's internal promises
+    // before this build worker finishes — prevents contaminating other workers.
+    await db.$disconnect().catch(() => {});
   }
 }

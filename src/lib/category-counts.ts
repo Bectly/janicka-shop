@@ -1,5 +1,4 @@
 import { getDb } from "@/lib/db";
-import { cacheLife, cacheTag } from "next/cache";
 
 export interface CategoryWithCount {
   slug: string;
@@ -9,13 +8,9 @@ export interface CategoryWithCount {
 
 /**
  * Returns all categories with their active (non-sold) product counts.
- * Cached for 30s, shared across all users — used by header navigation.
+ * Called from HeaderNav (inside Suspense) — rendered dynamically via PPR.
  */
 export async function getCategoriesWithCounts(): Promise<CategoryWithCount[]> {
-  "use cache";
-  cacheLife("minutes");
-  cacheTag("products");
-
   const db = await getDb();
   const categories = await db.category.findMany({
     orderBy: { sortOrder: "asc" },
