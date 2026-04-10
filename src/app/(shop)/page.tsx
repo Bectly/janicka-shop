@@ -18,6 +18,7 @@ import { getLowestPrices30d } from "@/lib/price-history";
 import { HeroSection } from "@/components/shop/hero-section";
 import { buildItemListSchema, buildWebSiteSchema, buildOrganizationSchema, jsonLdString } from "@/lib/structured-data";
 import { ScrollReveal } from "@/components/shop/scroll-reveal";
+import { LayoutGrid, Star, Tag, Heart, Layers, Mail } from "lucide-react";
 
 /* ---------- Cached DB fetches (cross-request via "use cache") ---------- */
 
@@ -110,7 +111,7 @@ async function CategoriesSection() {
       <div className="flex items-end justify-between">
         <div>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/8 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase mb-3">
-            <span aria-hidden="true">◈</span> Kategorie
+            <LayoutGrid className="size-3" aria-hidden="true" /> Kategorie
           </span>
           <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
             Kategorie
@@ -210,7 +211,7 @@ async function FeaturedProductsSection() {
       <div className="flex items-end justify-between">
         <div>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-champagne/50 px-3 py-1 text-xs font-semibold tracking-wider text-champagne-dark uppercase mb-3">
-            <span aria-hidden="true">★</span> Výběr
+            <Star className="size-3" aria-hidden="true" /> Výběr
           </span>
           <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
             Doporučujeme
@@ -285,7 +286,7 @@ async function SaleProductsSection() {
         <div className="flex items-end justify-between">
           <div>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/8 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase mb-3">
-              <span aria-hidden="true">✦</span> Akce
+              <Tag className="size-3" aria-hidden="true" /> Akce
             </span>
             <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
               Výprodej
@@ -361,7 +362,7 @@ async function PopularBrandsSection() {
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="text-center">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/8 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase mb-4">
-          <span aria-hidden="true">✦</span> Značky
+          <Heart className="size-3" aria-hidden="true" /> Značky
         </span>
         <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
           Populární značky
@@ -414,7 +415,7 @@ async function FeaturedCollectionsSection() {
       <div className="flex items-end justify-between">
         <div>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-sage-light/60 px-3 py-1 text-xs font-semibold tracking-wider text-sage-dark uppercase mb-3">
-            <span aria-hidden="true">◇</span> Kolekce
+            <Layers className="size-3" aria-hidden="true" /> Kolekce
           </span>
           <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
             Kolekce
@@ -663,7 +664,7 @@ export default async function HomePage() {
           <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-lg text-center">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase mb-4">
-                <span aria-hidden="true">✉</span> Newsletter
+                <Mail className="size-3" aria-hidden="true" /> Newsletter
               </span>
               <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
                 Buďte v obraze
