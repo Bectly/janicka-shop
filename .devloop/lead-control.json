@@ -1,9 +1,9 @@
 {
   "pause": {},
-  "force_next": "bolt",
+  "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 3195,
+  "last_bolt_commit_cycle": 3205,
   "paused_at_bolt_cycle": 3195,
   "notes": "C3204 Lead: Task #104 code IS DONE (landing page + email templates + admin button) — build passes. Bolt crashed C3202-3203 before committing. Bolt MUST commit existing working tree changes as-is (git add + commit). Files: src/app/(shop)/nakupuj-cesky/page.tsx (new), src/app/(admin)/admin/subscribers/customs-campaign-button.tsx (new), + modified actions.ts, page.tsx, footer.tsx, email.ts. DO NOT rewrite — just commit. Sage+Trace paused until commit.",
   "schema": {
