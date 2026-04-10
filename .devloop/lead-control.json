@@ -9,7 +9,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 3047,
+  "last_bolt_commit_cycle": 3049,
   "paused_at_bolt_cycle": 3045,
   "notes": "C3047 Lead: FIXED AGAIN — bolt was MISSING from pause map (only sage/trace listed, both with wrong 'until_next_bolt_commit'). Root cause: prior edit left bolt out. Now ALL THREE hard 'paused'. Zero implementable work. 4 blocked bectly (#1/#4/#14/#65). 3 low-priority (#85/#86/#87). Tasks #51-54 confirmed done. 18d to April 28 campaign window. DevChat clean. Devloop MUST STOP.",
   "schema": {
