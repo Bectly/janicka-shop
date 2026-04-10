@@ -3,7 +3,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2941,
+  "last_bolt_commit_cycle": 2943,
   "paused_at_bolt_cycle": 2917,
   "notes": "C2942 Lead: pause:{} cleared 7TH TIME. Re-applied all-agent pause (bolt/sage/guard/aria). Session manager bug PERSISTS — bectly MUST fix session_manager_last_processed or pause serialization. Trace only active (#57/#73). ZERO Bolt-assignable tasks. All blocked bectly. 18d to April 28 campaign. ACK 1116+1117. STOP SCHEDULING BOLT.",
   "schema": {
