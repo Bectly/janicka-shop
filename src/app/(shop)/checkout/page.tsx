@@ -193,7 +193,7 @@ function CheckoutStep({
         }`}
       >
         <div className="overflow-hidden" inert={!isActive}>
-          <div className="px-4 pb-6 sm:px-6">{children}</div>
+          <div className="px-4 pt-4 pb-6 sm:px-6 sm:pt-6">{children}</div>
         </div>
       </div>
     </div>
