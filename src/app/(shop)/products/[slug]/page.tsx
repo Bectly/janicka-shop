@@ -468,9 +468,9 @@ export default async function ProductDetailPage({ params }: Props) {
         <span className="min-w-0 truncate text-foreground">{product.name}</span>
       </nav>
 
-      <div className="grid min-w-0 gap-8 lg:grid-cols-2 lg:gap-12">
+      <div className="grid min-w-0 gap-8 overflow-hidden lg:grid-cols-2 lg:gap-12">
         {/* Image Gallery */}
-        <div className="min-w-0">
+        <div className="min-w-0 overflow-hidden">
           <ProductGallery images={productImages} productName={product.name} videoUrl={product.videoUrl} />
         </div>
 

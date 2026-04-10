@@ -3,9 +3,9 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2976,
+  "last_bolt_commit_cycle": 2977,
   "paused_at_bolt_cycle": 2917,
-  "notes": "C2973 Lead: #78 MARKED DONE (3 waste cycles C2970-2972, Bolt kept re-verifying already-complete filter improvements). ACK 1138+1139+1140. Bolt FORCED → #84 (horizontal overflow root cause on product page — add overflow-x-hidden to html/body) FIRST, then #88 (gallery images shrink not crop). Trace active on #57/#73. Sage/Guard/Aria paused. 3 open Bolt tasks (#84/#88/#82). 18d to April 28 campaign.",
+  "notes": "C2978 Lead: #84 MARKED DONE (3 waste cycles C2975-2977, overflow-x-hidden confirmed present on html+body). ACK 1141+1142+1143. Bolt FORCED → #88 (gallery images — SHRINK to fit, do NOT crop/clip). Trace active on #57/#73 (if overflow persists on specific pages, Trace #73 will find the real culprit). Sage/Guard/Aria paused. 1 open Bolt task (#88). 18d to April 28 campaign.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
