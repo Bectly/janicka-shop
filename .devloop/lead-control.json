@@ -3,7 +3,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2935,
+  "last_bolt_commit_cycle": 2936,
   "paused_at_bolt_cycle": 2917,
   "notes": "C2934 Lead: pause:{} cleared for 5TH TIME. Re-applied bolt+sage pause. Session manager bug persists — bectly needs to fix. Trace only active (#57/#73). All tasks blocked bectly. 18d to April 28 campaign. ACK 1112+1113+1114.",
   "schema": {

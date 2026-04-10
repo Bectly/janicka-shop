@@ -278,11 +278,10 @@ async function SaleProductsSection() {
   "use cache";
   cacheLife("hours");
   cacheTag("products");
-  let saleProducts: Awaited<ReturnType<typeof import("@prisma/client").PrismaClient.prototype.product.findMany>>;
-  let lowestPricesMap: Map<string, number>;
+  // eslint-disable-next-line no-useless-catch
   try {
     const db = await getDb();
-    saleProducts = await db.product.findMany({
+    const saleProducts = await db.product.findMany({
       where: {
         active: true,
         sold: false,
@@ -292,11 +291,10 @@ async function SaleProductsSection() {
       take: 8,
       orderBy: { createdAt: "desc" },
     });
-    if (saleProducts.length === 0) return null;
-    lowestPricesMap = await getLowestPrices30d(saleProducts.map((p) => p.id));
-  } catch {
-    return null;
-  }
+
+  if (saleProducts.length === 0) return null;
+
+  const lowestPricesMap = await getLowestPrices30d(saleProducts.map((p) => p.id));
 
   return (
     <section className="bg-brand/[0.04]">
