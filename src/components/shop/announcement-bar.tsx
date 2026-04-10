@@ -6,10 +6,10 @@ import { X } from "lucide-react";
 const STORAGE_KEY = "janicka-announcement-dismissed";
 
 const messages = [
-  "Doprava zdarma od 1 500 Kč",
-  "Každý kousek je unikát — second hand & vintage",
-  "14 dní na vrácení bez udání důvodu",
-  "Prémiová kvalita, ověřený stav",
+  "🚚 Doprava zdarma od 1 500 Kč",
+  "✨ Každý kousek je unikát — second hand & vintage",
+  "↺ 14 dní na vrácení bez udání důvodu",
+  "🌸 Prémiová kvalita, ověřený stav",
 ];
 
 export function AnnouncementBar() {

@@ -348,10 +348,13 @@ async function PopularBrandsSection() {
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="text-center">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/8 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase mb-4">
+          <span aria-hidden="true">✦</span> Značky
+        </span>
         <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
           Populární značky
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-3 text-sm text-muted-foreground">
           Oblíbené značky v naší nabídce
         </p>
       </div>
@@ -360,10 +363,12 @@ async function PopularBrandsSection() {
           <Link
             key={brand}
             href={`/products?brand=${encodeURIComponent(brand)}`}
-            className="inline-flex items-center gap-1.5 rounded-full border bg-card px-4 py-2 text-sm font-medium text-foreground transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
+            className="group inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-gradient-to-br from-card to-blush-light px-4 py-2 text-sm font-medium text-foreground/80 shadow-sm transition-all duration-200 hover:border-brand/30 hover:from-blush hover:to-brand-light/20 hover:text-primary hover:shadow-[0_4px_14px_-4px_oklch(0.55_0.20_350_/_0.15)]"
           >
             {brand}
-            <span className="text-xs text-muted-foreground">({count})</span>
+            <span className="text-[11px] text-muted-foreground/60 transition-colors group-hover:text-primary/50">
+              {count}
+            </span>
           </Link>
         ))}
       </div>
