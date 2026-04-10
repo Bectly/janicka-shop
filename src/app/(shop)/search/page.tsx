@@ -134,7 +134,16 @@ export default async function SearchPage({
           dangerouslySetInnerHTML={{ __html: jsonLdString(searchJsonLd) }}
         />
       )}
-      <h1 className="sr-only">Vyhledávání</h1>
+      {/* Editorial header */}
+      <div className="mb-8 flex flex-col items-start gap-2">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1 text-xs font-semibold tracking-wide text-primary">
+          <Search className="size-3" />
+          Hledání
+        </span>
+        <h1 className="font-heading text-[1.75rem] font-bold text-foreground sm:text-3xl">
+          Vyhledávání
+        </h1>
+      </div>
       {/* Search input */}
       <form action="/search" method="get" className="mx-auto max-w-xl">
         <div className="relative">
@@ -196,10 +205,13 @@ export default async function SearchPage({
               </div>
             ) : (
               <div className="py-12 text-center">
-                <p className="text-lg text-muted-foreground">
-                  Nic jsme nenašli pro &ldquo;{query}&rdquo;
-                </p>
-                <p className="mt-2 text-sm text-muted-foreground">
+                <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/[0.06] to-brand/[0.10] ring-1 ring-inset ring-primary/10">
+                  <Search className="size-6 text-primary/50" />
+                </div>
+                <h2 className="font-heading text-lg font-semibold text-foreground">
+                  Nic jsme nenašli
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
                   Zkuste jiný výraz nebo se podívejte na naše kategorie
                 </p>
                 {categories.length > 0 && (
@@ -217,9 +229,15 @@ export default async function SearchPage({
                 )}
                 {featuredProducts.length > 0 && (
                   <div className="mt-12 text-left">
-                    <h2 className="font-heading text-lg font-bold text-foreground">
-                      Mohlo by se vám líbit
-                    </h2>
+                    <div className="flex flex-col gap-1.5">
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1 text-xs font-semibold tracking-wide text-primary self-start">
+                        <Search className="size-3" />
+                        Doporučujeme
+                      </span>
+                      <h2 className="font-heading text-lg font-bold text-foreground">
+                        Mohlo by se vám líbit
+                      </h2>
+                    </div>
                     <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
                       {featuredProducts.map((product) => (
                         <ProductCard
@@ -271,9 +289,15 @@ export default async function SearchPage({
             {/* Featured products */}
             {featuredProducts.length > 0 && (
               <div className="mt-12">
-                <h2 className="font-heading text-lg font-bold text-foreground">
-                  Doporučujeme
-                </h2>
+                <div className="flex flex-col gap-1.5">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1 text-xs font-semibold tracking-wide text-primary self-start">
+                    <Search className="size-3" />
+                    Výběr
+                  </span>
+                  <h2 className="font-heading text-lg font-bold text-foreground">
+                    Doporučujeme
+                  </h2>
+                </div>
                 <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
                   {featuredProducts.map((product) => (
                     <ProductCard

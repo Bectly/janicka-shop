@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { PreferenceCenter } from "./preference-center";
+import { BellOff } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -55,10 +56,15 @@ export default async function UnsubscribeNewsletterPage({ searchParams }: Props)
     <div className="mx-auto max-w-xl px-4 py-24 text-center sm:px-6">
       {success ? (
         <>
-          <div className="mb-6 flex items-center justify-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-sage-light">
+          {/* Editorial pill-badge header */}
+          <div className="mb-6 flex flex-col items-center gap-3">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1 text-xs font-semibold tracking-wide text-primary">
+              <BellOff className="size-3" />
+              Odhlášení novinek
+            </span>
+            <div className="flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-sage-light/60 to-sage-light ring-1 ring-inset ring-sage-dark/10">
               <svg
-                className="h-8 w-8 text-sage-dark"
+                className="h-7 w-7 text-sage-dark"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -79,10 +85,15 @@ export default async function UnsubscribeNewsletterPage({ searchParams }: Props)
         </>
       ) : (
         <>
-          <div className="mb-6 flex items-center justify-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
+          {/* Editorial pill-badge header */}
+          <div className="mb-6 flex flex-col items-center gap-3">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1 text-xs font-semibold tracking-wide text-primary">
+              <BellOff className="size-3" />
+              Odhlášení novinek
+            </span>
+            <div className="flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-destructive/[0.06] to-destructive/[0.12] ring-1 ring-inset ring-destructive/10">
               <svg
-                className="h-8 w-8 text-destructive"
+                className="h-7 w-7 text-destructive"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"

@@ -51,13 +51,13 @@ export default async function SharedWishlistPage({ searchParams }: Props) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-6">
-        <div className="flex items-center gap-2 text-primary">
-          <Heart className="size-5" />
-          <span className="text-sm font-medium">Seznam přání</span>
-        </div>
-        <h1 className="mt-1 font-heading text-3xl font-bold text-foreground">
-          Seznam přání z Janička Shop
+      <div className="mb-6 flex flex-col items-start gap-2">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1 text-xs font-semibold tracking-wide text-primary">
+          <Heart className="size-3" />
+          Seznam přání
+        </span>
+        <h1 className="font-heading text-[1.75rem] font-bold text-foreground sm:text-3xl">
+          Sdílený seznam přání
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {available.length}{" "}
@@ -189,8 +189,10 @@ export default async function SharedWishlistPage({ searchParams }: Props) {
 function EmptyState({ message }: { message: string }) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-20 text-center sm:px-6 lg:px-8">
-      <Heart className="mx-auto size-12 text-muted-foreground/30" />
-      <p className="mt-4 text-lg text-muted-foreground">{message}</p>
+      <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/[0.06] to-blush/30 ring-1 ring-inset ring-primary/10">
+        <Heart className="size-6 text-primary/50" />
+      </div>
+      <p className="mt-2 text-lg text-muted-foreground">{message}</p>
       <Button className="mt-6" render={<Link href="/products" />}>
         <ShoppingBag className="mr-2 size-4" />
         Prohlédnout kolekci

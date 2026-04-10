@@ -60,7 +60,8 @@ export default async function CollectionsPage() {
             <span className="mx-2">/</span>
             <span className="text-foreground">Kolekce</span>
           </nav>
-          <span className="inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-primary">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1 text-xs font-semibold tracking-wide text-primary">
+            <Layers className="size-3" />
             Kurátorský výběr
           </span>
           <h1 className="mt-2 font-heading text-[1.75rem] font-bold tracking-tight text-foreground sm:text-[2.25rem]">
@@ -90,14 +91,20 @@ export default async function CollectionsPage() {
         </div>
       ) : (
         <div className="py-20 text-center">
-          <Layers className="mx-auto size-12 text-muted-foreground/30" />
-          <p className="mt-4 text-lg text-muted-foreground">
-            Zatím nemáme žádné kolekce.
+          <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/[0.06] to-brand/[0.10] ring-1 ring-inset ring-primary/10">
+            <Layers className="size-6 text-primary/50" />
+          </div>
+          <h2 className="font-heading text-lg font-semibold text-foreground">
+            Zatím žádné kolekce
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Brzy přidáme kurátorské výběry.
           </p>
           <Link
             href="/products"
-            className="mt-4 inline-flex text-sm text-primary hover:underline"
+            className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-4 py-1.5 text-sm font-semibold text-primary transition-colors hover:bg-primary/[0.10]"
           >
+            <Layers className="size-3.5" />
             Prohlédnout celý katalog
           </Link>
         </div>
