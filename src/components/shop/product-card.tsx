@@ -114,12 +114,14 @@ export function ProductCard({
           Rezervováno
         </span>
       )}
+      {/* #80 skryto per Janička — zakomentovat, nemazat
       {stock === 1 && !isReserved && (
         <span className="flex items-center gap-0.5 rounded-full bg-amber-500 px-2.5 py-0.5 text-xs font-semibold text-white shadow-sm">
           <Flame className="size-3" />
           Poslední kus
         </span>
       )}
+      */}
     </div>
   );
 
