@@ -24,6 +24,7 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // Czech → English URL redirects for informational pages
       {
         source: "/obchodni-podminky",
         destination: "/terms",
@@ -32,6 +33,36 @@ const nextConfig: NextConfig = {
       {
         source: "/ochrana-soukromi",
         destination: "/privacy",
+        permanent: true,
+      },
+      {
+        source: "/doprava",
+        destination: "/shipping",
+        permanent: true,
+      },
+      {
+        source: "/kontakt",
+        destination: "/contact",
+        permanent: true,
+      },
+      {
+        source: "/o-nas",
+        destination: "/about",
+        permanent: true,
+      },
+      {
+        source: "/reklamace",
+        destination: "/returns",
+        permanent: true,
+      },
+      {
+        source: "/vratky",
+        destination: "/returns",
+        permanent: true,
+      },
+      {
+        source: "/kosik",
+        destination: "/cart",
         permanent: true,
       },
     ];

@@ -306,6 +306,7 @@
 
 .announcement-marquee {
   animation: marquee-scroll 30s linear infinite;
+  will-change: transform;
 }
 
 .announcement-bar:hover .announcement-marquee {
