@@ -22,7 +22,7 @@ export function NewsletterForm({ variant = "default" }: { variant?: "default" | 
 
   if (state?.success) {
     return (
-      <div className={`mt-6 flex items-center justify-center gap-2 text-sm font-medium ${variant === "footer" ? "text-sage-light" : "text-emerald-600"}`}>
+      <div className={`mt-6 flex items-center justify-center gap-2 text-sm font-medium ${variant === "footer" ? "text-sage-light" : "text-sage-dark"}`}>
         <CheckCircle2 className="size-5" />
         <span>{state.message}</span>
       </div>

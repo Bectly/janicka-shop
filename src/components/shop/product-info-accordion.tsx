@@ -43,7 +43,7 @@ export function ProductInfoAccordion() {
           <li>Zásilkovna — na adresu: {formatPrice(SHIPPING_PRICES.packeta_home)}</li>
           <li>Česká pošta: {formatPrice(SHIPPING_PRICES.czech_post)}</li>
         </ul>
-        <p className="mt-2 font-medium text-emerald-600">
+        <p className="mt-2 font-medium text-sage-dark">
           Doprava zdarma od {formatPrice(FREE_SHIPPING_THRESHOLD)}
         </p>
         <p className="mt-1.5">

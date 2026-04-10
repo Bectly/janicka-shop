@@ -214,7 +214,7 @@ export function ProductListItem({
               </p>
             )}
             {price >= FREE_SHIPPING_THRESHOLD && (
-              <p className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+              <p className="text-[10px] font-medium text-sage-dark">
                 Doprava zdarma
               </p>
             )}

@@ -35,7 +35,7 @@ export function FreeShippingBar({
   return (
     <div className="mt-3">
       {isFree ? (
-        <div className="flex items-center gap-2 text-sm font-medium text-emerald-700">
+        <div className="flex items-center gap-2 text-sm font-medium text-sage-dark">
           <Truck className="size-4" />
           <span>Doprava zdarma!</span>
         </div>

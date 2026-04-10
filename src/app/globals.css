@@ -326,16 +326,16 @@
 }
 .announcement-bar::before {
   left: 0;
-  background: linear-gradient(to right, oklch(0.55 0.20 350), transparent);
+  background: linear-gradient(to right, var(--color-brand), transparent);
 }
 .announcement-bar::after {
   right: 2.5rem;
-  background: linear-gradient(to left, oklch(0.55 0.20 350), transparent);
+  background: linear-gradient(to left, var(--color-brand), transparent);
 }
 
 /* ─── Newsletter input glow (footer variant) ─── */
 .newsletter-input-footer:focus {
-  box-shadow: 0 0 20px oklch(0.55 0.2 350 / 15%);
+  box-shadow: 0 0 20px oklch(from var(--color-brand) l c h / 0.15);
 }
 
 /* ─── Sticky filter toolbar border on scroll ─── */
