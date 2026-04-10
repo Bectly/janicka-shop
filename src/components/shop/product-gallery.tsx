@@ -524,7 +524,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
           {/* Main lightbox image — swipeable with vertical dismiss */}
           <div
             ref={imgContainerRef}
-            className={`relative h-[60vh] w-[80vw] max-w-4xl select-none overflow-hidden ${
+            className={`relative select-none overflow-hidden ${
               zoomed ? "cursor-grab active:cursor-grabbing" : "cursor-zoom-in"
             }`}
             style={{
@@ -568,17 +568,20 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
             <Image
               src={getUrl(images[getImageIndex(activeIndex)])}
               alt={getAlt(images[getImageIndex(activeIndex)], productName, getImageIndex(activeIndex))}
-              fill
+              width={1200}
+              height={1600}
               priority
-              className="object-contain transition-transform duration-200"
+              className="max-h-[70vh] max-w-[90vw] object-contain transition-transform duration-200 sm:max-h-[80vh] sm:max-w-[80vw]"
               style={{
+                width: "auto",
+                height: "auto",
                 transform: zoomed
                   ? `scale(2) translate(${panOffset.x / 2}px, ${panOffset.y / 2}px)`
                   : swipeOffset !== 0
                     ? `translateX(${swipeOffset}px)`
                     : "scale(1)",
               }}
-              sizes="90vw"
+              sizes="(max-width: 640px) 90vw, 80vw"
               quality={90}
             />
           </div>
