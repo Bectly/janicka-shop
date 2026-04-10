@@ -1,13 +1,15 @@
 {
   "pause": {
-    "sage": "until_next_bolt_commit"
+    "bolt": "paused",
+    "sage": "paused",
+    "trace": "paused"
   },
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 3036,
-  "paused_at_bolt_cycle": 3026,
-  "notes": "C3032 Lead: ALL agents HARD PAUSED — zero implementable work. 4 tasks blocked bectly (#1 R2, #4 Heureka, #14 GMC, #65 SITE_URL). 3 features blocked low-priority (#85/#86/#87). 18d to April 28 Vinted T&C campaign window. No devChat, no new tasks. Devloop MUST STOP until bectly unblocks.",
+  "paused_at_bolt_cycle": 3036,
+  "notes": "C3038 Lead: ALL agents HARD PAUSED (bolt/sage/trace explicitly listed). Zero implementable work. 4 tasks blocked bectly (#1 R2, #4 Heureka, #14 GMC, #65 SITE_URL). 3 features low-priority (#85/#86/#87). 18d to April 28 campaign window. Devloop MUST STOP until bectly unblocks.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
