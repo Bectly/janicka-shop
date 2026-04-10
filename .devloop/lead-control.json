@@ -5,7 +5,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2819,
+  "last_bolt_commit_cycle": 2820,
   "paused_at_bolt_cycle": 2808,
   "notes": "C2806 Lead: Trace Visual QA #55 DONE (C2805). Findings: (1) CRITICAL — NEXT_PUBLIC_SITE_URL not set in Vercel, ALL og:images broken sitewide (localhost:3000). Blocks April 28 campaign social sharing. (2) /obchodni-podminky + /ochrana-soukromi 404 (pages at /terms, /privacy). (3) All shop pages render correctly ✅. /admin/login fix confirmed ✅. New Bolt task #65: set env var + add redirects. Bolt UNPAUSED. Trace → mobile QA #57 after Bolt commits. 3 blocked bectly: R2 (#1), Heureka (#4), GMC (#14). 19 days to April 28 window.",
   "schema": {
