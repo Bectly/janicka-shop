@@ -29,7 +29,11 @@ const topLinks = [
   { name: "Oblíbené", href: "/oblibene" },
 ];
 
-export function MobileNav() {
+interface MobileNavProps {
+  categoryCounts?: Record<string, number>;
+}
+
+export function MobileNav({ categoryCounts }: MobileNavProps) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -95,19 +99,23 @@ export function MobileNav() {
           {categories.map((cat) => {
             const slug = cat.href.split("category=")[1];
             const isActive = pathname === "/products" && activeCategory === slug;
+            const count = slug && categoryCounts ? categoryCounts[slug] : undefined;
             return (
               <Link
                 key={cat.href}
                 href={cat.href}
                 onClick={() => setOpen(false)}
                 aria-current={isActive ? "page" : undefined}
-                className={`rounded-lg px-3 py-2.5 text-sm transition-colors ${
+                className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm transition-colors ${
                   isActive
                     ? "bg-muted font-medium text-foreground"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
               >
                 {cat.name}
+                {count !== undefined && count > 0 && (
+                  <span className="text-xs opacity-50">({count})</span>
+                )}
               </Link>
             );
           })}

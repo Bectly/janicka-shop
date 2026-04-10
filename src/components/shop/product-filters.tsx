@@ -31,6 +31,7 @@ interface ProductFiltersProps {
   colors: string[];
   categories: { slug: string; name: string }[];
   counts: FilterCounts;
+  categoryCounts?: Record<string, number>;
   totalFiltered: number;
 }
 
@@ -56,6 +57,7 @@ export function ProductFilters({
   colors,
   categories,
   counts,
+  categoryCounts,
   totalFiltered,
 }: ProductFiltersProps) {
   const router = useRouter();
@@ -118,6 +120,10 @@ export function ProductFilters({
 
   // --- Shared filter sections (used in both desktop inline and mobile drawer) ---
 
+  const totalAllCategories = categoryCounts
+    ? Object.values(categoryCounts).reduce((sum, n) => sum + n, 0)
+    : undefined;
+
   const categoryPills = (
     <div className="flex flex-wrap gap-2" role="group" aria-label="Kategorie">
       <button
@@ -130,21 +136,30 @@ export function ProductFilters({
         }`}
       >
         Vše
+        {totalAllCategories !== undefined && (
+          <span className="ml-1 text-xs opacity-60">({totalAllCategories})</span>
+        )}
       </button>
-      {categories.map((cat) => (
-        <button
-          key={cat.slug}
-          onClick={() => updateParams({ category: cat.slug })}
-          aria-pressed={activeCategory === cat.slug}
-          className={`min-h-11 inline-flex items-center rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-            activeCategory === cat.slug
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground hover:bg-muted/80"
-          }`}
-        >
-          {cat.name}
-        </button>
-      ))}
+      {categories.map((cat) => {
+        const count = categoryCounts?.[cat.slug];
+        return (
+          <button
+            key={cat.slug}
+            onClick={() => updateParams({ category: cat.slug })}
+            aria-pressed={activeCategory === cat.slug}
+            className={`min-h-11 inline-flex items-center rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+              activeCategory === cat.slug
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+          >
+            {cat.name}
+            {count !== undefined && (
+              <span className="ml-1 text-xs opacity-60">({count})</span>
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 

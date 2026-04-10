@@ -4,9 +4,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 interface StickyCategoryNavProps {
   categories: { slug: string; name: string }[];
+  categoryCounts?: Record<string, number>;
 }
 
-export function StickyCategoryNav({ categories }: StickyCategoryNavProps) {
+export function StickyCategoryNav({ categories, categoryCounts }: StickyCategoryNavProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const activeCategory = searchParams.get("category") ?? "";
@@ -39,20 +40,26 @@ export function StickyCategoryNav({ categories }: StickyCategoryNavProps) {
       >
         Vše
       </button>
-      {categories.map((cat) => (
-        <button
-          key={cat.slug}
-          onClick={() => setCategory(cat.slug)}
-          aria-current={activeCategory === cat.slug ? "page" : undefined}
-          className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-            activeCategory === cat.slug
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted/60 text-muted-foreground hover:bg-muted"
-          }`}
-        >
-          {cat.name}
-        </button>
-      ))}
+      {categories.map((cat) => {
+        const count = categoryCounts?.[cat.slug];
+        return (
+          <button
+            key={cat.slug}
+            onClick={() => setCategory(cat.slug)}
+            aria-current={activeCategory === cat.slug ? "page" : undefined}
+            className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+              activeCategory === cat.slug
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted/60 text-muted-foreground hover:bg-muted"
+            }`}
+          >
+            {cat.name}
+            {count !== undefined && count > 0 && (
+              <span className="ml-0.5 opacity-50">({count})</span>
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 }

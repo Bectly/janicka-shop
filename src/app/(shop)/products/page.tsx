@@ -148,11 +148,11 @@ function computeFilterCounts(
   const sizeCounts: Record<string, number> = {};
   const conditionCounts: Record<string, number> = {};
   const colorCounts: Record<string, number> = {};
+  const categoryCounts: Record<string, number> = {};
   let totalFiltered = 0;
 
   for (const p of products) {
-    // Base filters (category, sale, price) — always applied
-    if (filters.category && p.category.slug !== filters.category) continue;
+    // Base filters (sale, price) — always applied to all facets
     if (filters.sale === "true" && !p.compareAt) continue;
     if (filters.minPrice !== null && p.price < filters.minPrice) continue;
     if (filters.maxPrice !== null && p.price > filters.maxPrice) continue;
@@ -172,6 +172,17 @@ function computeFilterCounts(
     const matchesColor =
       filters.colors.length === 0 ||
       filters.colors.some((c) => pColors.includes(c));
+    const matchesCategory =
+      !filters.category || p.category.slug === filters.category;
+
+    // Category counts: all filters EXCEPT category (faceted)
+    if (matchesBrand && matchesSize && matchesCond && matchesColor) {
+      categoryCounts[p.category.slug] =
+        (categoryCounts[p.category.slug] ?? 0) + 1;
+    }
+
+    // Skip products not matching category for all other facets
+    if (!matchesCategory) continue;
 
     // Total count: all filters applied
     if (matchesBrand && matchesSize && matchesCond && matchesColor) {
@@ -203,6 +214,7 @@ function computeFilterCounts(
     sizes: sizeCounts,
     conditions: conditionCounts,
     colors: colorCounts,
+    categories: categoryCounts,
     totalFiltered,
   };
 }
@@ -393,6 +405,7 @@ export default async function ProductsPage({
                     slug: c.slug,
                     name: c.name,
                   }))}
+                  categoryCounts={filterCounts.categories}
                 />
               </Suspense>
             </div>
@@ -412,6 +425,7 @@ export default async function ProductsPage({
             colors={colors}
             categories={categories.map((c) => ({ slug: c.slug, name: c.name }))}
             counts={filterCounts}
+            categoryCounts={filterCounts.categories}
             totalFiltered={totalItems}
           />
         </Suspense>

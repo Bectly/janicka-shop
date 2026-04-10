@@ -6,14 +6,21 @@ import { WishlistHeaderButton } from "./wishlist-header-button";
 import { MobileNav } from "./mobile-nav";
 import { InstantSearch } from "./instant-search";
 import { DesktopNavLinks } from "./desktop-nav-links";
+import { getCategoriesWithCounts } from "@/lib/category-counts";
 
-export function Header() {
+export async function Header() {
+  const categories = await getCategoriesWithCounts();
+  const categoryCounts: Record<string, number> = {};
+  for (const c of categories) {
+    categoryCounts[c.slug] = c.count;
+  }
+
   return (
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80">
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
         {/* Mobile menu — Suspense needed because MobileNav reads searchParams */}
         <Suspense fallback={<div className="size-11 md:hidden" />}>
-          <MobileNav />
+          <MobileNav categoryCounts={categoryCounts} />
         </Suspense>
 
         {/* Logo */}
@@ -41,7 +48,7 @@ export function Header() {
               </div>
             }
           >
-            <DesktopNavLinks />
+            <DesktopNavLinks categoryCounts={categoryCounts} />
           </Suspense>
         </nav>
 
