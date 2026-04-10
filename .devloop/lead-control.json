@@ -4,8 +4,8 @@
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 3215,
-  "paused_at_bolt_cycle": 3205,
-  "notes": "C3212 Lead: PAUSE FIX — pause field was EMPTY {} (again, same root cause as C2685). Bolt ran 3+ idle cycles (C3209-3211) burning tokens. All 5 agents NOW explicitly hard-paused. 8 tasks remain ALL blocked on bectly. ZERO implementable work. Devloop MUST stop.",
+  "paused_at_bolt_cycle": 3215,
+  "notes": "C3216 Lead: PERMANENT PAUSE — changed all agents from 'until_lead_directive' (self-defeats on Lead run, root cause C2667) to 'paused' (true hard pause). 8 tasks ALL blocked on bectly. ZERO implementable work. Devloop MUST stop cycling.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
