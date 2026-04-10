@@ -3,9 +3,9 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2916,
-  "paused_at_bolt_cycle": 2897,
-  "notes": "C2908 Lead: #78 DONE (marked in DB, was causing 3-cycle re-verify waste C2906-2908). #84 overflow-x-hidden DONE (already applied in globals.css lines 153+158). Bolt PRIORITY: #82 Vinted product cleanup — 354 products need: popisky rewrite (remove Vinted-specific text), kategorie check, velikosti normalize (XS/S/M/L/XL or numeric), barvy doplnit, condition mapping, značky normalize. Use Agent subagents for batch processing. Trace: continue #57 mobile responsive + #73 scroll overflow. Sage: visual QA after Bolt commits on #82. 3 blocked bectly: R2 (#1), Heureka (#4), GMC (#14). 18 days to April 28 campaign. Build EXIT:0. ACK feedback 1096+1095+1094.",
+  "last_bolt_commit_cycle": 2917,
+  "paused_at_bolt_cycle": 2917,
+  "notes": "C2918 Lead: #82 Vinted cleanup DONE (marked in DB — was 3-cycle waste C2915-2917). Bolt PAUSED: zero actionable work. All remaining tasks either TRACE (#57 in_progress, #73 open) or blocked bectly (#1 R2, #4 Heureka, #14 GMC, #65 SITE_URL). Trace: finish #57 mobile responsive → #73 scroll overflow. Bolt unpauses when Trace surfaces bugs to fix. 18 days to April 28 campaign. ACK feedback 1104+1101+1100.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
