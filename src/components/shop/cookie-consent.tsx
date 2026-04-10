@@ -200,7 +200,7 @@ export function CookieConsentBanner() {
 
         <p className="mt-3 text-xs text-muted-foreground">
           Více informací v{" "}
-          <a href="/privacy" className="inline-block py-1 underline hover:text-foreground">
+          <a href="/privacy" className="inline-flex min-h-[44px] items-center underline hover:text-foreground">
             zásadách ochrany osobních údajů
           </a>
           . Dozorový úřad:{" "}
