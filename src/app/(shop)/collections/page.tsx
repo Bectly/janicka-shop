@@ -48,23 +48,28 @@ export default async function CollectionsPage() {
   }));
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      {/* Breadcrumb */}
-      <nav className="mb-4 text-sm text-muted-foreground" aria-label="Navigace">
-        <Link href="/" className="hover:text-foreground">
-          Domů
-        </Link>
-        <span className="mx-2">/</span>
-        <span className="text-foreground">Kolekce</span>
-      </nav>
-
-      <div className="mb-8">
-        <h1 className="font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
-          Kolekce
-        </h1>
-        <p className="mt-2 text-muted-foreground">
-          Kurátorské výběry unikátních kousků podle tématu, sezóny a stylu.
-        </p>
+    <div className="mx-auto max-w-7xl px-4 pb-8 sm:px-6 lg:px-8">
+      {/* Editorial header — full-bleed brand-palette gradient */}
+      <div className="relative -mx-4 mb-10 overflow-hidden sm:-mx-6 lg:-mx-8">
+        <div className="absolute inset-0 bg-gradient-to-br from-brand/[0.08] via-champagne-light/50 to-blush/60" />
+        <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+          <nav className="mb-4 text-sm text-muted-foreground" aria-label="Navigace">
+            <Link href="/" className="hover:text-foreground">
+              Domů
+            </Link>
+            <span className="mx-2">/</span>
+            <span className="text-foreground">Kolekce</span>
+          </nav>
+          <span className="inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-primary">
+            Kurátorský výběr
+          </span>
+          <h1 className="mt-2 font-heading text-[1.75rem] font-bold tracking-tight text-foreground sm:text-[2.25rem]">
+            Kolekce
+          </h1>
+          <p className="mt-2 max-w-lg text-muted-foreground">
+            Kurátorské výběry unikátních kousků podle tématu, sezóny a stylu.
+          </p>
+        </div>
       </div>
 
       {collectionsWithCounts.length > 0 ? (

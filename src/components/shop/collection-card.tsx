@@ -50,7 +50,7 @@ export function CollectionCard({
       className={`group relative overflow-hidden rounded-2xl shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg ${wide ? "sm:col-span-2" : ""}`}
     >
       {/* ── Image / empty state ────────────────────────────── */}
-      <div className="relative aspect-[4/3] overflow-hidden">
+      <div className={`relative overflow-hidden ${wide ? "aspect-[4/3] sm:aspect-[16/9]" : "aspect-[4/3]"}`}>
         {hasImage ? (
           <>
             <Image
