@@ -901,7 +901,7 @@ export default function CheckoutPage() {
 
                       {/* Packeta widget */}
                       {option.id === "packeta_pickup" && isSelected && (
-                        <div className="mt-3 ml-9">
+                        <div className="mt-3">
                           <PacketaWidget
                             onPointSelected={handlePacketaPointSelected}
                             selectedPoint={packetaPoint}
