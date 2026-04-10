@@ -3,7 +3,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2964,
+  "last_bolt_commit_cycle": 2966,
   "paused_at_bolt_cycle": 2917,
   "notes": "C2965 Lead: #76 MARKED DONE (4 waste cycles C2962-2964). ACK 1132+1133+1134. Bolt UNPAUSED → #84 (horizontal overflow root cause), then #88 (gallery images). Trace active on #57/#73. Sage/Guard/Aria paused. 5 actionable Bolt tasks. 18d to April 28 campaign.",
   "schema": {
