@@ -20,7 +20,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const rl = await rateLimitLogin();
         if (!rl.success) return null;
 
-        const db = await getDb();
+        let db;
+        try {
+          db = await getDb();
+        } catch (err) {
+          console.error("[auth] DB connection failed:", err);
+          throw err;
+        }
+
         const admin = await db.admin.findUnique({
           where: { email: credentials.email as string },
         });
