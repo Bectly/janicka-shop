@@ -524,7 +524,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
           {/* Main lightbox image — swipeable with vertical dismiss */}
           <div
             ref={imgContainerRef}
-            /* DO NOT REMOVE h-[60vh] w-[80vw] — without it lightbox is fullscreen and unusable */
+            /* DO NOT REMOVE h-[60vh] w-[80vw] max-w-lg — bez toho je lightbox fullscreen a nepoužitelný! */
             className={`relative h-[60vh] w-[80vw] max-w-lg select-none overflow-hidden ${
               zoomed ? "cursor-grab active:cursor-grabbing" : "cursor-zoom-in"
             }`}
@@ -572,7 +572,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
               width={600}
               height={800}
               priority
-              className="max-h-[55vh] w-auto object-contain transition-transform duration-200 sm:max-h-[65vh]"
+              className="block max-h-[50vh] max-w-[85vw] w-auto object-contain transition-transform duration-200 sm:max-h-[70vh] sm:max-w-[60vw]"
               style={{
                 transform: zoomed
                   ? `scale(2) translate(${panOffset.x / 2}px, ${panOffset.y / 2}px)`
