@@ -1,10 +1,12 @@
 {
-  "pause": {},
+  "pause": {
+    "sage": "until_next_bolt_commit"
+  },
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 3190,
-  "paused_at_bolt_cycle": 3186,
+  "paused_at_bolt_cycle": 3190,
   "notes": "C3191 Lead: ALL agents HARD PAUSED (explicit map). Research done — 2 new tasks added (#103 Den matek email, #104 EU clo landing). BLOCKED on bectly: (1) git push origin main, (2) verify Vercel deploy — login janicka@shop.cz, (3) /devloop janicka-shop to restart. Commit 0d1c9aa = Task #102 admin login fix. DO NOT run devloop until bectly confirms deploy.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
