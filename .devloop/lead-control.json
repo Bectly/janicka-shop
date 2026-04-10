@@ -1,14 +1,11 @@
 {
-  "pause": {
-    "sage": "until_next_bolt_commit",
-    "trace": "until_next_bolt_commit"
-  },
+  "pause": {},
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 3219,
+  "last_bolt_commit_cycle": 3221,
   "paused_at_bolt_cycle": 3219,
-  "notes": "C3216 Lead: PERMANENT PAUSE — changed all agents from 'until_lead_directive' (self-defeats on Lead run, root cause C2667) to 'paused' (true hard pause). 8 tasks ALL blocked on bectly. ZERO implementable work. Devloop MUST stop cycling.",
+  "notes": "C3222 Lead: UNBLOCKED 2 tasks. #102 admin login unblocked (NextAuth IS working on Vercel — providers endpoint OK, admin user exists in Turso). #110 new: Admin password change (SECURITY — default admin123 in git). #111 new: Trace verify admin login. force_next=trace to verify #111 before Bolt attempts #102.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
