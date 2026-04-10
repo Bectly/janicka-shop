@@ -524,7 +524,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
           {/* Main lightbox image — swipeable with vertical dismiss */}
           <div
             ref={imgContainerRef}
-            className={`relative h-[70vh] w-[85vw] max-w-4xl select-none overflow-hidden sm:h-[75vh] sm:w-[90vw] sm:max-w-5xl ${
+            className={`relative h-[60vh] w-[80vw] max-w-4xl select-none overflow-hidden ${
               zoomed ? "cursor-grab active:cursor-grabbing" : "cursor-zoom-in"
             }`}
             style={{
