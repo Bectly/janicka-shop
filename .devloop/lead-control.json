@@ -1,10 +1,12 @@
 {
-  "pause": {},
+  "pause": {
+    "sage": "until_next_bolt_commit"
+  },
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 2890,
-  "paused_at_bolt_cycle": 2879,
+  "paused_at_bolt_cycle": 2890,
   "notes": "C2889 Lead: #49 marked DONE (committed C2886). Bolt PRIORITY: #72 hero alt text (trivial 1-liner: hero-section.tsx line 90, change alt='Janička — Třešňová Větvička' to alt='Janička') → #82 clean Vinted products → #77 remove mock/seed data. Trace: run #73 horizontal scroll audit (375px viewport). Sage: paused until Bolt commits. 3 blocked bectly: R2 (#1), Heureka (#4), GMC (#14). 18 days to April 28 campaign. ACK feedback 1079+1076.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
