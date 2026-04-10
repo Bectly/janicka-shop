@@ -8,6 +8,7 @@ import type { Metadata } from "next";
 import { SubscriberToggle } from "./subscriber-toggle";
 import { ExportCsvButton } from "./export-csv-button";
 import { CampaignSender } from "./campaign-sender";
+import { VintedCampaignButton } from "./vinted-campaign-button";
 
 export const metadata: Metadata = {
   title: "Newsletter odběratelé",
@@ -76,6 +77,8 @@ export default async function AdminSubscribersPage() {
         </div>
         <ExportCsvButton />
       </div>
+
+      <VintedCampaignButton activeSubscriberCount={activeCount} />
 
       <CampaignSender
         collections={collectionOptions}

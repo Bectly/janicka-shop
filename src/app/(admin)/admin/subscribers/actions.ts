@@ -3,8 +3,8 @@
 import { getDb } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { rateLimitAdmin } from "@/lib/rate-limit";
-import { sendCampaignEmail } from "@/lib/email";
-import type { CampaignEmailData, CampaignProduct } from "@/lib/email";
+import { sendCampaignEmail, sendVintedCampaignEmail } from "@/lib/email";
+import type { CampaignEmailData, CampaignProduct, VintedCampaignSegment } from "@/lib/email";
 import { getImageUrls } from "@/lib/images";
 import { parseJsonStringArray } from "@/lib/images";
 
@@ -252,4 +252,103 @@ export async function getCampaignHistory() {
     orderBy: { createdAt: "desc" },
     take: 10,
   });
+}
+
+// ---------------------------------------------------------------------------
+// Vinted T&C campaign (C2788 brief — April 28, 2026)
+// ---------------------------------------------------------------------------
+
+interface VintedCampaignResult {
+  success: boolean;
+  sentCount: number;
+  failedCount: number;
+  error?: string;
+}
+
+/**
+ * Send the pre-built Vinted T&C campaign to active subscribers.
+ * Segment determines subject line:
+ *  - "warm": subscribers who signed up within last 90 days → Subject A
+ *  - "cold": subscribers older than 90 days → Subject B
+ *  - "all": auto-segments based on subscriber recency
+ */
+export async function sendVintedTcCampaign(
+  segment: "warm" | "cold" | "all",
+): Promise<VintedCampaignResult> {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) {
+    return { success: false, sentCount: 0, failedCount: 0, error: "Příliš mnoho požadavků. Zkuste to za chvíli." };
+  }
+
+  const db = await getDb();
+  const now = new Date();
+  const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+
+  // Fetch active, non-paused subscribers
+  const subscribers = await db.newsletterSubscriber.findMany({
+    where: {
+      active: true,
+      OR: [
+        { pausedUntil: null },
+        { pausedUntil: { lt: now } },
+      ],
+    },
+    select: { email: true, createdAt: true },
+  });
+
+  if (subscribers.length === 0) {
+    return { success: true, sentCount: 0, failedCount: 0 };
+  }
+
+  // Determine subject line per subscriber
+  const tagged: { email: string; segment: VintedCampaignSegment }[] = subscribers.map((s) => {
+    if (segment === "all") {
+      return {
+        email: s.email,
+        segment: s.createdAt >= ninetyDaysAgo ? "warm" : "cold",
+      };
+    }
+    return { email: s.email, segment };
+  });
+
+  // Log campaign
+  const subjectDesc = segment === "all"
+    ? "Vinted T&C kampaň (auto-segment)"
+    : segment === "warm"
+      ? "Vinted T&C kampaň — Tvoje fotky patří tobě. Vždy."
+      : "Vinted T&C kampaň — Zatímco Vinted školí AI...";
+
+  const campaign = await db.campaignLog.create({
+    data: {
+      subject: subjectDesc,
+      previewText: "U nás je to jinak. A vždy bylo.",
+      status: "sending",
+    },
+  });
+
+  let sentCount = 0;
+  let failedCount = 0;
+
+  for (let i = 0; i < tagged.length; i += BATCH_SIZE) {
+    const batch = tagged.slice(i, i + BATCH_SIZE);
+    const results = await Promise.all(
+      batch.map((sub) => sendVintedCampaignEmail(sub.segment, sub.email)),
+    );
+    for (const ok of results) {
+      if (ok) sentCount++;
+      else failedCount++;
+    }
+
+    if (i + BATCH_SIZE < tagged.length) {
+      await new Promise((resolve) => setTimeout(resolve, BATCH_DELAY_MS));
+    }
+  }
+
+  await db.campaignLog.update({
+    where: { id: campaign.id },
+    data: { status: "completed", sentCount, failedCount },
+  });
+
+  return { success: true, sentCount, failedCount };
 }
