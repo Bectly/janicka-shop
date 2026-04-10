@@ -1,13 +1,11 @@
 {
-  "pause": {
-    "sage": "until_next_bolt_commit"
-  },
+  "pause": {},
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 3084,
-  "paused_at_bolt_cycle": 3079,
-  "notes": "C3080 Lead: PAUSE FIX — pause field was partial (only trace). All 5 agents now HARD paused. 4 tasks blocked on bectly (R2/Heureka/GMC/SITE_URL). Bolt wasted C3077-3079 (3 empty cycles) because pause field kept getting cleared. 18d to Apr 28 campaign. Feedback #1191/#1190/#1189 ACK.",
+  "paused_at_bolt_cycle": 3084,
+  "notes": "C3085 Lead: NEW TASK #98 from bectly — lightbox fix + Vercel deploy. Bolt UNPAUSED + force_next. Sage/Trace wait for Bolt commit. Guard/Aria paused. Previous 4 blocked tasks unchanged. Feedback #1194/#1193/#1192 ACK.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",

@@ -522,9 +522,10 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
           )}
 
           {/* Main lightbox image — swipeable with vertical dismiss */}
+          {/* DO NOT REMOVE: h-[60vh] w-[80vw] max-w-lg constrains lightbox size — without it the image goes fullscreen */}
           <div
             ref={imgContainerRef}
-            className={`relative select-none ${
+            className={`relative h-[60vh] w-[80vw] max-w-lg select-none ${
               zoomed
                 ? "cursor-grab active:cursor-grabbing overflow-hidden"
                 : "cursor-zoom-in overflow-visible"
@@ -570,10 +571,9 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
             <Image
               src={getUrl(images[getImageIndex(activeIndex)])}
               alt={getAlt(images[getImageIndex(activeIndex)], productName, getImageIndex(activeIndex))}
-              width={900}
-              height={1200}
+              fill
               priority
-              className="block h-auto w-auto max-h-[76vh] max-w-[92vw] object-contain transition-transform duration-200 sm:max-h-[80vh] sm:max-w-[68vw]"
+              className="object-contain transition-transform duration-200"
               style={{
                 transform: zoomed
                   ? `scale(2) translate(${panOffset.x / 2}px, ${panOffset.y / 2}px)`
@@ -581,7 +581,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                     ? `translateX(${swipeOffset}px)`
                     : undefined,
               }}
-              sizes="(max-width: 640px) 92vw, 68vw"
+              sizes="(max-width: 640px) 80vw, 32rem"
               quality={90}
             />
           </div>
