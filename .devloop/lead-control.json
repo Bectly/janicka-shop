@@ -1,10 +1,12 @@
 {
-  "pause": {},
+  "pause": {
+    "sage": "until_next_bolt_commit"
+  },
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 3097,
-  "paused_at_bolt_cycle": 3095,
+  "paused_at_bolt_cycle": 3097,
   "notes": "C3097 Lead: Bolt was NOT in pause map — fixed (root cause of C3094-3096 waste). ALL 3 agents HARD paused (status:'paused'). Zero implementable work. Blocked on bectly: #1 R2, #4 Heureka, #14 GMC (Apr 30 deadline), #65 SITE_URL. Low-pri #85-87 deferred. Feedback #1201/#1202 ACK. 18d to Apr 28 campaign.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
