@@ -91,24 +91,13 @@ export function HeroSection() {
             width={400}
             height={218}
             priority
-            className="mx-auto h-auto w-[200px] drop-shadow-lg sm:w-[280px] lg:w-[360px]"
+            className="mx-auto h-auto w-[280px] drop-shadow-lg sm:w-[400px] lg:w-[520px]"
           />
         </div>
 
-        {/* Brand name */}
-        <h1
-          className={`mt-6 font-heading text-4xl font-bold tracking-tight text-charcoal sm:mt-8 sm:text-5xl lg:text-6xl transition-all duration-1000 delay-200 ease-out ${
-            mounted
-              ? "opacity-100 translate-y-0"
-              : "opacity-0 translate-y-6"
-          }`}
-        >
-          Třešňová Větvička
-        </h1>
-
         {/* Tagline */}
         <p
-          className={`mt-3 max-w-lg text-lg leading-relaxed text-charcoal-light sm:mt-4 sm:max-w-xl sm:text-xl lg:text-2xl transition-all duration-1000 delay-400 ease-out ${
+          className={`mt-6 max-w-lg text-lg leading-relaxed text-charcoal-light sm:mt-8 sm:max-w-xl sm:text-xl lg:text-2xl transition-all duration-1000 delay-200 ease-out ${
             mounted
               ? "opacity-100 translate-y-0"
               : "opacity-0 translate-y-6"
@@ -120,7 +109,7 @@ export function HeroSection() {
 
         {/* Second hand badge */}
         <p
-          className={`mt-2 text-sm font-medium tracking-wider text-brand uppercase sm:text-base transition-all duration-1000 delay-500 ease-out ${
+          className={`mt-2 text-sm font-medium tracking-wider text-brand uppercase sm:text-base transition-all duration-1000 delay-300 ease-out ${
             mounted
               ? "opacity-100 translate-y-0"
               : "opacity-0 translate-y-6"
@@ -131,7 +120,7 @@ export function HeroSection() {
 
         {/* CTA buttons */}
         <div
-          className={`mt-8 flex flex-wrap justify-center gap-3 sm:mt-10 transition-all duration-1000 delay-700 ease-out ${
+          className={`mt-8 flex flex-wrap justify-center gap-3 sm:mt-10 transition-all duration-1000 delay-500 ease-out ${
             mounted
               ? "opacity-100 translate-y-0"
               : "opacity-0 translate-y-6"
