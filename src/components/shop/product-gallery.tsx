@@ -288,7 +288,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
 
   return (
     <>
-      <div className="space-y-3">
+      <div className="min-w-0 max-w-full overflow-hidden space-y-3">
         {/* Main image/video — swipeable on touch devices */}
         <div
           className="group relative aspect-[3/4] overflow-hidden rounded-2xl bg-muted touch-pan-y"

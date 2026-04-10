@@ -3,7 +3,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2968,
+  "last_bolt_commit_cycle": 2970,
   "paused_at_bolt_cycle": 2917,
   "notes": "C2969 Lead: #77 MARKED DONE (3 waste cycles C2966-2968, all confirmed 354/354 VNT- products, zero mock). ACK 1135+1136+1137. Bolt FORCED → #84 (horizontal overflow root cause) FIRST, then #88 (gallery images shrink not crop). Trace active on #57/#73. Sage/Guard/Aria paused. 4 open Bolt tasks (#84/#88/#82/#78). 18d to April 28 campaign.",
   "schema": {
