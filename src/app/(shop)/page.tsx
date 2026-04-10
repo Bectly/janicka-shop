@@ -53,11 +53,11 @@ async function getFeaturedProductsForPage() {
 
 function ProductGridSkeleton({ count = 8 }: { count?: number }) {
   return (
-    <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
+    <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className={`space-y-3${i === 0 ? " col-span-2" : ""}`}>
+        <div key={i} className={`space-y-3${i === 0 || i === 5 ? " col-span-2" : ""}`}>
           <Skeleton className="aspect-[3/4] w-full rounded-2xl" />
-          {i > 0 && (
+          {i !== 0 && i !== 5 && (
             <>
               <Skeleton className="h-4 w-3/4" />
               <Skeleton className="h-4 w-1/2" />
@@ -157,9 +157,9 @@ async function NewProductsSection() {
           Zobrazit vše &rarr;
         </Link>
       </div>
-      <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
+      <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
         {newProducts.map((product, i) => (
-          <div key={product.id} className={i === 0 ? "col-span-2" : undefined}>
+          <div key={product.id} className={i === 0 || i === 5 ? "col-span-2" : undefined}>
             <ProductCard
               id={product.id}
               name={product.name}
@@ -177,7 +177,7 @@ async function NewProductsSection() {
               isReserved={false}
               lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
               priority={i < 4}
-              variant={i === 0 ? "featured" : "standard"}
+              variant={i === 0 || i === 5 ? "featured" : "standard"}
             />
           </div>
         ))}
@@ -217,9 +217,9 @@ async function FeaturedProductsSection() {
           Zobrazit vše &rarr;
         </Link>
       </div>
-      <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
+      <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
         {featuredProducts.map((product, i) => (
-          <div key={product.id} className={i === 0 ? "col-span-2" : undefined}>
+          <div key={product.id} className={i === 0 || i === 5 ? "col-span-2" : undefined}>
             <ProductCard
               id={product.id}
               name={product.name}
@@ -236,7 +236,7 @@ async function FeaturedProductsSection() {
               isReserved={false}
               lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
               priority={i < 4}
-              variant={i === 0 ? "featured" : "standard"}
+              variant={i === 0 || i === 5 ? "featured" : "standard"}
             />
           </div>
         ))}
@@ -289,9 +289,9 @@ async function SaleProductsSection() {
             Zobrazit vše &rarr;
           </Link>
         </div>
-        <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
+        <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
           {saleProducts.map((product, i) => (
-            <div key={product.id} className={i === 0 ? "col-span-2" : undefined}>
+            <div key={product.id} className={i === 0 || i === 5 ? "col-span-2" : undefined}>
               <ProductCard
                 id={product.id}
                 name={product.name}
@@ -307,7 +307,7 @@ async function SaleProductsSection() {
                 stock={product.stock}
                 isReserved={false}
                 lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
-                variant={i === 0 ? "featured" : "standard"}
+                variant={i === 0 || i === 5 ? "featured" : "standard"}
               />
             </div>
           ))}

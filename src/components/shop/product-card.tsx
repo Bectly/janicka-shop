@@ -130,7 +130,7 @@ export function ProductCard({
         src={mainImage}
         alt={name}
         fill
-        className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
+        className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
         sizes={isFeatured
           ? "(max-width: 640px) 100vw, (max-width: 1024px) 66vw, 50vw"
           : "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
@@ -144,7 +144,7 @@ export function ProductCard({
           src={secondImage}
           alt={`${name} — detail`}
           fill
-          className="object-cover opacity-0 transition-all duration-700 ease-out group-hover:opacity-100 group-hover:scale-[1.06]"
+          className="object-cover opacity-0 transition-all duration-700 ease-out group-hover:opacity-100 group-hover:scale-105"
           sizes={isFeatured
             ? "(max-width: 640px) 100vw, (max-width: 1024px) 66vw, 50vw"
             : "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
@@ -163,55 +163,46 @@ export function ProductCard({
   /* ==================== FEATURED VARIANT ==================== */
   if (isFeatured) {
     return (
-      <Link href={`/products/${slug}`} className="group relative block transition-transform duration-500 ease-out hover:-translate-y-1 haptic-press">
-        <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-muted shadow-[0_4px_24px_-6px_rgba(0,0,0,0.1)] transition-shadow duration-500 group-hover:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.18)]">
+      <Link href={`/products/${slug}`} className="group relative block transition-all duration-500 ease-out hover:-translate-y-2 haptic-press">
+        <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-muted shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-500 ease-out group-hover:shadow-[0_24px_60px_-12px_rgba(180,130,140,0.25)]">
           {imageBlock}
 
-          {/* Action buttons */}
-          <div className="absolute top-3 right-3 z-10 flex flex-col gap-1.5">
+          {/* Action buttons — revealed on hover (always visible on touch) */}
+          <div className="absolute top-3 right-3 z-10 flex flex-col gap-1.5 transition-all duration-300 sm:translate-y-1 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100">
             <WishlistButton productId={id} />
             <QuickViewButton productId={id} />
           </div>
 
           {badges}
 
-          {/* Persistent gradient overlay with product info */}
-          <div className="absolute inset-x-0 bottom-0 z-[5] bg-gradient-to-t from-black/70 via-black/40 to-transparent px-4 pt-20 pb-4 transition-all duration-500 group-hover:from-black/80 group-hover:via-black/50">
+          {/* Editorial gradient overlay with product info */}
+          <div className="absolute inset-x-0 bottom-0 z-[5] bg-gradient-to-t from-black/65 via-black/35 to-transparent px-5 pt-24 pb-5 transition-all duration-500 group-hover:from-black/75 group-hover:via-black/45">
             <div className="flex items-center gap-1.5">
-              <span className="text-xs font-medium text-white/70">{categoryName}</span>
               {brand && (
-                <>
-                  <span className="text-white/40">&middot;</span>
-                  <span className="text-xs font-semibold tracking-wide text-white/90 uppercase">{brand}</span>
-                </>
+                <span className="text-[11px] font-semibold tracking-[0.12em] text-white/90 uppercase">{brand}</span>
               )}
+              {brand && <span className="text-white/30">&middot;</span>}
+              <span className="text-[11px] font-medium text-white/60">{categoryName}</span>
             </div>
-            <h3 className="mt-1.5 text-base font-semibold leading-snug text-white sm:text-lg">
+            <h3 className="mt-2 text-base font-semibold leading-snug text-white sm:text-lg">
               {name}
             </h3>
-            <div className="mt-1.5 flex items-center gap-2.5">
-              <span className="text-lg font-bold text-white">{formatPrice(price)}</span>
+            <div className="mt-2 flex items-baseline gap-2.5">
+              <span className="text-lg font-bold tracking-tight text-white">{formatPrice(price)}</span>
               {hasDiscount && (
-                <span className="text-sm text-white/50 line-through">{formatPrice(compareAt)}</span>
+                <span className="text-sm text-white/40 line-through">{formatPrice(compareAt)}</span>
               )}
             </div>
             {hasDiscount && lowestPrice30d != null && (
-              <p className="mt-0.5 text-[10px] text-white/50">
+              <p className="mt-0.5 text-[10px] text-white/40">
                 Nejnižší cena za 30 dní: {formatPrice(lowestPrice30d)}
               </p>
             )}
             {price >= FREE_SHIPPING_THRESHOLD && (
-              <p className="mt-0.5 text-[10px] font-medium text-emerald-300">
+              <p className="mt-0.5 text-[10px] font-medium text-emerald-300/90">
                 Doprava zdarma
               </p>
             )}
-          </div>
-
-          {/* Hover "Rychlý náhled" pill */}
-          <div className="absolute inset-0 z-[6] flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-            <span className="rounded-full bg-white/95 px-5 py-2 text-sm font-medium text-foreground shadow-lg backdrop-blur-sm">
-              Rychlý náhled
-            </span>
           </div>
         </div>
       </Link>
@@ -220,50 +211,44 @@ export function ProductCard({
 
   /* ==================== STANDARD VARIANT ==================== */
   return (
-    <Link href={`/products/${slug}`} className="group block transition-transform duration-300 ease-out hover:-translate-y-1.5 haptic-press">
-      <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-muted shadow-[0_2px_16px_-4px_rgba(0,0,0,0.06)] transition-shadow duration-300 group-hover:shadow-[0_12px_40px_-8px_rgba(0,0,0,0.13)]">
+    <Link href={`/products/${slug}`} className="group block transition-all duration-500 ease-out hover:-translate-y-2 haptic-press">
+      <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-muted shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] transition-all duration-500 ease-out group-hover:shadow-[0_20px_50px_-12px_rgba(180,130,140,0.22)]">
         {imageBlock}
 
-        {/* Action buttons */}
-        <div className="absolute top-2 right-2 z-10 flex flex-col gap-1.5">
+        {/* Action buttons — revealed on hover (always visible on touch) */}
+        <div className="absolute top-3 right-3 z-10 flex flex-col gap-1.5 transition-all duration-300 sm:translate-y-1 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100">
           <WishlistButton productId={id} />
           <QuickViewButton productId={id} />
         </div>
 
         {badges}
 
-        {/* Hover gradient overlay with "Rychlý náhled" pill */}
-        <div className="absolute inset-x-0 bottom-0 flex h-16 translate-y-full items-end justify-center bg-gradient-to-t from-black/40 to-transparent pb-3 transition-transform duration-300 group-hover:translate-y-0">
-          <span className="rounded-full bg-white/90 px-4 py-1.5 text-xs font-medium text-foreground shadow-sm backdrop-blur-sm">
-            Rychlý náhled
-          </span>
-        </div>
+        {/* Subtle hover gradient */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/25 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
       </div>
-      <div className="mt-3 space-y-1">
+      <div className="mt-3 space-y-0.5">
         <div className="flex items-center gap-1.5">
-          <p className="text-xs text-muted-foreground">{categoryName}</p>
           {brand && (
-            <>
-              <span className="text-xs text-muted-foreground/40">&middot;</span>
-              <p className="text-xs font-semibold tracking-wide text-primary/70 uppercase">
-                {brand}
-              </p>
-            </>
+            <p className="text-[11px] font-semibold tracking-[0.1em] text-primary/70 uppercase">
+              {brand}
+            </p>
           )}
+          {brand && <span className="text-[10px] text-muted-foreground/30">&middot;</span>}
+          <p className="text-[11px] text-muted-foreground/60">{categoryName}</p>
         </div>
-        <h3 className="text-sm font-medium leading-snug text-foreground group-hover:text-primary transition-colors">
+        <h3 className="text-[13px] font-medium leading-snug text-foreground/90 transition-colors line-clamp-1 group-hover:text-primary">
           {name}
         </h3>
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold">{formatPrice(price)}</span>
+        <div className="flex items-baseline gap-2 pt-0.5">
+          <span className="text-sm font-bold tracking-tight">{formatPrice(price)}</span>
           {hasDiscount && (
-            <span className="text-xs text-muted-foreground line-through">
+            <span className="text-xs text-muted-foreground/50 line-through">
               {formatPrice(compareAt)}
             </span>
           )}
         </div>
         {hasDiscount && lowestPrice30d != null && (
-          <p className="text-[10px] leading-tight text-muted-foreground">
+          <p className="text-[10px] leading-tight text-muted-foreground/70">
             Nejnižší cena za 30 dní: {formatPrice(lowestPrice30d)}
           </p>
         )}
@@ -274,19 +259,19 @@ export function ProductCard({
         )}
         {/* Size & color indicators */}
         {(parsedSizes.length > 0 || parsedColors.length > 0) && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 pt-1">
             {parsedSizes.length > 0 && (
               <div className="flex flex-wrap gap-0.5">
                 {parsedSizes.slice(0, 4).map((s) => (
                   <span
                     key={s}
-                    className="rounded bg-muted px-1 py-px text-[10px] leading-tight text-muted-foreground"
+                    className="rounded-sm bg-muted/80 px-1.5 py-px text-[10px] leading-tight text-muted-foreground"
                   >
                     {s}
                   </span>
                 ))}
                 {parsedSizes.length > 4 && (
-                  <span className="rounded bg-muted px-1 py-px text-[10px] leading-tight text-muted-foreground">
+                  <span className="rounded-sm bg-muted/80 px-1.5 py-px text-[10px] leading-tight text-muted-foreground">
                     +{parsedSizes.length - 4}
                   </span>
                 )}
