@@ -201,7 +201,7 @@ export function ProductCard({
               </p>
             )}
             {price >= FREE_SHIPPING_THRESHOLD && (
-              <p className="mt-0.5 text-[10px] font-medium text-emerald-300/90">
+              <p className="mt-0.5 text-[10px] font-medium text-champagne">
                 Doprava zdarma
               </p>
             )}
