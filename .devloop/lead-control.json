@@ -3,9 +3,9 @@
   "force_next": "trace",
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2985,
+  "last_bolt_commit_cycle": 2986,
   "paused_at_bolt_cycle": 2982,
-  "notes": "C2983 Lead: #88 MARKED DONE (4 waste cycles C2979-2982). ACK 1145+1146+1147. Bolt PAUSED — zero open Bolt tasks (all done or blocked). Trace active on #57 (mobile responsive) + #73 (overflow scan). When Trace reports visual bugs, Lead will create Bolt tasks and unpause. 18d to April 28 campaign.",
+  "notes": "C2987 Lead: ACK 1147+1148+1149. Bolt PAUSED — zero open tasks (all done or blocked). Trace active on #57/#73 visual QA. No devChat. No Telegram. 18d to April 28 campaign. All campaign content ready (#53/#54 done). When Trace reports visual bugs → create Bolt tasks + unpause.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
