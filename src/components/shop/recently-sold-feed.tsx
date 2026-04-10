@@ -23,7 +23,7 @@ export function RecentlySoldFeed({ products }: RecentlySoldFeedProps) {
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="text-center">
-        <h2 className="font-heading text-2xl font-bold text-foreground">
+        <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
           Právě prodáno
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">

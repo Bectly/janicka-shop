@@ -97,7 +97,7 @@ export function HeroSection() {
 
         {/* Brand name */}
         <h1
-          className={`mt-6 font-heading text-2xl font-bold tracking-tight text-charcoal sm:mt-8 sm:text-3xl lg:text-4xl transition-all duration-1000 delay-200 ease-out ${
+          className={`mt-6 font-heading text-4xl font-bold tracking-tight text-charcoal sm:mt-8 sm:text-5xl lg:text-6xl transition-all duration-1000 delay-200 ease-out ${
             mounted
               ? "opacity-100 translate-y-0"
               : "opacity-0 translate-y-6"
@@ -108,7 +108,7 @@ export function HeroSection() {
 
         {/* Tagline */}
         <p
-          className={`mt-3 max-w-md text-base leading-relaxed text-charcoal-light sm:mt-4 sm:max-w-lg sm:text-lg lg:text-xl transition-all duration-1000 delay-400 ease-out ${
+          className={`mt-3 max-w-lg text-lg leading-relaxed text-charcoal-light sm:mt-4 sm:max-w-xl sm:text-xl lg:text-2xl transition-all duration-1000 delay-400 ease-out ${
             mounted
               ? "opacity-100 translate-y-0"
               : "opacity-0 translate-y-6"
