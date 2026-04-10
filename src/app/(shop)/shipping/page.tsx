@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Truck } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Doprava a platba | Janička",
@@ -9,11 +10,21 @@ export const metadata: Metadata = {
 export default function ShippingPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
-      <h1 className="font-heading text-3xl font-bold text-foreground">
-        Doprava a platba
-      </h1>
+      {/* Editorial header */}
+      <div className="mb-10 flex flex-col items-start gap-2">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1 text-xs font-semibold tracking-wide text-primary">
+          <Truck className="size-3" />
+          Rychlá doprava
+        </span>
+        <h1 className="font-heading text-[1.75rem] font-bold text-foreground sm:text-3xl">
+          Doprava a platba
+        </h1>
+        <p className="text-muted-foreground">
+          Vše o způsobech doručení, platebních metodách a dodacích lhůtách.
+        </p>
+      </div>
 
-      <div className="mt-8 space-y-8 text-muted-foreground leading-relaxed">
+      <div className="space-y-8 text-muted-foreground leading-relaxed">
         <section>
           <h2 className="font-heading text-xl font-semibold text-foreground">
             Způsoby dopravy
