@@ -2220,3 +2220,351 @@ export async function sendVintedCampaignEmail(
     return false;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Den matek 2026 — 3-email Resend campaign (Task #103)
+// ---------------------------------------------------------------------------
+
+export type MothersDayEmailNumber = 1 | 2 | 3;
+export type MothersDaySegment = "warm" | "cold";
+
+const MOTHERS_DAY_SUBJECTS: Record<MothersDayEmailNumber, Record<MothersDaySegment, string>> = {
+  1: {
+    warm: "Najdi mámě kousek, který nemá nikdo jiný 🌷",
+    cold: "Daruj originál místo masové výroby — každý kousek unikát",
+  },
+  2: {
+    warm: "Mámě zbývá pár dní — co ji opravdu potěší?",
+    cold: "Mámě zbývá pár dní — co ji opravdu potěší?",
+  },
+  3: {
+    warm: "Poslední šance: odeslání do 3 dnů 📦",
+    cold: "Poslední šance: odeslání do 3 dnů 📦",
+  },
+};
+
+const MOTHERS_DAY_PREVIEWS: Record<MothersDayEmailNumber, string> = {
+  1: "U Janičky víš, co kupuješ.",
+  2: "Každý kousek je unikát — kdokoliv ho může koupit dřív.",
+  3: "Doprava zdarma nad 1 500 Kč. Stihni to pro mámu.",
+};
+
+function buildMothersDayProductGridHtml(
+  products: CampaignProduct[],
+  columns: 2 | 3 = 2,
+): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+
+  const cells = products.map((p) => {
+    const productUrl = `${baseUrl}/products/${p.slug}`;
+    const imageHtml = p.image
+      ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; border: 1px solid #f0f0f0;" />`
+      : `<div style="width: 100%; height: 200px; background: #f5f5f5; border-radius: 8px; display: flex; align-items: center; justify-content: center;"><span style="font-size: 32px;">👗</span></div>`;
+
+    const discount = p.compareAt && p.compareAt > p.price
+      ? Math.round(((p.compareAt - p.price) / p.compareAt) * 100)
+      : null;
+
+    const priceHtml = discount
+      ? `<span style="text-decoration: line-through; color: #999; font-size: 12px;">${formatPriceCzk(p.compareAt!)}</span><br/><strong style="color: #dc2626;">${formatPriceCzk(p.price)}</strong> <span style="background: #dc2626; color: #fff; font-size: 11px; padding: 1px 5px; border-radius: 4px;">-${discount}%</span>`
+      : `<strong style="color: #1a1a1a;">${formatPriceCzk(p.price)}</strong>`;
+
+    const conditionLabel = CONDITION_LABELS_EMAIL[p.condition] ?? p.condition;
+    const width = columns === 3 ? "33.33%" : "50%";
+
+    return `
+      <td style="width: ${width}; padding: 8px; vertical-align: top;">
+        <a href="${productUrl}" style="text-decoration: none; color: inherit; display: block;">
+          ${imageHtml}
+          <p style="margin: 8px 0 2px; font-size: 13px; font-weight: 600; color: #1a1a1a; line-height: 1.3;">${escapeHtml(p.name)}</p>
+          ${p.brand ? `<p style="margin: 0 0 2px; font-size: 12px; color: #888;">${escapeHtml(p.brand)}</p>` : ""}
+          <p style="margin: 0 0 2px; font-size: 11px; color: #666;">${escapeHtml(conditionLabel)}</p>
+          <p style="margin: 0; font-size: 11px; color: #d946ef;">Unikát — pouze 1 ks</p>
+          <div style="margin-top: 4px;">${priceHtml}</div>
+        </a>
+      </td>`;
+  });
+
+  const colCount = columns;
+  const rows: string[] = [];
+  for (let i = 0; i < cells.length; i += colCount) {
+    const rowCells = cells.slice(i, i + colCount);
+    while (rowCells.length < colCount) {
+      const w = colCount === 3 ? "33.33%" : "50%";
+      rowCells.push(`<td style="width: ${w}; padding: 8px;"></td>`);
+    }
+    rows.push(`<tr>${rowCells.join("")}</tr>`);
+  }
+
+  return `<table style="width: 100%; border-collapse: collapse; margin-top: 16px;">${rows.join("")}</table>`;
+}
+
+function buildMothersDayEmailShell(
+  previewText: string,
+  recipientEmail: string,
+  innerHtml: string,
+): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const unsubscribeUrl = `${baseUrl}/odhlasit-novinky?email=${encodeURIComponent(recipientEmail)}`;
+
+  return `<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <span style="display: none; max-height: 0; overflow: hidden; mso-hide: all;">${escapeHtml(previewText)}</span>
+</head>
+<body style="margin: 0; padding: 0; background-color: #fdf4ff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
+
+    <div style="text-align: center; padding: 24px 0;">
+      <a href="${baseUrl}" style="display: inline-block;"><img src="${baseUrl}/logo/logo-email.png" alt="Janička Shop" style="height: 40px; width: auto; border: 0;" /></a>
+      <p style="margin: 4px 0 0; font-size: 13px; color: #999;">Second hand móda pro tebe</p>
+    </div>
+
+    <div style="background: #fff; border-radius: 12px; padding: 32px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+      ${innerHtml}
+    </div>
+
+    <div style="text-align: center; padding: 20px 0 4px;">
+      <p style="margin: 0; font-size: 12px; color: #a855f7; font-style: italic;">Tvoje fotky jsou tvoje. Vždy.</p>
+    </div>
+
+    <div style="text-align: center; padding: 4px 0 24px; font-size: 12px; color: #999;">
+      <p style="margin: 0;">Janička Shop — Second hand móda</p>
+      <p style="margin: 8px 0 0;">
+        <a href="${unsubscribeUrl}" style="color: #999; text-decoration: underline;">Odhlásit se z odběru</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+// --- Email 1: Warmup (May 1) ---
+
+function buildMothersDayEmail1Html(
+  products: CampaignProduct[],
+  recipientEmail: string,
+): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const ctaUrl = `${baseUrl}/products?sort=newest`;
+
+  const productsHtml = products.length > 0
+    ? buildMothersDayProductGridHtml(products, 2)
+    : "";
+
+  const personaGridHtml = `
+    <table style="width: 100%; border-collapse: collapse; margin: 24px 0 8px;">
+      <tr>
+        <td style="width: 33.33%; padding: 8px; vertical-align: top; text-align: center;">
+          <div style="background: #fdf4ff; border-radius: 12px; padding: 16px 8px;">
+            <div style="font-size: 28px; margin-bottom: 6px;">🤍</div>
+            <p style="margin: 0; font-size: 13px; font-weight: 600; color: #1a1a1a;">Minimalistka</p>
+            <p style="margin: 4px 0 0; font-size: 11px; color: #666; line-height: 1.4;">Čisté linie, nadčasové kousky</p>
+          </div>
+        </td>
+        <td style="width: 33.33%; padding: 8px; vertical-align: top; text-align: center;">
+          <div style="background: #fef3c7; border-radius: 12px; padding: 16px 8px;">
+            <div style="font-size: 28px; margin-bottom: 6px;">✨</div>
+            <p style="margin: 0; font-size: 13px; font-weight: 600; color: #1a1a1a;">Klasička</p>
+            <p style="margin: 4px 0 0; font-size: 11px; color: #666; line-height: 1.4;">Elegance a ověřená kvalita</p>
+          </div>
+        </td>
+        <td style="width: 33.33%; padding: 8px; vertical-align: top; text-align: center;">
+          <div style="background: #f0fdf4; border-radius: 12px; padding: 16px 8px;">
+            <div style="font-size: 28px; margin-bottom: 6px;">🌿</div>
+            <p style="margin: 0; font-size: 13px; font-weight: 600; color: #1a1a1a;">Boho</p>
+            <p style="margin: 4px 0 0; font-size: 11px; color: #666; line-height: 1.4;">Volnost, barvy, originalita</p>
+          </div>
+        </td>
+      </tr>
+    </table>
+    <p style="margin: 0; text-align: center; font-size: 12px; color: #888;">Jaká je tvoje máma? Najdi jí kousek na míru.</p>
+  `;
+
+  const innerHtml = `
+    <div style="text-align: center; margin-bottom: 20px;">
+      <div style="display: inline-block; font-size: 40px;">🌷</div>
+    </div>
+
+    <h2 style="margin: 0 0 16px; font-size: 24px; color: #1a1a1a; text-align: center; line-height: 1.3;">
+      Daruj mámě kousek,<br/>který nemá nikdo jiný
+    </h2>
+
+    <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.7; color: #444; text-align: center;">
+      Den matek je <strong style="color: #1a1a1a;">10.&nbsp;května</strong>.
+      Místo masově vyráběných dárků jí dej něco, co má příběh&nbsp;— originální kousek,
+      pečlivě vybraný a&nbsp;zkontrolovaný.
+    </p>
+
+    <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.7; color: #444; text-align: center;">
+      Každý kus u&nbsp;nás existuje jen jednou. Žádné kopie, žádné série.
+      Až ho máma rozbalí, bude vědět, že jsi vybírala opravdu jen pro ni.
+    </p>
+
+    ${personaGridHtml}
+
+    ${productsHtml}
+
+    <div style="text-align: center; margin-top: 28px;">
+      <a href="${escapeHtml(ctaUrl)}" style="display: inline-block; background: #a855f7; color: #fff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 15px; font-weight: 600;">
+        Prohlédnout dárky pro mámu
+      </a>
+    </div>
+  `;
+
+  return buildMothersDayEmailShell(
+    MOTHERS_DAY_PREVIEWS[1],
+    recipientEmail,
+    innerHtml,
+  );
+}
+
+// --- Email 2: Push (May 7) ---
+
+function buildMothersDayEmail2Html(
+  products: CampaignProduct[],
+  recipientEmail: string,
+): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const ctaUrl = `${baseUrl}/products?sort=newest`;
+
+  const productsHtml = products.length > 0
+    ? buildMothersDayProductGridHtml(products, 2)
+    : "";
+
+  const innerHtml = `
+    <div style="text-align: center; margin-bottom: 20px;">
+      <div style="display: inline-block; font-size: 40px;">💐</div>
+    </div>
+
+    <h2 style="margin: 0 0 16px; font-size: 24px; color: #1a1a1a; text-align: center; line-height: 1.3;">
+      Mámě zbývá pár dní.<br/>Co ji opravdu potěší?
+    </h2>
+
+    <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.7; color: #444; text-align: center;">
+      Den matek je už za <strong style="color: #1a1a1a;">3&nbsp;dny</strong>.
+      Kytka zvadne, bonboniéra se sní&nbsp;— ale krásný kousek oblečení
+      ji potěší pokaždé, když si ho oblékne.
+    </p>
+
+    <div style="background: #fdf4ff; border-radius: 8px; padding: 12px 16px; margin: 0 0 20px; text-align: center;">
+      <p style="margin: 0; font-size: 13px; color: #7e22ce; font-weight: 600;">
+        ⚡ Každý kousek existuje jen jednou — kdokoliv ho může koupit dřív
+      </p>
+    </div>
+
+    ${productsHtml}
+
+    <div style="text-align: center; margin-top: 28px;">
+      <a href="${escapeHtml(ctaUrl)}" style="display: inline-block; background: #a855f7; color: #fff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 15px; font-weight: 600;">
+        Vybrat dárek pro mámu
+      </a>
+    </div>
+
+    <p style="margin: 20px 0 0; font-size: 13px; color: #888; text-align: center; line-height: 1.5;">
+      💡 Tip: Nevíš velikost? Dárková poukázka je vždy jistota.
+    </p>
+  `;
+
+  return buildMothersDayEmailShell(
+    MOTHERS_DAY_PREVIEWS[2],
+    recipientEmail,
+    innerHtml,
+  );
+}
+
+// --- Email 3: Urgency (May 9) ---
+
+function buildMothersDayEmail3Html(
+  products: CampaignProduct[],
+  recipientEmail: string,
+): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const ctaUrl = `${baseUrl}/products?sort=newest`;
+
+  const productsHtml = products.length > 0
+    ? buildMothersDayProductGridHtml(products.slice(0, 3), 3)
+    : "";
+
+  const innerHtml = `
+    <div style="text-align: center; margin-bottom: 20px;">
+      <div style="display: inline-block; font-size: 40px;">⏰</div>
+    </div>
+
+    <h2 style="margin: 0 0 16px; font-size: 24px; color: #1a1a1a; text-align: center; line-height: 1.3;">
+      Poslední šance — Den matek je zítra!
+    </h2>
+
+    <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.7; color: #444; text-align: center;">
+      Objednávky zadané <strong style="color: #1a1a1a;">dnes</strong> stihneme odeslat
+      tak, aby dorazily včas. Nenechávej to na poslední chvíli.
+    </p>
+
+    <div style="background: #f0fdf4; border-radius: 8px; padding: 12px 16px; margin: 0 0 8px; text-align: center;">
+      <p style="margin: 0; font-size: 14px; color: #166534; font-weight: 600;">
+        🚚 Doprava zdarma nad 1 500 Kč
+      </p>
+    </div>
+
+    <div style="background: #fef3c7; border-radius: 8px; padding: 12px 16px; margin: 0 0 20px; text-align: center;">
+      <p style="margin: 0; font-size: 13px; color: #92400e; font-weight: 600;">
+        ⚡ Objednej dnes — stihneme odeslat do 3 dnů
+      </p>
+    </div>
+
+    ${productsHtml}
+
+    <div style="text-align: center; margin-top: 28px;">
+      <a href="${escapeHtml(ctaUrl)}" style="display: inline-block; background: #dc2626; color: #fff; padding: 16px 36px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: 700;">
+        Objednat teď →
+      </a>
+    </div>
+  `;
+
+  return buildMothersDayEmailShell(
+    MOTHERS_DAY_PREVIEWS[3],
+    recipientEmail,
+    innerHtml,
+  );
+}
+
+const MOTHERS_DAY_BUILDERS: Record<
+  MothersDayEmailNumber,
+  (products: CampaignProduct[], email: string) => string
+> = {
+  1: buildMothersDayEmail1Html,
+  2: buildMothersDayEmail2Html,
+  3: buildMothersDayEmail3Html,
+};
+
+/**
+ * Send a Mother's Day campaign email to one recipient.
+ * Returns true on success, false on failure (non-throwing for batch use).
+ */
+export async function sendMothersDayEmail(
+  emailNumber: MothersDayEmailNumber,
+  segment: MothersDaySegment,
+  products: CampaignProduct[],
+  recipientEmail: string,
+): Promise<boolean> {
+  const resend = getResendClient();
+  if (!resend) {
+    console.warn("[Email] RESEND_API_KEY not set — skipping Mother's Day campaign");
+    return false;
+  }
+
+  try {
+    await resend.emails.send({
+      from: NEWSLETTER_FROM_EMAIL,
+      to: recipientEmail,
+      subject: MOTHERS_DAY_SUBJECTS[emailNumber][segment],
+      html: MOTHERS_DAY_BUILDERS[emailNumber](products, recipientEmail),
+    });
+    return true;
+  } catch (error) {
+    console.error(`[Email] Failed to send Mother's Day email ${emailNumber} to ${recipientEmail}:`, error);
+    return false;
+  }
+}
