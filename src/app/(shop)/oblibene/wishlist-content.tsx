@@ -94,7 +94,7 @@ export function WishlistContent() {
         <p className="mt-1 text-sm text-muted-foreground">
           Klikněte na srdíčko u produktu a přidejte si ho sem
         </p>
-        <Button className="mt-6" render={<Link href="/products" />}>
+        <Button size="lg" className="mt-6" render={<Link href="/products" />}>
           <ShoppingBag className="mr-2 size-4" />
           Prohlédnout kolekci
         </Button>

@@ -185,10 +185,10 @@ export async function Footer() {
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Top section — centered logo + tagline */}
         <div className="flex flex-col items-center pb-10 pt-16 sm:pb-12 sm:pt-20">
-          <Link href="/" className="group inline-block">
+          <Link href="/" className="group inline-flex min-h-[44px] items-center" aria-label="Janička — domů">
             <Image
               src="/logo/logo-header-lg.png"
-              alt="Janička"
+              alt=""
               width={160}
               height={64}
               className="h-10 w-auto brightness-0 invert transition-opacity group-hover:opacity-80 sm:h-12"
@@ -229,7 +229,7 @@ export async function Footer() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="footer-link text-sm text-white/55 transition-colors duration-200 hover:text-white"
+                      className="footer-link inline-block py-1.5 text-sm text-white/55 transition-colors duration-200 hover:text-white"
                     >
                       {link.name}
                     </Link>

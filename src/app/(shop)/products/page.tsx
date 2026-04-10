@@ -7,6 +7,7 @@ import { Pagination } from "@/components/shop/pagination";
 import { ProductGrid } from "./product-grid";
 import { CategoryHero, CatalogHero } from "@/components/shop/category-hero";
 import { GridViewSwitcher } from "@/components/shop/grid-view-switcher";
+import { StickyCategoryNav } from "@/components/shop/sticky-category-nav";
 import { buildBreadcrumbSchema, jsonLdString } from "@/lib/structured-data";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Metadata } from "next";
@@ -368,22 +369,34 @@ export default async function ProductsPage({
       </nav>
 
       {/* ===== Sticky filter toolbar ===== */}
-      <div className="sticky top-0 z-30 -mx-4 bg-background/80 px-4 py-3 backdrop-blur-lg sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+      <div className="sticky top-0 z-30 -mx-4 border-b border-border/40 bg-background/80 px-4 py-3 backdrop-blur-lg sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         <div className="flex items-center justify-between gap-3">
-          <p className="text-sm text-muted-foreground">
-            {totalItems}{" "}
-            {totalItems === 1
-              ? "produkt"
-              : totalItems >= 2 && totalItems <= 4
-                ? "produkty"
-                : "produktů"}
-            {totalPages > 1 && (
-              <span>
-                {" "}
-                &middot; stránka {safePage} z {totalPages}
-              </span>
-            )}
-          </p>
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <p className="shrink-0 text-sm text-muted-foreground">
+              {totalItems}{" "}
+              {totalItems === 1
+                ? "produkt"
+                : totalItems >= 2 && totalItems <= 4
+                  ? "produkty"
+                  : "produktů"}
+              {totalPages > 1 && (
+                <span className="hidden sm:inline">
+                  {" "}
+                  &middot; stránka {safePage} z {totalPages}
+                </span>
+              )}
+            </p>
+            <div className="hidden min-w-0 flex-1 lg:block">
+              <Suspense fallback={null}>
+                <StickyCategoryNav
+                  categories={categories.map((c) => ({
+                    slug: c.slug,
+                    name: c.name,
+                  }))}
+                />
+              </Suspense>
+            </div>
+          </div>
           <Suspense fallback={null}>
             <GridViewSwitcher />
           </Suspense>

@@ -167,36 +167,32 @@ export function CookieConsentBanner() {
           {/* Czech law: Accept/Reject MUST be same size, font, color — no dark patterns */}
           <Button
             variant="outline"
-            size="sm"
             onClick={handleRejectAll}
-            className="flex-1 sm:flex-none"
+            className="min-h-[44px] flex-1 sm:flex-none"
           >
             Odmítnout vše
           </Button>
           {showDetails ? (
             <Button
               variant="outline"
-              size="sm"
-              onClick={handleSavePreferences}
-              className="flex-1 sm:flex-none"
+                onClick={handleSavePreferences}
+              className="min-h-[44px] flex-1 sm:flex-none"
             >
               Uložit nastavení
             </Button>
           ) : (
             <Button
               variant="outline"
-              size="sm"
               onClick={() => setShowDetails(true)}
-              className="flex-1 sm:flex-none"
+              className="min-h-[44px] flex-1 sm:flex-none"
             >
               Nastavení
             </Button>
           )}
           <Button
             variant="outline"
-            size="sm"
             onClick={handleAcceptAll}
-            className="flex-1 sm:flex-none"
+            className="min-h-[44px] flex-1 sm:flex-none"
           >
             Přijmout vše
           </Button>
@@ -204,7 +200,7 @@ export function CookieConsentBanner() {
 
         <p className="mt-3 text-xs text-muted-foreground">
           Více informací v{" "}
-          <a href="/privacy" className="underline hover:text-foreground">
+          <a href="/privacy" className="inline-block py-1 underline hover:text-foreground">
             zásadách ochrany osobních údajů
           </a>
           . Dozorový úřad:{" "}

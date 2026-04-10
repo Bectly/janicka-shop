@@ -1,13 +1,11 @@
 {
-  "pause": {
-    "sage": "until_next_bolt_commit"
-  },
+  "pause": {},
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 2879,
   "paused_at_bolt_cycle": 2879,
-  "notes": "C2871 Lead: #47 DONE, #71 DONE (C2868), #83 DONE (dup of #71). 4-cycle waste loop broken (ack feedback 1059-1061). Bolt PRIORITY: #76 CRITICAL checkout Vercel error → #72 hero logo → #74 mobile nav close → #80 hide badge → #81 remove AI bar. Trace paused until Bolt commits. Sage paused until Bolt commits. 3 blocked bectly: R2 (#1), Heureka (#4), GMC (#14). 18 days to April 28 window.",
+  "notes": "C2884 Lead: 6 tasks verified DONE (#48/#74/#75/#76/#80/#81). Bolt wasted 4 cycles on completed #48/#76. Bolt PRIORITY: #72 hero alt text (trivial 1-liner: hero-section.tsx line 90, change alt from 'Janička — Třešňová Větvička' to 'Janička') → #82 clean Vinted products (popisky, atributy, kategorie) → #77 remove mock/seed data. Trace running #57 mobile responsive, then #73 horizontal scroll. Sage paused until Bolt commits. 3 blocked bectly: R2 (#1), Heureka (#4), GMC (#14). 18 days to April 28 window.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",

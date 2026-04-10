@@ -15,10 +15,10 @@ export function Header() {
         <MobileNav />
 
         {/* Logo */}
-        <Link href="/" className="shrink-0">
+        <Link href="/" className="inline-flex min-h-[44px] shrink-0 items-center" aria-label="Janička — domů">
           <Image
             src="/logo/logo-header.png"
-            alt="Janička"
+            alt=""
             width={120}
             height={48}
             className="h-8 w-auto"

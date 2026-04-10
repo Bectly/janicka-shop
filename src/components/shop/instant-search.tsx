@@ -263,7 +263,7 @@ export function InstantSearch() {
       {/* Trigger button */}
       <button
         onClick={openSearch}
-        className="inline-flex items-center justify-center rounded-lg p-2 text-foreground/80 transition-colors hover:bg-muted hover:text-foreground"
+        className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-foreground/80 transition-colors hover:bg-muted hover:text-foreground"
         aria-label="Hledat (Ctrl+K)"
       >
         <Search className="size-5" />

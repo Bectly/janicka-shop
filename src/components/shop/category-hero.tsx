@@ -2,7 +2,15 @@
 
 import { useRef, useEffect, useState } from "react";
 import Image from "next/image";
-import { Sparkles, Shirt, Layers, Wind, Gem, Tag, type LucideIcon } from "lucide-react";
+import {
+  Sparkles,
+  Shirt,
+  Layers,
+  Wind,
+  Gem,
+  Tag,
+  type LucideIcon,
+} from "lucide-react";
 
 interface CategoryHeroProps {
   name: string;
@@ -13,42 +21,53 @@ interface CategoryHeroProps {
 }
 
 /**
- * Category-specific mood gradients — each category gets a unique
- * editorial color story using the brand palette (OKLch).
+ * Category-specific mood — each category gets a unique editorial
+ * color story, tagline, and decorative watermark letter.
  */
 const CATEGORY_MOODS: Record<
   string,
-  { gradient: string; accent: string; icon: LucideIcon }
+  {
+    gradient: string;
+    accent: string;
+    icon: LucideIcon;
+    tagline: string;
+    watermark: string;
+  }
 > = {
   saty: {
-    gradient:
-      "from-brand/15 via-champagne-light/60 to-blush",
+    gradient: "from-brand/15 via-champagne-light/60 to-blush",
     accent: "text-brand-dark",
     icon: Sparkles,
+    tagline: "Elegance, která vypráví příběh",
+    watermark: "Š",
   },
   "topy-halenky": {
-    gradient:
-      "from-sage-light/80 via-champagne-light/40 to-blush-light",
+    gradient: "from-sage-light/80 via-champagne-light/40 to-blush-light",
     accent: "text-sage-dark",
     icon: Shirt,
+    tagline: "Každodenní styl, výjimečný výběr",
+    watermark: "T",
   },
   "kalhoty-sukne": {
-    gradient:
-      "from-champagne/40 via-blush-light/60 to-brand-light/20",
+    gradient: "from-champagne/40 via-blush-light/60 to-brand-light/20",
     accent: "text-charcoal",
     icon: Layers,
+    tagline: "Základ šatníku, který vydrží",
+    watermark: "K",
   },
   "bundy-kabaty": {
-    gradient:
-      "from-charcoal/10 via-champagne-light/50 to-sage-light/30",
+    gradient: "from-charcoal/10 via-champagne-light/50 to-sage-light/30",
     accent: "text-charcoal-dark",
     icon: Wind,
+    tagline: "Pro každé počasí, s osobitým stylem",
+    watermark: "B",
   },
   doplnky: {
-    gradient:
-      "from-champagne/60 via-brand-light/20 to-blush-light",
+    gradient: "from-champagne/60 via-brand-light/20 to-blush-light",
     accent: "text-champagne-dark",
     icon: Gem,
+    tagline: "Detaily, které dělají outfit",
+    watermark: "D",
   },
 };
 
@@ -56,16 +75,11 @@ const DEFAULT_MOOD = {
   gradient: "from-brand-light/20 via-champagne-light/50 to-blush",
   accent: "text-brand-dark",
   icon: Sparkles,
+  tagline: "Unikátní kousky, pečlivě vybrané",
+  watermark: "J",
 };
 
-export function CategoryHero({
-  name,
-  slug,
-  description,
-  image,
-  productCount,
-}: CategoryHeroProps) {
-  const heroRef = useRef<HTMLDivElement>(null);
+function useParallax(factor = 0.3) {
   const [offset, setOffset] = useState(0);
 
   useEffect(() => {
@@ -79,21 +93,39 @@ export function CategoryHero({
       if (!ticking) {
         ticking = true;
         requestAnimationFrame(() => {
-          setOffset(window.scrollY * 0.3);
+          setOffset(window.scrollY * factor);
           ticking = false;
         });
       }
     }
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [factor]);
 
+  return offset;
+}
+
+function productCountText(count: number): string {
+  if (count === 1) return "unikátní kousek";
+  if (count >= 2 && count <= 4) return "unikátní kousky";
+  return "unikátních kousků";
+}
+
+export function CategoryHero({
+  name,
+  slug,
+  description,
+  image,
+  productCount,
+}: CategoryHeroProps) {
+  const heroRef = useRef<HTMLDivElement>(null);
+  const offset = useParallax(0.3);
   const mood = CATEGORY_MOODS[slug] ?? DEFAULT_MOOD;
 
   return (
     <div
       ref={heroRef}
-      className="relative -mx-4 -mt-8 mb-8 overflow-hidden sm:-mx-6 lg:-mx-8"
+      className="category-hero relative -mx-4 -mt-8 mb-10 overflow-hidden sm:-mx-6 lg:-mx-8"
     >
       {/* Background layer with parallax */}
       <div
@@ -110,7 +142,6 @@ export function CategoryHero({
             priority
           />
         ) : (
-          /* Gradient mood fallback */
           <div
             className={`absolute inset-0 bg-gradient-to-br ${mood.gradient}`}
           />
@@ -119,35 +150,66 @@ export function CategoryHero({
         <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/30 to-transparent" />
       </div>
 
+      {/* Decorative watermark letter */}
+      <div
+        className="pointer-events-none absolute right-4 top-6 select-none font-heading text-[12rem] font-bold leading-none text-foreground/[0.03] sm:right-8 sm:text-[16rem] lg:right-16 lg:text-[20rem]"
+        aria-hidden="true"
+      >
+        {mood.watermark}
+      </div>
+
       {/* Content */}
-      <div className="relative mx-auto max-w-7xl px-4 pb-10 pt-16 sm:px-6 sm:pb-12 sm:pt-20 lg:px-8 lg:pb-14 lg:pt-24">
-        {/* Editorial pill badge */}
-        <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1 text-xs font-semibold tracking-wide text-primary">
+      <div className="relative mx-auto max-w-7xl px-4 pb-12 pt-20 sm:px-6 sm:pb-16 sm:pt-24 lg:px-8 lg:pb-20 lg:pt-32">
+        {/* Editorial pill badge — stagger 1 */}
+        <span className="category-hero-stagger mb-4 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1 text-xs font-semibold uppercase tracking-widest text-primary">
           <mood.icon className="size-3.5 shrink-0" aria-hidden="true" />
           Kolekce
         </span>
 
+        {/* Heading — stagger 2 */}
         <h1
-          className={`mt-1 font-heading text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl ${mood.accent}`}
+          className={`category-hero-stagger text-display ${mood.accent}`}
+          style={{ animationDelay: "80ms" }}
         >
           {name}
         </h1>
 
+        {/* Decorative brand accent line — stagger 3 */}
+        <div
+          className="category-hero-stagger mt-4 h-[3px] w-12 rounded-full bg-gradient-to-r from-brand to-brand-light"
+          style={{ animationDelay: "160ms" }}
+          aria-hidden="true"
+        />
+
+        {/* Editorial tagline — stagger 4 */}
+        <p
+          className="category-hero-stagger mt-4 font-heading text-lg italic text-muted-foreground/70 sm:text-xl"
+          style={{ animationDelay: "220ms" }}
+        >
+          {mood.tagline}
+        </p>
+
+        {/* Description — stagger 5 */}
         {description && (
-          <p className="mt-3 max-w-xl text-base text-muted-foreground sm:text-lg">
+          <p
+            className="category-hero-stagger mt-3 max-w-xl text-base text-muted-foreground sm:text-lg"
+            style={{ animationDelay: "280ms" }}
+          >
             {description}
           </p>
         )}
 
-        <p className="mt-3 text-sm font-medium text-muted-foreground/80">
-          {productCount}{" "}
-          {productCount === 1
-            ? "unikátní kousek"
-            : productCount >= 2 && productCount <= 4
-              ? "unikátní kousky"
-              : "unikátních kousků"}
+        {/* Count — stagger 6 */}
+        <p
+          className="category-hero-stagger mt-4 text-sm font-medium text-muted-foreground/80"
+          style={{ animationDelay: "340ms" }}
+        >
+          {productCount} {productCountText(productCount)}
         </p>
       </div>
+
+      {/* Bottom fade edge for seamless transition into content */}
+      <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-background to-transparent" />
     </div>
   );
 }
@@ -156,30 +218,10 @@ export function CategoryHero({
  * Generic catalog hero — shown when no category is selected.
  */
 export function CatalogHero({ productCount }: { productCount: number }) {
-  const [offset, setOffset] = useState(0);
-
-  useEffect(() => {
-    const prefersReduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    if (prefersReduced) return;
-
-    let ticking = false;
-    function onScroll() {
-      if (!ticking) {
-        ticking = true;
-        requestAnimationFrame(() => {
-          setOffset(window.scrollY * 0.3);
-          ticking = false;
-        });
-      }
-    }
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  const offset = useParallax(0.3);
 
   return (
-    <div className="relative -mx-4 -mt-8 mb-8 overflow-hidden sm:-mx-6 lg:-mx-8">
+    <div className="category-hero relative -mx-4 -mt-8 mb-10 overflow-hidden sm:-mx-6 lg:-mx-8">
       <div
         className="absolute inset-0 will-change-transform"
         style={{ transform: `translateY(${offset}px)` }}
@@ -188,21 +230,54 @@ export function CatalogHero({ productCount }: { productCount: number }) {
         <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/30 to-transparent" />
       </div>
 
-      <div className="relative mx-auto max-w-7xl px-4 pb-10 pt-16 sm:px-6 sm:pb-12 sm:pt-20 lg:px-8 lg:pb-14 lg:pt-24">
+      {/* Decorative watermark */}
+      <div
+        className="pointer-events-none absolute right-4 top-6 select-none font-heading text-[12rem] font-bold leading-none text-foreground/[0.03] sm:right-8 sm:text-[16rem] lg:right-16 lg:text-[20rem]"
+        aria-hidden="true"
+      >
+        J
+      </div>
+
+      <div className="relative mx-auto max-w-7xl px-4 pb-12 pt-20 sm:px-6 sm:pb-16 sm:pt-24 lg:px-8 lg:pb-20 lg:pt-32">
         {/* Editorial pill badge */}
-        <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1 text-xs font-semibold tracking-wide text-primary">
+        <span className="category-hero-stagger mb-4 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1 text-xs font-semibold uppercase tracking-widest text-primary">
           <Tag className="size-3.5 shrink-0" aria-hidden="true" />
           Naše kolekce
         </span>
 
-        <h1 className="mt-1 font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
+        <h1
+          className="category-hero-stagger text-display text-foreground"
+          style={{ animationDelay: "80ms" }}
+        >
           Katalog
         </h1>
-        <p className="mt-3 max-w-xl text-base text-muted-foreground sm:text-lg">
+
+        {/* Decorative accent line */}
+        <div
+          className="category-hero-stagger mt-4 h-[3px] w-12 rounded-full bg-gradient-to-r from-brand to-brand-light"
+          style={{ animationDelay: "160ms" }}
+          aria-hidden="true"
+        />
+
+        <p
+          className="category-hero-stagger mt-4 font-heading text-lg italic text-muted-foreground/70 sm:text-xl"
+          style={{ animationDelay: "220ms" }}
+        >
+          Pečlivě vybraný second hand pro moderní ženy
+        </p>
+
+        <p
+          className="category-hero-stagger mt-3 max-w-xl text-base text-muted-foreground sm:text-lg"
+          style={{ animationDelay: "280ms" }}
+        >
           Prohlédněte si naši kolekci stylového oblečení. Každý kousek je
           unikát — pečlivě vybraný a zkontrolovaný.
         </p>
-        <p className="mt-3 text-sm font-medium text-muted-foreground/80">
+
+        <p
+          className="category-hero-stagger mt-4 text-sm font-medium text-muted-foreground/80"
+          style={{ animationDelay: "340ms" }}
+        >
           {productCount}{" "}
           {productCount === 1
             ? "kousek"
@@ -212,6 +287,9 @@ export function CatalogHero({ productCount }: { productCount: number }) {
           v nabídce
         </p>
       </div>
+
+      {/* Bottom fade edge */}
+      <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-background to-transparent" />
     </div>
   );
 }

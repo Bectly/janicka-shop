@@ -43,7 +43,7 @@ export function ContactForm() {
             name="name"
             required
             maxLength={100}
-            className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            className="mt-1 min-h-[44px] w-full rounded-lg border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             placeholder="Vaše jméno"
           />
         </div>
@@ -61,7 +61,7 @@ export function ContactForm() {
             name="email"
             required
             maxLength={200}
-            className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            className="mt-1 min-h-[44px] w-full rounded-lg border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             placeholder="vas@email.cz"
           />
         </div>
@@ -76,7 +76,7 @@ export function ContactForm() {
           <select
             id="subject"
             name="subject"
-            className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            className="mt-1 min-h-[44px] w-full rounded-lg border bg-background px-3 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           >
             <option value="order">Dotaz k objednávce</option>
             <option value="product">Dotaz k produktu</option>
@@ -100,7 +100,7 @@ export function ContactForm() {
             required
             minLength={10}
             maxLength={5000}
-            className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            className="mt-1 min-h-[44px] w-full rounded-lg border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             placeholder="Jak vám můžeme pomoci?"
           />
         </div>
@@ -114,7 +114,7 @@ export function ContactForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
         >
           {isPending && <Loader2 className="size-4 animate-spin" />}
           {isPending ? "Odesílám…" : "Odeslat zprávu"}

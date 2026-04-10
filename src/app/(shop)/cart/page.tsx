@@ -74,7 +74,7 @@ export default function CartPage() {
           <p className="mt-2 max-w-xs text-muted-foreground">
             Přidejte si něco hezkého z naší kolekce jedinečných kousků.
           </p>
-          <Button className="mt-8" render={<Link href="/products" />}>
+          <Button size="lg" className="mt-8" render={<Link href="/products" />}>
             Prohlédnout kolekci
           </Button>
         </div>

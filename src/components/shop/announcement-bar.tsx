@@ -107,7 +107,7 @@ export function AnnouncementBar() {
         <button
           type="button"
           onClick={handleDismiss}
-          className="absolute right-1 z-10 inline-flex size-10 items-center justify-center rounded-full text-white/60 transition-all hover:bg-white/10 hover:text-white sm:right-3 sm:size-11"
+          className="absolute right-1 z-10 inline-flex size-11 items-center justify-center rounded-full text-white/60 transition-all hover:bg-white/10 hover:text-white sm:right-3"
           aria-label="Zavřít oznámení"
         >
           <X className="size-3.5" />
