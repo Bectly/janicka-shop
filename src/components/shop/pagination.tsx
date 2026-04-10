@@ -46,7 +46,7 @@ export function Pagination({ totalItems, perPage, basePath }: PaginationProps) {
   }
 
   const linkBase =
-    "inline-flex min-h-[44px] items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors";
+    "inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors";
   const pageBase =
     "inline-flex min-h-[44px] min-w-11 items-center justify-center rounded-lg px-3 py-2 text-center text-sm font-medium transition-colors";
 

@@ -41,6 +41,7 @@ export function PacketaWidget({
   selectedPoint,
 }: PacketaWidgetProps) {
   const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [widgetError, setWidgetError] = useState(false);
 
   // Check if script is already loaded (e.g. from cache)
   useEffect(() => {
@@ -49,20 +50,38 @@ export function PacketaWidget({
   }, []);
 
   const openWidget = useCallback(() => {
-    if (!window.Packeta) return;
+    if (!window.Packeta || !PACKETA_API_KEY) {
+      setWidgetError(true);
+      return;
+    }
 
-    window.Packeta.Widget.pick(
-      PACKETA_API_KEY,
-      (point) => {
-        onPointSelected(point ?? null);
-      },
-      {
-        language: "cs",
-        view: "modal",
-        vendors: [{ country: "cz" }],
-      }
-    );
+    try {
+      window.Packeta.Widget.pick(
+        PACKETA_API_KEY,
+        (point) => {
+          onPointSelected(point ?? null);
+        },
+        {
+          language: "cs",
+          view: "modal",
+          vendors: [{ country: "cz" }],
+        }
+      );
+    } catch (e) {
+      console.error("[PacketaWidget] Widget pick failed:", e);
+      setWidgetError(true);
+    }
   }, [onPointSelected]);
+
+  // No API key configured — show fallback instead of broken widget
+  if (!PACKETA_API_KEY) {
+    return (
+      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+        Výběr výdejního místa Zásilkovny je momentálně nedostupný. Zvolte prosím
+        jiný způsob dopravy.
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -70,7 +89,15 @@ export function PacketaWidget({
         src="https://widget.packeta.com/v6/www/js/library.js"
         strategy="lazyOnload"
         onLoad={() => setScriptLoaded(true)}
+        onError={() => setWidgetError(true)}
       />
+
+      {widgetError && (
+        <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          Nepodařilo se načíst mapu výdejních míst. Zkuste to znovu nebo zvolte
+          jiný způsob dopravy.
+        </div>
+      )}
 
       {selectedPoint ? (
         <div className="flex items-start gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
