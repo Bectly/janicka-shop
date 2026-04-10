@@ -120,17 +120,14 @@ export function CategoryHero({
 
       {/* Content */}
       <div className="relative mx-auto max-w-7xl px-4 pb-10 pt-16 sm:px-6 sm:pb-12 sm:pt-20 lg:px-8 lg:pb-14 lg:pt-24">
-        {/* Decorative emoji */}
-        <span
-          className="mb-3 block text-4xl sm:text-5xl"
-          role="img"
-          aria-hidden="true"
-        >
-          {mood.emoji}
+        {/* Editorial pill badge */}
+        <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1 text-xs font-semibold tracking-wide text-primary">
+          <span aria-hidden="true">{mood.emoji}</span>
+          Kolekce
         </span>
 
         <h1
-          className={`font-heading text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl ${mood.accent}`}
+          className={`mt-1 font-heading text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl ${mood.accent}`}
         >
           {name}
         </h1>
@@ -191,14 +188,13 @@ export function CatalogHero({ productCount }: { productCount: number }) {
       </div>
 
       <div className="relative mx-auto max-w-7xl px-4 pb-10 pt-16 sm:px-6 sm:pb-12 sm:pt-20 lg:px-8 lg:pb-14 lg:pt-24">
-        <span
-          className="mb-3 block text-4xl sm:text-5xl"
-          role="img"
-          aria-hidden="true"
-        >
-          ✨
+        {/* Editorial pill badge */}
+        <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1 text-xs font-semibold tracking-wide text-primary">
+          <span aria-hidden="true">✦</span>
+          Naše kolekce
         </span>
-        <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
+
+        <h1 className="mt-1 font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
           Katalog
         </h1>
         <p className="mt-3 max-w-xl text-base text-muted-foreground sm:text-lg">

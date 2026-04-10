@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getDb } from "@/lib/db";
 import { getLowestPrices30d } from "@/lib/price-history";
 import { ProductCard } from "@/components/shop/product-card";
@@ -149,10 +150,23 @@ export async function ProductGrid({
 
   if (paginatedProducts.length === 0) {
     return (
-      <div className="py-20 text-center">
-        <p className="text-lg text-muted-foreground">
+      <div className="py-16 text-center">
+        <div className="mx-auto mb-5 inline-flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-brand/10 via-champagne-light/30 to-blush-light/40">
+          <span className="text-2xl" aria-hidden="true">🔍</span>
+        </div>
+        <h3 className="font-heading text-lg font-semibold text-foreground">
+          Nic nenalezeno
+        </h3>
+        <p className="mx-auto mt-2 max-w-xs text-sm text-muted-foreground">
           Žádné produkty neodpovídají zvoleným filtrům.
         </p>
+        <Link
+          href="/products"
+          className="mt-5 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/10"
+        >
+          <span aria-hidden="true">↩</span>
+          Zobrazit vše
+        </Link>
       </div>
     );
   }
