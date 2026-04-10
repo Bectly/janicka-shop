@@ -109,6 +109,9 @@ async function CategoriesSection() {
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="flex items-end justify-between">
         <div>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/8 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase mb-3">
+            <span aria-hidden="true">◈</span> Kategorie
+          </span>
           <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
             Kategorie
           </h2>
@@ -143,6 +146,9 @@ async function NewProductsSection() {
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="flex items-end justify-between">
         <div>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase mb-3">
+            <span className="size-1.5 rounded-full bg-brand animate-pulse" aria-hidden="true" /> Nové
+          </span>
           <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
             Nově přidané
           </h2>
@@ -203,6 +209,9 @@ async function FeaturedProductsSection() {
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="flex items-end justify-between">
         <div>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-champagne/50 px-3 py-1 text-xs font-semibold tracking-wider text-champagne-dark uppercase mb-3">
+            <span aria-hidden="true">★</span> Výběr
+          </span>
           <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
             Doporučujeme
           </h2>
@@ -275,6 +284,9 @@ async function SaleProductsSection() {
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="flex items-end justify-between">
           <div>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/8 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase mb-3">
+              <span aria-hidden="true">✦</span> Akce
+            </span>
             <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
               Výprodej
             </h2>
@@ -401,6 +413,9 @@ async function FeaturedCollectionsSection() {
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="flex items-end justify-between">
         <div>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-sage-light/60 px-3 py-1 text-xs font-semibold tracking-wider text-sage-dark uppercase mb-3">
+            <span aria-hidden="true">◇</span> Kolekce
+          </span>
           <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
             Kolekce
           </h2>
@@ -639,9 +654,17 @@ export default async function HomePage() {
 
       {/* Newsletter — no data, renders instantly */}
       <ScrollReveal>
-        <section className="bg-primary/5">
-          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <section className="relative overflow-hidden bg-gradient-to-br from-brand-light/30 via-blush to-champagne-light/50">
+          {/* Decorative background glow */}
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+            <div className="absolute -left-24 -top-24 size-64 rounded-full bg-brand/8 blur-3xl" />
+            <div className="absolute -bottom-12 -right-12 size-48 rounded-full bg-champagne/30 blur-2xl" />
+          </div>
+          <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-lg text-center">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase mb-4">
+                <span aria-hidden="true">✉</span> Newsletter
+              </span>
               <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
                 Buďte v obraze
               </h2>
