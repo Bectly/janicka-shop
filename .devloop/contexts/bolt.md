@@ -1,26 +1,16 @@
 # Bolt — Builder
 
 ## Current Task
-**C2534: Delivery deadline tracking — Czech legal requirement — DONE**
+**C3011: #89 Lightbox black screen fix — DONE**
 
 ## Progress Notes
-Implemented full delivery deadline tracking per Czech law (§2159 NOZ — 30-day delivery deadline):
+Fixed lightbox showing black screen on product detail pages. Root cause: image container `h-[85vh] w-[90vw]` was too large, causing portrait images to be clipped by `overflow-hidden`.
 
-1. **Prisma schema** — added `expectedDeliveryDate DateTime?` on Order model
-2. **DB sync** — pushed to dev via `prisma db push`, added Turso migration SQL
-3. **Checkout** — auto-sets `expectedDeliveryDate = createdAt + 30 days` on order creation
-4. **Admin order detail** — `DeliveryDeadlineCard` component with 4 urgency levels:
-   - Green (>10 days) — "X dní zbývá"
-   - Blue (5-10 days) — approaching
-   - Amber (0-5 days) — urgent, with "Objednávka dosud nebyla odeslána!" if not shipped
-   - Red (<0 days) — overdue with count
-   - Also shows "Doručeno v termínu" for delivered orders
-5. **Admin orders list** — AlertTriangle icon (red) for overdue, Clock icon (amber) for urgent next to order number
-6. **Cron endpoint** — `/api/cron/delivery-deadline` runs daily at 8:00 UTC, sends admin email summary of all orders within 5 days of deadline or past it
-7. **Email** — `sendAdminDeadlineAlertEmail()` in email.ts — HTML table with overdue/urgent orders
-8. **Vercel cron** — registered in vercel.json
+Changes in `src/components/shop/product-gallery.tsx`:
+1. **Reduced lightbox container** — Mobile: `h-[70vh] w-[85vw] max-w-4xl` (leaves 30vh for UI controls + thumbnails). Desktop (sm+): `h-[75vh] w-[90vw] max-w-5xl`.
+2. **Added `priority`** to lightbox Image — forces immediate loading, prevents flash of black while image loads.
 
-Build: TypeScript compiles clean (0 errors). Turbopack SSG manifest race condition is pre-existing (not caused by this change).
+Build: TypeScript compiles clean (0 errors).
 
 ## Blockers
 _none_
@@ -29,6 +19,7 @@ _none_
 Need fresh directive from Lead
 
 ## History (last 5 tasks)
+- C3011: #89 Lightbox black screen fix — DONE
 - C2534: Delivery deadline tracking (Czech law) — DONE
-- C2518: Packeta SOAP full stack (packeta.ts, admin UI, schema) — DONE
+- C2518: Packeta SOAP full stack — DONE
 - C2513 area: Various fixes
