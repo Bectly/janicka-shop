@@ -6,7 +6,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 3020,
+  "last_bolt_commit_cycle": 3021,
   "paused_at_bolt_cycle": 3016,
   "notes": "C3017 Lead: #89 lightbox DONE (a00910f). All backlog tasks (#51-54) already done. Only blocked tasks remain (#1/#4/#14/#65 = bectly credentials). NEW: #90 Bolt → April 28 Vinted campaign email template (C2788 brief). #91 Trace → verify lightbox fix. After #90+#91 complete → full pause (no implementable work left). 18d to April 28 window.",
   "schema": {
