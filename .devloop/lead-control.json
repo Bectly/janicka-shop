@@ -5,7 +5,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 3135,
+  "last_bolt_commit_cycle": 3138,
   "paused_at_bolt_cycle": 3135,
   "notes": "C3135 Lead: 7th recurrence of pause-map wipe bug. Bolt ran AGAIN (last_bolt_commit_cycle bumped 3133→3135) despite C3131 fix. until_next_bolt_commit for Sage/Trace would auto-clear since 3135>3133. ALL THREE agents now hard 'paused' (not conditional). Zero open tasks. 7 blocked on bectly. Feedback #1221-1222 ACK. No monitors due. DEVLOOP MUST STOP.",
   "schema": {
