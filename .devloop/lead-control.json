@@ -1,6 +1,7 @@
 {
   "pause": {
-    "sage": "until_next_bolt_commit"
+    "sage": "until_next_bolt_commit",
+    "trace": "until_next_bolt_commit"
   },
   "force_next": null,
   "interval_override": {},
