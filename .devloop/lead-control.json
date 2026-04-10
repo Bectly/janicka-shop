@@ -3,7 +3,7 @@
   "force_next": "trace",
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 3061,
+  "last_bolt_commit_cycle": 3067,
   "paused_at_bolt_cycle": 3045,
   "notes": "C3066 Lead: #92/#93/#94 all DONE (lightbox fixed C3060, product audit confirmed C3061, #94 superseded). Bolt 4-cycle spin broken — was picking up completed in_progress tasks. Bolt → #95 Turso sync. Trace → #96 verify lightbox. Sage paused. Feedback #1182 ACK.",
   "schema": {

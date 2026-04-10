@@ -573,7 +573,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
               width={900}
               height={1200}
               priority
-              className="block h-auto w-auto max-h-[76vh] max-w-[92vw] object-contain transition-transform duration-200 sm:max-h-[84vh] sm:max-w-[68vw]"
+              className="block h-auto w-auto max-h-[76vh] max-w-[92vw] object-contain transition-transform duration-200 sm:max-h-[80vh] sm:max-w-[68vw]"
               style={{
                 transform: zoomed
                   ? `scale(2) translate(${panOffset.x / 2}px, ${panOffset.y / 2}px)`
