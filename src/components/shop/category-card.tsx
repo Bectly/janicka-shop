@@ -28,10 +28,10 @@ const categoryThemes: Record<string, {
     hoverShadow: "hover:shadow-[0_8px_24px_-6px_oklch(0.55_0.20_350_/_0.14)]",
   },
   "topy-halenky": {
-    cardFrom: "from-violet-50",
-    iconBg: "bg-violet-100",
-    hoverBorder: "hover:border-violet-200",
-    hoverShadow: "hover:shadow-lg",
+    cardFrom: "from-blush-dark/30",
+    iconBg: "bg-brand-light/20",
+    hoverBorder: "hover:border-brand-light/30",
+    hoverShadow: "hover:shadow-[0_8px_24px_-6px_oklch(0.75_0.12_350_/_0.12)]",
   },
   "kalhoty-sukne": {
     cardFrom: "from-sage-light/40",
@@ -46,9 +46,9 @@ const categoryThemes: Record<string, {
     hoverShadow: "hover:shadow-lg",
   },
   doplnky: {
-    cardFrom: "from-amber-50",
-    iconBg: "bg-amber-100",
-    hoverBorder: "hover:border-amber-200",
+    cardFrom: "from-champagne-light/60",
+    iconBg: "bg-champagne/50",
+    hoverBorder: "hover:border-champagne-dark/30",
     hoverShadow: "hover:shadow-lg",
   },
 };

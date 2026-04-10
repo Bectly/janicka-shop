@@ -23,20 +23,19 @@ export async function MothersDayBanner() {
       : "/products?new=1";
 
   return (
-    <section className="bg-gradient-to-r from-rose-100 via-pink-50 to-rose-100">
+    <section className="bg-gradient-to-r from-brand-light/20 via-blush-dark/40 to-brand-light/20">
       <div className="mx-auto max-w-7xl px-4 py-10 text-center sm:px-6 sm:py-14 lg:px-8">
         <p className="text-3xl sm:text-4xl">🌷</p>
-        <h2 className="mt-3 font-heading text-2xl font-bold text-rose-900 sm:text-3xl">
+        <h2 className="mt-3 font-heading text-2xl font-bold text-brand-dark sm:text-3xl">
           Najdi mámě jedinečný kousek
         </h2>
-        <p className="mx-auto mt-2 max-w-md text-sm text-rose-700/80 sm:text-base">
+        <p className="mx-auto mt-2 max-w-md text-sm text-brand-dark/70 sm:text-base">
           Daruj second hand místo masové výroby — každý kousek je originál.
         </p>
         <div className="mt-6">
           <Button
             size="lg"
             render={<Link href={href} />}
-            className="bg-rose-600 text-white hover:bg-rose-700"
           >
             Prohlédnout kolekci
             <ArrowRight data-icon="inline-end" className="size-4" />
