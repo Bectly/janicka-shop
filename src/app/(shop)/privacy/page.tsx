@@ -353,7 +353,7 @@ export default function PrivacyPage() {
                 href="https://www.uoou.cz"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary underline"
+                className="inline-flex min-h-[44px] items-center text-primary underline"
               >
                 www.uoou.cz
               </a>
@@ -390,7 +390,7 @@ export default function PrivacyPage() {
               <strong className="text-foreground">info@janicka.cz</strong>
             </li>
             <li>
-              <Link href="/contact" className="text-primary underline">
+              <Link href="/contact" className="inline-flex min-h-[44px] items-center text-primary underline">
                 Kontaktní formulář
               </Link>
             </li>

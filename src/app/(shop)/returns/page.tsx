@@ -123,7 +123,7 @@ export default function ReturnsPage() {
           </p>
           <p className="mt-1">
             Nebo využijte náš{" "}
-            <a href="/contact" className="text-primary underline">
+            <a href="/contact" className="inline-flex min-h-[44px] items-center text-primary underline">
               kontaktní formulář
             </a>
             .
