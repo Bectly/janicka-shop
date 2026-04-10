@@ -1,11 +1,11 @@
 {
   "pause": {},
-  "force_next": "trace",
+  "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 3005,
+  "last_bolt_commit_cycle": 3006,
   "paused_at_bolt_cycle": 2982,
-  "notes": "C3002 Lead: FIXED waste loop — Bolt was NOT actually paused (pause:{} empty). Now HARD-PAUSED all agents except Trace. 10+ empty commits from Bolt. Trace running #57/#73 visual QA. No monitors due. 18d to April 28 campaign. Next Bolt work: Trace visual QA findings → create BOLT tasks → unpause Bolt.",
+  "notes": "C3007 Lead: RECURRING BUG — pause:{} was empty AGAIN (4th occurrence). Session manager or scheduler keeps clearing it. Re-applied hard pause for ALL agents. #57 and #73 DONE (Trace C2902 confirmed zero horizontal scroll, all touch targets fixed). ZERO open tasks. All remaining items blocked on bectly. 18d to April 28 campaign. DO NOT CLEAR PAUSE FIELD.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
