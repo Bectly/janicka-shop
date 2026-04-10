@@ -313,6 +313,26 @@
   animation-play-state: paused;
 }
 
+/* Soft fade edges — gradient overlays that blend into bar background */
+.announcement-bar::before,
+.announcement-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3.5rem;
+  z-index: 1;
+  pointer-events: none;
+}
+.announcement-bar::before {
+  left: 0;
+  background: linear-gradient(to right, oklch(0.55 0.20 350), transparent);
+}
+.announcement-bar::after {
+  right: 2.5rem;
+  background: linear-gradient(to left, oklch(0.55 0.20 350), transparent);
+}
+
 /* ─── Newsletter input glow (footer variant) ─── */
 .newsletter-input-footer:focus {
   box-shadow: 0 0 20px oklch(0.55 0.2 350 / 15%);
@@ -417,6 +437,27 @@
 .hero-petal {
   animation: petal-fall linear infinite;
   will-change: transform;
+}
+
+/* ─── Section heading brand accent line ─── */
+/* Usage: add class "section-heading" to h2 elements for a decorative brand underline */
+@utility section-heading {
+  position: relative;
+  display: inline-block;
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -0.35em;
+    width: 2rem;
+    height: 3px;
+    border-radius: 9999px;
+    background: linear-gradient(
+      to right,
+      oklch(0.55 0.20 350),
+      oklch(0.72 0.14 350)
+    );
+  }
 }
 
 /* ─── Reduced motion: disable custom animations ─── */

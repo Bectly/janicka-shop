@@ -24,9 +24,13 @@ export function CategoryCard({
   return (
     <Link
       href={`/products?category=${slug}`}
-      className="group flex flex-col items-center gap-3 rounded-2xl border bg-card p-6 text-center transition-all hover:border-primary/30 hover:shadow-md"
+      className="group flex flex-col items-center gap-3 rounded-2xl border bg-card p-6 text-center transition-all duration-300 hover:border-primary/40 hover:bg-primary/[0.04] hover:shadow-[0_8px_24px_-6px_oklch(0.55_0.20_350_/_0.14)] hover:-translate-y-0.5"
     >
-      <span className="text-4xl" role="img" aria-label={name}>
+      <span
+        className="text-4xl transition-transform duration-300 group-hover:scale-110"
+        role="img"
+        aria-label={name}
+      >
         {categoryIcons[slug] ?? "🏷️"}
       </span>
       <div>

@@ -109,7 +109,7 @@ async function CategoriesSection() {
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="flex items-end justify-between">
         <div>
-          <h2 className="font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
+          <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
             Kategorie
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -143,7 +143,7 @@ async function NewProductsSection() {
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="flex items-end justify-between">
         <div>
-          <h2 className="font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
+          <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
             Nově přidané
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -203,7 +203,7 @@ async function FeaturedProductsSection() {
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="flex items-end justify-between">
         <div>
-          <h2 className="font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
+          <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
             Doporučujeme
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -275,7 +275,7 @@ async function SaleProductsSection() {
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="flex items-end justify-between">
           <div>
-            <h2 className="font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
+            <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
               Výprodej
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -396,7 +396,7 @@ async function FeaturedCollectionsSection() {
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="flex items-end justify-between">
         <div>
-          <h2 className="font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
+          <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
             Kolekce
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">

@@ -56,10 +56,10 @@ export function HeroSection() {
               top: "-20px",
               width: p.size,
               height: p.size,
-              opacity: p.opacity,
               animationDelay: `${p.delay}s`,
               animationDuration: `${p.duration}s`,
               ["--petal-drift" as string]: `${p.drift}px`,
+              ["--petal-opacity" as string]: String(p.opacity),
             }}
             viewBox="0 0 16 18"
             fill="none"
