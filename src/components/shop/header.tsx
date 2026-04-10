@@ -13,7 +13,12 @@ const NAV_NAMES = ["Novinky", "Šaty", "Topy & Halenky", "Kalhoty & Sukně", "Bu
 
 async function HeaderNav() {
   await connection();
-  const categories = await getCategoriesWithCounts();
+  let categories: Awaited<ReturnType<typeof getCategoriesWithCounts>> = [];
+  try {
+    categories = await getCategoriesWithCounts();
+  } catch {
+    // DB unavailable — nav renders without counts, page still works
+  }
   const categoryCounts: Record<string, number> = {};
   for (const c of categories) {
     categoryCounts[c.slug] = c.count;

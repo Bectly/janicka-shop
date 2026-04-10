@@ -33,15 +33,17 @@ function saveConsent(consent: CookieConsent) {
 }
 
 export function CookieConsentBanner() {
-  // Lazy initializer: SSR returns false, client checks localStorage on mount.
-  // Avoids extra render from useEffect + setState pattern.
-  const [visible, setVisible] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return !getSavedConsent();
-  });
+  // Always start false on both server and client to avoid hydration mismatch.
+  // React 19 treats server/client state divergence as a fatal error.
+  const [visible, setVisible] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [analytics, setAnalytics] = useState(false);
   const [marketing, setMarketing] = useState(false);
+
+  useEffect(() => {
+    // Check localStorage only after hydration — safe from mismatch
+    if (!getSavedConsent()) setVisible(true);
+  }, []);
 
   useEffect(() => {
     // Allow re-opening the banner (e.g. from footer "Nastavení cookies" link)

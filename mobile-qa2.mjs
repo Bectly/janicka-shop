@@ -1,6 +1,6 @@
 import { chromium } from 'playwright';
 
-const BASE = 'http://localhost:3001';
+const BASE = 'http://localhost:3000';
 const VIEWPORT = { width: 375, height: 812 };
 
 const PAGES = [

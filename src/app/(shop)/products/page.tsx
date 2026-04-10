@@ -280,7 +280,15 @@ export default async function ProductsPage({
       : null;
 
   // Facet data is cached for 30s — same for all users, avoids re-querying 2000 products per request
-  const { categories, countingProducts } = await getCachedFacetData();
+  // Wrapped in try-catch: "use cache" context uses a different CWD on local dev,
+  // causing SQLite to fail. Falls back to empty arrays — ProductGrid still queries live.
+  let facetData: Awaited<ReturnType<typeof getCachedFacetData>>;
+  try {
+    facetData = await getCachedFacetData();
+  } catch {
+    facetData = { categories: [], countingProducts: [] };
+  }
+  const { categories, countingProducts } = facetData;
 
   // Extract unique brands (sorted alphabetically)
   const brandSet = new Set<string>();
