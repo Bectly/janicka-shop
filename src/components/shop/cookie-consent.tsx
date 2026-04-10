@@ -94,7 +94,7 @@ export function CookieConsentBanner() {
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 p-4" role="dialog" aria-label="Nastavení cookies" aria-modal="false">
+    <div className="bottom-above-nav fixed inset-x-0 z-50 p-4" role="dialog" aria-label="Nastavení cookies" aria-modal="false">
       <div className="mx-auto max-w-2xl rounded-xl border bg-card p-6 shadow-lg">
         <h3 className="font-heading text-base font-semibold text-foreground">
           Soubory cookie

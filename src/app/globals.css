@@ -376,6 +376,28 @@
   animation: ptr-spin 600ms linear infinite;
 }
 
+/* ─── Bottom-nav-aware fixed positioning ─── */
+/* Lifts fixed elements above the mobile bottom nav (3.5rem) + device safe area.
+   Resets to bottom-0 on desktop where there is no bottom nav. */
+.bottom-above-nav {
+  bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: 1024px) {
+  .bottom-above-nav {
+    bottom: 0;
+  }
+}
+
+/* Back-to-top button: 1rem gap above the nav on mobile, 1.5rem from edge on desktop */
+.back-to-top-pos {
+  bottom: calc(3.5rem + 1rem + env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: 1024px) {
+  .back-to-top-pos {
+    bottom: 1.5rem;
+  }
+}
+
 /* ─── Reduced motion: disable custom animations ─── */
 @media (prefers-reduced-motion: reduce) {
   .animate-shimmer,

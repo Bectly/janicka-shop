@@ -81,7 +81,7 @@ export function BottomNav() {
                   fill={isActive && tab.icon === Heart ? "currentColor" : "none"}
                 />
                 {badge > 0 && (
-                  <span className="absolute -top-1.5 -right-2.5 flex size-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold leading-none text-primary-foreground">
+                  <span className="absolute -top-1.5 -right-2.5 flex size-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold leading-none text-primary-foreground whitespace-nowrap">
                     {badge > 99 ? "99+" : badge}
                   </span>
                 )}
