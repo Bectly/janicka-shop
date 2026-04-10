@@ -1,10 +1,12 @@
 {
-  "pause": {},
+  "pause": {
+    "sage": "until_next_bolt_commit"
+  },
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 3155,
-  "paused_at_bolt_cycle": 3153,
+  "paused_at_bolt_cycle": 3155,
   "notes": "C3155 Lead: 11th pause-map wipe fix. Bolt MISSING AGAIN (session manager keeps removing it). All 3 hard-paused. Zero open tasks, 7 blocked on bectly. Feedback #1229-1230 ACK. No monitors due. DEVLOOP MUST STOP.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
