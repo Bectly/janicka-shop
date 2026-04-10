@@ -193,10 +193,20 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
       }
     };
     document.addEventListener("keydown", handleKey);
+    // Lock body scroll — position:fixed trick works on iOS Safari
+    // (overflow:hidden alone does NOT prevent scrolling on iOS)
+    const scrollY = window.scrollY;
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
     document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", handleKey);
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
       document.body.style.overflow = "";
+      window.scrollTo(0, scrollY);
     };
   }, [lightboxOpen, closeLightbox, imageSlideIndices]);
 
@@ -461,9 +471,10 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
       {/* Lightbox — images only, no video */}
       {lightboxOpen && !isVideoActive && (
         <div
-          className={`fixed inset-0 z-[100] flex items-center justify-center bg-black/95 ${
+          className={`fixed inset-0 z-[100] flex items-center justify-center bg-black/95 overscroll-none ${
             lightboxClosing ? "animate-lightbox-close" : "animate-lightbox-open"
           }`}
+          style={{ touchAction: "none" }}
           role="dialog"
           aria-modal="true"
           aria-label={`${productName} — galerie`}
