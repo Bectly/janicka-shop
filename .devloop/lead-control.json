@@ -1,9 +1,5 @@
 {
-  "pause": {
-    "bolt": "paused",
-    "trace": "paused",
-    "sage": "paused"
-  },
+  "pause": {},
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
