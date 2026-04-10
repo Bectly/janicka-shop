@@ -335,7 +335,7 @@ export function WelcomeContent({ stats }: { stats: ProjectStats }) {
         {/* ── Tym ── */}
         <section className="mb-16">
           <h2 className="mb-8 text-center text-2xl font-bold text-gray-900">
-            Tym, co na tom pracoval
+            Tým, co na tom pracoval
           </h2>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -399,12 +399,12 @@ export function WelcomeContent({ stats }: { stats: ProjectStats }) {
             <StatBox
               icon={<Sparkles className="size-5 text-rose-400" />}
               value={<AnimatedCounter target={stats.totalCycles} />}
-              label="AI cyklu"
+              label="AI cyklů"
             />
             <StatBox
               icon={<GitCommit className="size-5 text-rose-400" />}
               value={<AnimatedCounter target={stats.totalCommits} />}
-              label="commitu"
+              label="commitů"
             />
             <StatBox
               icon={<Code2 className="size-5 text-rose-400" />}
@@ -414,16 +414,16 @@ export function WelcomeContent({ stats }: { stats: ProjectStats }) {
                   suffix="+"
                 />
               }
-              label="radku kodu"
+              label="řádků kódu"
             />
             <StatBox
               icon={<Calendar className="size-5 text-rose-400" />}
               value={<AnimatedCounter target={stats.daysSinceStart} />}
-              label="dni vyvoje"
+              label="dní vývoje"
             />
           </div>
           <p className="mt-4 text-center text-sm text-gray-400">
-            ...a JARVIS u toho byla kazdou minutu
+            ...a JARVIS u toho byla každou minutu
           </p>
         </section>
 
@@ -435,7 +435,7 @@ export function WelcomeContent({ stats }: { stats: ProjectStats }) {
             disabled={loading}
             className="h-14 rounded-full bg-rose-500 px-10 text-lg font-semibold text-white shadow-lg shadow-rose-200 transition-all hover:bg-rose-600 hover:shadow-xl hover:shadow-rose-300 active:scale-95"
           >
-            {loading ? "Nacitam..." : "Jdu si to prohlednout →"}
+            {loading ? "Načítám..." : "Jdu si to prohlédnout →"}
           </Button>
         </section>
       </div>

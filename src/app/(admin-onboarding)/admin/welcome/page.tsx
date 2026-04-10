@@ -103,7 +103,7 @@ export default function AdminWelcomePage() {
     <Suspense
       fallback={
         <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-rose-50 via-pink-50 to-amber-50">
-          <div className="animate-pulse text-rose-400">Nacitam...</div>
+          <div className="animate-pulse text-rose-400">Načítám...</div>
         </div>
       }
     >
