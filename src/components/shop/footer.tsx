@@ -288,7 +288,7 @@ export async function Footer() {
         {/* Payment badges */}
         <div className="flex flex-col items-center gap-3 py-8">
           <p className="text-[10px] uppercase tracking-[0.2em] text-white/20">Platební metody</p>
-          <div className="flex flex-wrap items-center justify-center gap-2.5 opacity-50 grayscale transition-all duration-500 hover:opacity-75 hover:grayscale-0">
+          <div className="flex flex-wrap items-center justify-center gap-2.5 opacity-60 grayscale transition-all duration-500 hover:opacity-80 hover:grayscale-0">
             <VisaIcon />
             <MastercardIcon />
             <ApplePayIcon />

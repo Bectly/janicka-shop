@@ -75,7 +75,7 @@ export function CategoryCard({
       className={`group flex flex-col items-center gap-3 rounded-2xl border bg-card bg-gradient-to-br ${t.cardFrom} p-6 text-center transition-all duration-300 ${t.hoverBorder} ${t.hoverShadow} hover:-translate-y-0.5`}
     >
       <span
-        className={`flex size-14 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3 ${t.iconBg}`}
+        className={`flex size-12 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3 sm:size-14 ${t.iconBg}`}
         aria-hidden="true"
       >
         <Icon className="size-6 text-foreground/60" strokeWidth={1.5} />
