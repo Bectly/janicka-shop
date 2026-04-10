@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Truck, Sparkles, RotateCcw, Star, type LucideIcon } from "lucide-react";
+import { X, Truck, Sparkles, RotateCcw, Star, Diamond, type LucideIcon } from "lucide-react";
 
 const STORAGE_KEY = "janicka-announcement-dismissed";
 
@@ -27,7 +27,7 @@ function MarqueeTrack() {
       {messages.map((msg, i) => (
         <span key={i} className="inline-flex items-center">
           <MessageItem icon={msg.icon} text={msg.text} />
-          <span className="mx-5 inline-block text-white/30" aria-hidden="true">✦</span>
+          <Diamond className="mx-5 size-2 shrink-0 fill-white/25 text-white/25" aria-hidden="true" />
         </span>
       ))}
     </>

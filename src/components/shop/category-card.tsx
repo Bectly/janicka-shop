@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Sparkles, Shirt, Layers, Wind, Gem, Tag, type LucideIcon } from "lucide-react";
 
 interface CategoryCardProps {
   name: string;
@@ -7,12 +8,12 @@ interface CategoryCardProps {
   productCount: number;
 }
 
-const categoryIcons: Record<string, string> = {
-  saty: "👗",
-  "topy-halenky": "👚",
-  "kalhoty-sukne": "👖",
-  "bundy-kabaty": "🧥",
-  doplnky: "👜",
+const categoryIcons: Record<string, LucideIcon> = {
+  saty: Sparkles,
+  "topy-halenky": Shirt,
+  "kalhoty-sukne": Layers,
+  "bundy-kabaty": Wind,
+  doplnky: Gem,
 };
 
 const categoryThemes: Record<string, {
@@ -67,17 +68,17 @@ export function CategoryCard({
   productCount,
 }: CategoryCardProps) {
   const t = categoryThemes[slug] ?? defaultTheme;
+  const Icon = categoryIcons[slug] ?? Tag;
   return (
     <Link
       href={`/products?category=${slug}`}
       className={`group flex flex-col items-center gap-3 rounded-2xl border bg-card bg-gradient-to-br ${t.cardFrom} p-6 text-center transition-all duration-300 ${t.hoverBorder} ${t.hoverShadow} hover:-translate-y-0.5`}
     >
       <span
-        className={`flex size-14 items-center justify-center rounded-2xl text-3xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3 ${t.iconBg}`}
-        role="img"
-        aria-label={name}
+        className={`flex size-14 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3 ${t.iconBg}`}
+        aria-hidden="true"
       >
-        {categoryIcons[slug] ?? "🏷️"}
+        <Icon className="size-6 text-foreground/60" strokeWidth={1.5} />
       </span>
       <div>
         <h3 className="font-heading font-medium text-foreground transition-colors group-hover:text-primary">
