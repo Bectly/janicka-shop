@@ -5,7 +5,7 @@
   "session_manager": {},
   "last_bolt_commit_cycle": 2871,
   "paused_at_bolt_cycle": 2820,
-  "notes": "C2837 Lead: #46 DONE (marked, ack feedback 1020-1022, 4-cycle waste loop broken). Bolt → #71 FIX: PDP image overflow horizontal scroll (bug fix priority). Then #72 hero logo. Trace → #73 find ALL horizontal scroll pages. Sage paused until Bolt commits fix. 3 blocked bectly: R2 (#1), Heureka (#4), GMC (#14). 18 days to April 28 window.",
+  "notes": "C2871 Lead: #47 DONE, #71 DONE (C2868), #83 DONE (dup of #71). 4-cycle waste loop broken (ack feedback 1059-1061). Bolt PRIORITY: #76 CRITICAL checkout Vercel error → #72 hero logo → #74 mobile nav close → #80 hide badge → #81 remove AI bar. Trace paused until Bolt commits. Sage paused until Bolt commits. 3 blocked bectly: R2 (#1), Heureka (#4), GMC (#14). 18 days to April 28 window.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",

@@ -60,11 +60,11 @@ function TikTokIcon({ className }: { className?: string }) {
   );
 }
 
-/** Inline SVG payment icons — small, crisp, no external deps */
+/** Inline SVG payment icons */
 function VisaIcon() {
   return (
-    <svg className="h-6 w-auto" viewBox="0 0 48 16" fill="none" aria-label="Visa">
-      <rect width="48" height="16" rx="2" fill="#1A1F71" />
+    <svg className="h-7 w-auto" viewBox="0 0 48 16" fill="none" aria-label="Visa">
+      <rect width="48" height="16" rx="2.5" fill="#1A1F71" />
       <text x="24" y="11.5" textAnchor="middle" fill="white" fontSize="9" fontWeight="700" fontFamily="sans-serif">VISA</text>
     </svg>
   );
@@ -72,8 +72,8 @@ function VisaIcon() {
 
 function MastercardIcon() {
   return (
-    <svg className="h-6 w-auto" viewBox="0 0 48 16" fill="none" aria-label="Mastercard">
-      <rect width="48" height="16" rx="2" fill="#2D2D2D" />
+    <svg className="h-7 w-auto" viewBox="0 0 48 16" fill="none" aria-label="Mastercard">
+      <rect width="48" height="16" rx="2.5" fill="#2D2D2D" />
       <circle cx="20" cy="8" r="5" fill="#EB001B" />
       <circle cx="28" cy="8" r="5" fill="#F79E1B" />
       <path d="M24 4.27a5 5 0 0 1 0 7.46 5 5 0 0 1 0-7.46z" fill="#FF5F00" />
@@ -83,8 +83,8 @@ function MastercardIcon() {
 
 function ApplePayIcon() {
   return (
-    <svg className="h-6 w-auto" viewBox="0 0 48 16" fill="none" aria-label="Apple Pay">
-      <rect width="48" height="16" rx="2" fill="#000" />
+    <svg className="h-7 w-auto" viewBox="0 0 48 16" fill="none" aria-label="Apple Pay">
+      <rect width="48" height="16" rx="2.5" fill="#000" />
       <text x="24" y="11" textAnchor="middle" fill="white" fontSize="7" fontWeight="600" fontFamily="sans-serif">Apple Pay</text>
     </svg>
   );
@@ -92,8 +92,8 @@ function ApplePayIcon() {
 
 function GooglePayIcon() {
   return (
-    <svg className="h-6 w-auto" viewBox="0 0 48 16" fill="none" aria-label="Google Pay">
-      <rect width="48" height="16" rx="2" fill="#fff" stroke="#ddd" strokeWidth="0.5" />
+    <svg className="h-7 w-auto" viewBox="0 0 48 16" fill="none" aria-label="Google Pay">
+      <rect width="48" height="16" rx="2.5" fill="#fff" stroke="#ddd" strokeWidth="0.5" />
       <text x="24" y="11" textAnchor="middle" fill="#5F6368" fontSize="6.5" fontWeight="500" fontFamily="sans-serif">G Pay</text>
     </svg>
   );
@@ -101,8 +101,8 @@ function GooglePayIcon() {
 
 function BankTransferIcon() {
   return (
-    <svg className="h-6 w-auto" viewBox="0 0 48 16" fill="none" aria-label="Bankovní převod">
-      <rect width="48" height="16" rx="2" fill="#E8F0FE" stroke="#C4D7F2" strokeWidth="0.5" />
+    <svg className="h-7 w-auto" viewBox="0 0 48 16" fill="none" aria-label="Bankovní převod">
+      <rect width="48" height="16" rx="2.5" fill="#E8F0FE" stroke="#C4D7F2" strokeWidth="0.5" />
       <text x="24" y="11" textAnchor="middle" fill="#1A73E8" fontSize="6" fontWeight="500" fontFamily="sans-serif">QR Platba</text>
     </svg>
   );
@@ -112,9 +112,9 @@ function BankTransferIcon() {
 function CherryBlossomPattern() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-[0.04]" aria-hidden="true">
-      <svg className="absolute -right-12 -top-12 size-64 text-brand" viewBox="0 0 200 200" fill="currentColor">
+      {/* Top-right large blossom */}
+      <svg className="footer-blossom absolute -right-10 -top-10 size-56 text-brand" viewBox="0 0 200 200" fill="currentColor">
         <g>
-          {/* Petal cluster 1 */}
           <ellipse cx="100" cy="80" rx="12" ry="24" transform="rotate(0 100 100)" />
           <ellipse cx="100" cy="80" rx="12" ry="24" transform="rotate(72 100 100)" />
           <ellipse cx="100" cy="80" rx="12" ry="24" transform="rotate(144 100 100)" />
@@ -123,7 +123,8 @@ function CherryBlossomPattern() {
           <circle cx="100" cy="100" r="6" />
         </g>
       </svg>
-      <svg className="absolute -bottom-8 -left-8 size-48 text-brand-light" viewBox="0 0 200 200" fill="currentColor">
+      {/* Bottom-left medium blossom */}
+      <svg className="footer-blossom absolute -bottom-6 -left-6 size-44 text-brand-light" viewBox="0 0 200 200" fill="currentColor">
         <g>
           <ellipse cx="100" cy="82" rx="10" ry="20" transform="rotate(15 100 100)" />
           <ellipse cx="100" cy="82" rx="10" ry="20" transform="rotate(87 100 100)" />
@@ -133,7 +134,8 @@ function CherryBlossomPattern() {
           <circle cx="100" cy="100" r="5" />
         </g>
       </svg>
-      <svg className="absolute right-1/3 top-1/2 size-32 text-brand" viewBox="0 0 200 200" fill="currentColor">
+      {/* Center-right small blossom */}
+      <svg className="footer-blossom absolute right-1/4 top-1/2 size-28 text-brand" viewBox="0 0 200 200" fill="currentColor">
         <g>
           <ellipse cx="100" cy="84" rx="8" ry="16" transform="rotate(30 100 100)" />
           <ellipse cx="100" cy="84" rx="8" ry="16" transform="rotate(102 100 100)" />
@@ -141,6 +143,17 @@ function CherryBlossomPattern() {
           <ellipse cx="100" cy="84" rx="8" ry="16" transform="rotate(246 100 100)" />
           <ellipse cx="100" cy="84" rx="8" ry="16" transform="rotate(318 100 100)" />
           <circle cx="100" cy="100" r="4" />
+        </g>
+      </svg>
+      {/* Bottom-right tiny accent blossom */}
+      <svg className="footer-blossom absolute bottom-1/4 right-1/6 size-20 text-brand-light" viewBox="0 0 200 200" fill="currentColor">
+        <g>
+          <ellipse cx="100" cy="85" rx="7" ry="14" transform="rotate(10 100 100)" />
+          <ellipse cx="100" cy="85" rx="7" ry="14" transform="rotate(82 100 100)" />
+          <ellipse cx="100" cy="85" rx="7" ry="14" transform="rotate(154 100 100)" />
+          <ellipse cx="100" cy="85" rx="7" ry="14" transform="rotate(226 100 100)" />
+          <ellipse cx="100" cy="85" rx="7" ry="14" transform="rotate(298 100 100)" />
+          <circle cx="100" cy="100" r="3.5" />
         </g>
       </svg>
     </div>
@@ -164,48 +177,49 @@ export async function Footer() {
   }
 
   return (
-    <footer className="relative mt-auto border-t border-border/50 bg-charcoal text-white" role="contentinfo">
+    <footer className="relative mt-auto border-t border-white/5 bg-charcoal text-white" role="contentinfo">
       <CherryBlossomPattern />
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Top section — centered logo + tagline */}
-        <div className="flex flex-col items-center pb-10 pt-14">
-          <Link href="/" className="inline-block transition-opacity hover:opacity-80">
+        <div className="flex flex-col items-center pb-8 pt-14 sm:pb-10 sm:pt-16">
+          <Link href="/" className="group inline-block">
             <Image
               src="/logo/logo-header-lg.png"
               alt="Janička"
               width={160}
               height={64}
-              className="h-10 w-auto brightness-0 invert sm:h-12"
+              className="h-10 w-auto brightness-0 invert transition-opacity group-hover:opacity-80 sm:h-12"
             />
           </Link>
-          <p className="mt-3 max-w-md text-center text-sm leading-relaxed text-white/60">
-            Stylové oblečení pro moderní ženy. Kvalita, elegance a udržitelnost
-            v&nbsp;každém kousku.
+          <p className="mt-4 max-w-sm text-center text-sm leading-relaxed text-white/50">
+            Stylové oblečení pro moderní ženy.
+            <br className="hidden sm:block" />
+            Kvalita, elegance a udržitelnost v&nbsp;každém kousku.
           </p>
         </div>
 
         {/* Newsletter section */}
-        <div className="mx-auto max-w-lg pb-10">
+        <div className="mx-auto max-w-md pb-10">
           <div className="text-center">
-            <h3 className="font-heading text-lg font-semibold tracking-tight sm:text-xl">
+            <h3 className="font-heading text-lg font-semibold tracking-tight text-white sm:text-xl">
               Novinky do e-mailu
             </h3>
-            <p className="mt-1 text-sm text-white/50">
+            <p className="mt-1.5 text-sm text-white/40">
               Buďte první, kdo uvidí nové kousky a výhodné nabídky.
             </p>
           </div>
           <NewsletterForm variant="footer" />
         </div>
 
-        {/* Divider */}
-        <div className="h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+        {/* Gradient divider */}
+        <div className="h-px bg-gradient-to-r from-transparent via-white/12 to-transparent" />
 
         {/* Link columns + social */}
-        <div className="grid grid-cols-2 gap-8 py-10 sm:grid-cols-3 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-8 py-10 sm:grid-cols-3 md:grid-cols-4 md:gap-x-8">
           {Object.values(footerLinks).map((section) => (
             <div key={section.title}>
-              <h3 className="text-xs font-semibold uppercase tracking-widest text-white/60">
+              <h3 className="text-[11px] font-semibold uppercase tracking-[0.15em] text-white/50">
                 {section.title}
               </h3>
               <ul className="mt-4 space-y-2.5">
@@ -213,7 +227,7 @@ export async function Footer() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm text-white/60 transition-colors hover:text-white"
+                      className="text-sm text-white/55 transition-colors duration-200 hover:text-white"
                     >
                       {link.name}
                     </Link>
@@ -223,25 +237,25 @@ export async function Footer() {
             </div>
           ))}
 
-          {/* Social + contact column */}
+          {/* Social column */}
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-white/60">
+            <h3 className="text-[11px] font-semibold uppercase tracking-[0.15em] text-white/50">
               Sledujte nás
             </h3>
-            <div className="mt-4 flex gap-3">
+            <div className="mt-4 flex gap-2.5">
               {instagram ? (
                 <a
                   href={instagram}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex size-10 items-center justify-center rounded-full bg-white/5 text-white/60 transition-all hover:bg-white/10 hover:text-white"
+                  className="footer-social-icon inline-flex size-10 items-center justify-center rounded-full bg-white/[0.06] text-white/50 transition-all duration-300 hover:bg-brand/20 hover:text-brand-light hover:shadow-[0_0_12px_rgba(var(--color-brand),0.15)]"
                   aria-label="Instagram"
                 >
-                  <InstagramIcon className="size-4.5" />
+                  <InstagramIcon className="size-[18px]" />
                 </a>
               ) : (
-                <span className="inline-flex size-10 items-center justify-center rounded-full bg-white/5 text-white/40">
-                  <InstagramIcon className="size-4.5" />
+                <span className="inline-flex size-10 items-center justify-center rounded-full bg-white/[0.04] text-white/30">
+                  <InstagramIcon className="size-[18px]" />
                 </span>
               )}
               {facebook ? (
@@ -249,30 +263,30 @@ export async function Footer() {
                   href={facebook}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex size-10 items-center justify-center rounded-full bg-white/5 text-white/60 transition-all hover:bg-white/10 hover:text-white"
+                  className="footer-social-icon inline-flex size-10 items-center justify-center rounded-full bg-white/[0.06] text-white/50 transition-all duration-300 hover:bg-brand/20 hover:text-brand-light hover:shadow-[0_0_12px_rgba(var(--color-brand),0.15)]"
                   aria-label="Facebook"
                 >
-                  <FacebookIcon className="size-4.5" />
+                  <FacebookIcon className="size-[18px]" />
                 </a>
               ) : (
-                <span className="inline-flex size-10 items-center justify-center rounded-full bg-white/5 text-white/40">
-                  <FacebookIcon className="size-4.5" />
+                <span className="inline-flex size-10 items-center justify-center rounded-full bg-white/[0.04] text-white/30">
+                  <FacebookIcon className="size-[18px]" />
                 </span>
               )}
-              <span className="inline-flex size-10 items-center justify-center rounded-full bg-white/5 text-white/40">
-                <TikTokIcon className="size-4.5" />
+              <span className="inline-flex size-10 items-center justify-center rounded-full bg-white/[0.04] text-white/30">
+                <TikTokIcon className="size-[18px]" />
               </span>
             </div>
           </div>
         </div>
 
-        {/* Divider */}
-        <div className="h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+        {/* Gradient divider */}
+        <div className="h-px bg-gradient-to-r from-transparent via-white/12 to-transparent" />
 
         {/* Payment badges */}
-        <div className="flex flex-col items-center gap-4 py-8">
-          <p className="text-xs text-white/30">Bezpečné platební metody</p>
-          <div className="flex flex-wrap items-center justify-center gap-2">
+        <div className="flex flex-col items-center gap-3 py-8">
+          <p className="text-[11px] uppercase tracking-[0.12em] text-white/25">Bezpečné platební metody</p>
+          <div className="flex flex-wrap items-center justify-center gap-2 opacity-70">
             <VisaIcon />
             <MastercardIcon />
             <ApplePayIcon />
@@ -281,26 +295,26 @@ export async function Footer() {
           </div>
         </div>
 
-        {/* Divider */}
-        <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        {/* Gradient divider */}
+        <div className="h-px bg-gradient-to-r from-transparent via-white/8 to-transparent" />
 
         {/* Bottom bar — legal */}
-        <div className="space-y-3 py-6">
-          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-white/30">
-            <CookieSettingsButton className="transition-colors hover:text-white/60" />
+        <div className="space-y-2.5 py-6">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-white/25">
+            <CookieSettingsButton className="transition-colors duration-200 hover:text-white/50" />
             <a
               href="https://ec.europa.eu/consumers/odr"
               target="_blank"
               rel="noopener noreferrer"
-              className="transition-colors hover:text-white/60"
+              className="transition-colors duration-200 hover:text-white/50"
             >
               Řešení sporů online (ODR)
             </a>
             <span>
-              Dozorový úřad: ČOI (Česká obchodní inspekce)
+              Dozorový úřad: ČOI
             </span>
           </div>
-          <p className="text-center text-xs text-white/25">
+          <p className="text-center text-xs text-white/20">
             &copy; {new Date().getFullYear()} Janička. Všechna práva vyhrazena.
           </p>
         </div>

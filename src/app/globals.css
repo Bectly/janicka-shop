@@ -361,6 +361,39 @@
   animation-play-state: paused;
 }
 
+/* Dismiss slide-out animation */
+@keyframes announcement-dismiss {
+  from {
+    max-height: 2.75rem;
+    opacity: 1;
+  }
+  to {
+    max-height: 0;
+    opacity: 0;
+  }
+}
+
+.announcement-bar-dismiss {
+  animation: announcement-dismiss 280ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  overflow: hidden;
+}
+
+/* Shimmer overlay — subtle light sweep */
+@keyframes announcement-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+.announcement-shimmer {
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.06) 50%,
+    transparent 60%
+  );
+  animation: announcement-shimmer 6s ease-in-out infinite;
+}
+
 /* Soft fade edges — gradient overlays that blend into bar background */
 .announcement-bar::before,
 .announcement-bar::after {
@@ -383,7 +416,8 @@
 
 /* ─── Newsletter input glow (footer variant) ─── */
 .newsletter-input-footer:focus {
-  box-shadow: 0 0 20px oklch(from var(--color-brand) l c h / 0.15);
+  box-shadow: 0 0 24px oklch(from var(--color-brand) l c h / 0.18),
+              0 0 6px oklch(from var(--color-brand) l c h / 0.08);
 }
 
 /* ─── Sticky filter toolbar border on scroll ─── */
@@ -553,6 +587,8 @@
   .animate-slide-in-left,
   .animate-slide-in-right,
   .announcement-marquee,
+  .announcement-shimmer,
+  .announcement-bar-dismiss,
   .animate-lightbox-open,
   .animate-lightbox-close,
   .animate-ptr-spin,

@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState } from "react";
 import Image from "next/image";
+import { Sparkles, Shirt, Layers, Wind, Gem, Tag, type LucideIcon } from "lucide-react";
 
 interface CategoryHeroProps {
   name: string;
@@ -17,44 +18,44 @@ interface CategoryHeroProps {
  */
 const CATEGORY_MOODS: Record<
   string,
-  { gradient: string; accent: string; emoji: string }
+  { gradient: string; accent: string; icon: LucideIcon }
 > = {
   saty: {
     gradient:
       "from-brand/15 via-champagne-light/60 to-blush",
     accent: "text-brand-dark",
-    emoji: "👗",
+    icon: Sparkles,
   },
   "topy-halenky": {
     gradient:
       "from-sage-light/80 via-champagne-light/40 to-blush-light",
     accent: "text-sage-dark",
-    emoji: "👚",
+    icon: Shirt,
   },
   "kalhoty-sukne": {
     gradient:
       "from-champagne/40 via-blush-light/60 to-brand-light/20",
     accent: "text-charcoal",
-    emoji: "👖",
+    icon: Layers,
   },
   "bundy-kabaty": {
     gradient:
       "from-charcoal/10 via-champagne-light/50 to-sage-light/30",
     accent: "text-charcoal-dark",
-    emoji: "🧥",
+    icon: Wind,
   },
   doplnky: {
     gradient:
       "from-champagne/60 via-brand-light/20 to-blush-light",
     accent: "text-champagne-dark",
-    emoji: "👜",
+    icon: Gem,
   },
 };
 
 const DEFAULT_MOOD = {
   gradient: "from-brand-light/20 via-champagne-light/50 to-blush",
   accent: "text-brand-dark",
-  emoji: "✨",
+  icon: Sparkles,
 };
 
 export function CategoryHero({
@@ -122,7 +123,7 @@ export function CategoryHero({
       <div className="relative mx-auto max-w-7xl px-4 pb-10 pt-16 sm:px-6 sm:pb-12 sm:pt-20 lg:px-8 lg:pb-14 lg:pt-24">
         {/* Editorial pill badge */}
         <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1 text-xs font-semibold tracking-wide text-primary">
-          <span aria-hidden="true">{mood.emoji}</span>
+          <mood.icon className="size-3.5 shrink-0" aria-hidden="true" />
           Kolekce
         </span>
 
@@ -190,7 +191,7 @@ export function CatalogHero({ productCount }: { productCount: number }) {
       <div className="relative mx-auto max-w-7xl px-4 pb-10 pt-16 sm:px-6 sm:pb-12 sm:pt-20 lg:px-8 lg:pb-14 lg:pt-24">
         {/* Editorial pill badge */}
         <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1 text-xs font-semibold tracking-wide text-primary">
-          <span aria-hidden="true">✦</span>
+          <Tag className="size-3.5 shrink-0" aria-hidden="true" />
           Naše kolekce
         </span>
 
