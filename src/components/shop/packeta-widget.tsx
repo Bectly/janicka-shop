@@ -50,7 +50,7 @@ export function PacketaWidget({
   }, []);
 
   const openWidget = useCallback(() => {
-    if (!window.Packeta || !PACKETA_API_KEY) {
+    if (!window.Packeta) {
       setWidgetError(true);
       return;
     }
@@ -72,16 +72,6 @@ export function PacketaWidget({
       setWidgetError(true);
     }
   }, [onPointSelected]);
-
-  // No API key configured — show fallback instead of broken widget
-  if (!PACKETA_API_KEY) {
-    return (
-      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-        Výběr výdejního místa Zásilkovny je momentálně nedostupný. Zvolte prosím
-        jiný způsob dopravy.
-      </div>
-    );
-  }
 
   return (
     <div>
