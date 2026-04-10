@@ -5,10 +5,10 @@
     "aria": "paused",
     "guard": "paused"
   },
-  "force_next": "bolt",
+  "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 3172,
+  "last_bolt_commit_cycle": 3178,
   "paused_at_bolt_cycle": 3170,
   "notes": "C3176 Lead: Task #102 OPEN — admin login broken on Vercel (NextAuth Configuration error). Bolt unpaused + forced next. Sage/Trace/Aria/Guard paused. ⚠️ ROOT CAUSE of 14x pause-map clearing: devloop_engine.py:460-468 unconditionally sets control['pause']={} after Lead runs. Bectly must fix Engine code — change line 467 to only clear 'until_lead_directive' entries (like orchestrator does at line 2096-2100). Until fixed, pauses will be wiped every Lead cycle.",
   "schema": {
