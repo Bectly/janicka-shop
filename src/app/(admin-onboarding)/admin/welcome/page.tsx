@@ -52,7 +52,7 @@ async function WelcomeGate() {
 
   const db = await getDb();
   const admin = await db.admin.findUnique({
-    where: { id: session.user.id! },
+    where: { email: session.user.email! },
     select: { onboardedAt: true },
   });
 

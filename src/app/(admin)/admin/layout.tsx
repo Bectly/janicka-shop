@@ -20,10 +20,12 @@ async function AdminAuthGate({
 
   // Check onboarding status — redirect to welcome if not completed
   const db = await getDb();
-  const admin = await db.admin.findUnique({
-    where: { id: session.user.id! },
-    select: { onboardedAt: true },
-  });
+  const admin = session.user.email
+    ? await db.admin.findUnique({
+        where: { email: session.user.email },
+        select: { onboardedAt: true },
+      })
+    : null;
 
   if (!admin?.onboardedAt) {
     redirect("/admin/welcome");

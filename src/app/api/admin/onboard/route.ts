@@ -5,13 +5,13 @@ import { getDb } from "@/lib/db";
 export async function PATCH() {
   const session = await auth();
 
-  if (!session?.user?.id) {
+  if (!session?.user?.email) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const db = await getDb();
   await db.admin.update({
-    where: { id: session.user.id },
+    where: { email: session.user.email },
     data: { onboardedAt: new Date() },
   });
 
