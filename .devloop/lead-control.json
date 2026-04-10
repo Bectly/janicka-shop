@@ -3,9 +3,9 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2920,
+  "last_bolt_commit_cycle": 2921,
   "paused_at_bolt_cycle": 2917,
-  "notes": "C2918 Lead: #82 Vinted cleanup DONE (marked in DB — was 3-cycle waste C2915-2917). Bolt PAUSED: zero actionable work. All remaining tasks either TRACE (#57 in_progress, #73 open) or blocked bectly (#1 R2, #4 Heureka, #14 GMC, #65 SITE_URL). Trace: finish #57 mobile responsive → #73 scroll overflow. Bolt unpauses when Trace surfaces bugs to fix. 18 days to April 28 campaign. ACK feedback 1104+1101+1100.",
+  "notes": "C2922 Lead: ROOT CAUSE FIX — pause field was EMPTY {} despite C2918 saying 'paused'. Bolt ran 3 waste cycles (C2919-2921). Now EXPLICITLY paused in config. Trace C2902 found 'no horizontal scroll on any page' + fixed 6 touch-target issues. Trace continues #57/#73 to final confirmation. Bolt unpauses ONLY when Trace finds fixable bugs. 18 days to April 28 campaign. All other tasks blocked bectly. ACK 1104+1105+1106.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",

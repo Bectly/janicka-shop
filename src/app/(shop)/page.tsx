@@ -26,28 +26,36 @@ async function getNewProductsForPage() {
   "use cache";
   cacheLife("hours");
   cacheTag("products");
-  const db = await getDb();
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  return db.product.findMany({
-    where: { active: true, sold: false, createdAt: { gte: sevenDaysAgo } },
-    include: { category: { select: { name: true } } },
-    take: 8,
-    orderBy: { createdAt: "desc" },
-  });
+  try {
+    const db = await getDb();
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    return db.product.findMany({
+      where: { active: true, sold: false, createdAt: { gte: sevenDaysAgo } },
+      include: { category: { select: { name: true } } },
+      take: 8,
+      orderBy: { createdAt: "desc" },
+    });
+  } catch {
+    return [];
+  }
 }
 
 async function getFeaturedProductsForPage() {
   "use cache";
   cacheLife("hours");
   cacheTag("products");
-  const db = await getDb();
-  return db.product.findMany({
-    where: { featured: true, active: true, sold: false },
-    include: { category: { select: { name: true } } },
-    take: 8,
-    orderBy: { createdAt: "desc" },
-  });
+  try {
+    const db = await getDb();
+    return db.product.findMany({
+      where: { featured: true, active: true, sold: false },
+      include: { category: { select: { name: true } } },
+      take: 8,
+      orderBy: { createdAt: "desc" },
+    });
+  } catch {
+    return [];
+  }
 }
 
 /* ---------- Skeleton placeholders for streamed sections ---------- */
@@ -96,7 +104,8 @@ async function CategoriesSection() {
   "use cache";
   cacheLife("hours");
   cacheTag("products");
-  const db = await getDb();
+  const db = await getDb().catch(() => null);
+  if (!db) return null;
   const categories = await db.category.findMany({
     orderBy: { sortOrder: "asc" },
     include: {
@@ -104,7 +113,8 @@ async function CategoriesSection() {
         select: { products: { where: { active: true, sold: false } } },
       },
     },
-  });
+  }).catch(() => null);
+  if (!categories) return null;
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
@@ -264,7 +274,8 @@ async function SaleProductsSection() {
   "use cache";
   cacheLife("hours");
   cacheTag("products");
-  const db = await getDb();
+  const db = await getDb().catch(() => null);
+  if (!db) return null;
   const saleProducts = await db.product.findMany({
     where: {
       active: true,
@@ -342,7 +353,8 @@ async function PopularBrandsSection() {
   "use cache";
   cacheLife("hours");
   cacheTag("products");
-  const db = await getDb();
+  const db = await getDb().catch(() => null);
+  if (!db) return null;
   const brandProducts = await db.product.groupBy({
     by: ["brand"],
     where: { active: true, sold: false, brand: { not: null } },
@@ -393,7 +405,8 @@ async function FeaturedCollectionsSection() {
   "use cache";
   cacheLife("hours");
   cacheTag("products");
-  const db = await getDb();
+  const db = await getDb().catch(() => null);
+  if (!db) return null;
   const featuredCollections = await db.collection.findMany({
     where: {
       active: true,
@@ -458,7 +471,8 @@ async function RecentlySoldSection() {
   "use cache";
   cacheLife("hours");
   cacheTag("products");
-  const db = await getDb();
+  const db = await getDb().catch(() => null);
+  if (!db) return null;
   const recentlySold = await db.product.findMany({
     where: { sold: true, active: true },
     select: {
