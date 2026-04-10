@@ -1,10 +1,12 @@
 {
-  "pause": {},
+  "pause": {
+    "sage": "until_next_bolt_commit"
+  },
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 3010,
-  "paused_at_bolt_cycle": 2982,
+  "paused_at_bolt_cycle": 3010,
   "notes": "C3011 Lead: 5th pause:{} clear. #89 lightbox bug IS OPEN — Bolt missed it. Bolt unpaused → #89. Trace/Sage wait for commit. Guard/Aria paused. 18d to April 28 campaign (email infra exists). DO NOT CLEAR PAUSE FIELD.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
