@@ -1,14 +1,11 @@
 {
-  "pause": {
-    "sage": "until_next_bolt_commit",
-    "trace": "until_next_bolt_commit"
-  },
+  "pause": {},
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 3022,
-  "paused_at_bolt_cycle": 3016,
-  "notes": "C3017 Lead: #89 lightbox DONE (a00910f). All backlog tasks (#51-54) already done. Only blocked tasks remain (#1/#4/#14/#65 = bectly credentials). NEW: #90 Bolt → April 28 Vinted campaign email template (C2788 brief). #91 Trace → verify lightbox fix. After #90+#91 complete → full pause (no implementable work left). 18d to April 28 window.",
+  "last_bolt_commit_cycle": 3023,
+  "paused_at_bolt_cycle": 3023,
+  "notes": "C3023 Lead: #90 DONE (Vinted campaign email verified 4x, marked complete). Bolt PAUSED — zero implementable work. Trace unpaused + forced for #91 (lightbox verify). After #91 → full pause all agents. 4 tasks blocked bectly (#1/#4/#14/#65). 18d to April 28 campaign window.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
