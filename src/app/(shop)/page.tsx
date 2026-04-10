@@ -278,22 +278,25 @@ async function SaleProductsSection() {
   "use cache";
   cacheLife("hours");
   cacheTag("products");
-  const db = await getDb().catch(() => null);
-  if (!db) return null;
-  const saleProducts = await db.product.findMany({
-    where: {
-      active: true,
-      sold: false,
-      compareAt: { not: null },
-    },
-    include: { category: { select: { name: true } } },
-    take: 8,
-    orderBy: { createdAt: "desc" },
-  });
-
-  if (saleProducts.length === 0) return null;
-
-  const lowestPricesMap = await getLowestPrices30d(saleProducts.map((p) => p.id));
+  let saleProducts: Awaited<ReturnType<typeof import("@prisma/client").PrismaClient.prototype.product.findMany>>;
+  let lowestPricesMap: Map<string, number>;
+  try {
+    const db = await getDb();
+    saleProducts = await db.product.findMany({
+      where: {
+        active: true,
+        sold: false,
+        compareAt: { not: null },
+      },
+      include: { category: { select: { name: true } } },
+      take: 8,
+      orderBy: { createdAt: "desc" },
+    });
+    if (saleProducts.length === 0) return null;
+    lowestPricesMap = await getLowestPrices30d(saleProducts.map((p) => p.id));
+  } catch {
+    return null;
+  }
 
   return (
     <section className="bg-brand/[0.04]">
