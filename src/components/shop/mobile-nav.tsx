@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Menu } from "lucide-react";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -30,6 +31,16 @@ const topLinks = [
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const activeCategory = searchParams.get("category");
+  const activeSort = searchParams.get("sort");
+
+  function topLinkActive(href: string) {
+    if (href === "/products?sort=newest") return pathname === "/products" && activeSort === "newest" && !activeCategory;
+    if (href === "/products") return pathname === "/products" && !activeCategory && activeSort !== "newest";
+    return pathname === href;
+  }
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -61,30 +72,45 @@ export function MobileNav() {
         </div>
 
         <nav aria-label="Hlavní navigace" className="flex flex-col gap-1 px-4">
-          {topLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={() => setOpen(false)}
-              className="rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
-            >
-              {link.name}
-            </Link>
-          ))}
+          {topLinks.map((link) => {
+            const isActive = topLinkActive(link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setOpen(false)}
+                aria-current={isActive ? "page" : undefined}
+                className={`rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                  isActive ? "bg-muted text-foreground" : "hover:bg-muted"
+                }`}
+              >
+                {link.name}
+              </Link>
+            );
+          })}
           <div className="my-1 border-t" />
           <p className="px-3 pt-1 pb-0.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Kategorie
           </p>
-          {categories.map((cat) => (
-            <Link
-              key={cat.href}
-              href={cat.href}
-              onClick={() => setOpen(false)}
-              className="rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            >
-              {cat.name}
-            </Link>
-          ))}
+          {categories.map((cat) => {
+            const slug = cat.href.split("category=")[1];
+            const isActive = pathname === "/products" && activeCategory === slug;
+            return (
+              <Link
+                key={cat.href}
+                href={cat.href}
+                onClick={() => setOpen(false)}
+                aria-current={isActive ? "page" : undefined}
+                className={`rounded-lg px-3 py-2.5 text-sm transition-colors ${
+                  isActive
+                    ? "bg-muted font-medium text-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                {cat.name}
+              </Link>
+            );
+          })}
         </nav>
       </SheetContent>
     </Sheet>

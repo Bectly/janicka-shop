@@ -87,7 +87,7 @@ export function HeroSection() {
         >
           <Image
             src="/logo/logo-transparent.png"
-            alt="Janička — Třešňová Větvička"
+            alt="Janička"
             width={400}
             height={218}
             priority

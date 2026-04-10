@@ -11,8 +11,10 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80">
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
-        {/* Mobile menu */}
-        <MobileNav />
+        {/* Mobile menu — Suspense needed because MobileNav reads searchParams */}
+        <Suspense fallback={<div className="size-11 md:hidden" />}>
+          <MobileNav />
+        </Suspense>
 
         {/* Logo */}
         <Link href="/" className="inline-flex min-h-[44px] shrink-0 items-center" aria-label="Janička — domů">
