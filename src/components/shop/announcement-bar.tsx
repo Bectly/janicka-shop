@@ -1,22 +1,43 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, Truck, Sparkles, RotateCcw, Star, type LucideIcon } from "lucide-react";
 
 const STORAGE_KEY = "janicka-announcement-dismissed";
 
-const messages = [
-  "🚚 Doprava zdarma od 1 500 Kč",
-  "✨ Každý kousek je unikát — second hand & vintage",
-  "↺ 14 dní na vrácení bez udání důvodu",
-  "🌸 Prémiová kvalita, ověřený stav",
+const messages: { icon: LucideIcon; text: string }[] = [
+  { icon: Truck,      text: "Doprava zdarma od 1 500 Kč" },
+  { icon: Sparkles,   text: "Každý kousek je unikát — second hand & vintage" },
+  { icon: RotateCcw,  text: "14 dní na vrácení bez udání důvodu" },
+  { icon: Star,       text: "Prémiová kvalita, ověřený stav" },
 ];
+
+function MessageItem({ icon: Icon, text }: { icon: LucideIcon; text: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <Icon className="size-3 shrink-0 opacity-75" aria-hidden="true" />
+      <span>{text}</span>
+    </span>
+  );
+}
+
+function MarqueeTrack() {
+  return (
+    <>
+      {messages.map((msg, i) => (
+        <span key={i} className="inline-flex items-center">
+          <MessageItem icon={msg.icon} text={msg.text} />
+          <span className="mx-5 inline-block text-white/30" aria-hidden="true">✦</span>
+        </span>
+      ))}
+    </>
+  );
+}
 
 export function AnnouncementBar() {
   // Fix hydration mismatch: always render on server (hidden via useEffect), not via typeof window
   const [dismissed, setDismissed] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const marqueeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (localStorage.getItem(STORAGE_KEY)) {
@@ -28,23 +49,20 @@ export function AnnouncementBar() {
   // Don't render until client-side hydration is complete
   if (!mounted || dismissed) return null;
 
-  // Build doubled message string for seamless marquee loop
-  const marqueeText = messages.join("  ✦  ");
-
   return (
     <div className="announcement-bar relative overflow-hidden bg-gradient-to-r from-brand via-brand-dark to-brand text-white">
       <div className="flex min-h-10 items-center sm:min-h-11">
         {/* Marquee track — two copies for seamless loop */}
         <div
-          ref={marqueeRef}
-          className="announcement-marquee flex shrink-0 items-center gap-0 whitespace-nowrap"
+          className="announcement-marquee flex shrink-0 items-center whitespace-nowrap"
           aria-live="polite"
         >
-          <span className="inline-block px-8 text-xs font-medium tracking-wide sm:text-sm">
-            {marqueeText}
+          <span className="inline-flex items-center px-8 text-xs font-medium tracking-wide sm:text-sm">
+            <MarqueeTrack />
           </span>
-          <span className="inline-block px-8 text-xs font-medium tracking-wide sm:text-sm">
-            {marqueeText}
+          {/* Second copy for seamless loop — hidden from screen readers */}
+          <span className="inline-flex items-center px-8 text-xs font-medium tracking-wide sm:text-sm" aria-hidden="true">
+            <MarqueeTrack />
           </span>
         </div>
 
