@@ -4,8 +4,8 @@
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 3079,
-  "paused_at_bolt_cycle": 3075,
-  "notes": "C3076 Lead: #97 seed cleanup DONE (Bolt C3074, verified C3075). ALL remaining tasks blocked on bectly: #1 R2 tokens, #4 Heureka API key, #14 GMC registration (DEADLINE Apr 30), #65 SITE_URL. Team HARD PAUSED — zero implementable work. 18 days to Apr 28 Vinted campaign window. Product pipeline COMPLETE: 347 clean products in Turso. Feedback #1188/#1187/#1186 ACK.",
+  "paused_at_bolt_cycle": 3079,
+  "notes": "C3080 Lead: PAUSE FIX — pause field was partial (only trace). All 5 agents now HARD paused. 4 tasks blocked on bectly (R2/Heureka/GMC/SITE_URL). Bolt wasted C3077-3079 (3 empty cycles) because pause field kept getting cleared. 18d to Apr 28 campaign. Feedback #1191/#1190/#1189 ACK.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
