@@ -3,7 +3,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2977,
+  "last_bolt_commit_cycle": 2979,
   "paused_at_bolt_cycle": 2917,
   "notes": "C2978 Lead: #84 MARKED DONE (3 waste cycles C2975-2977, overflow-x-hidden confirmed present on html+body). ACK 1141+1142+1143. Bolt FORCED → #88 (gallery images — SHRINK to fit, do NOT crop/clip). Trace active on #57/#73 (if overflow persists on specific pages, Trace #73 will find the real culprit). Sage/Guard/Aria paused. 1 open Bolt task (#88). 18d to April 28 campaign.",
   "schema": {
