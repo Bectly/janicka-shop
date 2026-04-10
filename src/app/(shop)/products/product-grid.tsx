@@ -43,8 +43,8 @@ interface ProductGridProps {
 }
 
 const VIEW_GRID_CLASSES: Record<ViewMode, string> = {
-  "grid-2": "grid grid-cols-2 gap-3 sm:gap-4 lg:gap-5",
-  "grid-3": "grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-5",
+  "grid-2": "grid grid-cols-2 gap-4 sm:gap-5 lg:gap-6",
+  "grid-3": "grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 lg:gap-6",
   list: "flex flex-col gap-3",
 };
 
@@ -197,7 +197,7 @@ export async function ProductGrid({
       />
       <div className={VIEW_GRID_CLASSES[viewMode]}>
         {paginatedProducts.map((product, i) => {
-          const isFeatured = product.featured && !isListView;
+          const isEditorial = !isListView && (product.featured || i === 0 || i === 5);
 
           if (isListView) {
             return (
@@ -231,7 +231,7 @@ export async function ProductGrid({
           return (
             <div
               key={product.id}
-              className={`animate-fade-up-scroll${isFeatured ? " col-span-2" : ""}`}
+              className={`animate-fade-up-scroll${isEditorial ? " col-span-2" : ""}`}
               style={{ animationDelay: `${i * 60}ms` }}
             >
               <ProductCard
@@ -251,7 +251,7 @@ export async function ProductGrid({
                 isReserved={false}
                 lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
                 priority={i < 4}
-                variant={isFeatured ? "featured" : "standard"}
+                variant={isEditorial ? "featured" : "standard"}
               />
             </div>
           );
