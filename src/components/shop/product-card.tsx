@@ -110,7 +110,7 @@ export function ProductCard({
         </span>
       )}
       {isReserved && (
-        <span className="rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-medium text-violet-800 shadow-sm">
+        <span className="rounded-full bg-champagne px-2.5 py-0.5 text-xs font-medium text-brand-dark shadow-sm">
           Rezervováno
         </span>
       )}

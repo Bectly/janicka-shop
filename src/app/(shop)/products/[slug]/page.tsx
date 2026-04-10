@@ -603,7 +603,7 @@ export default async function ProductDetailPage({ params }: Props) {
           {/* Stock info — delivery + shipping shown unconditionally;
               AddToCartButton handles the "reserved by other" state client-side */}
           {product.stock > 0 ? (
-            <p className="mt-4 flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400">
+            <p className="mt-4 flex items-center gap-1.5 text-xs font-medium text-brand-dark">
               <Sparkles className="size-3.5" />
               Jediný kus — tento kousek existuje jen jednou
             </p>

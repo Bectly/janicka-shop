@@ -104,11 +104,13 @@ export function ProductListItem({
               -{discountPercent} %
             </span>
           )}
+          {/* #80 skryto per Janička — zakomentovat, nemazat
           {stock === 1 && !isReserved && (
             <span className="flex items-center gap-0.5 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-semibold text-white">
               <Flame className="size-2.5" />
             </span>
           )}
+          */}
         </div>
       </div>
 
@@ -151,7 +153,7 @@ export function ProductListItem({
               </span>
             )}
             {isReserved && (
-              <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-medium text-violet-800">
+              <span className="rounded-full bg-champagne px-2 py-0.5 text-[10px] font-medium text-brand-dark">
                 Rezervováno
               </span>
             )}
