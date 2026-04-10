@@ -43,13 +43,13 @@ export function VintedComparisonSection() {
 
             {/* Janička column */}
             <div className="rounded-xl bg-white/10 p-6 ring-1 ring-white/10">
-              <p className="text-xs font-semibold uppercase tracking-wider text-emerald-300">
+              <p className="text-xs font-semibold uppercase tracking-wider text-sage-light">
                 U nás
               </p>
               <ul className="mt-4 space-y-4">
                 {janickaAdvantages.map((advantage) => (
                   <li key={advantage} className="flex gap-3 text-sm leading-relaxed text-white">
-                    <Check className="mt-0.5 size-4 shrink-0 text-emerald-400" />
+                    <Check className="mt-0.5 size-4 shrink-0 text-sage" />
                     <span>{advantage}</span>
                   </li>
                 ))}
