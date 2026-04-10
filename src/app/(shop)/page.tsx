@@ -214,6 +214,8 @@ async function NewProductsSection() {
 async function FeaturedProductsSection() {
   const featuredProducts = await getFeaturedProductsForPage();
 
+  if (featuredProducts.length === 0) return null;
+
   const lowestPricesMap = await getLowestPrices30d(featuredProducts.map((p) => p.id));
 
   return (
