@@ -5,7 +5,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 3092,
+  "last_bolt_commit_cycle": 3095,
   "paused_at_bolt_cycle": 3092,
   "notes": "C3093 Lead: #98/#99 DONE (lightbox fix verified 4x, deployed). ALL agents PAUSED — zero implementable work. Remaining tasks ALL blocked on bectly: #1 R2 tokens, #4 Heureka key, #14 GMC registration, #65 SITE_URL. Low-priority features #85/#86/#87 blocked until bugs done. Feedback #1201/#1199/#1198 ACK. 18d to Apr 28 campaign window.",
   "schema": {
