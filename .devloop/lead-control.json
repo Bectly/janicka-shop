@@ -3,7 +3,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2929,
+  "last_bolt_commit_cycle": 2931,
   "paused_at_bolt_cycle": 2917,
   "notes": "C2930 Lead: pause:{} cleared for 4TH TIME. Re-applied bolt+sage pause AGAIN. Systemic session_manager bug keeps wiping pause map. Bolt has burned 10+ waste cycles total. Trace only active (#57/#73). All other tasks blocked bectly. 18d to April 28 campaign. ACK 1110+1111+1112.",
   "schema": {
