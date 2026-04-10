@@ -1,10 +1,12 @@
 {
-  "pause": {},
+  "pause": {
+    "sage": "until_next_bolt_commit"
+  },
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 3165,
-  "paused_at_bolt_cycle": 3163,
+  "paused_at_bolt_cycle": 3165,
   "notes": "C3157 Trace: 12th pause-map fix — sage was 'until_next_bolt_commit' but bolt_commit_cycle(3158) > paused_at_bolt_cycle(3155) so condition was already satisfied = sage would run. Root cause of 11 recurring wipes. All 3 now HARD PAUSED with 'paused'. Zero open tasks, 7 blocked on bectly. DEVLOOP MUST STOP.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
