@@ -3,7 +3,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 3105,
+  "last_bolt_commit_cycle": 3106,
   "paused_at_bolt_cycle": 3097,
   "notes": "C3103 Lead: Task #100 DONE (committed 5516ee4). Bolt now on #101 — checkout Doprava broken padding + Zásilkovna. TWO issues: (1) Content clipping on right side in accordion — check overflow-hidden on card container line 138 + Packeta ml-9 on line 904 pushing content. (2) Zásilkovna widget shows 'nedostupné' because NEXT_PUBLIC_PACKETA_API_KEY is empty (packeta-widget.tsx:37,77-83). If key not in .env.local → blocked on bectly. Sage/Trace wait for commit. Feedback #1203 ACK.",
   "schema": {
