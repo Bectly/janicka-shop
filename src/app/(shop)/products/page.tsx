@@ -371,13 +371,13 @@ export default async function ProductsPage({
         className="mb-4 text-sm text-muted-foreground"
         aria-label="Navigace"
       >
-        <Link href="/" className="inline-flex min-h-[44px] items-center hover:text-foreground">
+        <Link href="/" className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center hover:text-foreground">
           Domů
         </Link>
         <span className="mx-2">/</span>
         {params.category ? (
           <>
-            <Link href="/products" className="inline-flex min-h-[44px] items-center hover:text-foreground">
+            <Link href="/products" className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center hover:text-foreground">
               Katalog
             </Link>
             <span className="mx-2">/</span>

@@ -464,7 +464,7 @@ export function ProductFilters({
                   key={size}
                   onClick={() => toggleMulti("size", size, activeSizes)}
                   aria-pressed={isActive}
-                  className={`shrink-0 min-h-11 inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                  className={`shrink-0 min-h-11 min-w-11 inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                     isActive
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -610,7 +610,7 @@ export function ProductFilters({
                               onClick={() => !isDisabled && toggleMulti("size", size, activeSizes)}
                               aria-pressed={isActive}
                               aria-disabled={isDisabled}
-                              className={`min-h-11 min-w-[2.5rem] inline-flex items-center justify-center rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors ${
+                              className={`min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors ${
                                 isActive
                                   ? "bg-primary text-primary-foreground"
                                   : isDisabled

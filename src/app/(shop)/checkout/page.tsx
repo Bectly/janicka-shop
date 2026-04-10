@@ -442,18 +442,24 @@ export default function CheckoutPage() {
     setActiveStep(1);
 
     // Validate referral code + check store credit once we have the email
+    // Wrapped in try/catch — discount validation must never crash checkout
     startDiscountTransition(async () => {
-      const result = await validateCheckoutDiscounts({
-        referralCode: referralCode,
-        email: email,
-      });
-      setReferralDiscount(result.referralDiscount);
-      setReferralError(result.referralError);
-      setStoreCredit(result.storeCredit);
-      if (result.referralCode) {
-        setReferralCode(result.referralCode);
+      try {
+        const result = await validateCheckoutDiscounts({
+          referralCode: referralCode,
+          email: email,
+        });
+        setReferralDiscount(result.referralDiscount);
+        setReferralError(result.referralError);
+        setStoreCredit(result.storeCredit);
+        if (result.referralCode) {
+          setReferralCode(result.referralCode);
+        }
+        discountFetchedForRef.current = referralCode;
+      } catch (e) {
+        console.error("[Checkout] Discount validation failed:", e);
+        // Gracefully skip — checkout proceeds without discounts
       }
-      discountFetchedForRef.current = referralCode;
     });
   }, [referralCode]);
 

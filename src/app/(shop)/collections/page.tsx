@@ -54,7 +54,7 @@ export default async function CollectionsPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-brand/[0.08] via-champagne-light/50 to-blush/60" />
         <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
           <nav className="mb-4 text-sm text-muted-foreground" aria-label="Navigace">
-            <Link href="/" className="inline-flex min-h-[44px] items-center hover:text-foreground">
+            <Link href="/" className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center hover:text-foreground">
               Domů
             </Link>
             <span className="mx-2">/</span>

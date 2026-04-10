@@ -204,6 +204,7 @@ async function NewProductsSection() {
       <div className="mt-8 text-center sm:hidden">
         <Button
           variant="outline"
+          className="min-h-[44px]"
           render={<Link href="/products?sort=newest" />}
         >
           Zobrazit všechny novinky
@@ -395,7 +396,7 @@ async function PopularBrandsSection() {
             <Link
               key={brand}
               href={`/products?brand=${encodeURIComponent(brand)}`}
-              className="group inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-gradient-to-br from-card to-blush-light px-4 py-2 text-sm font-medium text-foreground/80 shadow-sm transition-all duration-200 hover:border-brand/30 hover:from-blush hover:to-brand-light/20 hover:text-primary hover:shadow-[0_4px_14px_-4px_oklch(0.55_0.20_350_/_0.15)]"
+              className="group inline-flex min-h-[44px] items-center gap-1.5 rounded-full border border-border/60 bg-gradient-to-br from-card to-blush-light px-4 py-2 text-sm font-medium text-foreground/80 shadow-sm transition-all duration-200 hover:border-brand/30 hover:from-blush hover:to-brand-light/20 hover:text-primary hover:shadow-[0_4px_14px_-4px_oklch(0.55_0.20_350_/_0.15)]"
             >
               {brand}
               <span className="text-[11px] text-muted-foreground/60 transition-colors group-hover:text-primary/50">
