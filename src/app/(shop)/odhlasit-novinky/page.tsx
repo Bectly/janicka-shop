@@ -56,9 +56,9 @@ export default async function UnsubscribeNewsletterPage({ searchParams }: Props)
       {success ? (
         <>
           <div className="mb-6 flex items-center justify-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-sage-light">
               <svg
-                className="h-8 w-8 text-emerald-600"
+                className="h-8 w-8 text-sage-dark"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"

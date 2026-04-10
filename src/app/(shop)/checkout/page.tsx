@@ -151,7 +151,7 @@ function CheckoutStep({
         <div
           className={`flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-bold transition-colors ${
             isCompleted
-              ? "bg-emerald-100 text-emerald-700"
+              ? "bg-sage-light text-sage-dark"
               : isActive
                 ? "bg-primary text-primary-foreground"
                 : "bg-muted text-muted-foreground"
@@ -636,7 +636,7 @@ export default function CheckoutPage() {
 
         {/* Referral banner */}
         {referralCode && !referralError && referralDiscount > 0 && (
-          <div className="mb-4 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400">
+          <div className="mb-4 flex items-center gap-2 rounded-lg border border-sage/30 bg-sage-light px-4 py-3 text-sm text-sage-dark">
             <Gift className="size-4 shrink-0" />
             <span>
               Kód doporučení <strong>{referralCode}</strong> — sleva{" "}
@@ -645,7 +645,7 @@ export default function CheckoutPage() {
           </div>
         )}
         {referralError && (
-          <div className="mb-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+          <div className="mb-4 flex items-center gap-2 rounded-lg border border-champagne-dark/40 bg-champagne-light px-4 py-3 text-sm text-charcoal">
             <Tag className="size-4 shrink-0" />
             <span>{referralError}</span>
           </div>
@@ -805,7 +805,7 @@ export default function CheckoutPage() {
               )}
 
               {subtotal >= FREE_SHIPPING_THRESHOLD && (
-                <div className="mb-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+                <div className="mb-4 rounded-lg bg-sage-light px-3 py-2 text-sm text-sage-dark">
                   <Package className="mr-1.5 inline-block size-4" />
                   Doprava zdarma u objednávek nad{" "}
                   {formatPrice(FREE_SHIPPING_THRESHOLD)}
@@ -866,7 +866,7 @@ export default function CheckoutPage() {
                         </div>
                         <span className="shrink-0 text-sm font-semibold">
                           {isFree ? (
-                            <span className="text-emerald-600">Zdarma</span>
+                            <span className="text-sage-dark">Zdarma</span>
                           ) : (
                             formatPrice(option.price)
                           )}
@@ -1087,7 +1087,7 @@ export default function CheckoutPage() {
               </div>
 
               {/* Inline trust badge */}
-              <div className="mt-4 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400">
+              <div className="mt-4 flex items-center gap-2 rounded-lg border border-sage/30 bg-sage-light px-3 py-2.5 text-sm text-sage-dark">
                 <Lock className="size-4 shrink-0" />
                 <span>
                   <span className="font-medium">Zabezpečená platba</span>
@@ -1158,7 +1158,7 @@ export default function CheckoutPage() {
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Doprava</span>
                   {shippingCost === 0 ? (
-                    <span className="text-emerald-600">Zdarma</span>
+                    <span className="text-sage-dark">Zdarma</span>
                   ) : (
                     <span>{formatPrice(shippingCost)}</span>
                   )}
@@ -1170,13 +1170,13 @@ export default function CheckoutPage() {
                   </div>
                 )}
                 {referralDiscount > 0 && (
-                  <div className="flex justify-between text-sm text-emerald-600">
+                  <div className="flex justify-between text-sm text-sage-dark">
                     <span>Sleva z doporučení</span>
                     <span>-{formatPrice(referralDiscount)}</span>
                   </div>
                 )}
                 {effectiveStoreCredit > 0 && (
-                  <div className="flex justify-between text-sm text-emerald-600">
+                  <div className="flex justify-between text-sm text-sage-dark">
                     <span>Kredit z doporučení</span>
                     <span>-{formatPrice(effectiveStoreCredit)}</span>
                   </div>
@@ -1272,7 +1272,7 @@ export default function CheckoutPage() {
                 <div className="mt-1 flex justify-between text-sm">
                   <span className="text-muted-foreground">Doprava</span>
                   {shippingCost === 0 ? (
-                    <span className="text-emerald-600">Zdarma</span>
+                    <span className="text-sage-dark">Zdarma</span>
                   ) : (
                     <span>{formatPrice(shippingCost)}</span>
                   )}
@@ -1284,13 +1284,13 @@ export default function CheckoutPage() {
                   </div>
                 )}
                 {referralDiscount > 0 && (
-                  <div className="mt-1 flex justify-between text-sm text-emerald-600">
+                  <div className="mt-1 flex justify-between text-sm text-sage-dark">
                     <span>Sleva z doporučení</span>
                     <span>-{formatPrice(referralDiscount)}</span>
                   </div>
                 )}
                 {effectiveStoreCredit > 0 && (
-                  <div className="mt-1 flex justify-between text-sm text-emerald-600">
+                  <div className="mt-1 flex justify-between text-sm text-sage-dark">
                     <span>Kredit z doporučení</span>
                     <span>-{formatPrice(effectiveStoreCredit)}</span>
                   </div>

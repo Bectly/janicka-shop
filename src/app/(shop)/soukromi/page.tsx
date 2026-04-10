@@ -100,11 +100,11 @@ export default function SoukromiPage() {
               </div>
 
               {/* Janička */}
-              <div className="rounded-xl bg-emerald-50 p-4">
-                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-600">
+              <div className="rounded-xl bg-sage-light p-4">
+                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-sage-dark">
                   U nás
                 </p>
-                <p className="text-sm font-medium leading-relaxed text-emerald-900">
+                <p className="text-sm font-medium leading-relaxed text-charcoal">
                   {item.janicka}
                 </p>
               </div>

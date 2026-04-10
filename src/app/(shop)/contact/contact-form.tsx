@@ -11,7 +11,7 @@ export function ContactForm() {
     return (
       <div className="rounded-xl border bg-card p-6 shadow-sm">
         <div className="flex flex-col items-center gap-3 py-4 text-center">
-          <CheckCircle className="size-10 text-emerald-500" />
+          <CheckCircle className="size-10 text-sage" />
           <h2 className="font-heading text-lg font-semibold text-foreground">
             Zpráva odeslána
           </h2>

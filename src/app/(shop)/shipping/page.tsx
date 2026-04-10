@@ -55,7 +55,7 @@ export default function ShippingPage() {
             </div>
           </div>
 
-          <div className="mt-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          <div className="mt-4 rounded-lg bg-sage-light px-4 py-3 text-sm text-sage-dark">
             Při objednávce nad <strong>1 500 Kč</strong> je doprava zdarma u
             všech způsobů doručení.
           </div>
@@ -71,7 +71,7 @@ export default function ShippingPage() {
                 <h3 className="font-medium text-foreground">
                   Platba kartou online
                 </h3>
-                <span className="text-sm font-medium text-emerald-600">
+                <span className="text-sm font-medium text-sage-dark">
                   zdarma
                 </span>
               </div>
@@ -87,7 +87,7 @@ export default function ShippingPage() {
                 <h3 className="font-medium text-foreground">
                   Bankovní převod
                 </h3>
-                <span className="text-sm font-medium text-emerald-600">
+                <span className="text-sm font-medium text-sage-dark">
                   zdarma
                 </span>
               </div>

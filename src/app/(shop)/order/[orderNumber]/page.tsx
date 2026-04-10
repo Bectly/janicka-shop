@@ -95,9 +95,9 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
       />
 
       {isPending ? (
-        <Clock className="mx-auto size-16 text-amber-500" />
+        <Clock className="mx-auto size-16 text-champagne-dark" />
       ) : (
-        <CheckCircle2 className="mx-auto size-16 text-emerald-500" />
+        <CheckCircle2 className="mx-auto size-16 text-sage" />
       )}
 
       <h1 className="mt-6 font-heading text-3xl font-bold text-foreground">
@@ -114,18 +114,18 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
 
       {/* Payment status banner */}
       {isPaid && (
-        <div className="mt-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        <div className="mt-4 rounded-lg bg-sage-light px-4 py-3 text-sm text-sage-dark">
           Platba byla úspěšně přijata
         </div>
       )}
       {isCod && (
-        <div className="mt-4 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-700">
+        <div className="mt-4 rounded-lg bg-champagne-light px-4 py-3 text-sm text-charcoal">
           Platba na dobírku — zaplatíte {formatPrice(order.total)} při převzetí
         </div>
       )}
       {isPending && (
         <>
-          <div className="mt-4 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-700">
+          <div className="mt-4 rounded-lg bg-champagne-light px-4 py-3 text-sm text-charcoal">
             Čekáme na potvrzení platby. Jakmile bude platba přijata, pošleme vám
             email.
           </div>
@@ -191,13 +191,13 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
             </div>
           )}
           {order.referralDiscount > 0 && (
-            <div className="mt-1 flex justify-between text-sm text-emerald-600">
+            <div className="mt-1 flex justify-between text-sm text-sage-dark">
               <span>Sleva z doporučení</span>
               <span>-{formatPrice(order.referralDiscount)}</span>
             </div>
           )}
           {order.storeCreditUsed > 0 && (
-            <div className="mt-1 flex justify-between text-sm text-emerald-600">
+            <div className="mt-1 flex justify-between text-sm text-sage-dark">
               <span>Kredit z doporučení</span>
               <span>-{formatPrice(order.storeCreditUsed)}</span>
             </div>

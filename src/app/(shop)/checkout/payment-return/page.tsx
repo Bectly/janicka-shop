@@ -140,7 +140,7 @@ export default async function PaymentReturnPage({ searchParams }: Props) {
   // Payment still pending — show waiting state
   return (
     <div className="mx-auto max-w-lg px-4 py-16 text-center sm:px-6 lg:px-8">
-      <Clock className="mx-auto size-16 text-amber-500" />
+      <Clock className="mx-auto size-16 text-champagne-dark" />
       <h1 className="mt-6 font-heading text-2xl font-bold">
         Čekáme na potvrzení platby
       </h1>

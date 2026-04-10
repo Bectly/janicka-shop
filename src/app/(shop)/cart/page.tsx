@@ -83,7 +83,7 @@ export default function CartPage() {
       <h1 className="font-heading text-3xl font-bold">Košík</h1>
 
       {/* Reservation info banner */}
-      <div className="mt-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+      <div className="mt-4 flex items-center gap-2 rounded-lg border border-champagne-dark/40 bg-champagne-light px-4 py-3 text-sm text-charcoal">
         <Clock className="size-4 shrink-0" />
         <span>
           Produkty jsou pro vás rezervovány na 15 minut. Po vypršení se vrátí do nabídky.
@@ -225,7 +225,7 @@ function CartItemRow({
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">Unikátní kus</span>
             {countdown && !isExpired && (
-              <span className="flex items-center gap-1 rounded-md bg-amber-50 px-1.5 py-0.5 text-xs font-medium text-amber-700">
+              <span className="flex items-center gap-1 rounded-md bg-champagne-light px-1.5 py-0.5 text-xs font-medium text-charcoal-light">
                 <Clock className="size-3" />
                 {countdown}
               </span>
@@ -261,7 +261,7 @@ function ShippingPreview({ total }: { total: number }) {
           <span className="text-muted-foreground">
             {SHIPPING_METHOD_LABELS[method] ?? method}
           </span>
-          <span className={isFree ? "font-medium text-emerald-600" : "text-foreground"}>
+          <span className={isFree ? "font-medium text-sage-dark" : "text-foreground"}>
             {isFree ? "Zdarma" : formatPrice(price)}
           </span>
         </div>
