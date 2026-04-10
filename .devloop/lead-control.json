@@ -1,14 +1,11 @@
 {
-  "pause": {
-    "sage": "until_next_bolt_commit",
-    "trace": "until_next_bolt_commit"
-  },
+  "pause": {},
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 3133,
+  "last_bolt_commit_cycle": 3135,
   "paused_at_bolt_cycle": 3133,
-  "notes": "C3131 Lead: ROOT CAUSE FOUND for 6th-recurrence pause map bug. devloop_orchestrator.py line 2096-2101 deletes agents with 'until_lead_directive' from pause map after Lead completes, but line 730-735 only re-adds QA_AGENTS (trace) — Bolt is DEV_AGENT and never gets re-added. FIX: use hard 'paused' (not 'until_lead_directive') to avoid deletion logic. Permanent fix needed in orchestrator.py. All 3 agents hard-paused. Zero open tasks. 7 blocked on bectly. Feedback #1220-1221 ACK. No monitors due. DEVLOOP MUST STOP.",
+  "notes": "C3135 Lead: 7th recurrence of pause-map wipe bug. Bolt ran AGAIN (last_bolt_commit_cycle bumped 3133→3135) despite C3131 fix. until_next_bolt_commit for Sage/Trace would auto-clear since 3135>3133. ALL THREE agents now hard 'paused' (not conditional). Zero open tasks. 7 blocked on bectly. Feedback #1221-1222 ACK. No monitors due. DEVLOOP MUST STOP.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
