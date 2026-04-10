@@ -1,7 +1,7 @@
 import Link from "next/link";
-import Image from "next/image";
 import { getDb } from "@/lib/db";
 import { connection } from "next/server";
+import { CollectionCard } from "@/components/shop/collection-card";
 
 import { Layers } from "lucide-react";
 import type { Metadata } from "next";
@@ -68,51 +68,19 @@ export default async function CollectionsPage() {
       </div>
 
       {collectionsWithCounts.length > 0 ? (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {collectionsWithCounts.map((collection, i) => (
-            <Link
+            <CollectionCard
               key={collection.id}
-              href={`/collections/${collection.slug}`}
-              className="group overflow-hidden rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md"
-            >
-              {/* Image */}
-              <div className="aspect-[16/9] overflow-hidden bg-muted">
-                {collection.image ? (
-                  <Image
-                    src={collection.image}
-                    alt={collection.title}
-                    width={640}
-                    height={360}
-                    className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    priority={i < 3}
-                  />
-                ) : (
-                  <div className="flex size-full items-center justify-center">
-                    <Layers className="size-12 text-muted-foreground/20" />
-                  </div>
-                )}
-              </div>
-
-              {/* Info */}
-              <div className="p-4">
-                <h2 className="font-heading text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
-                  {collection.title}
-                </h2>
-                {collection.description && (
-                  <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                    {collection.description}
-                  </p>
-                )}
-                <p className="mt-2 text-xs text-muted-foreground">
-                  {collection.availableCount}{" "}
-                  {collection.availableCount === 1
-                    ? "kousek"
-                    : collection.availableCount >= 2 && collection.availableCount <= 4
-                      ? "kousky"
-                      : "kousků"}
-                </p>
-              </div>
-            </Link>
+              slug={collection.slug}
+              title={collection.title}
+              description={collection.description}
+              image={collection.image}
+              availableCount={collection.availableCount}
+              priority={i < 3}
+              index={i}
+              wide={i === 0 && collectionsWithCounts.length > 2}
+            />
           ))}
         </div>
       ) : (

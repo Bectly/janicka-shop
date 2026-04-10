@@ -1,11 +1,11 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
 import Link from "next/link";
-import Image from "next/image";
 import { getDb } from "@/lib/db";
 import { cacheLife, cacheTag } from "next/cache";
 import { ProductCard } from "@/components/shop/product-card";
 import { CategoryCard } from "@/components/shop/category-card";
+import { CollectionCard } from "@/components/shop/collection-card";
 import { NewsletterForm } from "@/components/shop/newsletter-form";
 import { TrustBadges } from "@/components/shop/trust-badges";
 import { VintedComparisonSection } from "@/components/shop/vinted-comparison";
@@ -410,41 +410,18 @@ async function FeaturedCollectionsSection() {
           Všechny kolekce &rarr;
         </Link>
       </div>
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {featuredCollections.map((collection) => (
-          <Link
+      <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {featuredCollections.map((collection, i) => (
+          <CollectionCard
             key={collection.id}
-            href={`/collections/${collection.slug}`}
-            className="group overflow-hidden rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md"
-          >
-            {collection.image ? (
-              <div className="aspect-[16/9] overflow-hidden bg-muted">
-                <Image
-                  src={collection.image}
-                  alt={collection.title}
-                  width={640}
-                  height={360}
-                  className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-              </div>
-            ) : (
-              <div className="flex aspect-[16/9] items-center justify-center bg-gradient-to-br from-primary/5 to-accent/10">
-                <span className="font-heading text-xl font-bold text-primary/40">
-                  {collection.title}
-                </span>
-              </div>
-            )}
-            <div className="p-4">
-              <h3 className="font-heading text-base font-semibold text-foreground group-hover:text-primary transition-colors">
-                {collection.title}
-              </h3>
-              {collection.description && (
-                <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                  {collection.description}
-                </p>
-              )}
-            </div>
-          </Link>
+            slug={collection.slug}
+            title={collection.title}
+            description={collection.description}
+            image={collection.image}
+            priority={i < 2}
+            index={i}
+            wide={i === 0 && featuredCollections.length > 2}
+          />
         ))}
       </div>
       <div className="mt-6 text-center sm:hidden">
