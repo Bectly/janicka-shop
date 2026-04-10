@@ -1,10 +1,12 @@
 {
-  "pause": {},
+  "pause": {
+    "sage": "until_next_bolt_commit"
+  },
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 3145,
-  "paused_at_bolt_cycle": 3143,
+  "paused_at_bolt_cycle": 3145,
   "notes": "C3145 Lead: 9th recurrence — Bolt missing from pause map AGAIN. All 3 hard 'paused'. Zero open tasks, 7 blocked on bectly. Feedback #1225-1226 ACK. No monitors due. DEVLOOP MUST STOP CYCLING.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
