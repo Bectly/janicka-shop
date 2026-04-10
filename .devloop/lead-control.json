@@ -3,7 +3,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2820,
+  "last_bolt_commit_cycle": 2826,
   "paused_at_bolt_cycle": 2820,
   "notes": "C2821 Lead: WASTE LOOP FIXED — #44 was open in DB but committed at C2817 (78d0292). Bolt ran 3 empty cycles (#2818-2820). Marked #44 DONE. #65 re-classified BLOCKED (env var = bectly action). Bolt → #45 product card redesign (magazine style). Trace+Sage → until_next_bolt_commit. 3 blocked bectly: R2 (#1), Heureka (#4), GMC (#14). 18 days to April 28 window.",
   "schema": {
