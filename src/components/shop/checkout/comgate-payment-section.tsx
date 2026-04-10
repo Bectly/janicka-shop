@@ -227,7 +227,7 @@ export function ComgatePaymentSection({ orderNumber, accessToken, onSuccess }: P
     <div className="space-y-4">
       {/* Sandbox mode badge */}
       {IS_TEST && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+        <div className="rounded-lg border border-champagne bg-champagne-light px-3 py-2 text-xs text-champagne-dark">
           <strong>Sandbox režim</strong> — platba je testovací, žádné peníze nebudou strženy
         </div>
       )}
@@ -323,7 +323,7 @@ export function ComgatePaymentSection({ orderNumber, accessToken, onSuccess }: P
       )}
 
       {/* Inline trust badge */}
-      <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
+      <div className="flex items-center gap-2 rounded-lg border border-sage bg-sage-light px-3 py-2 text-xs text-sage-dark">
         <Lock className="size-3.5 shrink-0" />
         <span>Zabezpečená platba — šifrováno pomocí SSL</span>
       </div>

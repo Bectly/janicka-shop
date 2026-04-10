@@ -20,12 +20,12 @@ export function NotifyMeForm({ categoryId, sizes, brand, categoryName }: NotifyM
 
   if (state.success) {
     return (
-      <div className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center dark:border-emerald-800 dark:bg-emerald-950/30">
-        <Check className="mx-auto size-6 text-emerald-600 dark:text-emerald-400" />
-        <p className="mt-2 text-sm font-medium text-emerald-800 dark:text-emerald-300">
+      <div className="mt-6 rounded-xl border border-sage bg-sage-light p-4 text-center dark:border-sage-dark dark:bg-sage-dark/20">
+        <Check className="mx-auto size-6 text-sage-dark dark:text-sage" />
+        <p className="mt-2 text-sm font-medium text-sage-dark dark:text-sage">
           Super! Dáme vám vědět.
         </p>
-        <p className="mt-1 text-xs text-emerald-600/80 dark:text-emerald-400/70">
+        <p className="mt-1 text-xs text-sage-dark/80 dark:text-sage/70">
           Jakmile přidáme podobný kousek z kategorie {categoryName}, pošleme vám email.
         </p>
       </div>

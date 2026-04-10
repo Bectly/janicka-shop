@@ -95,7 +95,7 @@ export function MobileCheckoutSummary({
               <div className="mt-1 flex justify-between text-sm">
                 <span className="text-muted-foreground">Doprava</span>
                 {freeShipping ? (
-                  <span className="text-emerald-600">Zdarma</span>
+                  <span className="text-sage-dark">Zdarma</span>
                 ) : (
                   <span>{formatPrice(shippingCost)}</span>
                 )}

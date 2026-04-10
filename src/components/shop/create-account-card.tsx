@@ -23,10 +23,10 @@ export function CreateAccountCard({ orderNumber, accessToken }: CreateAccountCar
   if (dismissed || created) {
     if (created) {
       return (
-        <div className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-left">
+        <div className="mt-6 rounded-xl border border-sage bg-sage-light p-5 text-left">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="size-5 text-emerald-600" />
-            <p className="text-sm font-medium text-emerald-800">
+            <CheckCircle2 className="size-5 text-sage-dark" />
+            <p className="text-sm font-medium text-sage-dark">
               Účet vytvořen! Příště se přihlásíte pomocí svého emailu a hesla.
             </p>
           </div>

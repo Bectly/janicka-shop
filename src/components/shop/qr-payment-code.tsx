@@ -49,7 +49,7 @@ function CopyButton({ value, label }: { value: string; label: string }) {
       title={`Kopírovat ${label}`}
     >
       {copied ? (
-        <Check className="size-3 text-emerald-600" />
+        <Check className="size-3 text-sage-dark" />
       ) : (
         <Copy className="size-3" />
       )}
@@ -162,7 +162,7 @@ export function QrPaymentCode({
         </div>
       </div>
 
-      <div className="mt-4 rounded-lg bg-amber-50 px-3 py-2.5 text-xs text-amber-700">
+      <div className="mt-4 rounded-lg bg-champagne-light px-3 py-2.5 text-xs text-champagne-dark">
         Po připsání platby vám pošleme potvrzení emailem. Okamžité převody
         dorazí během pár sekund, standardní převody do 1–2 pracovních dnů.
       </div>

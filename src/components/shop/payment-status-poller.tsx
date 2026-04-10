@@ -83,7 +83,7 @@ export function PaymentStatusPoller({
 
   if (isPaid) {
     return (
-      <div className="mt-4 flex items-center justify-center gap-2 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 animate-in fade-in duration-300">
+      <div className="mt-4 flex items-center justify-center gap-2 rounded-lg bg-sage-light px-4 py-3 text-sm font-medium text-sage-dark animate-in fade-in duration-300">
         <CheckCircle2 className="size-4" />
         Platba byla přijata! Přesměrováváme...
       </div>

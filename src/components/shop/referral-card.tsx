@@ -70,7 +70,7 @@ export function ReferralCard({ orderNumber, referralCode }: ReferralCardProps) {
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <Button size="sm" variant="outline" onClick={handleCopy}>
               {copied ? (
-                <Check className="size-4 text-emerald-600" />
+                <Check className="size-4 text-sage-dark" />
               ) : (
                 <Copy className="size-4" />
               )}
