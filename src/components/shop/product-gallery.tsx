@@ -384,7 +384,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
               <div className="absolute right-3 top-3 z-20 rounded-full bg-black/50 px-2.5 py-1 text-xs font-medium text-white lg:hidden">
                 {activeIndex + 1} / {totalSlides}
               </div>
-              <div className="absolute bottom-3 left-1/2 z-20 flex max-w-[90%] -translate-x-1/2">
+              <div className="absolute bottom-3 left-1/2 z-20 flex max-w-[90%] -translate-x-1/2 overflow-hidden">
                 {Array.from({ length: totalSlides }).map((_, i) => (
                   <button
                     key={i}
@@ -412,7 +412,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
 
         {/* Thumbnails — video interleaved at its slide position */}
         {totalSlides > 1 && (
-          <div className="flex gap-2 overflow-x-auto pb-1">
+          <div className="flex gap-2 overflow-x-auto overflow-y-hidden scrollbar-none pb-1">
             {Array.from({ length: totalSlides }, (_, slideIdx) => {
               if (hasVideo && slideIdx === videoSlideIndex) {
                 return (
@@ -524,7 +524,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
           {/* Main lightbox image — swipeable with vertical dismiss */}
           <div
             ref={imgContainerRef}
-            className={`relative h-[85vh] w-[90vw] max-w-5xl select-none ${
+            className={`relative h-[85vh] w-[90vw] max-w-5xl select-none overflow-hidden ${
               zoomed ? "cursor-grab active:cursor-grabbing" : "cursor-zoom-in"
             }`}
             style={{
