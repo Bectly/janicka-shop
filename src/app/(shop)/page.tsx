@@ -104,17 +104,19 @@ async function CategoriesSection() {
   "use cache";
   cacheLife("hours");
   cacheTag("products");
-  const db = await getDb().catch(() => null);
-  if (!db) return null;
-  const categories = await db.category.findMany({
-    orderBy: { sortOrder: "asc" },
-    include: {
-      _count: {
-        select: { products: { where: { active: true, sold: false } } },
+  let db;
+  try { db = await getDb(); } catch { return null; }
+  let categories;
+  try {
+    categories = await db.category.findMany({
+      orderBy: { sortOrder: "asc" },
+      include: {
+        _count: {
+          select: { products: { where: { active: true, sold: false } } },
+        },
       },
-    },
-  }).catch(() => null);
-  if (!categories) return null;
+    });
+  } catch { return null; }
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
