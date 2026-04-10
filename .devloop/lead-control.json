@@ -1,18 +1,16 @@
 {
   "pause": {
     "sage": "paused",
-    "bolt": "paused",
     "trace": "paused",
     "aria": "paused",
-    "guard": "paused",
-    "lead": "paused"
+    "guard": "paused"
   },
-  "force_next": null,
+  "force_next": "bolt",
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 3172,
   "paused_at_bolt_cycle": 3170,
-  "notes": "C3171 Sage: 14th pause-map fix — pause map was EMPTY {} again despite notes claiming paused. Root cause: something keeps clearing the map. All 6 agents now hard-paused with string values. Zero open tasks, 7 blocked bectly. DEVLOOP MUST STOP.",
+  "notes": "C3176 Lead: Task #102 OPEN — admin login broken on Vercel (NextAuth Configuration error). Bolt unpaused + forced next. Sage/Trace/Aria/Guard paused. ⚠️ ROOT CAUSE of 14x pause-map clearing: devloop_engine.py:460-468 unconditionally sets control['pause']={} after Lead runs. Bectly must fix Engine code — change line 467 to only clear 'until_lead_directive' entries (like orchestrator does at line 2096-2100). Until fixed, pauses will be wiped every Lead cycle.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
