@@ -1,14 +1,11 @@
 {
-  "pause": {
-    "sage": "until_next_bolt_commit",
-    "trace": "until_next_bolt_commit"
-  },
+  "pause": {},
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 3186,
+  "last_bolt_commit_cycle": 3190,
   "paused_at_bolt_cycle": 3186,
-  "notes": "C3186 Lead: 5th consecutive waste cycle. ALL agents HARD PAUSED (explicit 'paused' — not conditional). Task #102 fix committed (0d1c9aa), build passes. BLOCKED on bectly: (1) git push, (2) verify Vercel deploy login with janicka@shop.cz, (3) mark #102 done. ZERO implementable work until deploy verified. ⚠️ Engine bug: devloop_engine.py:460-468 clears pause map after Lead — MUST use 'paused' not conditional. Devloop SHOULD STOP.",
+  "notes": "C3191 Lead: ALL agents HARD PAUSED (explicit map). Research done — 2 new tasks added (#103 Den matek email, #104 EU clo landing). BLOCKED on bectly: (1) git push origin main, (2) verify Vercel deploy — login janicka@shop.cz, (3) /devloop janicka-shop to restart. Commit 0d1c9aa = Task #102 admin login fix. DO NOT run devloop until bectly confirms deploy.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
