@@ -3,7 +3,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 2975,
+  "last_bolt_commit_cycle": 2976,
   "paused_at_bolt_cycle": 2917,
   "notes": "C2973 Lead: #78 MARKED DONE (3 waste cycles C2970-2972, Bolt kept re-verifying already-complete filter improvements). ACK 1138+1139+1140. Bolt FORCED → #84 (horizontal overflow root cause on product page — add overflow-x-hidden to html/body) FIRST, then #88 (gallery images shrink not crop). Trace active on #57/#73. Sage/Guard/Aria paused. 3 open Bolt tasks (#84/#88/#82). 18d to April 28 campaign.",
   "schema": {
