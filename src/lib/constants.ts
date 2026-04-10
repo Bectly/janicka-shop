@@ -8,10 +8,10 @@ export const CONDITION_LABELS: Record<string, string> = {
 
 /** Condition → badge color class */
 export const CONDITION_COLORS: Record<string, string> = {
-  new_with_tags: "bg-emerald-100 text-emerald-800",
-  excellent: "bg-sky-100 text-sky-800",
-  good: "bg-amber-100 text-amber-800",
-  visible_wear: "bg-orange-100 text-orange-800",
+  new_with_tags: "bg-sage-light text-sage-dark",
+  excellent: "bg-champagne-light text-champagne-dark",
+  good: "bg-champagne text-brand-dark",
+  visible_wear: "bg-blush-dark text-brand-dark",
 };
 
 /** Order status labels */
