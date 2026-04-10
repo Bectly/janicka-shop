@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { getDb } from "@/lib/db";
 import { formatPrice, formatDate } from "@/lib/format";
 import { connection } from "next/server";
@@ -5,32 +6,47 @@ import { connection } from "next/server";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from "@/lib/constants";
 import { Users, Mail, Phone, MapPin } from "lucide-react";
 import Link from "next/link";
+import { Pagination } from "@/components/shop/pagination";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Zákazníci",
 };
 
-export default async function AdminCustomersPage() {
+const ADMIN_CUSTOMERS_PER_PAGE = 25;
+
+export default async function AdminCustomersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const params = await searchParams;
+  const currentPage = Math.max(1, parseInt(params.page ?? "1") || 1);
+
   await connection();
   const db = await getDb();
-  const customers = await db.customer.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 200,
-    include: {
-      orders: {
-        select: {
-          id: true,
-          orderNumber: true,
-          total: true,
-          status: true,
-          createdAt: true,
+
+  const [totalCount, customers] = await Promise.all([
+    db.customer.count(),
+    db.customer.findMany({
+      orderBy: { createdAt: "desc" },
+      skip: (currentPage - 1) * ADMIN_CUSTOMERS_PER_PAGE,
+      take: ADMIN_CUSTOMERS_PER_PAGE,
+      include: {
+        orders: {
+          select: {
+            id: true,
+            orderNumber: true,
+            total: true,
+            status: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: "desc" },
+          take: 20,
         },
-        orderBy: { createdAt: "desc" },
-        take: 20,
       },
-    },
-  });
+    }),
+  ]);
 
   const customersWithStats = customers.map((customer) => {
     const validOrders = customer.orders.filter(
@@ -54,17 +70,18 @@ export default async function AdminCustomersPage() {
             Zákazníci
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {customers.length}{" "}
-            {customers.length === 1
+            {totalCount}{" "}
+            {totalCount === 1
               ? "zákazník"
-              : customers.length >= 2 && customers.length <= 4
+              : totalCount >= 2 && totalCount <= 4
                 ? "zákazníci"
-                : "zákazníků"}
+                : "zákazníků"}{" "}
+            celkem
           </p>
         </div>
       </div>
 
-      {customers.length === 0 ? (
+      {totalCount === 0 ? (
         <div className="mt-12 rounded-xl border bg-card p-12 text-center shadow-sm">
           <Users className="mx-auto size-12 text-muted-foreground/30" />
           <p className="mt-4 text-lg font-medium text-muted-foreground">
@@ -173,6 +190,14 @@ export default async function AdminCustomersPage() {
           </div>
         </div>
       )}
+
+      <Suspense fallback={null}>
+        <Pagination
+          totalItems={totalCount}
+          perPage={ADMIN_CUSTOMERS_PER_PAGE}
+          basePath="/admin/customers"
+        />
+      </Suspense>
     </>
   );
 }

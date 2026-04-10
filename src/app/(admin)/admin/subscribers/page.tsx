@@ -1,9 +1,11 @@
+import { Suspense } from "react";
 import { getDb } from "@/lib/db";
 import { formatDate } from "@/lib/format";
 import { parseJsonStringArray } from "@/lib/images";
 import { connection } from "next/server";
 
 import { Mail } from "lucide-react";
+import { Pagination } from "@/components/shop/pagination";
 import type { Metadata } from "next";
 import { SubscriberToggle } from "./subscriber-toggle";
 import { ExportCsvButton } from "./export-csv-button";
@@ -16,6 +18,8 @@ export const metadata: Metadata = {
   title: "Newsletter odběratelé",
 };
 
+const ADMIN_SUBSCRIBERS_PER_PAGE = 25;
+
 function safeJsonParseArray(json: string): string[] {
   try {
     const parsed = JSON.parse(json);
@@ -25,26 +29,41 @@ function safeJsonParseArray(json: string): string[] {
   }
 }
 
-export default async function AdminSubscribersPage() {
+export default async function AdminSubscribersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const params = await searchParams;
+  const currentPage = Math.max(1, parseInt(params.page ?? "1") || 1);
+
   await connection();
   const db = await getDb();
-  const subscribers = await db.newsletterSubscriber.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 500,
-  });
 
-  const categories = await db.category.findMany({
-    select: { id: true, name: true },
-  });
+  const [totalCount, activeCount, withPrefs, subscribers, categories] =
+    await Promise.all([
+      db.newsletterSubscriber.count(),
+      db.newsletterSubscriber.count({ where: { active: true } }),
+      db.newsletterSubscriber.count({
+        where: {
+          OR: [
+            { preferredSizes: { not: "[]" } },
+            { preferredCategories: { not: "[]" } },
+            { preferredBrands: { not: "[]" } },
+          ],
+        },
+      }),
+      db.newsletterSubscriber.findMany({
+        orderBy: { createdAt: "desc" },
+        skip: (currentPage - 1) * ADMIN_SUBSCRIBERS_PER_PAGE,
+        take: ADMIN_SUBSCRIBERS_PER_PAGE,
+      }),
+      db.category.findMany({
+        select: { id: true, name: true },
+      }),
+    ]);
+
   const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
-
-  const activeCount = subscribers.filter((s) => s.active).length;
-  const withPrefs = subscribers.filter(
-    (s) =>
-      s.preferredSizes !== "[]" ||
-      s.preferredCategories !== "[]" ||
-      s.preferredBrands !== "[]",
-  ).length;
 
   // Load collections + campaign history for CampaignSender
   const [collections, campaignHistory] = await Promise.all([
@@ -73,7 +92,7 @@ export default async function AdminSubscribersPage() {
             Newsletter odběratelé
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {activeCount} aktivních z {subscribers.length} celkem
+            {activeCount} aktivních z {totalCount} celkem
             {withPrefs > 0 && ` · ${withPrefs} s preferencemi`}
           </p>
         </div>
@@ -90,7 +109,7 @@ export default async function AdminSubscribersPage() {
         initialHistory={campaignHistory}
       />
 
-      {subscribers.length === 0 ? (
+      {totalCount === 0 ? (
         <div className="mt-12 rounded-xl border bg-card p-12 text-center shadow-sm">
           <Mail className="mx-auto size-12 text-muted-foreground/30" />
           <p className="mt-4 text-lg font-medium text-muted-foreground">
@@ -206,6 +225,14 @@ export default async function AdminSubscribersPage() {
           </div>
         </div>
       )}
+
+      <Suspense fallback={null}>
+        <Pagination
+          totalItems={totalCount}
+          perPage={ADMIN_SUBSCRIBERS_PER_PAGE}
+          basePath="/admin/subscribers"
+        />
+      </Suspense>
     </>
   );
 }

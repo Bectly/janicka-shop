@@ -1,13 +1,17 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { getDb } from "@/lib/db";
 import { connection } from "next/server";
 import { formatPrice, formatDate } from "@/lib/format";
 import { Gift, Ticket, Wallet, TrendingUp, Users } from "lucide-react";
+import { Pagination } from "@/components/shop/pagination";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Referraly & Kredity",
 };
+
+const ADMIN_REFERRALS_PER_PAGE = 25;
 
 const REFERRAL_STATUS_LABELS: Record<string, string> = {
   pending: "Čeká",
@@ -24,12 +28,13 @@ const REFERRAL_STATUS_COLORS: Record<string, string> = {
 export default async function AdminReferralsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; tab?: string }>;
+  searchParams: Promise<{ status?: string; tab?: string; page?: string }>;
 }) {
   await connection();
   const db = await getDb();
   const params = await searchParams;
 
+  const currentPage = Math.max(1, parseInt(params.page ?? "1") || 1);
   const activeTab = params.tab === "credits" ? "credits" : "referrals";
 
   // --- Referral codes ---
@@ -39,17 +44,31 @@ export default async function AdminReferralsPage({
     referralWhere.status = params.status;
   }
 
-  const referralCodes = await db.referralCode.findMany({
-    where: referralWhere,
-    orderBy: { createdAt: "desc" },
-    take: 200,
-  });
+  let referralCount = 0;
+  let referralCodes: Awaited<ReturnType<typeof db.referralCode.findMany>> = [];
+  let creditsCount = 0;
+  let storeCredits: Awaited<ReturnType<typeof db.storeCredit.findMany>> = [];
 
-  // --- Store credits ---
-  const storeCredits = await db.storeCredit.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 200,
-  });
+  if (activeTab === "referrals") {
+    [referralCount, referralCodes] = await Promise.all([
+      db.referralCode.count({ where: referralWhere }),
+      db.referralCode.findMany({
+        where: referralWhere,
+        orderBy: { createdAt: "desc" },
+        skip: (currentPage - 1) * ADMIN_REFERRALS_PER_PAGE,
+        take: ADMIN_REFERRALS_PER_PAGE,
+      }),
+    ]);
+  } else {
+    [creditsCount, storeCredits] = await Promise.all([
+      db.storeCredit.count(),
+      db.storeCredit.findMany({
+        orderBy: { createdAt: "desc" },
+        skip: (currentPage - 1) * ADMIN_REFERRALS_PER_PAGE,
+        take: ADMIN_REFERRALS_PER_PAGE,
+      }),
+    ]);
+  }
 
   // --- Stats ---
   const totalCodes = await db.referralCode.count();
@@ -280,6 +299,14 @@ export default async function AdminReferralsPage({
               </table>
             </div>
           </div>
+
+          <Suspense fallback={null}>
+            <Pagination
+              totalItems={referralCount}
+              perPage={ADMIN_REFERRALS_PER_PAGE}
+              basePath="/admin/referrals"
+            />
+          </Suspense>
         </>
       ) : (
         <>
@@ -386,6 +413,14 @@ export default async function AdminReferralsPage({
               </table>
             </div>
           </div>
+
+          <Suspense fallback={null}>
+            <Pagination
+              totalItems={creditsCount}
+              perPage={ADMIN_REFERRALS_PER_PAGE}
+              basePath="/admin/referrals"
+            />
+          </Suspense>
         </>
       )}
     </>

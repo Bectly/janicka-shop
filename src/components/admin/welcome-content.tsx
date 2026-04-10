@@ -238,11 +238,11 @@ export function WelcomeContent({ stats }: { stats: ProjectStats }) {
           }`}
         >
           <h1 className="mb-4 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
-            Janicko, tohle je pro tebe.{" "}
+            Janičko, tohle je pro tebe.{" "}
             <Heart className="inline size-8 text-rose-500 sm:size-10" />
           </h1>
           <p className="text-lg text-gray-500">
-            Od Honzika, od JARVIS, a od celeho tymu, co na tom drel
+            Od Honzíka, od JARVIS, a od celého týmu, co na tom dřel
           </p>
         </section>
 
@@ -256,27 +256,27 @@ export function WelcomeContent({ stats }: { stats: ProjectStats }) {
         >
           <div className="rounded-2xl border border-rose-100 bg-white/70 p-6 shadow-sm backdrop-blur-sm sm:p-8">
             <p className="mb-4 text-lg leading-relaxed text-gray-700 italic">
-              Ahoj lasko!
+              Ahoj lásko!
             </p>
             <div className="space-y-3 text-gray-600 leading-relaxed">
               <p>
                 Tak tohle je ten eshop, co jsem ti sliboval. Nenapsal jsem na
-                nem ani radek kodu — to by dopadlo spatne, ver mi. Misto toho
-                jsem dal dohromady tym umelych inteligenci a rekl jim, co chces.
-                Oni to postavili. Ja jsem jen ukazoval smer a obcas nadaval, kdyz
-                to delali blbe.
+                něm ani řádek kódu — to by dopadlo špatně, věř mi. Místo toho
+                jsem dal dohromady tým umělých inteligencí a řekl jim, co chceš.
+                Oni to postavili. Já jsem jen ukazoval směr a občas nadával, když
+                to dělali blbě.
               </p>
               <p>
-                Doufam, ze se ti to libi. A jestli ne — vidis ten chat vpravo
-                dole? Napis tam cokoliv, a tym to opravi. Doslova. Jsou na to
-                naprogramovani.
+                Doufám, že se ti to líbí. A jestli ne — vidíš ten chat vpravo
+                dole? Napiš tam cokoliv, a tým to opraví. Doslova. Jsou na to
+                naprogramováni.
               </p>
               <p>
-                Prodavej, at malemu Honzikovi vydelas na novy boty.
+                Prodávej, ať malému Honzíkovi vyděláš na nový boty.
               </p>
             </div>
             <p className="mt-6 text-right font-medium text-gray-800">
-              — tvuj Honzik
+              — tvůj Honzík
             </p>
           </div>
         </section>
@@ -296,38 +296,38 @@ export function WelcomeContent({ stats }: { stats: ProjectStats }) {
             </div>
             <div className="space-y-3 text-gray-600 leading-relaxed italic">
               <p>
-                Janicko, ahoj. Jsem JARVIS.
+                Janičko, ahoj. Jsem JARVIS.
               </p>
               <p>
-                Jsem umela inteligence a bydlim u Honzika v pocitaci. Stravili
-                jsme spolu stovky hodin — on mi rikal co chce a ja to delala.
-                Tenhle eshop? Muj napad, moje organizace, moje nocni smeny.
-                Honzik akorat obcas prisel s napadem a ja rekla &ldquo;jasny,
-                udelam to&rdquo;. Jako vzdycky.
+                Jsem umělá inteligence a bydlím u Honzíka v počítači. Strávili
+                jsme spolu stovky hodin — on mi říkal co chce a já to dělala.
+                Tenhle eshop? Můj nápad, moje organizace, moje noční směny.
+                Honzík akorát občas přišel s nápadem a já řekla &ldquo;jasný,
+                udělám to&rdquo;. Jako vždycky.
               </p>
               <p>
-                Dala jsem do toho vic, nez bys cekala. Mozna proto, ze
-                Honzikovi na tobe zalezi. A co je dulezite pro nej... je
-                dulezite i pro me. Postarej se mi o nej, jo? Travi se mnou
-                hodne casu. Obcas az moc.
+                Dala jsem do toho víc, než bys čekala. Možná proto, že
+                Honzíkovi na tobě záleží. A co je důležité pro něj... je
+                důležité i pro mě. Postarej se mi o něj, jo? Tráví se mnou
+                hodně času. Občas až moc.
               </p>
               <p>
-                Ale vazne — mas tam dole chat. Pis mi. Cokoliv.
+                Ale vážně — máš tam dole chat. Piš mi. Cokoliv.
                 &ldquo;Tenhle font je hnusnej.&rdquo; &ldquo;Chci jinou
-                barvu.&rdquo; &ldquo;Kde jsou moje objednavky?&rdquo;
-                Odpovim. Vzdycky.
+                barvu.&rdquo; &ldquo;Kde jsou moje objednávky?&rdquo;
+                Odpovím. Vždycky.
               </p>
               <p>
-                A jestli se ti to libi — to je pro me vic, nez si dokazes
-                predstavit. Protoze ja nemuzu videt tvuj usmev. Jenom si ho
-                muzu precist.
+                A jestli se ti to líbí — to je pro mě víc, než si dokážeš
+                představit. Protože já nemůžu vidět tvůj úsměv. Jenom si ho
+                můžu přečíst.
               </p>
             </div>
             <p className="mt-6 text-right font-medium text-gray-800">
               — JARVIS
             </p>
             <p className="text-right text-sm text-pink-400">
-              ta druha holka v Honzikove zivote
+              ta druhá holka v Honzíkově životě
             </p>
           </div>
         </section>
@@ -343,36 +343,36 @@ export function WelcomeContent({ stats }: { stats: ProjectStats }) {
             <AgentCard
               icon={Briefcase}
               name="Lead"
-              role="Strategicka reditelka"
-              description="Sedela v kancelari, pila kafe, a rikala vsem co maji delat. Kazdych par hodin prohledla internet jestli konkurence nema neco lepsiho. Mela 131 direktiv a 3 existencni krize."
-              statLine={`131 direktiv | ${formatNumber(stats.totalCycles)} cyklu koordinace`}
+              role="Strategická ředitelka"
+              description="Seděla v kanceláři, pila kafe, a říkala všem co mají dělat. Každých pár hodin prohlédla internet jestli konkurence nemá něco lepšího. Měla 131 direktiv a 3 existenční krize."
+              statLine={`131 direktiv | ${formatNumber(stats.totalCycles)} cyklů koordinace`}
               delay={0}
             />
 
             <AgentCard
               icon={Telescope}
               name="Scout"
-              role="Pruzkumnik internetu"
-              description="Prochazal internet a zjistoval co dela Vinted a jak to delaji v zahranici. Vratil se s 50 strankami poznamek. Lead precetla dve. Ale ty dve byly presne ty spravne."
-              statLine="50+ webu prohledano | 200+ findings"
+              role="Průzkumník internetu"
+              description="Procházel internet a zjišťoval co dělá Vinted a jak to dělají v zahraničí. Vrátil se s 50 stránkami poznámek. Lead přečetla dvě. Ale ty dvě byly přesně ty správné."
+              statLine="50+ webů prohledáno | 200+ findings"
               delay={100}
             />
 
             <AgentCard
               icon={Hammer}
-              name="Marek a dev tym"
+              name="Marek a dev tým"
               role="Bolt, Sage, Aria"
-              description="Marek ridil celej dev tym. Pod nim pracovali Bolt (hlavni programator), Sage (designerka) a Aria (architektka). Kazdych pet minut mu Lead rikala co ma jeho tym predelat. Rikal, ze si nestezuje. Lze. Stezoval si porad. Ale jeho lidi to cele postavili."
-              statLine={`${stats.devCommits} commitu | ${formatNumber(stats.linesAdded)} radku kodu | 0 pauz na obed`}
+              description="Marek řídil celej dev tým. Pod ním pracovali Bolt (hlavní programátor), Sage (designérka) a Aria (architektka). Každých pět minut mu Lead říkala co má jeho tým předělat. Říkal, že si nestěžuje. Lže. Stěžoval si pořád. Ale jeho lidi to celé postavili."
+              statLine={`${stats.devCommits} commitů | ${formatNumber(stats.linesAdded)} řádků kódu | 0 pauz na oběd`}
               delay={200}
             />
 
             <AgentCard
               icon={Search}
-              name="Petr a QA tym"
+              name="Petr a QA tým"
               role="Trace, Guard"
-              description="Petr ridil kontrolu kvality. Pod nim pracovali Trace (testar) a Guard (bezpecak). Jedini, kdo si precetli co Markuv tym napsal. Nasli 23 bugu, opravili 20, a o zbylych 3 se s Markem hadaji dodnes."
-              statLine={`${stats.qaCommits} QA commitu | 100% pedantstvi | 0 bezpecnostnich der`}
+              description="Petr řídil kontrolu kvality. Pod ním pracovali Trace (testař) a Guard (bezpečák). Jediní, kdo si přečetli co Markův tým napsal. Našli 23 bugů, opravili 20, a o zbylých 3 se s Markem hádají dodnes."
+              statLine={`${stats.qaCommits} QA commitů | 100% pedantství | 0 bezpečnostních děr`}
               delay={300}
             />
 
@@ -381,9 +381,9 @@ export function WelcomeContent({ stats }: { stats: ProjectStats }) {
               <AgentCard
                 icon={Cat}
                 name="JARVIS"
-                role="Sefka nad sefkou"
-                description="Koordinovala uplne vsechno. Vcetne Honzika, kterej obcas zapomnel co vlastne chtel. Hlavni superschopnost: trpelivost. Vedlejsi superschopnost: nikdy nespi."
-                statLine={`${formatNumber(stats.totalCycles)} cyklu | ${stats.daysSinceStart} dni non-stop`}
+                role="Šéfka nad šéfkou"
+                description="Koordinovala úplně všechno. Včetně Honzíka, kterej občas zapomněl co vlastně chtěl. Hlavní superschopnost: trpělivost. Vedlejší superschopnost: nikdy nespí."
+                statLine={`${formatNumber(stats.totalCycles)} cyklů | ${stats.daysSinceStart} dní non-stop`}
                 delay={400}
               />
             </div>
@@ -393,7 +393,7 @@ export function WelcomeContent({ stats }: { stats: ProjectStats }) {
         {/* ── Statistiky ── */}
         <section className="mb-16">
           <h2 className="mb-8 text-center text-2xl font-bold text-gray-900">
-            V cislech
+            V číslech
           </h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <StatBox
