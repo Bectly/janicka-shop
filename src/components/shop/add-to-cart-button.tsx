@@ -9,6 +9,7 @@ import { trackAddToCart } from "@/lib/analytics";
 import { SizeGuide } from "@/components/shop/size-guide";
 import { MobileStickyAtc } from "@/components/shop/mobile-sticky-atc";
 import { getImageUrls } from "@/lib/images";
+import { flyToCart } from "@/lib/fly-to-cart";
 import confetti from "canvas-confetti";
 
 interface AddToCartProps {
@@ -86,6 +87,9 @@ export function AddToCartButton({ product }: AddToCartProps) {
         variant: [selectedSize, selectedColor].filter(Boolean).join(" / ") || undefined,
       });
       setAdded(true);
+      if (buttonRef.current) {
+        flyToCart(imageList[0] ?? "", buttonRef.current);
+      }
       fireConfetti();
       setTimeout(() => setAdded(false), 2000);
     });
