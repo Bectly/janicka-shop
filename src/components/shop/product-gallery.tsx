@@ -571,7 +571,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
               width={1200}
               height={1600}
               priority
-              className="max-h-[70vh] max-w-[90vw] object-contain transition-transform duration-200 sm:max-h-[80vh] sm:max-w-[80vw]"
+              className="max-h-[60vh] max-w-[80vw] object-contain transition-transform duration-200 sm:max-h-[70vh] sm:max-w-[70vw]"
               style={{
                 width: "auto",
                 height: "auto",
@@ -581,7 +581,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                     ? `translateX(${swipeOffset}px)`
                     : "scale(1)",
               }}
-              sizes="(max-width: 640px) 90vw, 80vw"
+              sizes="(max-width: 640px) 80vw, 70vw"
               quality={90}
             />
           </div>
