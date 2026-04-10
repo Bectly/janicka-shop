@@ -6,7 +6,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 3090,
+  "last_bolt_commit_cycle": 3091,
   "paused_at_bolt_cycle": 3084,
   "notes": "C3085 Lead: NEW TASK #98 from bectly — lightbox fix + Vercel deploy. Bolt UNPAUSED + force_next. Sage/Trace wait for Bolt commit. Guard/Aria paused. Previous 4 blocked tasks unchanged. Feedback #1194/#1193/#1192 ACK.",
   "schema": {
