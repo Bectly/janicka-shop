@@ -228,6 +228,7 @@ export default async function ProductDetailPage({ params }: Props) {
       sizes: product.sizes,
       videoUrl: product.videoUrl,
       createdAt: product.createdAt,
+      measurements: product.measurements,
     }),
   };
 

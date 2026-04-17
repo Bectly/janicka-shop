@@ -132,7 +132,15 @@ export interface ProductForSchema {
   compareAt?: number | null;
   videoUrl?: string | null;
   createdAt?: Date | string | null;
+  measurements?: string | null;
 }
+
+const MEASUREMENT_LABELS: Record<string, string> = {
+  chest: "Šířka přes prsa",
+  waist: "Pas",
+  hips: "Boky",
+  length: "Délka",
+};
 
 /** Build a single Product schema object (for use standalone or inside ItemList). */
 export function buildProductSchema(product: ProductForSchema) {
@@ -170,6 +178,32 @@ export function buildProductSchema(product: ProductForSchema) {
       name: "Stav zboží",
       value: conditionDesc,
     });
+  }
+
+  // Flat garment measurements (chest/waist/hips/length in cm) — emitted as
+  // PropertyValue entries so Google Shopping + AI search can match size-specific
+  // queries like "délka 100 cm" or "prsa 40 cm". Second-hand buyers rely on
+  // exact measurements more than size tags.
+  if (product.measurements) {
+    try {
+      const m = JSON.parse(product.measurements) as Record<string, unknown>;
+      for (const key of ["chest", "waist", "hips", "length"]) {
+        const raw = m[key];
+        const n = typeof raw === "number" ? raw : Number(raw);
+        if (Number.isFinite(n) && n > 0) {
+          additionalProperty.push({
+            "@type": "PropertyValue",
+            propertyID: key,
+            name: MEASUREMENT_LABELS[key],
+            value: n,
+            unitCode: "CMT",
+            unitText: "cm",
+          });
+        }
+      }
+    } catch {
+      // malformed JSON — silently skip
+    }
   }
 
   // VideoObject — Google Shopping uses this for rich results (+22% CTR)
