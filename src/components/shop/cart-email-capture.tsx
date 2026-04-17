@@ -45,9 +45,9 @@ export function CartEmailCapture() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-lg border border-dashed border-muted-foreground/20 bg-muted/30 p-4">
+    <form onSubmit={handleSubmit} className="rounded-lg border border-primary/20 bg-primary/5 p-4">
       <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-        <Mail className="size-4 text-muted-foreground" />
+        <Mail className="size-4 text-primary/70" />
         Chceš vědět, když ti někdo kousek přebere?
       </div>
       <p className="mt-1 text-xs text-muted-foreground">
@@ -72,7 +72,7 @@ export function CartEmailCapture() {
           type="checkbox"
           checked={consent}
           onChange={(e) => setConsent(e.target.checked)}
-          className="mt-0.5 rounded"
+          className="mt-0.5 size-4 cursor-pointer rounded accent-primary"
         />
         Souhlasím se zasíláním upomínek o košíku na tento email
       </label>

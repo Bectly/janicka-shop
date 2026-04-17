@@ -43,8 +43,8 @@ export function MeasurementsBackfill() {
         <div
           className={`rounded-lg border px-4 py-3 text-sm ${
             result.success
-              ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-              : "border-destructive/20 bg-destructive/5 text-destructive"
+              ? "border-primary/30 bg-primary/10 text-primary"
+              : "border-destructive/30 bg-destructive/10 text-destructive"
           }`}
         >
           <div className="flex items-center gap-2 font-medium">
@@ -56,7 +56,7 @@ export function MeasurementsBackfill() {
             {result.message}
           </div>
           {result.success && (
-            <div className="mt-2 grid gap-1 text-xs text-emerald-900/80 sm:grid-cols-2">
+            <div className="mt-2 grid gap-1 text-xs text-primary/80 sm:grid-cols-2">
               <div>Prohledáno: {result.totalScanned}</div>
               <div>Aktualizováno: {result.updated}</div>
               <div>Přeskočeno: {result.skipped}</div>

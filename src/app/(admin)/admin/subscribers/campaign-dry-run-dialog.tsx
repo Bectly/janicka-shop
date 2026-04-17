@@ -302,8 +302,8 @@ export function CampaignDryRunDialog({
                   <div
                     className={`flex items-start gap-2 rounded-md border p-2 text-xs ${
                       testSent.success
-                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                        : "border-red-200 bg-red-50 text-red-700"
+                        ? "border-primary/30 bg-primary/10 text-primary"
+                        : "border-destructive/40 bg-destructive/10 text-destructive"
                     }`}
                   >
                     {testSent.success ? (
@@ -357,8 +357,8 @@ export function CampaignDryRunDialog({
               <div
                 className={`flex items-start gap-2 rounded-lg border p-3 text-sm ${
                   result.type === "success"
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                    : "border-red-200 bg-red-50 text-red-700"
+                    ? "border-primary/30 bg-primary/10 text-primary"
+                    : "border-destructive/40 bg-destructive/10 text-destructive"
                 }`}
               >
                 {result.type === "success" ? (

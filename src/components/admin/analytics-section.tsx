@@ -151,7 +151,7 @@ export function AnalyticsSection({
                 </thead>
                 <tbody>
                   {topProducts.map((p, i) => (
-                    <tr key={p.productId} className="border-b last:border-0">
+                    <tr key={p.productId} className="border-b last:border-0 odd:bg-muted/20">
                       <td className="px-3 py-2">
                         <div className="flex items-center gap-2">
                           <span className="w-4 shrink-0 text-xs font-medium text-muted-foreground">
@@ -177,7 +177,7 @@ export function AnalyticsSection({
                       <td className="px-3 py-2 text-right font-semibold">
                         {p.soldCount}
                       </td>
-                      <td className="px-3 py-2 text-right font-semibold text-emerald-600">
+                      <td className="px-3 py-2 text-right font-semibold text-primary">
                         {formatPrice(p.revenue)}
                       </td>
                     </tr>

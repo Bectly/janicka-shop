@@ -89,8 +89,8 @@ export function CampaignSender({
         <div
           className={`flex items-center gap-2 rounded-lg border p-3 text-sm ${
             result.type === "success"
-              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-              : "border-red-200 bg-red-50 text-red-700"
+              ? "border-primary/30 bg-primary/10 text-primary"
+              : "border-destructive/40 bg-destructive/10 text-destructive"
           }`}
         >
           {result.type === "success" ? (
@@ -280,11 +280,11 @@ export function CampaignSender({
                   </p>
                 </div>
                 <div className="ml-4 flex shrink-0 items-center gap-2 text-xs">
-                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 font-medium text-emerald-700">
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 font-medium text-primary">
                     {h.sentCount} odesláno
                   </span>
                   {h.failedCount > 0 && (
-                    <span className="rounded-full bg-red-100 px-2 py-0.5 font-medium text-red-700">
+                    <span className="rounded-full bg-destructive/10 px-2 py-0.5 font-medium text-destructive">
                       {h.failedCount} selhalo
                     </span>
                   )}

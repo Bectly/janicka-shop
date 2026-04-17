@@ -39,8 +39,8 @@ export function SettingsForm({ settings }: SettingsFormProps) {
         <div
           className={`flex items-center gap-2 rounded-lg border px-4 py-3 text-sm ${
             state.success
-              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-              : "border-destructive/20 bg-destructive/5 text-destructive"
+              ? "border-primary/30 bg-primary/10 text-primary"
+              : "border-destructive/30 bg-destructive/10 text-destructive"
           }`}
         >
           {state.success ? (
