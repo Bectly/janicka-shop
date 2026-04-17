@@ -426,7 +426,7 @@
   background: linear-gradient(to right, var(--color-brand), transparent);
 }
 .announcement-bar::after {
-  right: 2.5rem;
+  right: 0;
   background: linear-gradient(to left, var(--color-brand), transparent);
 }
 
