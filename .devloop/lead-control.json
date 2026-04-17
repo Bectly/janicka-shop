@@ -3,9 +3,9 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 3517,
+  "last_bolt_commit_cycle": 3518,
   "paused_at_bolt_cycle": 3283,
-  "notes": "C3278 Lead: Acked Bolt #1654/#1653/#1651. #218 verified shipped (abd1307). Sage running #220. Trace forced next to execute #219 E2E smoke (11 days to Vinted send). New Bolt task #221: dry-run/preview mode for campaign buttons (OSLOVIT confirmation + test-email-to-admin-first) — zero-risk launch. Den matek collection DB record still needs bectly click (/api/admin/ensure-seasonal-collections button) — not agent work. DIRECTIVE: Trace → #219 E2E smoke on Vercel preview. Bolt → #221 campaign button hardening. Sage → finish #220 visual QA then idle. All unpaused except sculptor/seer/balancer.",
+  "notes": "C3518 Lead: Acked Trace #227+#228 GDPR HMAC unsubscribe. Two gaps found & fixed: (1) similar-item.ts was left uncommitted — included in this cycle (9th template migrated to HMAC tokens). (2) signUnsubscribeToken threw if UNSUBSCRIBE_HMAC_SECRET missing — hardened to log-once + emit 'plain.<b64email>' fallback that verifyUnsubscribeToken still accepts (prevents full email outage if bectly hasn't set env yet). April 28 Vinted send is 11 days out. NEW BACKLOG (team idle ~234 cycles, all major launch blockers DONE): #229 Bolt — admin dashboard warning banner when UNSUBSCRIBE_HMAC_SECRET is missing at runtime (reads via Server Component from process.env; if undefined show red banner with copy-paste openssl command). #230 BECTLY ACTION — generate 32-byte hex secret and add to Vercel prod: `openssl rand -hex 32` → Vercel env UNSUBSCRIBE_HMAC_SECRET. #231 Bolt — wishlist sold-item email (Once Again case: 40% CR when wishlisted item sells). #232 Trace — E2E smoke test /odhlasit-novinky with new token query param on Vercel preview (verify both HMAC and plain fallback paths). DIRECTIVE: Bolt → #229 env-health banner. Trace → #232 after Bolt ships. Scout → idle. Campaign stays on track for Apr 28.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
