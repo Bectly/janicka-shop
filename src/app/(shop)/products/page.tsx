@@ -9,7 +9,7 @@ import { CategoryHero, CatalogHero } from "@/components/shop/category-hero";
 import { GridViewSwitcher } from "@/components/shop/grid-view-switcher";
 import { StickyCategoryNav } from "@/components/shop/sticky-category-nav";
 import { buildBreadcrumbSchema, jsonLdString } from "@/lib/structured-data";
-import { ALL_SIZES } from "@/lib/sizes";
+import { ALL_SIZES, getSizesForCategory } from "@/lib/sizes";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Metadata } from "next";
 
@@ -336,9 +336,17 @@ export default async function ProductsPage({
   const scopedBrands = brands.filter(
     (b) => (filterCounts.brands[b] ?? 0) > 0 || brandFilter.includes(b),
   );
-  const scopedSizes = sizes.filter(
-    (s) => (filterCounts.sizes[s] ?? 0) > 0 || sizeFilter.includes(s),
-  );
+  // Drop sizes that don't belong to the active category (defends against
+  // legacy/garbage values on imported products — e.g. kid sizes "4 roky"
+  // leaking onto Bundy & Kabáty). When no category is active, any canonical
+  // enum size is allowed.
+  const categoryAllowedSizes = params.category
+    ? new Set(getSizesForCategory(params.category))
+    : null;
+  const scopedSizes = sizes.filter((s) => {
+    if (categoryAllowedSizes && !categoryAllowedSizes.has(s)) return false;
+    return (filterCounts.sizes[s] ?? 0) > 0 || sizeFilter.includes(s);
+  });
   const scopedColors = colors.filter(
     (c) => (filterCounts.colors[c] ?? 0) > 0 || colorFilter.includes(c),
   );
