@@ -21,8 +21,8 @@ export function SubscriberToggle({ id, active }: { id: string; active: boolean }
       disabled={isPending}
       className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${
         active
-          ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
-          : "bg-red-100 text-red-800 hover:bg-red-200"
+          ? "bg-primary/10 text-primary hover:bg-primary/20"
+          : "bg-destructive/10 text-destructive hover:bg-destructive/20"
       } ${isPending ? "opacity-50" : ""}`}
     >
       {active ? "Aktivní" : "Odhlášen"}

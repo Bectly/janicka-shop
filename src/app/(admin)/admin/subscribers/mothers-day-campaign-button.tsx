@@ -56,7 +56,7 @@ export function MothersDayCampaignButton({ activeSubscriberCount, onSent }: Prop
 
   return (
     <div className="space-y-3">
-      <div className="rounded-xl border border-pink-200 bg-pink-50/30 p-4">
+      <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-sm font-semibold text-foreground">
             Den matek 2026 — e-mailová kampaň ({activeSubscriberCount})
@@ -71,7 +71,7 @@ export function MothersDayCampaignButton({ activeSubscriberCount, onSent }: Prop
                 key={opt.value}
                 className={`flex cursor-pointer flex-col gap-0.5 rounded-lg border p-2.5 text-xs transition-colors ${
                   selected === opt.value
-                    ? "border-pink-400 bg-pink-50 text-foreground"
+                    ? "border-primary/40 bg-primary/10 text-foreground"
                     : "border-border bg-white text-muted-foreground hover:bg-muted/50"
                 }`}
               >
@@ -98,7 +98,7 @@ export function MothersDayCampaignButton({ activeSubscriberCount, onSent }: Prop
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="inline-flex items-center gap-2 rounded-lg bg-pink-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-pink-700"
+          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
         >
           <Heart className="size-4" />
           Otevřít dry-run pro #{active.value} {active.label}

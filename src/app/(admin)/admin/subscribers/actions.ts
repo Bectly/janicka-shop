@@ -293,8 +293,8 @@ export async function sendVintedTcCampaign(
   confirmation?: string,
 ): Promise<VintedCampaignResult> {
   await requireAdmin();
-  if (confirmation !== "OSLOVIT") {
-    return { success: false, sentCount: 0, failedCount: 0, error: "Potvrzení 'OSLOVIT' chybí nebo není správně." };
+  if (confirmation !== "ODESLAT VINTED") {
+    return { success: false, sentCount: 0, failedCount: 0, error: "Potvrzení 'ODESLAT VINTED' chybí nebo není správně." };
   }
   const rl = await rateLimitAdmin();
   if (!rl.success) {
@@ -648,6 +648,12 @@ interface CampaignPreview {
   html: string;
   subscriberCount: number;
   sampleEmail: string;
+  /** Preheader / preview-text shown by most mail clients next to the subject. */
+  previewText?: string;
+  /** First ~300 chars of the rendered HTML body (quick diff-check before sending). */
+  htmlExcerpt?: string;
+  /** Active CampaignSendLock rows that would block an immediate send. */
+  lockStatus?: { campaignKey: string; expiresAt: string }[];
   /** Present when a campaign splits recipients by segment (e.g. Vinted A/B). */
   segmentCounts?: { warm: number; cold: number };
   /** Subject line actually used for each segment (only set on auto-segment preview). */
@@ -742,16 +748,39 @@ export async function previewVintedCampaign(
 
   const previewSegment: VintedCampaignSegment = segment === "cold" ? "cold" : "warm";
   const sampleEmail = (await getAdminTestRecipient()) ?? "preview@janicka-shop.cz";
-  const { subject, html } = renderVintedCampaignPreview(previewSegment, sampleEmail);
+  const { subject, html, previewText } = renderVintedCampaignPreview(previewSegment, sampleEmail);
 
   const warmPreview = renderVintedCampaignPreview("warm", sampleEmail);
   const coldPreview = renderVintedCampaignPreview("cold", sampleEmail);
+
+  // Check for active send-locks that would reject an immediate send.
+  const activeLocks = await db.campaignSendLock.findMany({
+    where: {
+      campaignKey: { in: ["vinted:all", "vinted:warm", "vinted:cold"] },
+      expiresAt: { gt: now },
+    },
+    select: { campaignKey: true, expiresAt: true },
+  });
+
+  // Strip HTML tags + collapse whitespace for a readable ~300-char body excerpt.
+  const bodyText = html
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const htmlExcerpt = bodyText.slice(0, 300);
 
   return {
     subject,
     html,
     subscriberCount,
     sampleEmail,
+    previewText,
+    htmlExcerpt,
+    lockStatus: activeLocks.map((l) => ({
+      campaignKey: l.campaignKey,
+      expiresAt: l.expiresAt.toISOString(),
+    })),
     // Only expose A/B breakdown for auto-segment; explicit warm/cold sends are single-segment.
     ...(segment === "all" ? {
       segmentCounts: { warm: warmCount, cold: coldCount },

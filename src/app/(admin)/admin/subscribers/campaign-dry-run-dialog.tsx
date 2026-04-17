@@ -16,6 +16,9 @@ interface Preview {
   html: string;
   subscriberCount: number;
   sampleEmail: string;
+  previewText?: string;
+  htmlExcerpt?: string;
+  lockStatus?: { campaignKey: string; expiresAt: string }[];
   segmentCounts?: { warm: number; cold: number };
   segmentSubjects?: { warm: string; cold: string };
 }
@@ -42,9 +45,11 @@ interface Props {
   sendTest: () => Promise<TestResult>;
   sendAll: (confirmation: string) => Promise<SendResult>;
   onSent?: () => void;
+  /** Typed phrase the admin must enter to enable the final Send button. */
+  confirmationWord?: string;
 }
 
-const CONFIRMATION_WORD = "OSLOVIT";
+const DEFAULT_CONFIRMATION_WORD = "OSLOVIT";
 
 const ACCENT_CLASSES: Record<
   Props["accentColor"],
@@ -58,18 +63,18 @@ const ACCENT_CLASSES: Record<
     buttonHover: "hover:bg-primary/90",
   },
   pink: {
-    border: "border-pink-300",
-    bg: "bg-pink-50/50",
-    text: "text-pink-700",
-    button: "bg-pink-600",
-    buttonHover: "hover:bg-pink-700",
+    border: "border-primary/30",
+    bg: "bg-primary/5",
+    text: "text-primary",
+    button: "bg-primary",
+    buttonHover: "hover:bg-primary/90",
   },
   emerald: {
-    border: "border-emerald-300",
-    bg: "bg-emerald-50/50",
-    text: "text-emerald-700",
-    button: "bg-emerald-600",
-    buttonHover: "hover:bg-emerald-700",
+    border: "border-muted-foreground/30",
+    bg: "bg-muted/40",
+    text: "text-foreground",
+    button: "bg-foreground",
+    buttonHover: "hover:bg-foreground/90",
   },
 };
 
@@ -82,8 +87,10 @@ export function CampaignDryRunDialog({
   sendTest,
   sendAll,
   onSent,
+  confirmationWord = DEFAULT_CONFIRMATION_WORD,
 }: Props) {
   const accent = ACCENT_CLASSES[accentColor];
+  const CONFIRMATION_WORD = confirmationWord;
 
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [preview, setPreview] = useState<Preview | null>(null);
@@ -249,26 +256,26 @@ export function CampaignDryRunDialog({
                   <p className="font-semibold text-muted-foreground">
                     A/B rozdělení (do 90 dní = warm, jinak cold):
                   </p>
-                  <div className="rounded-md border border-emerald-200 bg-emerald-50/60 p-2">
-                    <div className="flex items-baseline justify-between gap-2">
-                      <span className="font-semibold text-emerald-800">
+                  <div className=”rounded-md border border-primary/30 bg-primary/10 p-2”>
+                    <div className=”flex items-baseline justify-between gap-2”>
+                      <span className=”font-semibold text-primary”>
                         Warm ({preview.segmentCounts.warm})
                       </span>
-                      <span className="text-[11px] text-emerald-700">Subject A</span>
+                      <span className=”text-[11px] text-primary”>Subject A</span>
                     </div>
-                    <p className="mt-0.5 truncate text-emerald-900" title={preview.segmentSubjects.warm}>
-                      „{preview.segmentSubjects.warm}“
+                    <p className=”mt-0.5 truncate text-foreground” title={preview.segmentSubjects.warm}>
+                      „{preview.segmentSubjects.warm}”
                     </p>
                   </div>
-                  <div className="rounded-md border border-amber-200 bg-amber-50/60 p-2">
-                    <div className="flex items-baseline justify-between gap-2">
-                      <span className="font-semibold text-amber-800">
+                  <div className=”rounded-md border border-muted-foreground/30 bg-muted/40 p-2”>
+                    <div className=”flex items-baseline justify-between gap-2”>
+                      <span className=”font-semibold text-foreground”>
                         Cold ({preview.segmentCounts.cold})
                       </span>
-                      <span className="text-[11px] text-amber-700">Subject B</span>
+                      <span className=”text-[11px] text-muted-foreground”>Subject B</span>
                     </div>
-                    <p className="mt-0.5 truncate text-amber-900" title={preview.segmentSubjects.cold}>
-                      „{preview.segmentSubjects.cold}“
+                    <p className=”mt-0.5 truncate text-foreground” title={preview.segmentSubjects.cold}>
+                      „{preview.segmentSubjects.cold}”
                     </p>
                   </div>
                 </div>

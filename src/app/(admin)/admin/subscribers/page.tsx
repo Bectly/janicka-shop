@@ -194,7 +194,7 @@ export default async function AdminSubscribersPage({
                             {brands.map((b) => (
                               <span
                                 key={b}
-                                className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700"
+                                className="rounded bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground"
                               >
                                 {b}
                               </span>

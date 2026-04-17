@@ -2252,10 +2252,11 @@ function buildVintedCampaignHtml(
 export function renderVintedCampaignPreview(
   segment: VintedCampaignSegment,
   recipientEmail: string,
-): { subject: string; html: string } {
+): { subject: string; html: string; previewText: string } {
   return {
     subject: VINTED_SUBJECTS[segment],
     html: buildVintedCampaignHtml(segment, recipientEmail),
+    previewText: VINTED_PREVIEW_TEXT,
   };
 }
 

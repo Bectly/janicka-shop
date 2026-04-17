@@ -50,7 +50,7 @@ export function CustomsCampaignButton({ activeSubscriberCount, onSent }: Props) 
 
   return (
     <div className="space-y-3">
-      <div className="rounded-xl border border-emerald-200 bg-emerald-50/30 p-4">
+      <div className="rounded-xl border border-muted-foreground/20 bg-muted/30 p-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-sm font-semibold text-foreground">
             EU clo 2026 — e-mailová kampaň ({activeSubscriberCount})
@@ -65,7 +65,7 @@ export function CustomsCampaignButton({ activeSubscriberCount, onSent }: Props) 
                 key={opt.value}
                 className={`flex cursor-pointer flex-col gap-0.5 rounded-lg border p-2.5 text-xs transition-colors ${
                   selected === opt.value
-                    ? "border-emerald-400 bg-emerald-50 text-foreground"
+                    ? "border-muted-foreground/40 bg-muted/50 text-foreground"
                     : "border-border bg-white text-muted-foreground hover:bg-muted/50"
                 }`}
               >
