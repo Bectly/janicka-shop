@@ -15,6 +15,46 @@ export function ProductDefects({ note, images, condition }: ProductDefectsProps)
   const isNew = condition ? NEW_CONDITIONS.has(condition) : false;
 
   if (!hasContent) {
+    if (condition === "visible_wear") {
+      return (
+        <div className="my-10 rounded-2xl border border-amber-200/70 bg-amber-50/40 p-5 dark:border-amber-900/40 dark:bg-amber-950/20">
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-amber-500/15">
+              <AlertCircle className="size-5 text-amber-600 dark:text-amber-400" />
+            </div>
+            <div>
+              <p className="font-heading text-base font-semibold text-foreground">
+                Viditelné opotřebení — podrobnosti brzy doplníme
+              </p>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                Tento kousek nese stopy nošení. Pokud chceš detaily před nákupem, napiš nám.
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (condition === "good") {
+      return (
+        <div className="my-10 rounded-2xl border border-border bg-muted/40 p-5">
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/5">
+              <Sparkles className="size-5 text-muted-foreground" />
+            </div>
+            <div>
+              <p className="font-heading text-base font-semibold text-foreground">
+                Dobrý stav — bez výrazných vad
+              </p>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                Lehké stopy běžného nošení, nic, co by bilo do očí.
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="my-10 rounded-2xl border border-sage-light bg-sage-light/30 p-5">
         <div className="flex items-center gap-3">
