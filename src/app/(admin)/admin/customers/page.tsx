@@ -39,15 +39,36 @@ function parseTags(raw: string | null | undefined): string[] {
   }
 }
 
+type Sort = "recent" | "alpha" | "spent";
+type VerifiedFilter = "any" | "yes" | "no";
+type OrdersFilter = "any" | "yes" | "no";
+
 export default async function AdminCustomersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; q?: string; tag?: string }>;
+  searchParams: Promise<{
+    page?: string;
+    q?: string;
+    tag?: string;
+    sort?: string;
+    verified?: string;
+    orders?: string;
+    locked?: string;
+  }>;
 }) {
   const params = await searchParams;
   const currentPage = Math.max(1, parseInt(params.page ?? "1") || 1);
   const query = (params.q ?? "").trim();
   const tag = (params.tag ?? "").trim();
+  const sort: Sort =
+    params.sort === "alpha" || params.sort === "spent" || params.sort === "recent"
+      ? params.sort
+      : "recent";
+  const verified: VerifiedFilter =
+    params.verified === "yes" || params.verified === "no" ? params.verified : "any";
+  const ordersFilter: OrdersFilter =
+    params.orders === "yes" || params.orders === "no" ? params.orders : "any";
+  const lockedOnly = params.locked === "1";
 
   await connection();
   const db = await getDb();
@@ -58,17 +79,30 @@ export default async function AdminCustomersPage({
       { email: { contains: query } },
       { firstName: { contains: query } },
       { lastName: { contains: query } },
+      { phone: { contains: query } },
     ];
   }
   if (tag) {
     where.tags = { contains: `"${tag}"` };
   }
+  if (verified === "yes") where.emailVerified = { not: null };
+  if (verified === "no") where.emailVerified = null;
+  if (ordersFilter === "yes") where.orders = { some: {} };
+  if (ordersFilter === "no") where.orders = { none: {} };
+  if (lockedOnly) where.lockedUntil = { gt: new Date() };
+
+  const orderBy: Prisma.CustomerOrderByWithRelationInput =
+    sort === "alpha"
+      ? { lastName: "asc" }
+      : sort === "spent"
+        ? { updatedAt: "desc" } // spent sort handled client-side after aggregation
+        : { createdAt: "desc" };
 
   const [totalCount, customers, allTagsRaw] = await Promise.all([
     db.customer.count({ where }),
     db.customer.findMany({
       where,
-      orderBy: { createdAt: "desc" },
+      orderBy,
       skip: (currentPage - 1) * ADMIN_CUSTOMERS_PER_PAGE,
       take: ADMIN_CUSTOMERS_PER_PAGE,
       include: {
@@ -105,6 +139,7 @@ export default async function AdminCustomersPage({
     .slice(0, 20)
     .map(([t]) => t);
 
+  const now = Date.now();
   const customersWithStats = customers.map((customer) => {
     const validOrders = customer.orders.filter(
       (o) => o.status !== "cancelled",
@@ -118,10 +153,17 @@ export default async function AdminCustomersPage({
       lastOrder,
       parsedTags: parseTags(customer.tags),
       hasNote: !!customer.internalNote?.trim(),
+      isLocked:
+        !!customer.lockedUntil && customer.lockedUntil.getTime() > now,
     };
   });
 
-  const isFiltered = !!query || !!tag;
+  if (sort === "spent") {
+    customersWithStats.sort((a, b) => b.totalSpent - a.totalSpent);
+  }
+
+  const isFiltered =
+    !!query || !!tag || verified !== "any" || ordersFilter !== "any" || lockedOnly;
 
   return (
     <>
@@ -150,6 +192,66 @@ export default async function AdminCustomersPage({
         <CustomerSearchInput initialValue={query} />
         <CustomerTagFilter tags={allTags} activeTag={tag || null} />
       </div>
+
+      <form
+        method="get"
+        className="mt-3 flex flex-wrap items-center gap-3 text-xs"
+      >
+        {query && <input type="hidden" name="q" value={query} />}
+        {tag && <input type="hidden" name="tag" value={tag} />}
+        <label className="inline-flex items-center gap-1.5 text-muted-foreground">
+          Řadit
+          <select
+            name="sort"
+            defaultValue={sort}
+            className="rounded-md border bg-background px-2 py-1"
+          >
+            <option value="recent">Nejnovější</option>
+            <option value="spent">Dle utraceno</option>
+            <option value="alpha">Abecedně</option>
+          </select>
+        </label>
+        <label className="inline-flex items-center gap-1.5 text-muted-foreground">
+          Email
+          <select
+            name="verified"
+            defaultValue={verified}
+            className="rounded-md border bg-background px-2 py-1"
+          >
+            <option value="any">Vše</option>
+            <option value="yes">Ověřen</option>
+            <option value="no">Neověřen</option>
+          </select>
+        </label>
+        <label className="inline-flex items-center gap-1.5 text-muted-foreground">
+          Objednávky
+          <select
+            name="orders"
+            defaultValue={ordersFilter}
+            className="rounded-md border bg-background px-2 py-1"
+          >
+            <option value="any">Vše</option>
+            <option value="yes">Má objednávky</option>
+            <option value="no">Bez objednávek</option>
+          </select>
+        </label>
+        <label className="inline-flex items-center gap-1.5 text-muted-foreground">
+          <input
+            type="checkbox"
+            name="locked"
+            value="1"
+            defaultChecked={lockedOnly}
+            className="accent-primary"
+          />
+          Jen uzamčené
+        </label>
+        <button
+          type="submit"
+          className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+        >
+          Použít
+        </button>
+      </form>
 
       {totalCount === 0 ? (
         <div className="mt-12 rounded-xl border bg-card p-12 text-center shadow-sm">
@@ -201,7 +303,7 @@ export default async function AdminCustomersPage({
                     className="border-b last:border-0 transition-colors hover:bg-muted/30"
                   >
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <Link
                           href={`/admin/customers/${customer.id}`}
                           className="font-medium text-primary hover:underline"
@@ -212,6 +314,30 @@ export default async function AdminCustomersPage({
                           <StickyNote
                             className="size-3.5 text-amber-500"
                             aria-label="Má interní poznámku"
+                          />
+                        )}
+                        {customer.deletedAt && (
+                          <span className="inline-flex items-center gap-0.5 rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                            <Ban className="size-3" />
+                            smazán
+                          </span>
+                        )}
+                        {customer.disabled && !customer.deletedAt && (
+                          <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
+                            <Ban className="size-3" />
+                            blokován
+                          </span>
+                        )}
+                        {customer.isLocked && (
+                          <span className="inline-flex items-center gap-0.5 rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-medium text-rose-700">
+                            <Lock className="size-3" />
+                            uzamčen
+                          </span>
+                        )}
+                        {customer.emailVerified && (
+                          <ShieldCheck
+                            className="size-3.5 text-sky-600"
+                            aria-label="Email ověřen"
                           />
                         )}
                       </div>
