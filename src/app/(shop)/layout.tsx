@@ -26,8 +26,7 @@ export default function ShopLayout({
       </Suspense>
       {/* Spacer for fixed bottom nav on mobile — matches nav height + device safe area */}
       <div
-        className="lg:hidden"
-        style={{ height: "calc(3.5rem + env(safe-area-inset-bottom, 0px))" }}
+        className="lg:hidden h-[calc(3.5rem+env(safe-area-inset-bottom,_0px))]"
         aria-hidden="true"
       />
       <BackToTop />

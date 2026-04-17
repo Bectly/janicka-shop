@@ -323,8 +323,7 @@ export function DevChatWidget() {
         >
           {/* Header — taller on mobile for thumb reach */}
           <div
-            className="flex shrink-0 items-center justify-between border-b bg-rose-50 px-4 py-3 dark:bg-rose-950/30"
-            style={{ paddingTop: "calc(0.75rem + env(safe-area-inset-top, 0px))" }}
+            className="flex shrink-0 items-center justify-between border-b bg-rose-50 px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top,_0px))] dark:bg-rose-950/30"
           >
             <div>
               <h3 className="text-sm font-semibold text-foreground">DevChat</h3>
@@ -504,7 +503,7 @@ export function DevChatWidget() {
         onClick={() => setIsOpen(!isOpen)}
         className="devchat-bubble-pos fixed right-6 z-50 flex size-14 items-center justify-center rounded-full bg-rose-500 text-white shadow-lg transition-all hover:bg-rose-600 hover:shadow-xl active:scale-95"
         aria-label={isOpen ? "Zavřít chat" : "Otevřít DevChat"}
-        style={{ bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
+        className="devchat-bubble-pos fixed right-6 z-50 flex size-14 items-center justify-center rounded-full bg-rose-500 text-white shadow-lg transition-all hover:bg-rose-600 hover:shadow-xl active:scale-95 bottom-[calc(1.5rem+env(safe-area-inset-bottom,_0px))]"
       >
         {!isOpen && unreadCount > 0 && (
           <span className="absolute inset-0 animate-ping rounded-full bg-rose-400 opacity-30" />

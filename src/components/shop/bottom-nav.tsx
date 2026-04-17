@@ -41,8 +41,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border/50 bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80 lg:hidden"
-      style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-border/50 bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80 lg:hidden pb-[env(safe-area-inset-bottom,_0px)]"
       aria-label="Spodní navigace"
     >
       <div className="mx-auto flex h-14 max-w-lg items-stretch justify-around">
