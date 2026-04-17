@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
+import { logEvent } from "@/lib/audit-log";
 
 export async function removeFromWishlist(
   productId: string,
@@ -15,6 +16,11 @@ export async function removeFromWishlist(
   const db = await getDb();
   await db.customerWishlist.deleteMany({
     where: { customerId: session.user.id, productId },
+  });
+  await logEvent({
+    customerId: session.user.id,
+    action: "wishlist_remove",
+    metadata: { productId },
   });
 
   revalidatePath("/account/oblibene");

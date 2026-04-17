@@ -99,13 +99,14 @@ export function SettingsForm({ email, initial }: Props) {
       <div className="rounded-xl border bg-card p-6 shadow-sm">
         <h3 className="font-heading text-lg font-semibold">Tvoje data</h3>
         <p className="mt-1 text-sm text-muted-foreground">
-          Podle GDPR máš nárok na export všech uložených údajů.
+          Podle GDPR máš nárok na export všech uložených údajů. Stáhneš JSON s profilem,
+          objednávkami, adresami, oblíbenými a historií přihlášení. Limit: 1× za 24 hodin.
         </p>
         <Button
           variant="outline"
           className="mt-4"
           onClick={() => {
-            window.location.href = "/api/account/export";
+            window.location.href = "/api/customer/data-export";
           }}
         >
           Stáhnout moje data

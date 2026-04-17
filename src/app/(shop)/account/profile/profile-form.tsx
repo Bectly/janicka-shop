@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,7 +40,13 @@ export function ProfileForm({ initial }: Props) {
             autoComplete="email"
           />
           <p className="text-xs text-muted-foreground">
-            Email slouží jako přihlašovací jméno a nelze jej změnit.
+            Email slouží jako přihlašovací jméno.{" "}
+            <Link
+              href="/account/change-email"
+              className="font-medium text-primary hover:underline"
+            >
+              Změnit email
+            </Link>
           </p>
         </div>
       </fieldset>

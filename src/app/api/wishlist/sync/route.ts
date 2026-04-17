@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
+import { logEvent } from "@/lib/audit-log";
 
 const bodySchema = z.object({
   productIds: z.array(z.string().max(128)).max(200),
@@ -53,6 +54,14 @@ export async function POST(req: Request) {
     } catch {
       // skip duplicates/race conditions
     }
+  }
+
+  if (merged > 0) {
+    await logEvent({
+      customerId,
+      action: "wishlist_add",
+      metadata: { merged, source: "localStorage_sync" },
+    });
   }
 
   return NextResponse.json({ ok: true, merged });

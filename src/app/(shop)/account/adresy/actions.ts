@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
+import { logEvent } from "@/lib/audit-log";
 
 const CZ_ZIP_RE = /^\d{3} ?\d{2}$/;
 
@@ -91,6 +92,11 @@ export async function createAddress(
       },
     });
   });
+  await logEvent({
+    customerId,
+    action: "address_add",
+    metadata: { label: parsed.data.label, city: parsed.data.city },
+  });
 
   revalidatePath("/account/adresy");
   return { ...INITIAL, success: true };
@@ -138,6 +144,11 @@ export async function updateAddress(
       },
     });
   });
+  await logEvent({
+    customerId,
+    action: "address_update",
+    metadata: { addressId: id },
+  });
 
   revalidatePath("/account/adresy");
   return { ...INITIAL, success: true };
@@ -155,6 +166,11 @@ export async function deleteAddress(id: string): Promise<{ ok: boolean; error?: 
   if (!existing) return { ok: false, error: "Adresa nenalezena." };
 
   await db.customerAddress.delete({ where: { id } });
+  await logEvent({
+    customerId,
+    action: "address_delete",
+    metadata: { addressId: id, label: existing.label },
+  });
 
   // If deleted address was default, promote any other to default
   if (existing.isDefault) {

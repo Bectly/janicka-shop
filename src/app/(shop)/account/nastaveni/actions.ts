@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { signOut } from "@/lib/auth";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
+import { logEvent } from "@/lib/audit-log";
 
 export async function updateEmailPreferences(
   _prev: { error: string | null; success: boolean },
@@ -66,6 +67,14 @@ export async function deleteAccount(
   const now = new Date();
   const anonymizedEmail = `deleted-${customer.id}@janicka.local`;
 
+  // Log the delete intent BEFORE anonymizing — otherwise userAgent/ip context
+  // is fine but the customer row is already mutated by the time we'd log.
+  await logEvent({
+    customerId: customer.id,
+    action: "account_delete",
+    metadata: { emailOriginal: customer.email },
+  });
+
   await db.$transaction(async (tx) => {
     await tx.customer.update({
       where: { id: customer.id },
@@ -88,10 +97,10 @@ export async function deleteAccount(
     await tx.customerAddress.deleteMany({ where: { customerId: customer.id } });
     await tx.customerWishlist.deleteMany({ where: { customerId: customer.id } });
 
-    // Unsubscribe from newsletter
+    // Anonymize + deactivate newsletter subscriber tied to the original email.
     await tx.newsletterSubscriber.updateMany({
       where: { email: customer.email.toLowerCase() },
-      data: { active: false },
+      data: { active: false, email: anonymizedEmail, firstName: null },
     });
   });
 

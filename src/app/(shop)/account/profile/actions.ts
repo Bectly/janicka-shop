@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
+import { logEvent } from "@/lib/audit-log";
 
 const profileSchema = z.object({
   firstName: z.string().trim().min(1, "Jméno je povinné").max(80),
@@ -68,6 +69,11 @@ export async function updateProfile(
   await db.customer.update({
     where: { id: session.user.id },
     data: parsed.data,
+  });
+  await logEvent({
+    customerId: session.user.id,
+    action: "profile_update",
+    metadata: { fields: Object.keys(parsed.data) },
   });
 
   revalidatePath("/account/profile");
@@ -136,6 +142,7 @@ export async function changePassword(
     where: { id: session.user.id },
     data: { password: newHash },
   });
+  await logEvent({ customerId: session.user.id, action: "password_change" });
 
   revalidatePath("/account/profile");
   return { error: null, success: true };

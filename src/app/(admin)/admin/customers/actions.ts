@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { rateLimitAdmin } from "@/lib/rate-limit";
 import { ORDER_STATUS_LABELS } from "@/lib/constants";
+import { logEvent } from "@/lib/audit-log";
 
 async function requireAdmin() {
   const session = await auth();
@@ -235,6 +236,7 @@ export async function updateCustomerProfile(
       country: data.country?.trim().slice(0, 2).toUpperCase() || "CZ",
     },
   });
+  await logEvent({ customerId, action: "admin_profile_edit" });
 
   revalidatePath(`/admin/customers/${customerId}`);
   revalidatePath("/admin/customers");
@@ -261,6 +263,7 @@ export async function unlockCustomerAccount(customerId: string): Promise<void> {
       internalNote: appendAudit(customer.internalNote, "Admin: účet odemknut"),
     },
   });
+  await logEvent({ customerId, action: "admin_unlock" });
 
   revalidatePath(`/admin/customers/${customerId}`);
 }
@@ -293,6 +296,11 @@ export async function disableCustomerAccount(
       internalNote: appendAudit(customer.internalNote, auditLine),
     },
   });
+  await logEvent({
+    customerId,
+    action: "admin_disable",
+    metadata: reasonText ? { reason: reasonText } : {},
+  });
 
   revalidatePath(`/admin/customers/${customerId}`);
   revalidatePath("/admin/customers");
@@ -318,6 +326,7 @@ export async function enableCustomerAccount(customerId: string): Promise<void> {
       internalNote: appendAudit(customer.internalNote, "Admin: účet aktivován"),
     },
   });
+  await logEvent({ customerId, action: "admin_enable" });
 
   revalidatePath(`/admin/customers/${customerId}`);
   revalidatePath("/admin/customers");
@@ -346,21 +355,33 @@ export async function anonymizeCustomerAccount(
     : "Admin: GDPR anonymizace";
 
   const anonEmail = `deleted-${customer.id}@anonymized.local`;
-  await db.customer.update({
-    where: { id: customerId },
-    data: {
-      email: anonEmail,
-      password: null,
-      firstName: "Anonymizováno",
-      lastName: "Anonymizováno",
-      phone: null,
-      street: null,
-      city: null,
-      zip: null,
-      notifyMarketing: false,
-      deletedAt: new Date(),
-      internalNote: appendAudit(customer.internalNote, auditLine),
-    },
+
+  // Log BEFORE mutation so metadata can still reference identifiers if needed.
+  await logEvent({
+    customerId,
+    action: "admin_anonymize",
+    metadata: reasonText ? { reason: reasonText } : {},
+  });
+
+  await db.$transaction(async (tx) => {
+    await tx.customer.update({
+      where: { id: customerId },
+      data: {
+        email: anonEmail,
+        password: null,
+        firstName: "Anonymizováno",
+        lastName: "Anonymizováno",
+        phone: null,
+        street: null,
+        city: null,
+        zip: null,
+        notifyMarketing: false,
+        deletedAt: new Date(),
+        internalNote: appendAudit(customer.internalNote, auditLine),
+      },
+    });
+    await tx.customerAddress.deleteMany({ where: { customerId } });
+    await tx.customerWishlist.deleteMany({ where: { customerId } });
   });
 
   revalidatePath(`/admin/customers/${customerId}`);
@@ -394,6 +415,7 @@ export async function forceCustomerPasswordReset(
       ),
     },
   });
+  await logEvent({ customerId, action: "admin_force_reset" });
 
   revalidatePath(`/admin/customers/${customerId}`);
 }

@@ -72,35 +72,58 @@ model Product {
 }
 
 model Customer {
-  id                  String             @id @default(cuid())
-  email               String             @unique
-  password            String?
-  firstName           String
-  lastName            String
-  phone               String?
-  street              String?
-  city                String?
-  zip                 String?
-  country             String             @default("CZ")
-  winBackSentAt       DateTime?
-  internalNote        String?
-  tags                String             @default("[]")
-  notifyMarketing     Boolean            @default(true)
-  deletedAt           DateTime?
-  disabled            Boolean            @default(false)
-  emailVerified       DateTime?
-  loginAttempts       Int                @default(0)
-  lockedUntil         DateTime?
-  lastLoginAt         DateTime?
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
-  orders              Order[]
-  returns             Return[]
-  addresses           CustomerAddress[]
-  wishlist            CustomerWishlist[]
+  id                     String             @id @default(cuid())
+  email                  String             @unique
+  password               String?
+  firstName              String
+  lastName               String
+  phone                  String?
+  street                 String?
+  city                   String?
+  zip                    String?
+  country                String             @default("CZ")
+  winBackSentAt          DateTime?
+  internalNote           String?
+  tags                   String             @default("[]")
+  notifyMarketing        Boolean            @default(true)
+  deletedAt              DateTime?
+  disabled               Boolean            @default(false)
+  emailVerified          DateTime?
+  loginAttempts          Int                @default(0)
+  lockedUntil            DateTime?
+  lastLoginAt            DateTime?
+  pendingEmail           String?
+  pendingEmailToken      String?            @unique
+  pendingEmailExpiresAt  DateTime?
+  lastEmailChangeAt      DateTime?
+  lastDataExportAt       DateTime?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+  orders                 Order[]
+  returns                Return[]
+  addresses              CustomerAddress[]
+  wishlist               CustomerWishlist[]
+  auditLogs              CustomerAuditLog[]
 
   @@index([deletedAt])
   @@index([disabled])
+  @@index([pendingEmailToken])
+}
+
+model CustomerAuditLog {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  action     String // login | logout | login_failed | password_change | password_reset | email_change_request | email_change_confirmed | profile_update | address_add | address_update | address_delete | wishlist_add | wishlist_remove | gdpr_export | account_delete | admin_unlock | admin_disable | admin_enable | admin_anonymize | admin_force_reset | admin_profile_edit
+  ip         String?
+  userAgent  String?
+  metadata   String   @default("{}") // JSON
+  createdAt  DateTime @default(now())
+
+  @@index([customerId])
+  @@index([customerId, createdAt])
+  @@index([action])
+  @@index([createdAt])
 }
 
 model CustomerAddress {

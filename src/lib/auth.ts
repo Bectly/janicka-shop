@@ -87,9 +87,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!customer || !customer.password || !isValid) {
           await recordLoginFailure();
           if (customer?.password) {
+            const newAttempts = (customer.loginAttempts ?? 0) + 1;
+            const LOCK_AFTER = 10;
+            const LOCK_DURATION_MS = 30 * 60 * 1000;
             await db.customer.update({
               where: { id: customer.id },
-              data: { loginAttempts: { increment: 1 } },
+              data: {
+                loginAttempts: newAttempts,
+                ...(newAttempts >= LOCK_AFTER
+                  ? { lockedUntil: new Date(Date.now() + LOCK_DURATION_MS) }
+                  : {}),
+              },
             });
           }
           return null;
@@ -106,6 +114,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           where: { id: customer.id },
           data: { loginAttempts: 0, lastLoginAt: new Date() },
         });
+
+        try {
+          const { logEvent } = await import("@/lib/audit-log");
+          await logEvent({ customerId: customer.id, action: "login" });
+        } catch {
+          // Audit logging must not block auth.
+        }
 
         return {
           id: customer.id,

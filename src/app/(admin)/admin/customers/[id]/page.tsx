@@ -7,6 +7,7 @@ import { CustomerInternalNoteEditor } from "../internal-note-editor";
 import { CustomerTagEditor } from "../tag-editor";
 import { AdminActionsPanel } from "./admin-actions-panel";
 import { CustomerProfileEditor } from "./profile-editor";
+import { CustomerActivityFeed } from "@/components/shop/customer-activity-feed";
 
 import { formatPrice, formatDate } from "@/lib/format";
 import {
@@ -58,9 +59,10 @@ export default async function CustomerDetailPage({
   const { id } = await params;
   const db = await getDb();
 
-  const customer = await db.customer.findUnique({
-    where: { id },
-    include: {
+  const [customer, auditLogs] = await Promise.all([
+    db.customer.findUnique({
+      where: { id },
+      include: {
       orders: {
         orderBy: { createdAt: "desc" },
         include: {
@@ -105,7 +107,20 @@ export default async function CustomerDetailPage({
       },
       _count: { select: { wishlist: true } },
     },
-  });
+    }),
+    db.customerAuditLog.findMany({
+      where: { customerId: id },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+      select: {
+        action: true,
+        ip: true,
+        userAgent: true,
+        metadata: true,
+        createdAt: true,
+      },
+    }),
+  ]);
 
   if (!customer) notFound();
 
@@ -564,6 +579,21 @@ export default async function CustomerDetailPage({
             </ul>
           </div>
         )}
+      </section>
+
+      {/* Audit log */}
+      <section className="mt-8">
+        <h2 className="flex items-center gap-2 font-heading text-lg font-semibold text-foreground">
+          <Shield className="size-5 text-muted-foreground" />
+          Aktivita na účtu ({auditLogs.length})
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Posledních 50 událostí — přihlášení, změny profilu, admin akce. IP adresy jsou
+          viditelné pouze adminovi.
+        </p>
+        <div className="mt-4">
+          <CustomerActivityFeed entries={auditLogs} showIp />
+        </div>
       </section>
 
       {/* Order history */}

@@ -998,6 +998,109 @@ export async function sendAdminDeadlineAlertEmail(
   }
 }
 
+/**
+ * Send a verification email to the NEW address after an email-change request.
+ * Clicking the link completes the change.
+ */
+export async function sendEmailChangeVerifyEmail(data: {
+  newEmail: string;
+  firstName: string;
+  verifyUrl: string;
+}): Promise<void> {
+  const resend = getResendClient();
+  if (!resend) {
+    console.warn("[Email] RESEND_API_KEY not set — skipping email-change verify");
+    return;
+  }
+  const safeName = escapeHtml(data.firstName || "");
+  const safeUrl = escapeHtml(data.verifyUrl);
+  const html = `<!DOCTYPE html><html lang="cs"><head><meta charset="utf-8"/></head>
+<body style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#faf8f5;padding:24px;color:#1a1a1a;">
+  <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:12px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+    <h1 style="font-size:22px;margin:0 0 16px;">Potvrď změnu emailu ${safeName ? `, ${safeName}` : ""}</h1>
+    <p style="line-height:1.6;color:#444;">Požádala jsi o změnu přihlašovacího emailu pro svůj účet v Janička Shop. Pro dokončení klikni na tlačítko níže — odkaz je platný 1 hodinu.</p>
+    <p style="margin:24px 0;"><a href="${safeUrl}" style="display:inline-block;background:#1a1a1a;color:#fff;padding:14px 24px;border-radius:8px;text-decoration:none;font-weight:500;">Potvrdit změnu emailu</a></p>
+    <p style="line-height:1.6;color:#888;font-size:13px;">Pokud jsi o změnu nepožádala, tenhle email ignoruj — ke změně nedojde.</p>
+    <p style="line-height:1.6;color:#888;font-size:12px;margin-top:24px;">Odkaz nefunguje? Zkopíruj ho do prohlížeče:<br/>${safeUrl}</p>
+  </div>
+</body></html>`;
+
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: data.newEmail,
+      subject: "Potvrď změnu emailu — Janička Shop",
+      html,
+    });
+  } catch (error) {
+    console.error(`[Email] Failed to send email-change verify to ${data.newEmail}:`, error);
+  }
+}
+
+/**
+ * Notify the OLD email address after an email change so the customer can
+ * catch unauthorized changes. Sent AFTER the swap has succeeded.
+ */
+export async function sendEmailChangeNoticeEmail(data: {
+  oldEmail: string;
+  newEmail: string;
+  firstName: string;
+}): Promise<void> {
+  const resend = getResendClient();
+  if (!resend) return;
+  const safeName = escapeHtml(data.firstName || "");
+  const safeNew = escapeHtml(data.newEmail);
+  const html = `<!DOCTYPE html><html lang="cs"><head><meta charset="utf-8"/></head>
+<body style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#faf8f5;padding:24px;color:#1a1a1a;">
+  <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:12px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+    <h1 style="font-size:22px;margin:0 0 16px;">Email na tvém účtu byl změněn ${safeName ? `, ${safeName}` : ""}</h1>
+    <p style="line-height:1.6;color:#444;">Přihlašovací email tvého účtu byl právě změněn na <strong>${safeNew}</strong>.</p>
+    <p style="line-height:1.6;color:#444;">Pokud jsi to byla ty, nemusíš dělat nic.</p>
+    <p style="line-height:1.6;color:#b84040;margin-top:16px;"><strong>Nebyla jsi to ty?</strong> Ozvi se nám okamžitě na <a href="mailto:objednavky@janicka-shop.cz" style="color:#b84040;">objednavky@janicka-shop.cz</a> — změnu vrátíme a účet zabezpečíme.</p>
+  </div>
+</body></html>`;
+
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: data.oldEmail,
+      subject: "Email tvého účtu byl změněn — Janička Shop",
+      html,
+    });
+  } catch (error) {
+    console.error(`[Email] Failed to send email-change notice to ${data.oldEmail}:`, error);
+  }
+}
+
+/** Confirm to the customer that GDPR deletion has completed. */
+export async function sendAccountDeletedEmail(data: {
+  email: string;
+  firstName: string;
+}): Promise<void> {
+  const resend = getResendClient();
+  if (!resend) return;
+  const safeName = escapeHtml(data.firstName || "");
+  const html = `<!DOCTYPE html><html lang="cs"><head><meta charset="utf-8"/></head>
+<body style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#faf8f5;padding:24px;color:#1a1a1a;">
+  <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:12px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+    <h1 style="font-size:22px;margin:0 0 16px;">Tvůj účet byl smazán ${safeName ? `, ${safeName}` : ""}</h1>
+    <p style="line-height:1.6;color:#444;">Tvé osobní údaje jsme anonymizovali. Historii objednávek uchováváme 10 let podle zákona o účetnictví — už ale bez tvých osobních údajů.</p>
+    <p style="line-height:1.6;color:#444;">Děkujeme za čas u nás. Kdybys chtěla účet znovu, stačí si ho založit s novým registračním emailem.</p>
+  </div>
+</body></html>`;
+
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: data.email,
+      subject: "Tvůj účet byl smazán — Janička Shop",
+      html,
+    });
+  } catch (error) {
+    console.error(`[Email] Failed to send account-deleted email to ${data.email}:`, error);
+  }
+}
+
 export async function sendNewsletterWelcomeEmail(email: string): Promise<void> {
   const resend = getResendClient();
   if (!resend) {
