@@ -671,6 +671,98 @@ export async function updateProductQuick(
   return { ok: true, product: updated };
 }
 
+// ── Inline quick-edit (measurements) ───────────────────────
+//
+// Used by the coverage dashboard to patch measurement fields + fitNote
+// without loading the full edit form.
+
+const measurementFieldSchema = z
+  .number()
+  .positive()
+  .max(500)
+  .optional()
+  .nullable();
+
+const measurementsPatchSchema = z.object({
+  chest: measurementFieldSchema,
+  waist: measurementFieldSchema,
+  hips: measurementFieldSchema,
+  length: measurementFieldSchema,
+  sleeve: measurementFieldSchema,
+  fitNote: z.string().max(120).nullable().optional(),
+});
+
+const MEASUREMENT_KEYS = ["chest", "waist", "hips", "length", "sleeve"] as const;
+
+export async function updateProductMeasurementsQuick(
+  id: string,
+  patch: z.infer<typeof measurementsPatchSchema>,
+): Promise<{
+  ok: true;
+  product: { id: string; measurements: string; fitNote: string | null };
+}> {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
+
+  if (!id || typeof id !== "string") throw new Error("Neplatné ID");
+  const parsed = measurementsPatchSchema.parse(patch);
+
+  const db = await getDb();
+  const current = await db.product.findUnique({
+    where: { id },
+    select: { id: true, slug: true, measurements: true },
+  });
+  if (!current) throw new Error("Produkt nenalezen");
+
+  // Merge with existing measurements — any key explicitly set to null is removed.
+  let existing: Record<string, unknown> = {};
+  try {
+    const raw = JSON.parse(current.measurements);
+    if (raw && typeof raw === "object" && !Array.isArray(raw)) existing = raw;
+  } catch {
+    existing = {};
+  }
+
+  for (const key of MEASUREMENT_KEYS) {
+    if (key in parsed) {
+      const v = parsed[key];
+      if (v === null || v === undefined) delete existing[key];
+      else existing[key] = v;
+    }
+  }
+
+  // Clean: keep only valid measurement keys with numeric values
+  const clean: Record<string, number> = {};
+  for (const key of MEASUREMENT_KEYS) {
+    const v = existing[key];
+    if (typeof v === "number" && isFinite(v) && v > 0) clean[key] = v;
+  }
+
+  const data: { measurements: string; fitNote?: string | null } = {
+    measurements: JSON.stringify(clean),
+  };
+  if ("fitNote" in parsed) {
+    const trimmed = parsed.fitNote?.trim();
+    data.fitNote = trimmed ? trimmed.slice(0, 120) : null;
+  }
+
+  const updated = await db.product.update({
+    where: { id },
+    data,
+    select: { id: true, measurements: true, fitNote: true },
+  });
+
+  revalidateTag("products", "seconds");
+  revalidateTag(`product-${current.slug}`, "seconds");
+  revalidatePath("/admin/products");
+  revalidatePath("/admin/products/coverage");
+  revalidatePath("/products");
+  revalidatePath(`/products/${current.slug}`);
+
+  return { ok: true, product: updated };
+}
+
 export async function deleteProduct(id: string) {
   await requireAdmin();
   const rl = await rateLimitAdmin();

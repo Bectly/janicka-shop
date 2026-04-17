@@ -88,7 +88,7 @@ export function CreateReturnForm({
 
   if (success) {
     return (
-      <div className="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+      <div className="rounded-lg bg-primary/5 px-4 py-3 text-sm text-primary">
         {success}
       </div>
     );

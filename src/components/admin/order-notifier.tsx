@@ -133,22 +133,22 @@ export function AdminOrderNotifier({
       {toasts.map((order) => (
         <div
           key={order.id}
-          className="pointer-events-auto flex w-full items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 shadow-lg"
+          className="pointer-events-auto flex w-full items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-3 shadow-lg"
         >
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
             <ShoppingBag className="size-4" />
           </div>
           <div className="flex-1 text-sm">
-            <p className="font-semibold text-emerald-900">Nová objednávka</p>
-            <p className="text-emerald-800">
+            <p className="font-semibold text-foreground">Nová objednávka</p>
+            <p className="text-foreground/80">
               {order.orderNumber} — {formatCzk(order.total)}
             </p>
             {order.customerName ? (
-              <p className="text-xs text-emerald-700">{order.customerName}</p>
+              <p className="text-xs text-muted-foreground">{order.customerName}</p>
             ) : null}
             <Link
               href={`/admin/orders/${order.id}`}
-              className="mt-1 inline-block text-xs font-medium text-emerald-700 underline underline-offset-2"
+              className="mt-1 inline-block text-xs font-medium text-primary underline underline-offset-2"
               onClick={() => dismiss(order.id)}
             >
               Zobrazit detail →
@@ -158,7 +158,7 @@ export function AdminOrderNotifier({
             type="button"
             onClick={() => dismiss(order.id)}
             aria-label="Zavřít upozornění"
-            className="text-emerald-700 transition-colors hover:text-emerald-900"
+            className="text-muted-foreground transition-colors hover:text-foreground"
           >
             <X className="size-4" />
           </button>

@@ -109,7 +109,7 @@ export function InlinePriceEdit({
         size="icon"
         onClick={save}
         disabled={isPending}
-        className="size-7 bg-emerald-600 hover:bg-emerald-700"
+        className="size-7 bg-primary hover:bg-primary/90"
         aria-label="Uložit"
       >
         <Check className="size-3" />

@@ -81,7 +81,7 @@ export function AdminSidebar({
               {showBadge ? (
                 <span
                   aria-label={`Posledních 24h: ${ordersLast24h} nových objednávek`}
-                  className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-emerald-600 px-1.5 text-[11px] font-semibold leading-5 text-white"
+                  className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold leading-5 text-primary-foreground"
                 >
                   {ordersLast24h > 99 ? "99+" : ordersLast24h}
                 </span>
