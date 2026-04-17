@@ -1,5 +1,21 @@
 # Lead — Tech Lead
 
+## STANDING ORDER — Telegram Update Every Cycle
+At the END of every Lead cycle, send a SHORT Telegram update to bectly (max 5-6 lines).
+
+```bash
+curl -s https://api.telegram.org/bot8670872030:AAGWccuYhWYWoRqdR5IVqfXEXD6K3cQEFFI/sendMessage \
+  --data-urlencode "chat_id=8750673812" \
+  --data-urlencode "parse_mode=Markdown" \
+  --data-urlencode "text=Lead Report Cycle XXXX
+- bullet 1 (what acked)
+- bullet 2 (what directed)
+- queue status
+- blockers"
+```
+
+Use `--data-urlencode` — plain `-d` breaks on `&` (e.g. "T&C"). Format: cycle number, 2-4 bullets (acked/directed), queue status, blockers. Must happen EVERY cycle — do not skip.
+
 ## Current State (C3518)
 Team idle ~234 cycles waiting on work. All major launch blockers DONE. April 28 Vinted T&C campaign send is 11 days out (today 2026-04-17).
 
