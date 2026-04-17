@@ -170,7 +170,7 @@ export function ProductCard({
           {imageBlock}
 
           {/* Action buttons — revealed on hover (always visible on touch) */}
-          <div className="absolute top-3 right-3 z-10 flex flex-col gap-1.5 transition-all duration-300 sm:translate-y-1 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100">
+          <div className="absolute top-3 right-3 z-10 flex flex-col gap-1.5 transition-all duration-300 sm:translate-y-1 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100 card-actions-touch-reveal">
             <WishlistButton productId={id} />
             <QuickViewButton productId={id} />
           </div>
@@ -218,7 +218,7 @@ export function ProductCard({
         {imageBlock}
 
         {/* Action buttons — revealed on hover (always visible on touch) */}
-        <div className="absolute top-3 right-3 z-10 flex flex-col gap-1.5 transition-all duration-300 sm:translate-y-1 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100">
+        <div className="absolute top-3 right-3 z-10 flex flex-col gap-1.5 transition-all duration-300 sm:translate-y-1 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100 card-actions-touch-reveal">
           <WishlistButton productId={id} />
           <QuickViewButton productId={id} />
         </div>

@@ -48,8 +48,7 @@ export function MobileStickyAtc({
 
   return (
     <div
-      className="fixed inset-x-0 z-50 border-t bg-background/95 px-4 py-3 backdrop-blur-sm lg:hidden"
-      style={{ bottom: "calc(3.5rem + env(safe-area-inset-bottom, 0px))" }}
+      className="fixed inset-x-0 z-50 border-t bg-background/95 px-4 py-3 backdrop-blur-sm lg:hidden bottom-above-nav"
     >
       <div className="flex items-center gap-3">
         <div className="min-w-0 flex-1">
