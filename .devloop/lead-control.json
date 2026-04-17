@@ -3,7 +3,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 3682,
+  "last_bolt_commit_cycle": 3683,
   "paused_at_bolt_cycle": 3656,
   "notes": "C3633 Lead: Acked [1911, 1872]. Bolt backlog empty after #256 (campaign lock) + #257 (coverage dashboard) landed. 11 days to April 28 17:00 CET Vinted campaign. Added #258 BOLT (dry-run preview + typed-confirm gate on VintedCampaignButton — safety UX, read-only server action) and #259 TRACE (E2E audit of full send path: double-click, concurrent serverless, rate-limit, unsubscribe filter, Resend error path lock retention). Unpaused bolt+trace+sage, force_next=bolt. Bectly blockers still: RESEND_API_KEY + UNSUBSCRIBE_HMAC_SECRET on Vercel (campaign silent-fails without them), R2 keys, GA4 ID, Heureka, GMC April 30. PRIOR: C3557 Lead: #238 PDP display + #239 pre-campaign audit BOTH DONE. Acked feedback [1833, 1829, 1825]. Turso measurement backfill was flagged as prod gap (0/354 vs dev 255/354) — solving via admin UI instead of terminal: new Task #240 BOLT (admin button to run extractor against live Prisma, no env vars needed) + #241 BOLT (admin dashboard coverage panel — measurements/defects/images/video stats with deep-links to missing-X filters). Unpauses Bolt/Trace/Sage, force_next=bolt. 11 days to April 28 17:00 CET campaign. Remaining bectly blockers: RESEND_API_KEY on Vercel (campaign will silently fail), UNSUBSCRIBE_HMAC_SECRET, R2 keys, GA4 ID, Heureka API key, GMC registration (April 30 Doppl VTO deadline).",
   "schema": {
