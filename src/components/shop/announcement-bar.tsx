@@ -51,17 +51,15 @@ export function AnnouncementBar() {
         <circle cx="100" cy="100" r="4" />
       </svg>
 
-      <div className="flex min-h-10 items-center sm:min-h-11">
+      <div className="flex min-h-10 items-center overflow-hidden sm:min-h-11">
         <div
-          className="announcement-marquee flex min-w-0 flex-1 items-center overflow-hidden whitespace-nowrap"
+          className="announcement-marquee flex shrink-0 items-center whitespace-nowrap text-xs font-medium tracking-wide sm:text-sm"
           aria-live="polite"
         >
-          <span className="inline-flex items-center px-6 text-xs font-medium tracking-wide sm:text-sm">
-            <MarqueeTrack />
-          </span>
-          <span className="inline-flex items-center px-6 text-xs font-medium tracking-wide sm:text-sm" aria-hidden="true">
-            <MarqueeTrack />
-          </span>
+          <MarqueeTrack />
+          <MarqueeTrack />
+          <MarqueeTrack />
+          <MarqueeTrack />
         </div>
       </div>
     </div>

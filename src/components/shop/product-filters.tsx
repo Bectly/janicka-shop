@@ -508,23 +508,29 @@ export function ProductFilters({
               </AccordionTrigger>
               <AccordionContent>
                 <div className="space-y-2 pb-1">
-                  {sizeGroups.map((group) => (
-                    <div key={group.label}>
-                      {sizeGroups.length > 1 && (
-                        <div className="mb-1 text-[0.65rem] font-medium uppercase tracking-wider text-muted-foreground/70">
-                          {group.label}
+                  {sizeGroups.map((group) => {
+                    const sizesWithStock = group.sizes.filter(
+                      (s) => (counts.sizes[s] ?? 0) > 0 || activeSizes.includes(s),
+                    );
+                    if (sizesWithStock.length === 0) return null;
+                    return (
+                      <div key={group.label}>
+                        {sizeGroups.length > 1 && (
+                          <div className="mb-1 text-[0.65rem] font-medium uppercase tracking-wider text-muted-foreground/70">
+                            {group.label}
+                          </div>
+                        )}
+                        <div className="flex flex-wrap gap-1.5" role="group" aria-label={`Filtr podle velikosti — ${group.label}`}>
+                          {sizesWithStock.map((s) => renderSizeButton(s, "sm"))}
                         </div>
-                      )}
-                      <div className="flex flex-wrap gap-1.5" role="group" aria-label={`Filtr podle velikosti — ${group.label}`}>
-                        {group.sizes.map((s) => renderSizeButton(s, "sm"))}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </AccordionContent>
             </AccordionItem>
           )}
-          {colors.length > 0 && (
+          {colors.filter((c) => (counts.colors[c] ?? 0) > 0 || activeColors.includes(c)).length > 0 && (
             <AccordionItem value="colors">
               <AccordionTrigger className="py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Barva
@@ -536,48 +542,46 @@ export function ProductFilters({
               </AccordionTrigger>
               <AccordionContent>
                 <div className="flex flex-wrap gap-2 pb-1" role="group" aria-label="Filtr podle barvy">
-                  {colors.map((color) => {
-                    const count = counts.colors[color] ?? 0;
-                    const isActive = activeColors.includes(color);
-                    const isDisabled = count === 0 && !isActive;
-                    const hex = COLOR_MAP[color] ?? "#9CA3AF";
-                    const isLight = isLightColor(hex);
-                    return (
-                      <button
-                        key={color}
-                        onClick={() => !isDisabled && toggleMulti("color", color, activeColors)}
-                        aria-pressed={isActive}
-                        aria-disabled={isDisabled}
-                        aria-label={`${color} (${count})`}
-                        title={`${color} (${count})`}
-                        className={`group relative flex min-h-11 items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium transition-colors ${
-                          isActive
-                            ? "bg-primary/10 ring-2 ring-primary"
-                            : isDisabled
-                              ? "opacity-40 cursor-not-allowed"
+                  {colors
+                    .filter((c) => (counts.colors[c] ?? 0) > 0 || activeColors.includes(c))
+                    .map((color) => {
+                      const count = counts.colors[color] ?? 0;
+                      const isActive = activeColors.includes(color);
+                      const hex = COLOR_MAP[color] ?? "#9CA3AF";
+                      const isLight = isLightColor(hex);
+                      return (
+                        <button
+                          key={color}
+                          onClick={() => toggleMulti("color", color, activeColors)}
+                          aria-pressed={isActive}
+                          aria-label={`${color} (${count})`}
+                          title={`${color} (${count})`}
+                          className={`group relative flex min-h-11 items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium transition-colors ${
+                            isActive
+                              ? "bg-primary/10 ring-2 ring-primary"
                               : "hover:bg-muted/80"
-                        }`}
-                      >
-                        <span
-                          className={`inline-block size-5 shrink-0 rounded-full border ${isLight ? "border-gray-300" : "border-transparent"}`}
-                          style={{ backgroundColor: hex }}
+                          }`}
                         >
-                          {isActive && (
-                            <Check className={`size-5 p-0.5 ${isLight ? "text-gray-700" : "text-white"}`} />
-                          )}
-                        </span>
-                        <span className={isDisabled ? "text-muted-foreground/40" : "text-muted-foreground"}>
-                          {color}
-                          <span className="ml-0.5 opacity-60">({count})</span>
-                        </span>
-                      </button>
-                    );
-                  })}
+                          <span
+                            className={`inline-block size-5 shrink-0 rounded-full border ${isLight ? "border-gray-300" : "border-transparent"}`}
+                            style={{ backgroundColor: hex }}
+                          >
+                            {isActive && (
+                              <Check className={`size-5 p-0.5 ${isLight ? "text-gray-700" : "text-white"}`} />
+                            )}
+                          </span>
+                          <span className="text-muted-foreground">
+                            {color}
+                            <span className="ml-0.5 opacity-60">({count})</span>
+                          </span>
+                        </button>
+                      );
+                    })}
                 </div>
               </AccordionContent>
             </AccordionItem>
           )}
-          {brands.length > 0 && (
+          {brands.filter((b) => (counts.brands[b] ?? 0) > 0 || activeBrands.includes(b)).length > 0 && (
             <AccordionItem value="brands">
               <AccordionTrigger className="py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Značka
@@ -589,7 +593,9 @@ export function ProductFilters({
               </AccordionTrigger>
               <AccordionContent>
                 <div className="flex flex-wrap gap-1.5 pb-1" role="group" aria-label="Filtr podle značky">
-                  {visibleBrands.map((brand) => renderBrandButton(brand, "sm"))}
+                  {visibleBrands
+                    .filter((b) => (counts.brands[b] ?? 0) > 0 || activeBrands.includes(b))
+                    .map((brand) => renderBrandButton(brand, "sm"))}
                 </div>
                 {hasMoreBrands && (
                   <Button
