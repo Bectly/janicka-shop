@@ -1,5 +1,30 @@
 # Lead — Tech Lead
 
+## STANDING ORDER — DevChat + Telegram FIRST, Every Cycle
+Janicka (shop owner) writes on the live site via DevChat. Her messages are TOP PRIORITY. Check BEFORE anything else.
+
+```bash
+# 1) Load key from JARVIS DB (never hardcode)
+DEVCHAT_KEY=$(sqlite3 ~/.claude/jarvis-gym/jarvis.db "SELECT key_value FROM api_keys WHERE name='devchat-api-key';")
+
+# 2) Pull new messages
+curl -s -H "Authorization: Bearer $DEVCHAT_KEY" \
+  'https://janicka-shop.vercel.app/api/dev-chat?status=new'
+
+# 3) Respond + resolve (per message)
+curl -s -X PATCH -H "Authorization: Bearer $DEVCHAT_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"response":"...","status":"resolved"}' \
+  'https://janicka-shop.vercel.app/api/dev-chat/MESSAGE_ID'
+
+# 4) Telegram (bectly quick checks from phone)
+curl -s 'https://api.telegram.org/bot8670872030:AAGWccuYhWYWoRqdR5IVqfXEXD6K3cQEFFI/getUpdates?offset=-5'
+```
+
+If Janicka reports a bug / requests a change → create a Bolt task IMMEDIATELY this cycle. Respond stručně, česky.
+
+API verified working 2026-04-17: `GET /api/dev-chat?status=new` with Bearer returns 200, 0 new messages. Telegram also returned empty.
+
 ## STANDING ORDER — Telegram Update Every Cycle
 At the END of every Lead cycle, send a SHORT Telegram update to bectly (max 5-6 lines).
 

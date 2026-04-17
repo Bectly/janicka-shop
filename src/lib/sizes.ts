@@ -139,6 +139,20 @@ export const EU_TO_LETTER: Record<ClothingEuSize, ClothingLetterSize> = {
   "54": "7XL",
 };
 
+export const WAIST_TO_LETTER: Record<PantsWaistSize, ClothingLetterSize> = {
+  W26: "XS",
+  W27: "XS",
+  W28: "S",
+  W29: "S",
+  W30: "M",
+  W31: "M",
+  W32: "L",
+  W33: "L",
+  W34: "XL",
+  W36: "XXL",
+  W38: "XXXL",
+};
+
 // ---------------------------------------------------------------------------
 // Category → allowed size groups
 // ---------------------------------------------------------------------------
@@ -262,8 +276,48 @@ export function normalizeSize(raw: string): string | null {
 }
 
 /**
+ * Reduce a list of equivalent size notations to ONE canonical entry.
+ *
+ * Priority: letter > bra > (shoe, if category=doplnky) > waist→letter > EU→letter.
+ * Examples: ["M","38"] → ["M"]; ["4XL","48"] → ["4XL"]; ["W32"] → ["L"];
+ * ["50"] (clothing) → ["5XL"]; ["37"] (doplnky) → ["37"]; ["75B"] → ["75B"].
+ */
+export function collapseToPrimary(
+  sizes: string[],
+  categorySlug: string | null | undefined,
+): string[] {
+  if (sizes.length === 0) return ["Univerzální"];
+
+  const letters = CLOTHING_LETTER_SIZES as readonly string[];
+  const letter = sizes.find((s) => letters.includes(s));
+  if (letter) return [letter];
+
+  const bras = BRA_SIZES as readonly string[];
+  const bra = sizes.find((s) => bras.includes(s));
+  if (bra) return [bra];
+
+  if (categorySlug === "doplnky") {
+    const shoes = SHOE_SIZES as readonly string[];
+    const shoe = sizes.find((s) => shoes.includes(s));
+    if (shoe) return [shoe];
+  }
+
+  const waist = sizes.find((s) => s in WAIST_TO_LETTER);
+  if (waist) return [WAIST_TO_LETTER[waist as PantsWaistSize]];
+
+  const eu = sizes.find((s) => s in EU_TO_LETTER);
+  if (eu) return [EU_TO_LETTER[eu as ClothingEuSize]];
+
+  const one = sizes.find((s) => s === "Univerzální");
+  if (one) return [one];
+
+  return [sizes[0]];
+}
+
+/**
  * Given a raw sizes array (free text from legacy data) + the product category,
- * returns a normalized array with only enum-valid values. Invalid values are
+ * returns a single-entry canonical array. Multiple equivalent notations
+ * (e.g. ["M","38"]) collapse to their primary letter size. Invalid values are
  * dropped and reported.
  */
 export function normalizeSizesForCategory(
@@ -271,18 +325,18 @@ export function normalizeSizesForCategory(
   categorySlug: string | null | undefined,
 ): { sizes: string[]; dropped: string[] } {
   const allowed = new Set(getSizesForCategory(categorySlug));
-  const out: string[] = [];
+  const valid: string[] = [];
   const dropped: string[] = [];
 
   for (const entry of raw) {
     const normalized = normalizeSize(entry);
     if (normalized && allowed.has(normalized)) {
-      if (!out.includes(normalized)) out.push(normalized);
+      if (!valid.includes(normalized)) valid.push(normalized);
     } else {
       dropped.push(entry);
     }
   }
 
-  if (out.length === 0) out.push("Univerzální");
-  return { sizes: out, dropped };
+  const sizes = collapseToPrimary(valid, categorySlug);
+  return { sizes, dropped };
 }

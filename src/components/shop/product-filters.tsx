@@ -5,6 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { X, SlidersHorizontal, ChevronDown, Check } from "lucide-react";
 import { CONDITION_LABELS, CONDITION_COLORS, COLOR_MAP } from "@/lib/constants";
 import {
+  CLOTHING_LETTER_SIZES,
+  SHOE_SIZES,
+  BRA_SIZES,
+} from "@/lib/sizes";
+import {
   Drawer,
   DrawerContent,
   DrawerHeader,
@@ -49,6 +54,29 @@ function productPlural(n: number): string {
   if (n === 1) return "produkt";
   if (n >= 2 && n <= 4) return "produkty";
   return "produktů";
+}
+
+/** Split a flat size list into logical groups for display. */
+function groupSizes(sizes: string[]): { label: string; sizes: string[] }[] {
+  const letterSet = new Set<string>(CLOTHING_LETTER_SIZES);
+  const shoeSet = new Set<string>(SHOE_SIZES);
+  const braSet = new Set<string>(BRA_SIZES);
+
+  const letters = sizes.filter((s) => letterSet.has(s));
+  const shoes = sizes.filter((s) => shoeSet.has(s) && !letterSet.has(s));
+  const bras = sizes.filter((s) => braSet.has(s));
+  const one = sizes.filter((s) => s === "Univerzální");
+  const other = sizes.filter(
+    (s) => !letterSet.has(s) && !shoeSet.has(s) && !braSet.has(s) && s !== "Univerzální",
+  );
+
+  return [
+    { label: "Oblečení", sizes: letters },
+    { label: "Boty", sizes: shoes },
+    { label: "Podprsenky", sizes: bras },
+    { label: "Univerzální", sizes: one },
+    { label: "Ostatní", sizes: other },
+  ].filter((g) => g.sizes.length > 0);
 }
 
 export function ProductFilters({
@@ -221,35 +249,54 @@ export function ProductFilters({
     </fieldset>
   );
 
+  const sizeGroups = groupSizes(sizes);
+
+  function renderSizeButton(size: string, density: "sm" | "base") {
+    const count = counts.sizes[size] ?? 0;
+    const isActive = activeSizes.includes(size);
+    const isDisabled = count === 0 && !isActive;
+    return (
+      <button
+        key={size}
+        onClick={() => !isDisabled && toggleMulti("size", size, activeSizes)}
+        aria-pressed={isActive}
+        aria-disabled={isDisabled}
+        className={`min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg ${density === "base" ? "px-2.5 py-1.5 text-sm" : "px-2.5 py-1 text-xs"} font-medium transition-colors ${
+          isActive
+            ? "bg-primary text-primary-foreground"
+            : isDisabled
+              ? "bg-muted/50 text-muted-foreground/40 cursor-not-allowed"
+              : "bg-muted text-muted-foreground hover:bg-muted/80"
+        }`}
+      >
+        {size}
+        <span className="ml-0.5 opacity-60">({count})</span>
+      </button>
+    );
+  }
+
   const sizeFilterSection = sizes.length > 0 && (
     <fieldset>
       <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         Velikost
       </legend>
-      <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filtr podle velikosti">
-        {sizes.map((size) => {
-          const count = counts.sizes[size] ?? 0;
-          const isActive = activeSizes.includes(size);
-          const isDisabled = count === 0 && !isActive;
-          return (
-            <button
-              key={size}
-              onClick={() => !isDisabled && toggleMulti("size", size, activeSizes)}
-              aria-pressed={isActive}
-              aria-disabled={isDisabled}
-              className={`min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
-                isActive
-                  ? "bg-primary text-primary-foreground"
-                  : isDisabled
-                    ? "bg-muted/50 text-muted-foreground/40 cursor-not-allowed"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
-              }`}
+      <div className="space-y-2">
+        {sizeGroups.map((group) => (
+          <div key={group.label}>
+            {sizeGroups.length > 1 && (
+              <div className="mb-1 text-[0.65rem] font-medium uppercase tracking-wider text-muted-foreground/70">
+                {group.label}
+              </div>
+            )}
+            <div
+              className="flex flex-wrap gap-1.5"
+              role="group"
+              aria-label={`Filtr podle velikosti — ${group.label}`}
             >
-              {size}
-              <span className="ml-0.5 opacity-60">({count})</span>
-            </button>
-          );
-        })}
+              {group.sizes.map((s) => renderSizeButton(s, "sm"))}
+            </div>
+          </div>
+        ))}
       </div>
     </fieldset>
   );
@@ -603,30 +650,23 @@ export function ProductFilters({
                       )}
                     </AccordionTrigger>
                     <AccordionContent>
-                      <div className="flex flex-wrap gap-1.5 pb-2" role="group" aria-label="Filtr podle velikosti">
-                        {sizes.map((size) => {
-                          const count = counts.sizes[size] ?? 0;
-                          const isActive = activeSizes.includes(size);
-                          const isDisabled = count === 0 && !isActive;
-                          return (
-                            <button
-                              key={size}
-                              onClick={() => !isDisabled && toggleMulti("size", size, activeSizes)}
-                              aria-pressed={isActive}
-                              aria-disabled={isDisabled}
-                              className={`min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors ${
-                                isActive
-                                  ? "bg-primary text-primary-foreground"
-                                  : isDisabled
-                                    ? "bg-muted/50 text-muted-foreground/40 cursor-not-allowed"
-                                    : "bg-muted text-muted-foreground hover:bg-muted/80"
-                              }`}
+                      <div className="space-y-3 pb-2">
+                        {sizeGroups.map((group) => (
+                          <div key={group.label}>
+                            {sizeGroups.length > 1 && (
+                              <div className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground/70">
+                                {group.label}
+                              </div>
+                            )}
+                            <div
+                              className="flex flex-wrap gap-1.5"
+                              role="group"
+                              aria-label={`Filtr podle velikosti — ${group.label}`}
                             >
-                              {size}
-                              <span className="ml-0.5 opacity-60">({count})</span>
-                            </button>
-                          );
-                        })}
+                              {group.sizes.map((s) => renderSizeButton(s, "base"))}
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </AccordionContent>
                   </AccordionItem>
