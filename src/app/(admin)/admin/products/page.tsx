@@ -24,13 +24,14 @@ const STATUS_FILTERS = [
   { value: "hidden", label: "Skryto" },
 ];
 
-type MissingKind = "images" | "measurements" | "defects" | "video";
-const MISSING_KINDS: MissingKind[] = ["images", "measurements", "defects", "video"];
+type MissingKind = "images" | "measurements" | "defects" | "video" | "fitnote";
+const MISSING_KINDS: MissingKind[] = ["images", "measurements", "defects", "video", "fitnote"];
 const MISSING_LABELS: Record<MissingKind, string> = {
   images: "bez 4+ fotek",
   measurements: "bez měr (hruď + délka)",
   defects: "použité bez popisu závad",
   video: "bez videa",
+  fitnote: "bez poznámky k střihu",
 };
 const NEW_CONDITIONS = new Set(["new_with_tags", "new_without_tags"]);
 
@@ -147,6 +148,9 @@ export default async function AdminProductsPage({
       }
       if (missingFilter === "video") {
         return !p.videoUrl || p.videoUrl.trim() === "";
+      }
+      if (missingFilter === "fitnote") {
+        return !p.fitNote || p.fitNote.trim() === "";
       }
       // "defects": non-new items without defectsNote
       if (NEW_CONDITIONS.has(p.condition)) return false;
