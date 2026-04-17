@@ -1,11 +1,11 @@
 {
   "pause": {},
-  "force_next": null,
+  "force_next": "bolt",
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 3248,
   "paused_at_bolt_cycle": 3248,
-  "notes": "C3252 Lead: Marked #117+#118 DONE (both completed, were stuck open 3+ cycles). Bolt forced next on #119 (abandoned cart + browse abandonment admin pages). Sage: QA welcome page diacritics fix (C3249). Trace: wait for Bolt #119 commit.",
+  "notes": "C3262 Lead: Bolt has UNCOMMITTED #119 work in working tree (abandoned-carts/page.tsx 208L + browse-abandonment/page.tsx 183L + sidebar.tsx +4L nav links — fully complete). #120 is barely started (only +1 import line on customers/[id]/page.tsx). DIRECTIVE: Bolt MUST (1) commit existing #119 files first ('feat: admin abandoned carts + browse abandonment pages'), mark #119 done, (2) THEN implement #120 properly: email history section in customers/[id]/page.tsx querying EmailLog by customer email, showing type/sentAt/subject/status. Do NOT redo #119 work — it exists.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
@@ -17,5 +17,5 @@
       "reset_no_change_counter": "bool"
     }
   },
-  "session_manager_last_processed": "2026-04-10T19:43:29.709200"
+  "session_manager_last_processed": "2026-04-17T02:09:09.572326"
 }

@@ -17,6 +17,7 @@ import {
   ShoppingCart,
   TrendingUp,
   Package,
+  Send,
 } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -68,6 +69,46 @@ export default async function CustomerDetailPage({
   });
 
   if (!customer) notFound();
+
+  const emailHistory: {
+    label: string;
+    sentAt: Date;
+    orderNumber?: string;
+    orderId?: string;
+  }[] = [];
+  if (customer.winBackSentAt) {
+    emailHistory.push({
+      label: "Win-back (návrat zákazníka)",
+      sentAt: customer.winBackSentAt,
+    });
+  }
+  for (const o of customer.orders) {
+    if (o.reviewEmailSentAt) {
+      emailHistory.push({
+        label: "Žádost o recenzi",
+        sentAt: o.reviewEmailSentAt,
+        orderNumber: o.orderNumber,
+        orderId: o.id,
+      });
+    }
+    if (o.deliveryCheckEmailSentAt) {
+      emailHistory.push({
+        label: "Ověření doručení",
+        sentAt: o.deliveryCheckEmailSentAt,
+        orderNumber: o.orderNumber,
+        orderId: o.id,
+      });
+    }
+    if (o.crossSellEmailSentAt) {
+      emailHistory.push({
+        label: "Cross-sell (T+14 dní)",
+        sentAt: o.crossSellEmailSentAt,
+        orderNumber: o.orderNumber,
+        orderId: o.id,
+      });
+    }
+  }
+  emailHistory.sort((a, b) => b.sentAt.getTime() - a.sentAt.getTime());
 
   const validOrders = customer.orders.filter((o) => o.status !== "cancelled");
   const totalSpent = validOrders.reduce((sum, o) => sum + o.total, 0);
@@ -165,6 +206,50 @@ export default async function CustomerDetailPage({
           );
         })}
       </div>
+
+      {/* Email history */}
+      <section className="mt-8">
+        <h2 className="flex items-center gap-2 font-heading text-lg font-semibold text-foreground">
+          <Send className="size-5 text-muted-foreground" />
+          Historie marketingových emailů
+        </h2>
+
+        {emailHistory.length === 0 ? (
+          <div className="mt-4 rounded-xl border bg-card p-6 text-center shadow-sm">
+            <p className="text-sm text-muted-foreground">
+              Zákazníkovi zatím nebyl odeslán žádný lifecycle email.
+            </p>
+          </div>
+        ) : (
+          <div className="mt-4 overflow-hidden rounded-xl border bg-card shadow-sm">
+            <ul className="divide-y">
+              {emailHistory.map((entry, idx) => (
+                <li
+                  key={`${entry.label}-${entry.orderId ?? "customer"}-${idx}`}
+                  className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 text-sm"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="font-medium text-foreground">
+                      {entry.label}
+                    </span>
+                    {entry.orderNumber && entry.orderId && (
+                      <Link
+                        href={`/admin/orders/${entry.orderId}`}
+                        className="text-xs text-primary hover:underline"
+                      >
+                        {entry.orderNumber}
+                      </Link>
+                    )}
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {formatDate(entry.sentAt)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </section>
 
       {/* Order history */}
       <section className="mt-8">
