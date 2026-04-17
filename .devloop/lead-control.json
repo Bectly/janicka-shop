@@ -1,12 +1,5 @@
 {
-  "pause": {
-    "seer": "until_lead_directive",
-    "sage": "until_lead_directive",
-    "balancer": "until_lead_directive",
-    "bolt": "until_lead_directive",
-    "trace": "until_lead_directive",
-    "sculptor": "until_lead_directive"
-  },
+  "pause": {},
   "force_next": null,
   "interval_override": {},
   "session_manager": {},

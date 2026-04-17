@@ -647,7 +647,7 @@ export default async function ProductDetailPage({ params }: Props) {
               AddToCartButton handles the "reserved by other" state client-side */}
           {product.stock > 0 ? (
             <div className="mt-4">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/8 px-3 py-1.5 text-xs font-semibold text-brand-dark">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1.5 text-xs font-semibold text-brand-dark">
                 <Sparkles className="size-3" />
                 Jediný kus — existuje jen jednou
               </span>

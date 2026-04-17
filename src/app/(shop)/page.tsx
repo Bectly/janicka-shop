@@ -118,7 +118,7 @@ async function CategoriesSection() {
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="flex items-end justify-between">
           <div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/8 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase mb-3">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase mb-3">
               <LayoutGrid className="size-3" aria-hidden="true" /> Kategorie
             </span>
             <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
@@ -300,7 +300,7 @@ async function SaleProductsSection() {
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between">
             <div>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/8 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase mb-3">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase mb-3">
                 <Tag className="size-3" aria-hidden="true" /> Akce
               </span>
               <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
@@ -380,7 +380,7 @@ async function PopularBrandsSection() {
     return (
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="text-center">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/8 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase mb-4">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase mb-4">
             <Heart className="size-3" aria-hidden="true" /> Značky
           </span>
           <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">

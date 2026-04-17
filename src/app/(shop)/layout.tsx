@@ -4,7 +4,6 @@ import { Footer } from "@/components/shop/footer";
 import { CookieConsentBanner } from "@/components/shop/cookie-consent";
 import { BackToTop } from "@/components/shop/back-to-top";
 import { AnnouncementBar } from "@/components/shop/announcement-bar";
-// import { VintedTcBanner } from "@/components/shop/vinted-tc-banner"; // #81 removed per Janička request
 import { DevChatWidget } from "@/components/dev-chat/dev-chat-widget";
 import { ReferralTracker } from "@/components/shop/referral-tracker";
 import { BottomNav } from "@/components/shop/bottom-nav";
@@ -17,7 +16,6 @@ export default function ShopLayout({
 }) {
   return (
     <>
-      {/* <VintedTcBanner /> */}{/* #81 removed per Janička request */}
       <AnnouncementBar />
       <Header />
       <main id="main-content" className="flex-1">{children}</main>
