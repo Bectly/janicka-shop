@@ -17,6 +17,7 @@ import {
 import Link from "next/link";
 import type { Metadata } from "next";
 import { PeriodSelector } from "./period-selector";
+import { EnvHealthBanner } from "@/components/admin/env-health-banner";
 
 export const metadata: Metadata = {
   title: "Přehled",
@@ -151,6 +152,7 @@ export default async function AdminDashboardPage({
 
   return (
     <>
+      <EnvHealthBanner />
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-heading text-2xl font-bold text-foreground">
