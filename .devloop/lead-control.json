@@ -3,7 +3,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 3523,
+  "last_bolt_commit_cycle": 3527,
   "paused_at_bolt_cycle": 3518,
   "notes": "C3524 Lead: URGENT bectly directive — 2 new BOLT tasks: #232 normalize product sizes (fixed enum per category, migrate 354 products via scripts/normalize-sizes.ts --dry-run/--apply, admin form dropdown only, NO free text) + #233 add condition new_without_tags (Nové bez visačky, between new_with_tags and excellent in CONDITION_LABELS + CONDITION_COLORS). #233 is ~30min; #232 is larger. Priority order after current in-progress #230 wishlist sold-item email: #233 → #232 → #231 TRACE HMAC review. Bectly action still pending: #230 openssl rand -hex 32 → Vercel env UNSUBSCRIBE_HMAC_SECRET. 11 days to April 28 Vinted send. 61+ local commits unpushed.",
   "schema": {

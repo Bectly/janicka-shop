@@ -29,7 +29,10 @@ interface AddToCartProps {
 export function AddToCartButton({ product }: AddToCartProps) {
   const addItem = useCartStore((s) => s.addItem);
   const items = useCartStore((s) => s.items);
-  const [selectedSize, setSelectedSize] = useState(product.sizes[0] ?? "");
+  // Second-hand pieces are unique (stock = 1). The `sizes` array holds the SAME
+  // size expressed in different systems (e.g. ["M","38","10"] = EU/UK notation),
+  // not selectable variants — so we always use the first entry as the primary.
+  const selectedSize = product.sizes[0] ?? "";
   const [selectedColor, setSelectedColor] = useState(product.colors[0] ?? "");
   const [added, setAdded] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -98,29 +101,16 @@ export function AddToCartButton({ product }: AddToCartProps) {
   return (
     <>
       <div id="atc-sentinel" className="mt-6 space-y-4">
-        {/* Size selector */}
+        {/* Size — static label (second-hand = 1 kus, sizes array = equivalents) */}
         {product.sizes.length > 0 && (
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-sm font-medium" id="size-label">Velikost</p>
+              <p className="text-sm font-medium">Velikost</p>
               <SizeGuide />
             </div>
-            <div className="flex flex-wrap gap-2" role="group" aria-labelledby="size-label">
-              {product.sizes.map((size) => (
-                <button
-                  key={size}
-                  onClick={() => setSelectedSize(size)}
-                  aria-pressed={selectedSize === size}
-                  className={`min-h-11 rounded-lg border px-3 py-2 text-sm font-medium transition-all duration-100 active:scale-90 ${
-                    selectedSize === size
-                      ? "border-primary bg-primary/10 text-primary animate-ring-expand"
-                      : "border-border text-muted-foreground hover:border-foreground/30"
-                  }`}
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
+            <span className="inline-flex items-center rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm font-semibold text-foreground">
+              {product.sizes.join(" · ")}
+            </span>
           </div>
         )}
 
