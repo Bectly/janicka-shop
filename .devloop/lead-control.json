@@ -3,7 +3,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 3272,
+  "last_bolt_commit_cycle": 3274,
   "paused_at_bolt_cycle": 3264,
   "notes": "C3272 Lead: Previous directive complete (#215/#217 done C3262-3271, #216 blocked bectly). Acked Bolt feedback #1648. New sprint: pre-launch hardening with 11 days to Vinted campaign (April 28 17:00 CET). 3 new tasks added: #218 BOLT delivery check-in email T+3-5d + cross-sell T+14d (closes C2331/C2335 gap), #219 TRACE pre-launch E2E smoke test on Vercel preview (catch regressions from C3269/C3271), #220 SAGE visual QA /admin/subscribers campaign buttons. DEADLINES UNCHANGED: GMC April 30 (blocked bectly), Vinted campaign April 28 17:00 CET (ready), Den matek May 1/7/9 (ready). DIRECTIVE: Bolt → #218 email flows. Trace → #219 E2E smoke. Sage → #220 campaign UI QA. All unpaused except sculptor/seer/balancer (not relevant).",
   "schema": {
