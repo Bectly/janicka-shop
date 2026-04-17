@@ -120,7 +120,7 @@ export function AddressForm({ initial, onDone }: Props) {
             id="country"
             name="country"
             defaultValue={initial?.country ?? "CZ"}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="h-10 w-full cursor-pointer rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
           >
             <option value="CZ">Česko</option>
             <option value="SK">Slovensko</option>
@@ -145,7 +145,7 @@ export function AddressForm({ initial, onDone }: Props) {
           name="isDefault"
           type="checkbox"
           defaultChecked={initial?.isDefault ?? false}
-          className="size-4 rounded border-input"
+          className="size-4 cursor-pointer rounded border-input accent-primary"
         />
         <Label htmlFor="isDefault" className="font-normal">
           Nastavit jako výchozí adresu

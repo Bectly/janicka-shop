@@ -53,7 +53,7 @@ export function SettingsForm({ email, initial }: Props) {
               type="checkbox"
               checked
               disabled
-              className="mt-0.5 size-4 rounded border-input"
+              className="mt-0.5 size-4 rounded border-input accent-primary"
               aria-describedby="trans-hint"
             />
             <div className="flex-1">
@@ -64,12 +64,12 @@ export function SettingsForm({ email, initial }: Props) {
             </div>
           </label>
 
-          <label className="flex items-start gap-3 rounded-lg border p-3 hover:bg-muted/40">
+          <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 hover:bg-muted/40">
             <input
               type="checkbox"
               name="notifyMarketing"
               defaultChecked={initial.notifyMarketing}
-              className="mt-0.5 size-4 rounded border-input"
+              className="mt-0.5 size-4 cursor-pointer rounded border-input accent-primary"
             />
             <div className="flex-1">
               <span className="text-sm font-medium">Slevy a akce, nové kousky</span>
