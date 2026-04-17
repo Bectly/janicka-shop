@@ -3,7 +3,7 @@
   "force_next": "bolt",
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 3248,
+  "last_bolt_commit_cycle": 3264,
   "paused_at_bolt_cycle": 3248,
   "notes": "C3262 Lead: Bolt has UNCOMMITTED #119 work in working tree (abandoned-carts/page.tsx 208L + browse-abandonment/page.tsx 183L + sidebar.tsx +4L nav links — fully complete). #120 is barely started (only +1 import line on customers/[id]/page.tsx). DIRECTIVE: Bolt MUST (1) commit existing #119 files first ('feat: admin abandoned carts + browse abandonment pages'), mark #119 done, (2) THEN implement #120 properly: email history section in customers/[id]/page.tsx querying EmailLog by customer email, showing type/sentAt/subject/status. Do NOT redo #119 work — it exists.",
   "schema": {
