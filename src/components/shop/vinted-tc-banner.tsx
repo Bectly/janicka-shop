@@ -35,7 +35,7 @@ export function VintedTcBanner() {
   if (urgent) {
     return (
       <div className="relative border-b border-red-300 bg-gradient-to-r from-red-50 to-rose-50 text-red-900">
-        <div className="mx-auto flex min-h-14 max-w-7xl items-center justify-center gap-2 px-4 py-3 pr-12 sm:px-6 lg:px-8">
+        <div className="mx-auto flex min-h-14 max-w-7xl items-center justify-center gap-2 px-4 py-3 pr-11 sm:pr-12 sm:px-6 lg:px-8">
           <AlertTriangle className="hidden size-4 shrink-0 text-red-600 sm:block" />
           <p className="text-center text-xs font-medium sm:text-sm">
             <span className="font-bold">Od 30. dubna Vinted automaticky získá právo na tvoje fotky</span>
@@ -73,7 +73,7 @@ export function VintedTcBanner() {
         <p className="text-center text-xs font-medium sm:text-sm">
           <span className="font-semibold">Tvoje fotky jsou tvoje.</span>{" "}
           Nikdy je nepoužijeme k trénování AI.{" "}
-          <span className="text-rose-600">
+          <span className="hidden text-rose-600 sm:inline">
             Na rozdíl od jiných platforem nesdílíme tvoje data s umělou inteligencí.
           </span>{" "}
           <Link

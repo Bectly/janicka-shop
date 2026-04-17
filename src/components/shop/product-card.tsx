@@ -84,7 +84,7 @@ export function ProductCard({
 
   /* ---------- Badges (shared between variants) ---------- */
   const badges = (
-    <div className={cn("absolute left-3 flex flex-col gap-1", isFeatured ? "top-3" : "top-2")}>
+    <div className="absolute left-3 top-3 flex flex-col gap-1">
       {createdAt && (() => {
         const label = formatTimeElapsed(createdAt);
         if (!label) return null;
@@ -238,7 +238,7 @@ export function ProductCard({
           {brand && <span className="text-[10px] text-muted-foreground/30">&middot;</span>}
           <p className="text-[11px] text-muted-foreground/60">{categoryName}</p>
         </div>
-        <h3 className="text-[13px] font-medium leading-snug text-foreground/90 transition-colors line-clamp-1 group-hover:text-primary">
+        <h3 className="text-sm font-medium leading-snug text-foreground/90 transition-colors line-clamp-1 group-hover:text-primary">
           {name}
         </h3>
         <div className="flex items-baseline gap-2 pt-0.5">
