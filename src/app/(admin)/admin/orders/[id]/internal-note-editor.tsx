@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useRef } from "react";
 import { Check, AlertCircle, Loader2 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { updateInternalNote } from "../actions";
 
 export function InternalNoteEditor({
@@ -69,7 +70,7 @@ export function InternalNoteEditor({
       <p className="mt-1 text-xs text-muted-foreground">
         Soukromá poznámka pouze pro tebe — zákaznice ji nevidí.
       </p>
-      <textarea
+      <Textarea
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onBlur={handleBlur}
@@ -77,7 +78,7 @@ export function InternalNoteEditor({
         maxLength={2000}
         rows={4}
         placeholder="Např. „zákaznice si psala přes DM, čeká na Packetu"
-        className="mt-3 w-full resize-y rounded-lg border bg-background px-3 py-2 text-sm text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-60"
+        className="mt-3 resize-y"
       />
       {error && (
         <p className="mt-2 flex items-start gap-1.5 text-xs text-destructive">
