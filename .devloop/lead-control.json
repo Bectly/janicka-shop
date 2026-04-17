@@ -5,7 +5,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 3264,
+  "last_bolt_commit_cycle": 3271,
   "paused_at_bolt_cycle": 3264,
   "notes": "C3263 Lead: Tasks #119+#120 DONE (committed C3264-3265). 3 new tasks added: #121 BOLT Vercel Analytics+SpeedInsights (quick win, no credentials), #122 BLOCKED GA4 setup (needs bectly), #217 BOLT Den matek 2026 collection (create before May 1). DEADLINE REMINDERS: (1) GMC registration (#14) — deadline April 30 (13 days), Doppl VTO rollout. (2) Vinted T&C campaign send April 28 17:00 CET via /admin/subscribers VintedCampaignButton — READY. (3) Den matek emails: send #1 May 1 (warmup), #2 May 7 (push), #3 May 9 (urgency) via MothersDayCampaignButton. DIRECTIVE: Bolt → implement #121 Vercel Analytics first (quick, 15 min), then #217 Den matek collection.",
   "schema": {
