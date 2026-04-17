@@ -72,7 +72,7 @@ export async function createCategory(formData: FormData) {
     },
   });
 
-  revalidateTag("products", "seconds");
+  revalidateTag("products", "max");
   revalidatePath("/admin/categories");
   revalidatePath("/products");
   revalidatePath("/");
@@ -122,7 +122,7 @@ export async function updateCategory(id: string, formData: FormData) {
     },
   });
 
-  revalidateTag("products", "seconds");
+  revalidateTag("products", "max");
   revalidatePath("/admin/categories");
   revalidatePath("/products");
   revalidatePath("/");
@@ -148,7 +148,7 @@ export async function deleteCategory(id: string) {
 
   await db.category.delete({ where: { id } });
 
-  revalidateTag("products", "seconds");
+  revalidateTag("products", "max");
   revalidatePath("/admin/categories");
   revalidatePath("/products");
   revalidatePath("/");

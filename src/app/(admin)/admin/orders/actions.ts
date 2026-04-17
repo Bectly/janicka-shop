@@ -160,7 +160,7 @@ export async function updateOrderStatus(orderId: string, status: string) {
       });
   }
 
-  revalidateTag("products", "seconds");
+  revalidateTag("products", "max");
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath("/products");

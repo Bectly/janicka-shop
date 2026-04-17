@@ -186,7 +186,7 @@ export async function updateReturnStatus(
       });
     });
 
-    revalidateTag("products", "seconds");
+    revalidateTag("products", "max");
     revalidatePath("/admin/returns");
     revalidatePath(`/admin/returns/${returnId}`);
     revalidatePath(`/admin/orders/${returnRecord.orderId}`);

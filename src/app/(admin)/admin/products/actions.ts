@@ -210,7 +210,7 @@ export async function createProduct(formData: FormData) {
     data: { productId: product.id, price: parsed.price },
   });
 
-  revalidateTag("products", "seconds");
+  revalidateTag("products", "max");
   revalidatePath("/admin/products");
   revalidatePath("/products");
   revalidatePath("/");
@@ -300,7 +300,7 @@ export async function updateProduct(id: string, formData: FormData) {
     },
   });
 
-  revalidateTag("products", "seconds");
+  revalidateTag("products", "max");
   revalidatePath("/admin/products");
   revalidatePath(`/products/${slug}`);
   revalidatePath("/products");
@@ -408,7 +408,7 @@ export async function quickCreateProduct(formData: FormData) {
     data: { productId: product.id, price: parsed.price },
   });
 
-  revalidateTag("products", "seconds");
+  revalidateTag("products", "max");
   revalidatePath("/admin/products");
   revalidatePath("/products");
   revalidatePath("/");
@@ -464,7 +464,7 @@ export async function duplicateProduct(id: string) {
     data: { productId: copy.id, price: copy.price },
   });
 
-  revalidateTag("products", "seconds");
+  revalidateTag("products", "max");
   revalidatePath("/admin/products");
   redirect(`/admin/products/${copy.id}/edit`);
 }
@@ -550,7 +550,7 @@ export async function bulkUpdateProducts(ids: string[], action: string) {
     }
   }
 
-  revalidateTag("products", "seconds");
+  revalidateTag("products", "max");
   revalidatePath("/admin/products");
   revalidatePath("/products");
   revalidatePath("/");
@@ -603,11 +603,11 @@ export async function bulkUpdatePrice(
       where: { id: p.id },
       data: { price: next },
     });
-    revalidateTag(`product-${p.slug}`, "seconds");
+    revalidateTag(`product-${p.slug}`, "max");
     affected++;
   }
 
-  revalidateTag("products", "seconds");
+  revalidateTag("products", "max");
   revalidatePath("/admin/products");
   revalidatePath("/products");
   revalidatePath("/");
@@ -662,8 +662,8 @@ export async function updateProductQuick(
     select: { id: true, price: true, active: true, featured: true },
   });
 
-  revalidateTag("products", "seconds");
-  revalidateTag(`product-${current.slug}`, "seconds");
+  revalidateTag("products", "max");
+  revalidateTag(`product-${current.slug}`, "max");
   revalidatePath("/admin/products");
   revalidatePath("/products");
   revalidatePath("/");
@@ -753,8 +753,8 @@ export async function updateProductMeasurementsQuick(
     select: { id: true, measurements: true, fitNote: true },
   });
 
-  revalidateTag("products", "seconds");
-  revalidateTag(`product-${current.slug}`, "seconds");
+  revalidateTag("products", "max");
+  revalidateTag(`product-${current.slug}`, "max");
   revalidatePath("/admin/products");
   revalidatePath("/admin/products/coverage");
   revalidatePath("/products");
@@ -784,7 +784,7 @@ export async function deleteProduct(id: string) {
     await db.product.delete({ where: { id } });
   }
 
-  revalidateTag("products", "seconds");
+  revalidateTag("products", "max");
   revalidatePath("/admin/products");
   revalidatePath("/products");
   revalidatePath("/");
