@@ -16,7 +16,7 @@
  * without terminal access.
  */
 
-export type MeasurementField = "chest" | "waist" | "hips" | "length";
+export type MeasurementField = "chest" | "waist" | "hips" | "length" | "sleeve";
 
 export type ExtractedMeasurements = Partial<Record<MeasurementField, number>>;
 
@@ -56,6 +56,12 @@ const RULES: FieldRule[] = [
       new RegExp(String.raw`\b(?:celkova\s+delka|delka\s+od\s+ramen|delka)\b(?![^0-9\n]{0,30}\brukav)[^0-9\n]{0,30}${NUM}${CM}`, "u"),
     ],
   },
+  {
+    field: "sleeve",
+    patterns: [
+      new RegExp(String.raw`\b(?:delka\s+rukav\w*|rukav\w*)\b[^0-9\n]{0,30}${NUM}${CM}`, "u"),
+    ],
+  },
 ];
 
 const RANGES: Record<MeasurementField, { min: number; max: number }> = {
@@ -63,6 +69,7 @@ const RANGES: Record<MeasurementField, { min: number; max: number }> = {
   waist: { min: 25, max: 130 },
   hips: { min: 25, max: 140 },
   length: { min: 20, max: 200 },
+  sleeve: { min: 10, max: 90 },
 };
 
 function stripDiacritics(s: string): string {
@@ -104,7 +111,8 @@ export function hasAnyMeasurement(m: ExtractedMeasurements): boolean {
     m.chest !== undefined ||
     m.waist !== undefined ||
     m.hips !== undefined ||
-    m.length !== undefined
+    m.length !== undefined ||
+    m.sleeve !== undefined
   );
 }
 
