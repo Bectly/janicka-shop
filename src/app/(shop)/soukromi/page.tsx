@@ -126,7 +126,7 @@ export default function SoukromiPage() {
               Náš slib
             </h2>
           </div>
-          <div className="mt-8 space-y-5 text-center text-base leading-relaxed text-muted-foreground sm:text-lg">
+          <div className="mt-8 space-y-5 text-left text-base leading-relaxed text-muted-foreground sm:text-center sm:text-lg">
             <p>
               Jsme malý český eshop s&nbsp;oblečením. Nejsme korporace
               s&nbsp;tisíci zaměstnanců a&nbsp;právníky, co píšou podmínky tak,
@@ -159,7 +159,7 @@ export default function SoukromiPage() {
         </p>
         <Link
           href="/products"
-          className="mt-8 inline-flex items-center gap-2 rounded-full bg-primary px-8 py-3.5 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+          className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-8 py-3.5 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 sm:w-auto"
         >
           Prohlédnout nabídku
           <ArrowRight className="size-4" />
