@@ -17,6 +17,8 @@ import {
   RecentlyViewedSection,
 } from "@/components/shop/recently-viewed";
 import { ProductInfoAccordion } from "@/components/shop/product-info-accordion";
+import { ProductDefects } from "@/components/shop/product-defects";
+import { parseDefects } from "@/lib/defects";
 import { FreeShippingBar } from "@/components/shop/free-shipping-bar";
 import { NotifyMeForm } from "@/components/shop/notify-me-form";
 import { BrowseAbandonmentTracker } from "@/components/shop/browse-abandonment-tracker";
@@ -264,6 +266,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
   const productImages = parseProductImages(product.images);
   const measurements = parseMeasurements(product.measurements);
+  const defects = parseDefects(product.defects);
 
   // --- SOLD PRODUCT VIEW ---
   if (product.sold) {
@@ -651,6 +654,9 @@ export default async function ProductDetailPage({ params }: Props) {
             brand={product.brand}
             categoryName={product.category.name}
           />
+
+          {/* Defects / flaws — honest transparent disclosure (trust builder) */}
+          <ProductDefects defects={defects} />
 
           {/* Shipping, returns & quality guarantee info */}
           <ProductInfoAccordion />

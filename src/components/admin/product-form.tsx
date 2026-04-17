@@ -7,7 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CONDITION_LABELS } from "@/lib/constants";
 import { ImageUpload } from "@/components/admin/image-upload";
+import { DefectsEditor } from "@/components/admin/defects-editor";
 import { parseProductImages, parseMeasurements } from "@/lib/images";
+import { parseDefects } from "@/lib/defects";
 import type { ProductImage, ProductMeasurements } from "@/lib/images";
 import { uploadFiles } from "@/lib/uploadthing";
 import { Save, Ruler, Video, X, Loader2 } from "lucide-react";
@@ -33,6 +35,7 @@ interface ProductData {
   active: boolean;
   images: string;
   measurements?: string;
+  defects?: string;
   fitNote?: string | null;
   videoUrl?: string | null;
 }
@@ -427,6 +430,9 @@ export function ProductForm({ categories, product, action }: ProductFormProps) {
           Nepovinné — reálné rozměry kusu pomohou zákaznicím s výběrem velikosti
         </p>
       </div>
+
+      {/* Defects */}
+      <DefectsEditor initial={parseDefects(product?.defects)} />
 
       {/* Toggles */}
       <div className="flex flex-wrap gap-6">

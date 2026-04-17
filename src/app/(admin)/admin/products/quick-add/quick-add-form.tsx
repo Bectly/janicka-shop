@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CONDITION_LABELS, COLOR_MAP } from "@/lib/constants";
 import { ImageUpload } from "@/components/admin/image-upload";
+import { DefectsEditor } from "@/components/admin/defects-editor";
 import { uploadFiles } from "@/lib/uploadthing";
 import { Zap, ChevronDown, ChevronUp, Video, X, Loader2, Ruler } from "lucide-react";
 
@@ -268,6 +269,9 @@ export function QuickAddForm({ categories, action }: QuickAddFormProps) {
               ))}
             </div>
           </div>
+
+          {/* Defects */}
+          <DefectsEditor />
 
           {/* Fit note */}
           <div className="space-y-2">

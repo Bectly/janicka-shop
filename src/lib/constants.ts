@@ -1,6 +1,7 @@
 /** Condition values and their Czech labels */
 export const CONDITION_LABELS: Record<string, string> = {
   new_with_tags: "Nové s visačkou",
+  new_without_tags: "Nové bez visačky",
   excellent: "Výborný stav",
   good: "Dobrý stav",
   visible_wear: "Viditelné opotřebení",
@@ -9,6 +10,7 @@ export const CONDITION_LABELS: Record<string, string> = {
 /** Condition → badge color class */
 export const CONDITION_COLORS: Record<string, string> = {
   new_with_tags: "bg-sage-light text-sage-dark",
+  new_without_tags: "bg-sage text-white",
   excellent: "bg-champagne-light text-champagne-dark",
   good: "bg-champagne text-brand-dark",
   visible_wear: "bg-blush-dark text-brand-dark",

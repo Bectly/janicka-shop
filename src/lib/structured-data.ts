@@ -17,6 +17,7 @@ const BASE_URL =
 
 const CONDITION_TO_SCHEMA: Record<string, string> = {
   new_with_tags: "https://schema.org/NewCondition",
+  new_without_tags: "https://schema.org/NewCondition",
   excellent: "https://schema.org/UsedCondition",
   good: "https://schema.org/UsedCondition",
   visible_wear: "https://schema.org/UsedCondition",
@@ -25,6 +26,7 @@ const CONDITION_TO_SCHEMA: Record<string, string> = {
 /** Czech condition labels for structured data descriptions */
 const CONDITION_DESCRIPTION: Record<string, string> = {
   new_with_tags: "Nové s visačkou — nepoužité zboží v původním stavu",
+  new_without_tags: "Nové bez visačky — nepoužité zboží bez originální visačky",
   excellent: "Výborný stav — minimální známky nošení",
   good: "Dobrý stav — lehké známky nošení",
   visible_wear: "Viditelné opotřebení — popsáno v detailu produktu",
