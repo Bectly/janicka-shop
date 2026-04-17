@@ -75,6 +75,8 @@ export default function RootLayout({
         <Suspense>
           <AnalyticsProvider />
         </Suspense>
+        <Analytics />
+        <SpeedInsights />
         {children}
       </body>
     </html>
