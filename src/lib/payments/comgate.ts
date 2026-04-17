@@ -68,6 +68,7 @@ export async function createComgatePayment(
     prepareOnly: "true",
     url: `${baseUrl}/checkout/payment-return?refId=${encodeURIComponent(params.refId)}${params.accessToken ? `&token=${encodeURIComponent(params.accessToken)}` : ""}`,
     notifUrl: `${baseUrl}/api/payments/comgate`,
+    ...(params.embedded ? { embedded: "true" } : {}),
   });
 
   const res = await fetch(`${COMGATE_API_URL}/create`, {

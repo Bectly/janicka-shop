@@ -94,6 +94,7 @@ export async function POST(req: NextRequest) {
       label: `Janička #${order.orderNumber.slice(-8)}`,
       method: COMGATE_METHOD_CODES[method] ?? "CARD_CZ_CSOB_2",
       accessToken: order.accessToken ?? undefined,
+      embedded: method === "CARD",
     });
 
     // Store transId on order

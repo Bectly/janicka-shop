@@ -1,10 +1,4 @@
-"use client";
-
-import { useState, useEffect, useCallback } from "react";
-import { X, Truck, Sparkles, RotateCcw, Star, Diamond, type LucideIcon } from "lucide-react";
-
-const COOKIE_NAME = "janicka-ann-dismissed";
-const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
+import { Truck, Sparkles, RotateCcw, Star, Diamond, type LucideIcon } from "lucide-react";
 
 const messages: { icon: LucideIcon; text: string }[] = [
   { icon: Truck,      text: "Doprava zdarma od 1 500 Kč" },
@@ -12,14 +6,6 @@ const messages: { icon: LucideIcon; text: string }[] = [
   { icon: RotateCcw,  text: "14 dní na vrácení bez udání důvodu" },
   { icon: Star,       text: "Prémiová kvalita, ověřený stav" },
 ];
-
-function getCookie(name: string): boolean {
-  return document.cookie.split("; ").some((c) => c.startsWith(`${name}=`));
-}
-
-function setCookie(name: string, value: string, maxAge: number) {
-  document.cookie = `${name}=${value}; path=/; max-age=${maxAge}; SameSite=Lax`;
-}
 
 function MessageItem({ icon: Icon, text }: { icon: LucideIcon; text: string }) {
   return (
@@ -44,34 +30,10 @@ function MarqueeTrack() {
 }
 
 export function AnnouncementBar() {
-  const [dismissed, setDismissed] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const [dismissing, setDismissing] = useState(false);
-
-  useEffect(() => {
-    if (getCookie(COOKIE_NAME)) {
-      setDismissed(true);
-    }
-    setMounted(true);
-  }, []);
-
-  const handleDismiss = useCallback(() => {
-    setDismissing(true);
-    setCookie(COOKIE_NAME, "1", COOKIE_MAX_AGE);
-    // Wait for slide-out animation to finish
-    setTimeout(() => setDismissed(true), 280);
-  }, []);
-
-  if (!mounted || dismissed) return null;
-
   return (
-    <div
-      className={`announcement-bar relative overflow-hidden bg-gradient-to-r from-brand via-brand-dark to-brand text-white ${dismissing ? "announcement-bar-dismiss" : "announcement-bar-enter"}`}
-    >
-      {/* Subtle shimmer overlay */}
+    <div className="announcement-bar relative overflow-hidden bg-gradient-to-r from-brand via-brand-dark to-brand text-white">
       <div className="announcement-shimmer pointer-events-none absolute inset-0" aria-hidden="true" />
 
-      {/* Cherry blossom accents */}
       <svg className="ann-blossom pointer-events-none absolute -left-3 top-1/2 size-10 -translate-y-1/2 text-white/10" viewBox="0 0 200 200" fill="currentColor" aria-hidden="true">
         <ellipse cx="100" cy="82" rx="10" ry="20" transform="rotate(0 100 100)" />
         <ellipse cx="100" cy="82" rx="10" ry="20" transform="rotate(72 100 100)" />
@@ -90,31 +52,17 @@ export function AnnouncementBar() {
       </svg>
 
       <div className="flex min-h-10 items-center sm:min-h-11">
-        {/* Left spacer — mirrors dismiss button width so marquee area is symmetric */}
-        <div className="size-11 shrink-0 lg:hidden" aria-hidden="true" />
-
-        {/* Marquee track — two copies for seamless loop; static centered on lg+ */}
         <div
-          className="announcement-marquee flex min-w-0 flex-1 shrink-0 items-center overflow-hidden whitespace-nowrap lg:justify-center lg:[animation:none]"
+          className="announcement-marquee flex min-w-0 flex-1 items-center overflow-hidden whitespace-nowrap lg:justify-center lg:[animation:none]"
           aria-live="polite"
         >
-          <span className="inline-flex items-center px-8 text-xs font-medium tracking-wide sm:text-sm">
+          <span className="inline-flex items-center px-6 text-xs font-medium tracking-wide sm:text-sm">
             <MarqueeTrack />
           </span>
-          <span className="inline-flex items-center px-8 text-xs font-medium tracking-wide sm:text-sm lg:hidden" aria-hidden="true">
+          <span className="inline-flex items-center px-6 text-xs font-medium tracking-wide sm:text-sm lg:hidden" aria-hidden="true">
             <MarqueeTrack />
           </span>
         </div>
-
-        {/* Dismiss button */}
-        <button
-          type="button"
-          onClick={handleDismiss}
-          className="absolute right-1 z-10 inline-flex size-11 items-center justify-center rounded-full text-white/60 transition-all hover:bg-white/10 hover:text-white sm:right-3"
-          aria-label="Zavřít oznámení"
-        >
-          <X className="size-3.5" />
-        </button>
       </div>
     </div>
   );

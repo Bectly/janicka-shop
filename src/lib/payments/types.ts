@@ -16,6 +16,12 @@ export interface CreatePaymentParams {
   method?: string;
   /** Order access token — included in return URL to prevent token leakage */
   accessToken?: string;
+  /**
+   * When true, Comgate returns an inline iframe URL instead of a redirect.
+   * Required for card payments using the inline gate (504×679px iframe).
+   * CLAUDE.md spec C52/C2298: "embedded: true on REST payment creation"
+   */
+  embedded?: boolean;
 }
 
 /** Successful create payment response */
