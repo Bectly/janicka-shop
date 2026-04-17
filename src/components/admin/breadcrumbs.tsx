@@ -21,6 +21,7 @@ const SEGMENT_LABELS: Record<string, string> = {
   new: "Nový",
   edit: "Upravit",
   "quick-add": "Rychlé přidání",
+  coverage: "Pokrytí měr",
   welcome: "Vítej",
 };
 

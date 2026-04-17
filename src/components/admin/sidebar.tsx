@@ -20,12 +20,14 @@ import {
   ShoppingBag,
   Eye,
   PenLine,
+  Ruler,
 } from "lucide-react";
 
 const navItems = [
   { href: "/admin/dashboard", label: "Přehled", icon: LayoutDashboard },
   { href: "/admin/products/quick-add", label: "Rychlé přidání", icon: Zap },
   { href: "/admin/products", label: "Produkty", icon: Package },
+  { href: "/admin/products/coverage", label: "Pokrytí měr", icon: Ruler },
   { href: "/admin/categories", label: "Kategorie", icon: Tags },
   { href: "/admin/collections", label: "Kolekce", icon: Layers },
   { href: "/admin/orders", label: "Objednávky", icon: ShoppingCart },
