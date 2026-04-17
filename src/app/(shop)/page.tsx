@@ -27,10 +27,18 @@ async function getNewProductsForPage() {
   cacheTag("products");
   try {
     const db = await getDb();
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const recent = await db.product.findMany({
+      where: { active: true, sold: false, createdAt: { gte: thirtyDaysAgo } },
+      include: { category: { select: { name: true } } },
+      take: 8,
+      orderBy: { createdAt: "desc" },
+    });
+    if (recent.length > 0) return recent;
+    // Fallback: if nothing in last 30 days, show the 8 most recently added products
     return db.product.findMany({
-      where: { active: true, sold: false, createdAt: { gte: sevenDaysAgo } },
+      where: { active: true, sold: false },
       include: { category: { select: { name: true } } },
       take: 8,
       orderBy: { createdAt: "desc" },
@@ -46,8 +54,17 @@ async function getFeaturedProductsForPage() {
   cacheTag("products");
   try {
     const db = await getDb();
-    return db.product.findMany({
+    const featured = await db.product.findMany({
       where: { featured: true, active: true, sold: false },
+      include: { category: { select: { name: true } } },
+      take: 8,
+      orderBy: { createdAt: "desc" },
+    });
+    if (featured.length > 0) return featured;
+    // Fallback: if nothing is marked featured, show latest active products so the
+    // "Doporučujeme" section still renders meaningful content.
+    return db.product.findMany({
+      where: { active: true, sold: false },
       include: { category: { select: { name: true } } },
       take: 8,
       orderBy: { createdAt: "desc" },
