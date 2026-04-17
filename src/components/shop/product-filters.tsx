@@ -216,8 +216,6 @@ export function ProductFilters({
     (saleOnly ? 1 : 0) +
     (activeCategory ? 1 : 0);
 
-  // --- Shared filter sections (used in both desktop inline and mobile drawer) ---
-
   const totalAllCategories = categoryCounts
     ? Object.values(categoryCounts).reduce((sum, n) => sum + n, 0)
     : undefined;
@@ -300,25 +298,6 @@ export function ProductFilters({
     );
   }
 
-  const brandFilter = brands.length > 0 && (
-    <fieldset>
-      <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        Značka
-      </legend>
-      <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filtr podle značky">
-        {visibleBrands.map((brand) => renderBrandButton(brand, "sm"))}
-      </div>
-      {hasMoreBrands && (
-        <Button
-          variant="link"
-          onClick={() => setShowAllBrands((v) => !v)}
-          className="mt-2 h-auto p-0 text-xs"
-        >
-          {showAllBrands ? "Zobrazit méně" : `Zobrazit všechny (${brands.length})`}
-        </Button>
-      )}
-    </fieldset>
-  );
 
   // When a category is active, restrict visible sizes to those valid for it.
   // Prevents shoe sizes from showing on Topy/Halenky etc. (category-blind data
@@ -355,158 +334,6 @@ export function ProductFilters({
     );
   }
 
-  const sizeFilterSection = visibleSizes.length > 0 && (
-    <fieldset>
-      <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        Velikost
-      </legend>
-      <div className="space-y-2">
-        {sizeGroups.map((group) => (
-          <div key={group.label}>
-            {sizeGroups.length > 1 && (
-              <div className="mb-1 text-[0.65rem] font-medium uppercase tracking-wider text-muted-foreground/70">
-                {group.label}
-              </div>
-            )}
-            <div
-              className="flex flex-wrap gap-1.5"
-              role="group"
-              aria-label={`Filtr podle velikosti — ${group.label}`}
-            >
-              {group.sizes.map((s) => renderSizeButton(s, "sm"))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </fieldset>
-  );
-
-  const colorFilterSection = colors.length > 0 && (
-    <fieldset>
-      <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        Barva
-      </legend>
-      <div className="flex flex-wrap gap-2" role="group" aria-label="Filtr podle barvy">
-        {colors.map((color) => {
-          const count = counts.colors[color] ?? 0;
-          const isActive = activeColors.includes(color);
-          const isDisabled = count === 0 && !isActive;
-          const hex = COLOR_MAP[color] ?? "#9CA3AF";
-          const isLight = isLightColor(hex);
-          return (
-            <button
-              key={color}
-              onClick={() => !isDisabled && toggleMulti("color", color, activeColors)}
-              aria-pressed={isActive}
-              aria-disabled={isDisabled}
-              aria-label={`${color} (${count})`}
-              title={`${color} (${count})`}
-              className={`group relative flex min-h-11 items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium transition-colors ${
-                isActive
-                  ? "bg-primary/10 ring-2 ring-primary"
-                  : isDisabled
-                    ? "opacity-40 cursor-not-allowed"
-                    : "hover:bg-muted/80"
-              }`}
-            >
-              <span
-                className={`inline-block size-5 shrink-0 rounded-full border ${isLight ? "border-gray-300" : "border-transparent"}`}
-                style={{ backgroundColor: hex }}
-              >
-                {isActive && (
-                  <Check className={`size-5 p-0.5 ${isLight ? "text-gray-700" : "text-white"}`} />
-                )}
-              </span>
-              <span className={isDisabled ? "text-muted-foreground/40" : "text-muted-foreground"}>
-                {color}
-                <span className="ml-0.5 opacity-60">({count})</span>
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    </fieldset>
-  );
-
-  const conditionFilterSection = (
-    <fieldset>
-      <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        Stav
-      </legend>
-      <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filtr podle stavu">
-        {Object.entries(CONDITION_LABELS)
-          .filter(([key]) => (counts.conditions[key] ?? 0) > 0 || activeConditions.includes(key))
-          .map(([key, label]) => {
-            const count = counts.conditions[key] ?? 0;
-            const isActive = activeConditions.includes(key);
-            return (
-              <button
-                key={key}
-                onClick={() => toggleMulti("condition", key, activeConditions)}
-                aria-pressed={isActive}
-                className={`min-h-11 inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-colors ${
-                  isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
-                }`}
-              >
-                <span
-                  className={`size-2 shrink-0 rounded-full ring-1 ring-inset ring-foreground/10 ${(CONDITION_COLORS[key] ?? "").split(" ")[0]}`}
-                  aria-hidden="true"
-                />
-                {label}
-                <span className="opacity-60">({count})</span>
-              </button>
-            );
-          })}
-      </div>
-    </fieldset>
-  );
-
-  const priceFilterSection = (
-    <fieldset>
-      <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        Cena (Kč)
-      </legend>
-      <div className="flex items-center gap-2">
-        <label htmlFor="filter-minPrice" className="sr-only">Minimální cena</label>
-        <Input
-          id="filter-minPrice"
-          type="number"
-          min="0"
-          max="999999"
-          placeholder="od"
-          defaultValue={minPrice}
-          onBlur={(e) => updateParams({ minPrice: e.target.value || null })}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              updateParams({ minPrice: e.currentTarget.value || null });
-            }
-          }}
-          className="h-8 text-xs"
-        />
-        <span className="text-xs text-muted-foreground" aria-hidden="true">–</span>
-        <label htmlFor="filter-maxPrice" className="sr-only">Maximální cena</label>
-        <Input
-          id="filter-maxPrice"
-          type="number"
-          min="0"
-          max="999999"
-          placeholder="do"
-          defaultValue={maxPrice}
-          onBlur={(e) => updateParams({ maxPrice: e.target.value || null })}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              updateParams({ maxPrice: e.currentTarget.value || null });
-            }
-          }}
-          className="h-8 text-xs"
-        />
-      </div>
-    </fieldset>
-  );
 
   const saleToggle = (
     <button
@@ -646,20 +473,10 @@ export function ProductFilters({
     </div>
   );
 
-  const filterGroups = (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {brandFilter}
-      {sizeFilterSection}
-      {colorFilterSection}
-      {conditionFilterSection}
-      {priceFilterSection}
-    </div>
-  );
-
   return (
     <>
-      {/* ===== DESKTOP: inline filters (hidden on mobile) ===== */}
-      <div className="hidden lg:block space-y-6">
+      {/* ===== DESKTOP: accordion filters (hidden on mobile) ===== */}
+      <div className="hidden lg:block space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <SlidersHorizontal className="size-4 text-muted-foreground" />
@@ -673,9 +490,219 @@ export function ProductFilters({
           {sortDropdown}
         </div>
         {categoryPills}
-        {filterGroups}
-        <div className="flex items-center gap-2">{saleToggle}</div>
         {activeFilterChips}
+        <Accordion
+          multiple
+          defaultValue={["sizes", "conditions"]}
+          className="border-t border-border/50"
+        >
+          {visibleSizes.length > 0 && (
+            <AccordionItem value="sizes">
+              <AccordionTrigger className="py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Velikost
+                {activeSizes.length > 0 && (
+                  <span className="ml-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-medium text-primary-foreground">
+                    {activeSizes.length}
+                  </span>
+                )}
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-2 pb-1">
+                  {sizeGroups.map((group) => (
+                    <div key={group.label}>
+                      {sizeGroups.length > 1 && (
+                        <div className="mb-1 text-[0.65rem] font-medium uppercase tracking-wider text-muted-foreground/70">
+                          {group.label}
+                        </div>
+                      )}
+                      <div className="flex flex-wrap gap-1.5" role="group" aria-label={`Filtr podle velikosti — ${group.label}`}>
+                        {group.sizes.map((s) => renderSizeButton(s, "sm"))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          )}
+          {colors.length > 0 && (
+            <AccordionItem value="colors">
+              <AccordionTrigger className="py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Barva
+                {activeColors.length > 0 && (
+                  <span className="ml-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-medium text-primary-foreground">
+                    {activeColors.length}
+                  </span>
+                )}
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="flex flex-wrap gap-2 pb-1" role="group" aria-label="Filtr podle barvy">
+                  {colors.map((color) => {
+                    const count = counts.colors[color] ?? 0;
+                    const isActive = activeColors.includes(color);
+                    const isDisabled = count === 0 && !isActive;
+                    const hex = COLOR_MAP[color] ?? "#9CA3AF";
+                    const isLight = isLightColor(hex);
+                    return (
+                      <button
+                        key={color}
+                        onClick={() => !isDisabled && toggleMulti("color", color, activeColors)}
+                        aria-pressed={isActive}
+                        aria-disabled={isDisabled}
+                        aria-label={`${color} (${count})`}
+                        title={`${color} (${count})`}
+                        className={`group relative flex min-h-11 items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium transition-colors ${
+                          isActive
+                            ? "bg-primary/10 ring-2 ring-primary"
+                            : isDisabled
+                              ? "opacity-40 cursor-not-allowed"
+                              : "hover:bg-muted/80"
+                        }`}
+                      >
+                        <span
+                          className={`inline-block size-5 shrink-0 rounded-full border ${isLight ? "border-gray-300" : "border-transparent"}`}
+                          style={{ backgroundColor: hex }}
+                        >
+                          {isActive && (
+                            <Check className={`size-5 p-0.5 ${isLight ? "text-gray-700" : "text-white"}`} />
+                          )}
+                        </span>
+                        <span className={isDisabled ? "text-muted-foreground/40" : "text-muted-foreground"}>
+                          {color}
+                          <span className="ml-0.5 opacity-60">({count})</span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          )}
+          {brands.length > 0 && (
+            <AccordionItem value="brands">
+              <AccordionTrigger className="py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Značka
+                {activeBrands.length > 0 && (
+                  <span className="ml-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-medium text-primary-foreground">
+                    {activeBrands.length}
+                  </span>
+                )}
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="flex flex-wrap gap-1.5 pb-1" role="group" aria-label="Filtr podle značky">
+                  {visibleBrands.map((brand) => renderBrandButton(brand, "sm"))}
+                </div>
+                {hasMoreBrands && (
+                  <Button
+                    variant="link"
+                    onClick={() => setShowAllBrands((v) => !v)}
+                    className="mt-2 h-auto p-0 text-xs"
+                  >
+                    {showAllBrands ? "Zobrazit méně" : `Zobrazit všechny (${brands.length})`}
+                  </Button>
+                )}
+              </AccordionContent>
+            </AccordionItem>
+          )}
+          <AccordionItem value="conditions">
+            <AccordionTrigger className="py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Stav
+              {activeConditions.length > 0 && (
+                <span className="ml-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-medium text-primary-foreground">
+                  {activeConditions.length}
+                </span>
+              )}
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="flex flex-wrap gap-1.5 pb-1" role="group" aria-label="Filtr podle stavu">
+                {Object.entries(CONDITION_LABELS)
+                  .filter(([key]) => (counts.conditions[key] ?? 0) > 0 || activeConditions.includes(key))
+                  .map(([key, label]) => {
+                    const count = counts.conditions[key] ?? 0;
+                    const isActive = activeConditions.includes(key);
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => toggleMulti("condition", key, activeConditions)}
+                        aria-pressed={isActive}
+                        className={`min-h-11 inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-colors ${
+                          isActive
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        }`}
+                      >
+                        <span
+                          className={`size-2 shrink-0 rounded-full ring-1 ring-inset ring-foreground/10 ${(CONDITION_COLORS[key] ?? "").split(" ")[0]}`}
+                          aria-hidden="true"
+                        />
+                        {label}
+                        <span className="opacity-60">({count})</span>
+                      </button>
+                    );
+                  })}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="price">
+            <AccordionTrigger className="py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Cena (Kč)
+              {(minPrice || maxPrice) && (
+                <span className="ml-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-medium text-primary-foreground">1</span>
+              )}
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="flex items-center gap-2 pb-1">
+                <label htmlFor="filter-minPrice" className="sr-only">Minimální cena</label>
+                <Input
+                  id="filter-minPrice"
+                  type="number"
+                  min="0"
+                  max="999999"
+                  placeholder="od"
+                  defaultValue={minPrice}
+                  onBlur={(e) => updateParams({ minPrice: e.target.value || null })}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      updateParams({ minPrice: e.currentTarget.value || null });
+                    }
+                  }}
+                  className="h-8 text-xs"
+                />
+                <span className="text-xs text-muted-foreground" aria-hidden="true">–</span>
+                <label htmlFor="filter-maxPrice" className="sr-only">Maximální cena</label>
+                <Input
+                  id="filter-maxPrice"
+                  type="number"
+                  min="0"
+                  max="999999"
+                  placeholder="do"
+                  defaultValue={maxPrice}
+                  onBlur={(e) => updateParams({ maxPrice: e.target.value || null })}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      updateParams({ maxPrice: e.currentTarget.value || null });
+                    }
+                  }}
+                  className="h-8 text-xs"
+                />
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="sale">
+            <AccordionTrigger className="py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Sleva
+              {saleOnly && (
+                <span className="ml-1 rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-medium text-destructive">1</span>
+              )}
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="pb-1">
+                {saleToggle}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </div>
 
       {/* ===== MOBILE: compact bar + drawer (hidden on desktop) ===== */}
