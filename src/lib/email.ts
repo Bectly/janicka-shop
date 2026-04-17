@@ -2194,6 +2194,20 @@ function buildVintedCampaignHtml(
 }
 
 /**
+ * Render the Vinted T&C campaign email (subject + HTML) without sending.
+ * Used by admin dry-run / preview UI before committing a full send.
+ */
+export function renderVintedCampaignPreview(
+  segment: VintedCampaignSegment,
+  recipientEmail: string,
+): { subject: string; html: string } {
+  return {
+    subject: VINTED_SUBJECTS[segment],
+    html: buildVintedCampaignHtml(segment, recipientEmail),
+  };
+}
+
+/**
  * Send the Vinted T&C campaign email to one recipient.
  * Returns true on success, false on failure (non-throwing for batch use).
  */
@@ -2540,6 +2554,22 @@ const MOTHERS_DAY_BUILDERS: Record<
 };
 
 /**
+ * Render a Mother's Day campaign email (subject + HTML) without sending.
+ * Used by admin dry-run / preview UI.
+ */
+export function renderMothersDayPreview(
+  emailNumber: MothersDayEmailNumber,
+  segment: MothersDaySegment,
+  products: CampaignProduct[],
+  recipientEmail: string,
+): { subject: string; html: string } {
+  return {
+    subject: MOTHERS_DAY_SUBJECTS[emailNumber][segment],
+    html: MOTHERS_DAY_BUILDERS[emailNumber](products, recipientEmail),
+  };
+}
+
+/**
  * Send a Mother's Day campaign email to one recipient.
  * Returns true on success, false on failure (non-throwing for batch use).
  */
@@ -2807,6 +2837,21 @@ const CUSTOMS_BUILDERS: Record<
   1: buildCustomsEmail1Html,
   2: buildCustomsEmail2Html,
 };
+
+/**
+ * Render an EU customs duty campaign email (subject + HTML) without sending.
+ * Used by admin dry-run / preview UI.
+ */
+export function renderCustomsCampaignPreview(
+  emailNumber: CustomsEmailNumber,
+  products: CampaignProduct[],
+  recipientEmail: string,
+): { subject: string; html: string } {
+  return {
+    subject: CUSTOMS_SUBJECTS[emailNumber],
+    html: CUSTOMS_BUILDERS[emailNumber](products, recipientEmail),
+  };
+}
 
 /**
  * Send an EU customs duty campaign email to one recipient.

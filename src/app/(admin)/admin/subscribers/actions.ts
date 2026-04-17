@@ -2,8 +2,16 @@
 
 import { getDb } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { rateLimitAdmin } from "@/lib/rate-limit";
-import { sendCampaignEmail, sendVintedCampaignEmail, sendMothersDayEmail, sendCustomsCampaignEmail } from "@/lib/email";
+import { rateLimitAdmin, checkRateLimitOnly, recordRateLimitHit } from "@/lib/rate-limit";
+import {
+  sendCampaignEmail,
+  sendVintedCampaignEmail,
+  sendMothersDayEmail,
+  sendCustomsCampaignEmail,
+  renderVintedCampaignPreview,
+  renderMothersDayPreview,
+  renderCustomsCampaignPreview,
+} from "@/lib/email";
 import type { CampaignEmailData, CampaignProduct, VintedCampaignSegment, MothersDayEmailNumber, MothersDaySegment, CustomsEmailNumber } from "@/lib/email";
 import { getImageUrls } from "@/lib/images";
 import { parseJsonStringArray } from "@/lib/images";
@@ -11,6 +19,24 @@ import { parseJsonStringArray } from "@/lib/images";
 async function requireAdmin() {
   const session = await auth();
   if (!session?.user) throw new Error("Unauthorized");
+  return session;
+}
+
+// One full campaign send per 1h window per key (process-wide, not per IP).
+// Resend-level enforcement: prevents accidental double-send even if UI races.
+const FULL_SEND_WINDOW_MS = 60 * 60 * 1000;
+function guardFullSend(key: string): { success: boolean; error?: string } {
+  const check = checkRateLimitOnly(`campaign-full-send:${key}`, 1, FULL_SEND_WINDOW_MS);
+  if (!check.success) {
+    return {
+      success: false,
+      error: "Tato kampaň už byla odeslána v posledních 60 minutách. Počkej před dalším odesláním.",
+    };
+  }
+  return { success: true };
+}
+function markFullSend(key: string) {
+  recordRateLimitHit(`campaign-full-send:${key}`);
 }
 
 export async function toggleSubscriberActive(id: string, active: boolean) {
@@ -274,12 +300,21 @@ interface VintedCampaignResult {
  */
 export async function sendVintedTcCampaign(
   segment: "warm" | "cold" | "all",
+  confirmation?: string,
 ): Promise<VintedCampaignResult> {
   await requireAdmin();
+  if (confirmation !== "OSLOVIT") {
+    return { success: false, sentCount: 0, failedCount: 0, error: "Potvrzení 'OSLOVIT' chybí nebo není správně." };
+  }
   const rl = await rateLimitAdmin();
   if (!rl.success) {
     return { success: false, sentCount: 0, failedCount: 0, error: "Příliš mnoho požadavků. Zkuste to za chvíli." };
   }
+  const guard = guardFullSend(`vinted:${segment}`);
+  if (!guard.success) {
+    return { success: false, sentCount: 0, failedCount: 0, error: guard.error };
+  }
+  markFullSend(`vinted:${segment}`);
 
   const db = await getDb();
   const now = new Date();
@@ -375,12 +410,21 @@ interface CustomsCampaignResult {
  */
 export async function sendCustomsDutyCampaign(
   emailNumber: CustomsEmailNumber,
+  confirmation?: string,
 ): Promise<CustomsCampaignResult> {
   await requireAdmin();
+  if (confirmation !== "OSLOVIT") {
+    return { success: false, sentCount: 0, failedCount: 0, error: "Potvrzení 'OSLOVIT' chybí nebo není správně." };
+  }
   const rl = await rateLimitAdmin();
   if (!rl.success) {
     return { success: false, sentCount: 0, failedCount: 0, error: "Příliš mnoho požadavků. Zkuste to za chvíli." };
   }
+  const guard = guardFullSend(`customs:${emailNumber}`);
+  if (!guard.success) {
+    return { success: false, sentCount: 0, failedCount: 0, error: guard.error };
+  }
+  markFullSend(`customs:${emailNumber}`);
 
   const db = await getDb();
   const now = new Date();
@@ -488,12 +532,21 @@ interface MothersDayCampaignResult {
  */
 export async function sendMothersDayCampaign(
   emailNumber: MothersDayEmailNumber,
+  confirmation?: string,
 ): Promise<MothersDayCampaignResult> {
   await requireAdmin();
+  if (confirmation !== "OSLOVIT") {
+    return { success: false, sentCount: 0, failedCount: 0, error: "Potvrzení 'OSLOVIT' chybí nebo není správně." };
+  }
   const rl = await rateLimitAdmin();
   if (!rl.success) {
     return { success: false, sentCount: 0, failedCount: 0, error: "Příliš mnoho požadavků. Zkuste to za chvíli." };
   }
+  const guard = guardFullSend(`mothers-day:${emailNumber}`);
+  if (!guard.success) {
+    return { success: false, sentCount: 0, failedCount: 0, error: guard.error };
+  }
+  markFullSend(`mothers-day:${emailNumber}`);
 
   const db = await getDb();
   const now = new Date();
@@ -582,4 +635,197 @@ export async function sendMothersDayCampaign(
   });
 
   return { success: true, sentCount, failedCount };
+}
+
+// ---------------------------------------------------------------------------
+// Campaign dry-run / preview + test-send-to-self (Task #221)
+// ---------------------------------------------------------------------------
+
+interface CampaignPreview {
+  subject: string;
+  html: string;
+  subscriberCount: number;
+  sampleEmail: string;
+}
+
+interface TestSendResult {
+  success: boolean;
+  recipient?: string;
+  error?: string;
+}
+
+async function loadMothersDayProducts(
+  emailNumber: MothersDayEmailNumber,
+): Promise<CampaignProduct[]> {
+  const db = await getDb();
+  const productCount = emailNumber === 3 ? 3 : emailNumber === 2 ? 6 : 4;
+  const dbProducts = await db.product.findMany({
+    where: { active: true, sold: false },
+    orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+    select: {
+      name: true, slug: true, price: true, compareAt: true,
+      brand: true, condition: true, images: true,
+    },
+    take: productCount,
+  });
+  return dbProducts.map((p) => ({
+    name: p.name,
+    slug: p.slug,
+    price: p.price,
+    compareAt: p.compareAt,
+    brand: p.brand,
+    condition: p.condition,
+    image: getImageUrls(p.images)[0] ?? null,
+  }));
+}
+
+async function loadCustomsProducts(
+  emailNumber: CustomsEmailNumber,
+): Promise<CampaignProduct[]> {
+  const db = await getDb();
+  const productCount = emailNumber === 1 ? 4 : 5;
+  const dbProducts = await db.product.findMany({
+    where: { active: true, sold: false },
+    orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+    select: {
+      name: true, slug: true, price: true, compareAt: true,
+      brand: true, condition: true, images: true,
+    },
+    take: productCount,
+  });
+  return dbProducts.map((p) => ({
+    name: p.name,
+    slug: p.slug,
+    price: p.price,
+    compareAt: p.compareAt,
+    brand: p.brand,
+    condition: p.condition,
+    image: getImageUrls(p.images)[0] ?? null,
+  }));
+}
+
+async function getAdminTestRecipient(): Promise<string | null> {
+  const session = await auth();
+  const email = session?.user?.email;
+  if (email) return email;
+  return process.env.ADMIN_NOTIFICATION_EMAIL ?? null;
+}
+
+/** Preview the Vinted T&C campaign (subject + HTML) without sending. */
+export async function previewVintedCampaign(
+  segment: "warm" | "cold" | "all",
+): Promise<CampaignPreview> {
+  await requireAdmin();
+  const db = await getDb();
+  const now = new Date();
+  const subscriberCount = await db.newsletterSubscriber.count({
+    where: {
+      active: true,
+      OR: [{ pausedUntil: null }, { pausedUntil: { lt: now } }],
+    },
+  });
+  const previewSegment: VintedCampaignSegment = segment === "cold" ? "cold" : "warm";
+  const sampleEmail = (await getAdminTestRecipient()) ?? "preview@janicka-shop.cz";
+  const { subject, html } = renderVintedCampaignPreview(previewSegment, sampleEmail);
+  return { subject, html, subscriberCount, sampleEmail };
+}
+
+/** Send a single Vinted T&C test email to the current admin only. */
+export async function sendVintedTestEmail(
+  segment: "warm" | "cold" | "all",
+): Promise<TestSendResult> {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) {
+    return { success: false, error: "Příliš mnoho požadavků. Zkuste to za chvíli." };
+  }
+  const recipient = await getAdminTestRecipient();
+  if (!recipient) {
+    return { success: false, error: "Není nastavený admin e-mail pro test." };
+  }
+  const testSegment: VintedCampaignSegment = segment === "cold" ? "cold" : "warm";
+  const ok = await sendVintedCampaignEmail(testSegment, recipient);
+  return ok
+    ? { success: true, recipient }
+    : { success: false, error: "Test-email se nepodařilo odeslat. Zkontroluj Resend." };
+}
+
+/** Preview a Mother's Day campaign email. */
+export async function previewMothersDayCampaign(
+  emailNumber: MothersDayEmailNumber,
+): Promise<CampaignPreview> {
+  await requireAdmin();
+  const db = await getDb();
+  const now = new Date();
+  const subscriberCount = await db.newsletterSubscriber.count({
+    where: {
+      active: true,
+      OR: [{ pausedUntil: null }, { pausedUntil: { lt: now } }],
+    },
+  });
+  const products = await loadMothersDayProducts(emailNumber);
+  const sampleEmail = (await getAdminTestRecipient()) ?? "preview@janicka-shop.cz";
+  const segment: MothersDaySegment = "warm";
+  const { subject, html } = renderMothersDayPreview(emailNumber, segment, products, sampleEmail);
+  return { subject, html, subscriberCount, sampleEmail };
+}
+
+/** Send a single Mother's Day test email to the current admin only. */
+export async function sendMothersDayTestEmail(
+  emailNumber: MothersDayEmailNumber,
+): Promise<TestSendResult> {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) {
+    return { success: false, error: "Příliš mnoho požadavků. Zkuste to za chvíli." };
+  }
+  const recipient = await getAdminTestRecipient();
+  if (!recipient) {
+    return { success: false, error: "Není nastavený admin e-mail pro test." };
+  }
+  const products = await loadMothersDayProducts(emailNumber);
+  const segment: MothersDaySegment = "warm";
+  const ok = await sendMothersDayEmail(emailNumber, segment, products, recipient);
+  return ok
+    ? { success: true, recipient }
+    : { success: false, error: "Test-email se nepodařilo odeslat. Zkontroluj Resend." };
+}
+
+/** Preview a customs duty campaign email. */
+export async function previewCustomsCampaign(
+  emailNumber: CustomsEmailNumber,
+): Promise<CampaignPreview> {
+  await requireAdmin();
+  const db = await getDb();
+  const now = new Date();
+  const subscriberCount = await db.newsletterSubscriber.count({
+    where: {
+      active: true,
+      OR: [{ pausedUntil: null }, { pausedUntil: { lt: now } }],
+    },
+  });
+  const products = await loadCustomsProducts(emailNumber);
+  const sampleEmail = (await getAdminTestRecipient()) ?? "preview@janicka-shop.cz";
+  const { subject, html } = renderCustomsCampaignPreview(emailNumber, products, sampleEmail);
+  return { subject, html, subscriberCount, sampleEmail };
+}
+
+/** Send a single customs duty test email to the current admin only. */
+export async function sendCustomsTestEmail(
+  emailNumber: CustomsEmailNumber,
+): Promise<TestSendResult> {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) {
+    return { success: false, error: "Příliš mnoho požadavků. Zkuste to za chvíli." };
+  }
+  const recipient = await getAdminTestRecipient();
+  if (!recipient) {
+    return { success: false, error: "Není nastavený admin e-mail pro test." };
+  }
+  const products = await loadCustomsProducts(emailNumber);
+  const ok = await sendCustomsCampaignEmail(emailNumber, products, recipient);
+  return ok
+    ? { success: true, recipient }
+    : { success: false, error: "Test-email se nepodařilo odeslat. Zkontroluj Resend." };
 }
