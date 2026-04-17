@@ -30,8 +30,8 @@ export function verifyUnsubscribeToken(token: string): string | null {
   const sig = token.slice(dotIdx + 1);
   const secret = getSecret();
   if (!secret) {
-    if (sig === "plain" || payload === "plain") {
-      const actualPayload = payload === "plain" ? sig : payload;
+    if (payload === "plain") {
+      const actualPayload = sig;
       try {
         return Buffer.from(actualPayload, "base64url").toString("utf8") || null;
       } catch {
