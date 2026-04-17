@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getDb } from "@/lib/db";
 import { connection } from "next/server";
+import { CustomerInternalNoteEditor } from "../internal-note-editor";
+import { CustomerTagEditor } from "../tag-editor";
 
 import { formatPrice, formatDate } from "@/lib/format";
 import {
@@ -69,6 +71,16 @@ export default async function CustomerDetailPage({
   });
 
   if (!customer) notFound();
+
+  let customerTags: string[] = [];
+  try {
+    const parsed = JSON.parse(customer.tags);
+    if (Array.isArray(parsed)) {
+      customerTags = parsed.filter((t): t is string => typeof t === "string");
+    }
+  } catch {
+    customerTags = [];
+  }
 
   const emailHistory: {
     label: string;
@@ -206,6 +218,18 @@ export default async function CustomerDetailPage({
           );
         })}
       </div>
+
+      {/* Admin-only: internal note + tags */}
+      <section className="mt-6 grid gap-4 md:grid-cols-2">
+        <CustomerInternalNoteEditor
+          customerId={customer.id}
+          initialValue={customer.internalNote}
+        />
+        <CustomerTagEditor
+          customerId={customer.id}
+          initialTags={customerTags}
+        />
+      </section>
 
       {/* Email history */}
       <section className="mt-8">

@@ -4,10 +4,14 @@ import { formatPrice, formatDate } from "@/lib/format";
 import { connection } from "next/server";
 
 import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from "@/lib/constants";
-import { Users, Mail, Phone, MapPin } from "lucide-react";
+import { Users, Mail, Phone, MapPin, StickyNote } from "lucide-react";
 import Link from "next/link";
 import { Pagination } from "@/components/shop/pagination";
+import { CustomerSearchInput } from "./customer-search-input";
+import { CustomerTagFilter } from "./customer-tag-filter";
+import { ExportCustomersCsvButton } from "./export-customers-csv-button";
 import type { Metadata } from "next";
+import type { Prisma } from "@prisma/client";
 
 export const metadata: Metadata = {
   title: "Zákazníci",
@@ -15,20 +19,46 @@ export const metadata: Metadata = {
 
 const ADMIN_CUSTOMERS_PER_PAGE = 25;
 
+function parseTags(raw: string | null | undefined): string[] {
+  if (!raw) return [];
+  try {
+    const v = JSON.parse(raw);
+    if (!Array.isArray(v)) return [];
+    return v.filter((t): t is string => typeof t === "string");
+  } catch {
+    return [];
+  }
+}
+
 export default async function AdminCustomersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; q?: string; tag?: string }>;
 }) {
   const params = await searchParams;
   const currentPage = Math.max(1, parseInt(params.page ?? "1") || 1);
+  const query = (params.q ?? "").trim();
+  const tag = (params.tag ?? "").trim();
 
   await connection();
   const db = await getDb();
 
-  const [totalCount, customers] = await Promise.all([
-    db.customer.count(),
+  const where: Prisma.CustomerWhereInput = {};
+  if (query) {
+    where.OR = [
+      { email: { contains: query } },
+      { firstName: { contains: query } },
+      { lastName: { contains: query } },
+    ];
+  }
+  if (tag) {
+    where.tags = { contains: `"${tag}"` };
+  }
+
+  const [totalCount, customers, allTagsRaw] = await Promise.all([
+    db.customer.count({ where }),
     db.customer.findMany({
+      where,
       orderBy: { createdAt: "desc" },
       skip: (currentPage - 1) * ADMIN_CUSTOMERS_PER_PAGE,
       take: ADMIN_CUSTOMERS_PER_PAGE,
@@ -45,7 +75,26 @@ export default async function AdminCustomersPage({
         },
       },
     }),
+    // Fetch tag strings from all customers to build the filter chip row.
+    // Limited to 1000 recent records to keep this cheap; covers practical usage.
+    db.customer.findMany({
+      where: { tags: { not: "[]" } },
+      select: { tags: true },
+      orderBy: { updatedAt: "desc" },
+      take: 1000,
+    }),
   ]);
+
+  const allTagCounts = new Map<string, number>();
+  for (const row of allTagsRaw) {
+    for (const t of parseTags(row.tags)) {
+      allTagCounts.set(t, (allTagCounts.get(t) ?? 0) + 1);
+    }
+  }
+  const allTags = [...allTagCounts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "cs-CZ"))
+    .slice(0, 20)
+    .map(([t]) => t);
 
   const customersWithStats = customers.map((customer) => {
     const validOrders = customer.orders.filter(
@@ -58,12 +107,16 @@ export default async function AdminCustomersPage({
       orderCount: customer.orders.length,
       totalSpent,
       lastOrder,
+      parsedTags: parseTags(customer.tags),
+      hasNote: !!customer.internalNote?.trim(),
     };
   });
 
+  const isFiltered = !!query || !!tag;
+
   return (
     <>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-heading text-2xl font-bold text-foreground">
             Zákazníci
@@ -71,23 +124,36 @@ export default async function AdminCustomersPage({
           <p className="mt-1 text-sm text-muted-foreground">
             {totalCount}{" "}
             {totalCount === 1
-              ? "zákazník"
+              ? "zákaznice"
               : totalCount >= 2 && totalCount <= 4
-                ? "zákazníci"
-                : "zákazníků"}{" "}
-            celkem
+                ? "zákaznice"
+                : "zákaznic"}{" "}
+            {isFiltered ? "odpovídá filtru" : "celkem"}
           </p>
         </div>
+        <ExportCustomersCsvButton
+          q={query || undefined}
+          tag={tag || undefined}
+        />
+      </div>
+
+      <div className="mt-6 flex flex-wrap items-center gap-3">
+        <CustomerSearchInput initialValue={query} />
+        <CustomerTagFilter tags={allTags} activeTag={tag || null} />
       </div>
 
       {totalCount === 0 ? (
         <div className="mt-12 rounded-xl border bg-card p-12 text-center shadow-sm">
           <Users className="mx-auto size-12 text-muted-foreground/30" />
           <p className="mt-4 text-lg font-medium text-muted-foreground">
-            Zatím žádní zákazníci
+            {isFiltered
+              ? "Žádné zákaznice neodpovídají filtru"
+              : "Zatím žádné zákaznice"}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Zákazníci se vytvoří automaticky při první objednávce.
+            {isFiltered
+              ? "Zkus upravit hledaný výraz nebo zrušit filtr tagem."
+              : "Zákaznice se vytvoří automaticky při první objednávce."}
           </p>
         </div>
       ) : (
@@ -97,10 +163,13 @@ export default async function AdminCustomersPage({
               <thead>
                 <tr className="border-b bg-muted/50">
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    Zákazník
+                    Zákaznice
                   </th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">
                     Kontakt
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                    Tagy
                   </th>
                   <th className="px-4 py-3 text-center font-medium text-muted-foreground">
                     Objednávky
@@ -123,12 +192,20 @@ export default async function AdminCustomersPage({
                     className="border-b last:border-0 transition-colors hover:bg-muted/30"
                   >
                     <td className="px-4 py-3">
-                      <Link
-                        href={`/admin/customers/${customer.id}`}
-                        className="font-medium text-primary hover:underline"
-                      >
-                        {customer.firstName} {customer.lastName}
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/admin/customers/${customer.id}`}
+                          className="font-medium text-primary hover:underline"
+                        >
+                          {customer.firstName} {customer.lastName}
+                        </Link>
+                        {customer.hasNote && (
+                          <StickyNote
+                            className="size-3.5 text-amber-500"
+                            aria-label="Má interní poznámku"
+                          />
+                        )}
+                      </div>
                       {customer.city && (
                         <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
                           <MapPin className="size-3" />
@@ -147,6 +224,27 @@ export default async function AdminCustomersPage({
                           <Phone className="size-3.5" />
                           <span className="text-xs">{customer.phone}</span>
                         </p>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {customer.parsedTags.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {customer.parsedTags.slice(0, 4).map((t) => (
+                            <span
+                              key={t}
+                              className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
+                            >
+                              {t}
+                            </span>
+                          ))}
+                          {customer.parsedTags.length > 4 && (
+                            <span className="text-xs text-muted-foreground">
+                              +{customer.parsedTags.length - 4}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-center">
