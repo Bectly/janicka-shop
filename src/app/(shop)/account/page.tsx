@@ -4,8 +4,9 @@ import { connection } from "next/server";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { formatPrice, formatDate } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Package, User } from "lucide-react";
+import { ArrowRight, Package, ShoppingBag, User } from "lucide-react";
 import { OrderStatusBadge } from "./order-status-badge";
 import type { Metadata } from "next";
 
@@ -46,7 +47,7 @@ export default async function AccountDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border bg-card p-6 shadow-sm">
+      <div className="rounded-xl border bg-gradient-to-br from-champagne-light/40 via-card to-card p-6 shadow-sm">
         <h2 className="font-heading text-xl font-semibold">
           Ahoj, {customer.firstName}!
         </h2>
@@ -61,12 +62,14 @@ export default async function AccountDashboardPage() {
         <DashCard
           href="/account/orders"
           icon={Package}
+          iconClass="bg-sage-light text-sage-dark"
           title="Objednávky"
           description="Historie, stav a sledování zásilek"
         />
         <DashCard
           href="/account/profile"
           icon={User}
+          iconClass="bg-champagne text-champagne-dark"
           title="Profil"
           description="Kontaktní údaje a doručovací adresa"
         />
@@ -89,6 +92,7 @@ export default async function AccountDashboardPage() {
 
         {recentOrders.length === 0 ? (
           <div className="rounded-xl border bg-card p-8 text-center shadow-sm">
+            <ShoppingBag className="mx-auto mb-3 size-8 text-muted-foreground/50" />
             <p className="text-sm text-muted-foreground">
               Ještě jsi nic neobjednala.
             </p>
@@ -102,11 +106,11 @@ export default async function AccountDashboardPage() {
             {recentOrders.map((o) => (
               <li
                 key={o.id}
-                className="rounded-xl border bg-card p-4 shadow-sm"
+                className="rounded-xl border bg-card shadow-sm transition-colors hover:border-primary/30 hover:bg-muted/30"
               >
                 <Link
                   href={`/account/orders/${o.orderNumber}`}
-                  className="flex items-center justify-between gap-3"
+                  className="flex items-center justify-between gap-3 p-4"
                 >
                   <div className="min-w-0">
                     <p className="truncate font-medium">{o.orderNumber}</p>
@@ -141,11 +145,13 @@ function DashCard({
   icon: Icon,
   title,
   description,
+  iconClass,
 }: {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   title: string;
   description: string;
+  iconClass?: string;
 }) {
   return (
     <Link
@@ -153,8 +159,8 @@ function DashCard({
       className="group rounded-xl border bg-card p-5 shadow-sm transition-colors hover:border-primary/40"
     >
       <div className="flex items-start gap-3">
-        <div className="rounded-lg bg-muted p-2">
-          <Icon className="size-5 text-foreground" />
+        <div className={cn("rounded-lg p-2", iconClass ?? "bg-muted text-foreground")}>
+          <Icon className="size-5" />
         </div>
         <div className="flex-1">
           <p className="font-medium">{title}</p>

@@ -39,9 +39,9 @@ export function AccountNav() {
             </li>
           );
         })}
-        <li className="md:mt-2">
+        <li className="md:mt-2 md:border-t md:pt-2">
           <SignOutButton>
-            <LogOut className="size-4" />
+            <LogOut className="size-4 shrink-0" />
             <span>Odhlásit se</span>
           </SignOutButton>
         </li>

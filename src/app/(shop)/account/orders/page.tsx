@@ -5,7 +5,7 @@ import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { formatPrice, formatDate } from "@/lib/format";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronRight, Package } from "lucide-react";
 import { OrderStatusBadge } from "../order-status-badge";
 import type { Metadata } from "next";
 
@@ -40,6 +40,7 @@ export default async function AccountOrdersPage() {
 
       {orders.length === 0 ? (
         <div className="rounded-xl border bg-card p-8 text-center shadow-sm">
+          <Package className="mx-auto mb-3 size-8 text-muted-foreground/50" />
           <p className="text-sm text-muted-foreground">
             Zatím zde nic není.
           </p>
@@ -53,11 +54,11 @@ export default async function AccountOrdersPage() {
           {orders.map((o) => (
             <li
               key={o.id}
-              className="rounded-xl border bg-card p-4 shadow-sm"
+              className="rounded-xl border bg-card shadow-sm transition-colors hover:border-primary/30 hover:bg-muted/30"
             >
               <Link
                 href={`/account/orders/${o.orderNumber}`}
-                className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="min-w-0">
                   <p className="truncate font-medium">{o.orderNumber}</p>
@@ -71,6 +72,7 @@ export default async function AccountOrdersPage() {
                   <span className="whitespace-nowrap font-semibold">
                     {formatPrice(o.total)}
                   </span>
+                  <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
                 </div>
               </Link>
             </li>

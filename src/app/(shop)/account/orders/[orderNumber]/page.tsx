@@ -69,7 +69,7 @@ export default async function AccountOrderDetailPage({ params }: Props) {
       <div>
         <Link
           href="/account/orders"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="size-4" />
           Zpět na objednávky
