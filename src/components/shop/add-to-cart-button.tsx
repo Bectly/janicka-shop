@@ -106,12 +106,17 @@ export function AddToCartButton({ product, hideSize = false }: AddToCartProps) {
         {!hideSize && product.sizes.length > 0 && (
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-sm font-medium">Velikost</p>
+              <p className="text-sm font-medium">Velikost kusu</p>
               <SizeGuide />
             </div>
             <span className="inline-flex items-center rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm font-semibold text-foreground">
               {product.sizes.join(" · ")}
             </span>
+            {product.sizes.length > 1 && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Tento kus sedí na velikosti {product.sizes.join(" / ")} (ekvivalenty pro srovnání)
+              </p>
+            )}
           </div>
         )}
 

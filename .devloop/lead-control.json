@@ -1,6 +1,6 @@
 {
   "pause": {},
-  "force_next": "bolt",
+  "force_next": null,
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 3712,

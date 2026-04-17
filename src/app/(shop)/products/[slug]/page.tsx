@@ -18,6 +18,7 @@ import {
 } from "@/components/shop/recently-viewed";
 import { ProductInfoAccordion } from "@/components/shop/product-info-accordion";
 import { ProductDefects } from "@/components/shop/product-defects";
+import { ProductDescription } from "@/components/shop/product-description";
 import { parseDefectImages } from "@/lib/defects";
 import { FreeShippingBar } from "@/components/shop/free-shipping-bar";
 import { NotifyMeForm } from "@/components/shop/notify-me-form";
@@ -488,8 +489,22 @@ export default async function ProductDetailPage({ params }: Props) {
   let colors: string[] = [];
   try { sizes = JSON.parse(product.sizes); } catch { /* corrupted data fallback */ }
   try { colors = JSON.parse(product.colors); } catch { /* corrupted data fallback */ }
+  // Filter sentinel "no real size" values — they don't help the buyer.
+  const SIZE_SENTINELS = new Set(["Jiná", "Jina", "Univerzální", "Univerzalni", "UNI"]);
+  const filteredSizes = sizes.filter((s) => !SIZE_SENTINELS.has(s));
+  // Accessories + all-sentinel cases: no size block at all.
+  const NON_SIZED_CATEGORIES = new Set(["doplnky"]);
+  const showSize =
+    !NON_SIZED_CATEGORIES.has(product.category.slug) && filteredSizes.length > 0;
   const hasDiscount = product.compareAt && product.compareAt > product.price;
   const lowestPrice30d = product.lowestPrice30d;
+
+  // Parse parenthetical variant info out of the title, e.g.
+  // "TrueLife vyhřívací deka – 75 × 150 cm (málo používaná)" →
+  // base: "TrueLife vyhřívací deka – 75 × 150 cm", variant: "málo používaná"
+  const titleMatch = product.name.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+  const titleBase = titleMatch ? titleMatch[1] : product.name;
+  const titleVariant = titleMatch ? titleMatch[2] : null;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -554,9 +569,12 @@ export default async function ProductDetailPage({ params }: Props) {
               </>
             )}
           </div>
-          <h1 className="mt-1 font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
-            {product.name}
+          <h1 className="mt-1 max-w-[28ch] text-balance font-heading text-xl font-semibold leading-tight tracking-tight text-foreground sm:text-2xl lg:text-[1.75rem]">
+            {titleBase}
           </h1>
+          {titleVariant && (
+            <p className="mt-1 text-sm text-muted-foreground">{titleVariant}</p>
+          )}
 
           {/* Condition + Price */}
           <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -595,19 +613,23 @@ export default async function ProductDetailPage({ params }: Props) {
             </div>
           )}
 
-          {/* Condition badge */}
-          <div className="mt-3">
+          {/* Condition + uniqueness badges — scarcity shown up front */}
+          <div className="mt-3 flex flex-wrap items-center gap-2">
             <span
               className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${CONDITION_COLORS[product.condition] ?? "bg-muted text-muted-foreground"}`}
             >
               {CONDITION_LABELS[product.condition] ?? product.condition}
             </span>
+            {product.stock > 0 && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold text-brand-dark">
+                <Sparkles className="size-3" />
+                Jediný kus
+              </span>
+            )}
           </div>
 
           {/* Description */}
-          <p className="mt-5 whitespace-pre-wrap text-sm leading-relaxed text-foreground/80 sm:text-base">
-            {product.description}
-          </p>
+          <ProductDescription text={product.description} />
 
           {/* Fit note */}
           {product.fitNote && (
@@ -687,16 +709,6 @@ export default async function ProductDetailPage({ params }: Props) {
             />
           </div>
 
-          {/* Urgency signal — shown BEFORE the ATC button so scarcity drives the click */}
-          {product.stock > 0 && (
-            <div className="mt-4">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1.5 text-xs font-semibold text-brand-dark">
-                <Sparkles className="size-3" />
-                Jediný kus — existuje jen jednou
-              </span>
-            </div>
-          )}
-
           {/* Add to cart — reservation status computed client-side */}
           <AddToCartButton
             product={{
@@ -705,20 +717,13 @@ export default async function ProductDetailPage({ params }: Props) {
               price: product.price,
               slug: product.slug,
               images: product.images,
-              sizes,
+              sizes: filteredSizes,
               colors,
               stock: product.stock,
               reservedUntil: reservedUntilIso,
             }}
-            hideSize={product.category.slug === "doplnky"}
+            hideSize={!showSize}
           />
-
-          {/* Out-of-stock label */}
-          {product.stock === 0 && (
-            <p className="mt-4 text-xs text-muted-foreground">
-              Momentálně nedostupné
-            </p>
-          )}
 
           {/* Estimated delivery */}
           {product.stock > 0 && (() => {
