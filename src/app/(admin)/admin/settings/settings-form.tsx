@@ -20,6 +20,10 @@ interface SettingsFormProps {
     dic: string;
     instagram: string;
     facebook: string;
+    notifyOnNewOrder: boolean;
+    notifyOnReturn: boolean;
+    notifyOnReviewFailed: boolean;
+    soundNotifications: boolean;
   };
 }
 
@@ -203,6 +207,78 @@ export function SettingsForm({ settings }: SettingsFormProps) {
               className="mt-1.5"
             />
           </div>
+        </div>
+      </section>
+
+      {/* Notifikace */}
+      <section>
+        <h2 className="font-heading text-lg font-semibold text-foreground">
+          Notifikace
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          E-mailové upozornění se pošle na{" "}
+          <strong>
+            {settings.contactEmail || "(není nastaven e-mail v kontaktních údajích)"}
+          </strong>
+          . Zvuková notifikace hraje krátký tón při nové objednávce, dokud máš admin otevřený.
+        </p>
+        <div className="mt-4 space-y-3">
+          <label className="flex items-start gap-3 text-sm">
+            <input
+              type="checkbox"
+              name="notifyOnNewOrder"
+              defaultChecked={settings.notifyOnNewOrder}
+              className="mt-0.5 size-4 rounded border-input"
+            />
+            <span>
+              <span className="font-medium text-foreground">Poslat mi e-mail při nové objednávce</span>
+              <span className="block text-xs text-muted-foreground">
+                Po zaplacení online platby nebo při dobírce dorazí shrnutí objednávky.
+              </span>
+            </span>
+          </label>
+          <label className="flex items-start gap-3 text-sm">
+            <input
+              type="checkbox"
+              name="notifyOnReturn"
+              defaultChecked={settings.notifyOnReturn}
+              className="mt-0.5 size-4 rounded border-input"
+            />
+            <span>
+              <span className="font-medium text-foreground">Poslat mi e-mail při vrácení zboží</span>
+              <span className="block text-xs text-muted-foreground">
+                Když zákaznice odešle žádost o vratku (14 dní).
+              </span>
+            </span>
+          </label>
+          <label className="flex items-start gap-3 text-sm">
+            <input
+              type="checkbox"
+              name="notifyOnReviewFailed"
+              defaultChecked={settings.notifyOnReviewFailed}
+              className="mt-0.5 size-4 rounded border-input"
+            />
+            <span>
+              <span className="font-medium text-foreground">Poslat mi e-mail, když se nepodaří odeslat žádost o recenzi</span>
+              <span className="block text-xs text-muted-foreground">
+                Dozvíš se o selhání automatické pošty do Heureky.
+              </span>
+            </span>
+          </label>
+          <label className="flex items-start gap-3 text-sm">
+            <input
+              type="checkbox"
+              name="soundNotifications"
+              defaultChecked={settings.soundNotifications}
+              className="mt-0.5 size-4 rounded border-input"
+            />
+            <span>
+              <span className="font-medium text-foreground">Zvuková notifikace v administraci</span>
+              <span className="block text-xs text-muted-foreground">
+                Krátký tón zahraje při příchodu nové objednávky, pokud máš otevřený admin.
+              </span>
+            </span>
+          </label>
         </div>
       </section>
 

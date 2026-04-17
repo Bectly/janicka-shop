@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { AdminSidebar } from "@/components/admin/sidebar";
+import { AdminOrderNotifier } from "@/components/admin/order-notifier";
 import { DevChatWidget } from "@/components/dev-chat/dev-chat-widget";
 
 async function AdminAuthGate({
@@ -31,14 +32,28 @@ async function AdminAuthGate({
     redirect("/admin/welcome");
   }
 
+  // Sidebar badge: count of orders created in the last 24h
+  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const [ordersLast24h, settings] = await Promise.all([
+    db.order.count({ where: { createdAt: { gte: yesterday } } }),
+    db.shopSettings.findUnique({
+      where: { id: "singleton" },
+      select: { soundNotifications: true },
+    }),
+  ]);
+
   return (
     <>
-      <AdminSidebar userName={session.user.name ?? "Admin"} />
+      <AdminSidebar
+        userName={session.user.name ?? "Admin"}
+        ordersLast24h={ordersLast24h}
+      />
       <main id="main-content" className="flex-1 overflow-auto">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           {children}
         </div>
       </main>
+      <AdminOrderNotifier soundEnabled={settings?.soundNotifications ?? false} />
       <Suspense>
         <DevChatWidget />
       </Suspense>

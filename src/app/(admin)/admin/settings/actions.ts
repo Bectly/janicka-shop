@@ -29,6 +29,10 @@ const settingsSchema = z.object({
   dic: z.string().trim().max(20).default(""),
   instagram: z.string().trim().max(200).default(""),
   facebook: z.string().trim().max(200).default(""),
+  notifyOnNewOrder: z.boolean().default(true),
+  notifyOnReturn: z.boolean().default(true),
+  notifyOnReviewFailed: z.boolean().default(true),
+  soundNotifications: z.boolean().default(false),
 });
 
 export type SettingsResult = {
@@ -75,6 +79,10 @@ export async function updateShopSettings(
     dic: formData.get("dic") ?? "",
     instagram: formData.get("instagram") ?? "",
     facebook: formData.get("facebook") ?? "",
+    notifyOnNewOrder: formData.get("notifyOnNewOrder") === "on",
+    notifyOnReturn: formData.get("notifyOnReturn") === "on",
+    notifyOnReviewFailed: formData.get("notifyOnReviewFailed") === "on",
+    soundNotifications: formData.get("soundNotifications") === "on",
   };
 
   const parsed = settingsSchema.safeParse(raw);

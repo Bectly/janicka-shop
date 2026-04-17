@@ -3,6 +3,9 @@
 import { useTransition, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createCategory, updateCategory } from "./actions";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 
 interface CategoryFormProps {
   category?: {
@@ -51,13 +54,13 @@ export function CategoryForm({ category }: CategoryFormProps) {
         >
           Název *
         </label>
-        <input
+        <Input
           type="text"
           id="name"
           name="name"
           required
           defaultValue={category?.name ?? ""}
-          className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+          className="mt-1"
           placeholder="např. Šaty"
         />
       </div>
@@ -69,12 +72,12 @@ export function CategoryForm({ category }: CategoryFormProps) {
         >
           Popis
         </label>
-        <textarea
+        <Textarea
           id="description"
           name="description"
           rows={3}
           defaultValue={category?.description ?? ""}
-          className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+          className="mt-1"
           placeholder="Krátký popis kategorie (volitelné)"
         />
       </div>
@@ -86,12 +89,12 @@ export function CategoryForm({ category }: CategoryFormProps) {
         >
           URL obrázku
         </label>
-        <input
+        <Input
           type="text"
           id="image"
           name="image"
           defaultValue={category?.image ?? ""}
-          className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+          className="mt-1"
           placeholder="https://... (volitelné)"
         />
       </div>
@@ -103,12 +106,12 @@ export function CategoryForm({ category }: CategoryFormProps) {
         >
           Pořadí řazení
         </label>
-        <input
+        <Input
           type="number"
           id="sortOrder"
           name="sortOrder"
           defaultValue={category?.sortOrder ?? 0}
-          className="mt-1 w-32 rounded-lg border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+          className="mt-1 w-32"
         />
         <p className="mt-1 text-xs text-muted-foreground">
           Nižší číslo = kategorie se zobrazí dříve.
@@ -116,24 +119,20 @@ export function CategoryForm({ category }: CategoryFormProps) {
       </div>
 
       <div className="flex items-center gap-3 pt-2">
-        <button
-          type="submit"
-          disabled={isPending}
-          className="rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
-        >
+        <Button type="submit" disabled={isPending}>
           {isPending
             ? "Ukládám..."
             : isEditing
               ? "Uložit změny"
               : "Vytvořit kategorii"}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="outline"
           onClick={() => router.push("/admin/categories")}
-          className="rounded-lg border px-6 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           Zrušit
-        </button>
+        </Button>
       </div>
     </form>
   );

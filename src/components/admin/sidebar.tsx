@@ -37,7 +37,13 @@ const navItems = [
   { href: "/admin/settings", label: "Nastavení", icon: Settings },
 ];
 
-export function AdminSidebar({ userName }: { userName: string }) {
+export function AdminSidebar({
+  userName,
+  ordersLast24h = 0,
+}: {
+  userName: string;
+  ordersLast24h?: number;
+}) {
   const pathname = usePathname();
 
   return (
@@ -56,6 +62,7 @@ export function AdminSidebar({ userName }: { userName: string }) {
         {navItems.map((item) => {
           const isActive = pathname.startsWith(item.href);
           const Icon = item.icon;
+          const showBadge = item.href === "/admin/orders" && ordersLast24h > 0;
           return (
             <Link
               key={item.href}
@@ -65,9 +72,18 @@ export function AdminSidebar({ userName }: { userName: string }) {
                   ? "bg-primary/10 text-primary"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               }`}
+              title={showBadge ? `Posledních 24h: ${ordersLast24h} nových objednávek` : undefined}
             >
               <Icon className="size-4" />
-              {item.label}
+              <span className="flex-1">{item.label}</span>
+              {showBadge ? (
+                <span
+                  aria-label={`Posledních 24h: ${ordersLast24h} nových objednávek`}
+                  className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-emerald-600 px-1.5 text-[11px] font-semibold leading-5 text-white"
+                >
+                  {ordersLast24h > 99 ? "99+" : ordersLast24h}
+                </span>
+              ) : null}
             </Link>
           );
         })}

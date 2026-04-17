@@ -3,6 +3,8 @@
 import { useTransition, useState } from "react";
 import { updateReturnStatus } from "../actions";
 import { RETURN_STATUS_LABELS } from "@/lib/constants";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 
 const STATUS_TRANSITIONS: Record<string, string[]> = {
   pending: ["approved", "rejected"],
@@ -75,27 +77,28 @@ export function ReturnStatusSelect({
 
       {showNote && (
         <div className="space-y-2">
-          <textarea
+          <Textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Důvod zamítnutí..."
-            className="w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
             rows={2}
           />
           <div className="flex gap-2">
-            <button
+            <Button
+              size="sm"
+              variant="destructive"
               onClick={handleRejectConfirm}
               disabled={isPending}
-              className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
             >
               {isPending ? "Ukládám..." : "Zamítnout"}
-            </button>
-            <button
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
               onClick={() => setShowNote(false)}
-              className="rounded-lg border px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted"
             >
               Zrušit
-            </button>
+            </Button>
           </div>
         </div>
       )}

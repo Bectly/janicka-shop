@@ -4,7 +4,7 @@ import { getDb } from "@/lib/db";
 import { getComgatePaymentStatus } from "@/lib/payments/comgate";
 import { ComgateError } from "@/lib/payments/types";
 import { revalidatePath } from "next/cache";
-import { sendPaymentConfirmedEmail } from "@/lib/email";
+import { sendPaymentConfirmedEmail, sendAdminNewOrderEmail } from "@/lib/email";
 import { logOrderToHeureka } from "@/lib/heureka";
 
 /**
@@ -152,6 +152,26 @@ async function processPaymentStatus(
               accessToken: order.accessToken ?? "",
             }).catch((err) => {
               console.error(`[Webhook] Failed to send payment confirmation email for ${order.orderNumber}:`, err);
+            });
+
+            // Notify admin that a paid online order arrived (task #244)
+            sendAdminNewOrderEmail({
+              orderNumber: order.orderNumber,
+              orderId: order.id,
+              customerName: `${order.customer.firstName} ${order.customer.lastName}`,
+              customerEmail: order.customer.email,
+              items: order.items.map((i) => ({
+                name: i.name,
+                price: i.price,
+                size: i.size,
+                color: i.color,
+              })),
+              total: order.total,
+              paymentMethod: order.paymentMethod ?? "comgate",
+              shippingMethod: order.shippingMethod ?? "",
+              paid: true,
+            }).catch((err) => {
+              console.error(`[Webhook] Failed to send admin notification for ${order.orderNumber}:`, err);
             });
 
             // Log to Heureka for "Ověřeno zákazníky" review questionnaire

@@ -540,22 +540,27 @@ export async function createOrder(
     console.error(`[Checkout] Order confirmation email failed for ${order.orderNumber}:`, err);
   });
 
-  // Notify admin about new order (fire-and-forget)
-  sendAdminNewOrderEmail({
-    orderNumber: order.orderNumber,
-    customerName: `${data.firstName} ${data.lastName}`,
-    customerEmail: order.customerEmail,
-    items: data.items.map((item) => {
-      const dbPrice = order.dbPrices.get(item.productId);
-      const dbName = order.dbNames.get(item.productId);
-      return { name: dbName ?? item.name, price: dbPrice ?? item.price, size: item.size, color: item.color };
-    }),
-    total: order.total,
-    paymentMethod: data.paymentMethod,
-    shippingMethod: data.shippingMethod,
-  }).catch((err: unknown) => {
-    console.error(`[Checkout] Admin notification email failed for ${order.orderNumber}:`, err);
-  });
+  // Notify admin about new order — COD only fires here (confirmed money).
+  // Online payments (Comgate) notify admin from the webhook once status=PAID,
+  // so unpaid pending orders don't spam admin inbox.
+  if (isCod) {
+    sendAdminNewOrderEmail({
+      orderNumber: order.orderNumber,
+      orderId: order.id,
+      customerName: `${data.firstName} ${data.lastName}`,
+      customerEmail: order.customerEmail,
+      items: data.items.map((item) => {
+        const dbPrice = order.dbPrices.get(item.productId);
+        const dbName = order.dbNames.get(item.productId);
+        return { name: dbName ?? item.name, price: dbPrice ?? item.price, size: item.size, color: item.color };
+      }),
+      total: order.total,
+      paymentMethod: data.paymentMethod,
+      shippingMethod: data.shippingMethod,
+    }).catch((err: unknown) => {
+      console.error(`[Checkout] Admin notification email failed for ${order.orderNumber}:`, err);
+    });
+  }
 
   // For cash on delivery — mark abandoned carts recovered, log to Heureka, then go to confirmation
   if (isCod) {

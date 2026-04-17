@@ -768,11 +768,50 @@ interface AdminOrderNotificationData {
   total: number;
   paymentMethod: string;
   shippingMethod: string;
+  orderId?: string;
+  paid?: boolean;
+}
+
+/**
+ * Resolve the admin notification target:
+ * 1. ShopSettings.contactEmail (primary — task #244 spec)
+ * 2. ADMIN_NOTIFICATION_EMAIL env var (fallback)
+ * Also returns the notification flags so callers can skip when disabled.
+ */
+export async function resolveAdminNotificationConfig(): Promise<{
+  email: string | null;
+  notifyOnNewOrder: boolean;
+  notifyOnReturn: boolean;
+  notifyOnReviewFailed: boolean;
+}> {
+  const { getDb } = await import("@/lib/db");
+  try {
+    const db = await getDb();
+    const settings = await db.shopSettings.findUnique({ where: { id: "singleton" } });
+    const settingsEmail = settings?.contactEmail?.trim() || null;
+    const fallback = process.env.ADMIN_NOTIFICATION_EMAIL ?? null;
+    return {
+      email: settingsEmail ?? fallback,
+      notifyOnNewOrder: settings?.notifyOnNewOrder ?? true,
+      notifyOnReturn: settings?.notifyOnReturn ?? true,
+      notifyOnReviewFailed: settings?.notifyOnReviewFailed ?? true,
+    };
+  } catch {
+    return {
+      email: process.env.ADMIN_NOTIFICATION_EMAIL ?? null,
+      notifyOnNewOrder: true,
+      notifyOnReturn: true,
+      notifyOnReviewFailed: true,
+    };
+  }
 }
 
 function buildAdminNewOrderHtml(data: AdminOrderNotificationData): string {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
-  const adminUrl = `${baseUrl}/admin/orders`;
+  const adminUrl = data.orderId
+    ? `${baseUrl}/admin/orders/${data.orderId}`
+    : `${baseUrl}/admin/orders`;
+  const headline = data.paid ? "Platba potvrzena" : "Nová objednávka!";
 
   const itemsHtml = data.items
     .map(
@@ -790,7 +829,7 @@ function buildAdminNewOrderHtml(data: AdminOrderNotificationData): string {
 <body style="margin: 0; padding: 0; background-color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333;">
   <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
     <div style="text-align: center; padding: 16px 0;">
-      <h1 style="margin: 0; font-size: 20px; color: #1a1a1a;">Nová objednávka!</h1>
+      <h1 style="margin: 0; font-size: 20px; color: #1a1a1a;">${headline}</h1>
     </div>
     <div style="background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
       <table style="width: 100%; border-collapse: collapse;">
@@ -850,18 +889,21 @@ export async function sendAdminNewOrderEmail(data: AdminOrderNotificationData): 
     return;
   }
 
-  // Admin email from env, with shop settings contact email as fallback
-  const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL;
-  if (!adminEmail) {
-    console.warn("[Email] ADMIN_NOTIFICATION_EMAIL not set — skipping admin order notification");
+  const config = await resolveAdminNotificationConfig();
+  if (!config.notifyOnNewOrder) {
+    return;
+  }
+  if (!config.email) {
+    console.warn("[Email] No admin notification email configured — skipping admin order notification");
     return;
   }
 
+  const subjectPrefix = data.paid ? "Platba potvrzena" : "Nová objednávka";
   try {
     await resend.emails.send({
       from: FROM_EMAIL,
-      to: adminEmail,
-      subject: `Nová objednávka ${data.orderNumber} — ${formatPriceCzk(data.total)}`,
+      to: config.email,
+      subject: `${subjectPrefix} ${data.orderNumber} — ${formatPriceCzk(data.total)}`,
       html: buildAdminNewOrderHtml(data),
     });
   } catch (error) {
