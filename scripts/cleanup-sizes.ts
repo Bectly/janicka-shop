@@ -2,8 +2,10 @@
  * Cleanup Product.sizes — normalize mixed/garbage size arrays to canonical
  * category-appropriate values. Uses the same logic as the admin size enum.
  *
- *   npx tsx scripts/cleanup-sizes.ts          # dry-run
- *   npx tsx scripts/cleanup-sizes.ts --write  # apply to Turso
+ *   npx tsx scripts/cleanup-sizes.ts                   # dry-run against Turso
+ *   npx tsx scripts/cleanup-sizes.ts --write           # apply to Turso
+ *   npx tsx scripts/cleanup-sizes.ts --local           # dry-run against prisma/dev.db
+ *   npx tsx scripts/cleanup-sizes.ts --local --write   # apply to prisma/dev.db
  */
 import { createClient } from "@libsql/client";
 import { getSizesForCategory, normalizeSize } from "../src/lib/sizes";
@@ -33,10 +35,13 @@ function filterValidForCategory(
 
 async function main() {
   const WRITE = process.argv.includes("--write");
-  const client = createClient({
-    url: process.env.TURSO_DATABASE_URL!,
-    authToken: process.env.TURSO_AUTH_TOKEN!,
-  });
+  const LOCAL = process.argv.includes("--local");
+  const client = LOCAL
+    ? createClient({ url: "file:prisma/dev.db" })
+    : createClient({
+        url: process.env.TURSO_DATABASE_URL!,
+        authToken: process.env.TURSO_AUTH_TOKEN!,
+      });
 
   const res = await client.execute(
     "SELECT p.id, p.name, p.sizes, c.slug AS categorySlug FROM Product p JOIN Category c ON p.categoryId = c.id",
@@ -77,7 +82,9 @@ async function main() {
     }
   }
 
-  console.log(`\n${WRITE ? "APPLIED" : "DRY-RUN"}`);
+  console.log(
+    `\n${WRITE ? "APPLIED" : "DRY-RUN"} (${LOCAL ? "LOCAL prisma/dev.db" : "TURSO"})`,
+  );
   console.log(`Changed: ${changed}`);
   console.log(`Unchanged: ${unchanged}`);
   console.log("\nSamples:");
