@@ -1,10 +1,18 @@
--- Janička Shop — Turso (production) schema sync
--- Run after any Prisma schema change: npm run db:push-turso
--- (requires ~/.turso/turso CLI installed and authenticated)
+-- ============================================================================
+-- DEPRECATED — DO NOT USE FOR NEW MIGRATIONS.
+--
+-- Use `npm run db:sync-turso` instead. That script diffs prisma/dev.db against
+-- Turso and applies any missing tables / columns / indexes automatically and
+-- idempotently. `npm run db:push` runs `prisma db push` + sync-turso in one go.
+--
+-- This file is kept only as a historical record of ALTERs applied manually
+-- before the automated sync existed. Do not append new DDL here.
+-- ============================================================================
+--
+-- Janička Shop — Turso (production) schema sync (historical log)
 --
 -- ⚠️  NOT IDEMPOTENT: ALTER TABLE ADD COLUMN fails if column already exists.
 --     Mark applied migrations with [APPLIED] so you know what to skip.
---     New cycles: append new DDL at the bottom under the latest comment.
 --
 -- APPLIED (already in production as of 2026-04-09):
 --   ✓ Cycle #2328: shippedAt, reviewEmailSentAt on Order

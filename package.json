@@ -8,7 +8,12 @@
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate",
-    "db:push-turso": "turso db shell janicka-shop < scripts/db-push-turso.sql"
+    "db:push-turso": "turso db shell janicka-shop < scripts/db-push-turso.sql",
+    "db:sync-turso": "tsx scripts/sync-turso.ts",
+    "db:sync-turso:dry": "tsx scripts/sync-turso.ts --dry",
+    "db:push": "prisma db push && npm run db:sync-turso",
+    "predeploy": "npm run db:sync-turso",
+    "deploy": "vercel deploy --prod"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1027.0",
