@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ShieldCheck, Camera, Eye, Lock, Heart, ArrowRight, Shield } from "lucide-react";
+import { Camera, Eye, Lock, Heart, ArrowRight, Shield } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Tvoje fotky jsou tvoje | Janička",
