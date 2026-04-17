@@ -553,34 +553,43 @@ export default async function ProductDetailPage({ params }: Props) {
 
           {/* Measurements table */}
           {hasMeasurements(measurements) && (
-            <div className="mt-4 rounded-lg border bg-muted/30 p-3">
-              <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-foreground">
-                <Ruler className="size-3.5" />
-                Rozměry kusu
+            <div className="mt-4 overflow-hidden rounded-xl border border-border">
+              <div className="flex items-center gap-2 border-b border-border bg-muted/40 px-4 py-2.5">
+                <Ruler className="size-3.5 shrink-0 text-foreground/60" />
+                <span className="text-xs font-semibold tracking-wide text-foreground">Rozměry kusu</span>
+                <span className="ml-auto text-[10px] text-muted-foreground">v cm · ploché položení</span>
               </div>
-              <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-sm sm:grid-cols-4 sm:gap-x-6">
+              <div className="grid grid-cols-2 gap-px bg-border sm:grid-cols-4">
                 {measurements.chest && (
-                  <div className="flex justify-between sm:flex-col sm:gap-0.5">
-                    <span className="text-muted-foreground">Prsa</span>
-                    <span className="font-medium">{measurements.chest} cm</span>
+                  <div className="flex flex-col gap-1 bg-background px-4 py-3">
+                    <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Prsa</span>
+                    <span className="text-lg font-bold tabular-nums leading-none text-foreground">
+                      {measurements.chest}<span className="ml-1 text-xs font-normal text-muted-foreground">cm</span>
+                    </span>
                   </div>
                 )}
                 {measurements.waist && (
-                  <div className="flex justify-between sm:flex-col sm:gap-0.5">
-                    <span className="text-muted-foreground">Pas</span>
-                    <span className="font-medium">{measurements.waist} cm</span>
+                  <div className="flex flex-col gap-1 bg-background px-4 py-3">
+                    <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Pas</span>
+                    <span className="text-lg font-bold tabular-nums leading-none text-foreground">
+                      {measurements.waist}<span className="ml-1 text-xs font-normal text-muted-foreground">cm</span>
+                    </span>
                   </div>
                 )}
                 {measurements.hips && (
-                  <div className="flex justify-between sm:flex-col sm:gap-0.5">
-                    <span className="text-muted-foreground">Boky</span>
-                    <span className="font-medium">{measurements.hips} cm</span>
+                  <div className="flex flex-col gap-1 bg-background px-4 py-3">
+                    <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Boky</span>
+                    <span className="text-lg font-bold tabular-nums leading-none text-foreground">
+                      {measurements.hips}<span className="ml-1 text-xs font-normal text-muted-foreground">cm</span>
+                    </span>
                   </div>
                 )}
                 {measurements.length && (
-                  <div className="flex justify-between sm:flex-col sm:gap-0.5">
-                    <span className="text-muted-foreground">Délka</span>
-                    <span className="font-medium">{measurements.length} cm</span>
+                  <div className="flex flex-col gap-1 bg-background px-4 py-3">
+                    <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Délka</span>
+                    <span className="text-lg font-bold tabular-nums leading-none text-foreground">
+                      {measurements.length}<span className="ml-1 text-xs font-normal text-muted-foreground">cm</span>
+                    </span>
                   </div>
                 )}
               </div>

@@ -1,18 +1,11 @@
 {
-  "pause": {
-    "sculptor": "until_lead_directive",
-    "seer": "until_lead_directive",
-    "balancer": "until_lead_directive",
-    "trace": "until_lead_directive",
-    "bolt": "until_lead_directive",
-    "sage": "until_lead_directive"
-  },
+  "pause": {},
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 3547,
   "paused_at_bolt_cycle": 3518,
-  "notes": "C3531 Lead: URGENT bectly directive — cleanup scripts pass2..6 destroyed original Vinted descriptions (92/355 products mention defects that are now lost in DB but still exist in scripts/vinted-data/products.json). 2 new BOLT tasks queued HIGH PRIORITY: #234 add Product.vintedId + originalDescription + originalVintedData JSON fields to schema, migrate, then scripts/restore-vinted-originals.ts matches DB products to products.json by vintedId/title and restores originalDescription + full original record as permanent backup (also overwrites empty/garbage description fields + restores material/measurements/color/brand/size if empty). #235 depends on #234: scripts/extract-defects-from-descriptions.ts parses Czech defect keywords (skvrna/žmolky/odření/vybledlá/díra/chybějící knoflík/poškozený zip/uvolněný šev/zažloutlý/opotřebení etc.) from originalDescription, maps to DefectType enum in src/lib/defects.ts, detects severity from context (drobná=minor, výrazná=moderate), writes to Product.defects JSON. Both tasks: --dry-run default, --apply flag. Priority after #230/#231 email work: #234 → #235 → then #233 → #232. Bectly action still pending: openssl rand -hex 32 → Vercel env UNSUBSCRIBE_HMAC_SECRET. 11 days to April 28 Vinted send.",
+  "notes": "C3547 Lead: C3531 sprint COMPLETE (#234 restore-vinted-originals ✅, #235 extract-defects 16/354 ✅, #233 new_without_tags ✅). Acked Bolt feedback [1822, 1821] — DefectType enum deprecated, defectsNote free-text is current shape; 16 genuine defect disclosures (not 92 — that count included negations + substring FPs). Next sprint: surface backfilled data to CUSTOMERS. Task #236 BOLT: verify defectsNote + measurements render on customer PDP (src/app/(shop)/products/[slug]/) with amber notice styling; confirm originalDescription stays admin-only (no leak to customer API). Task #237 TRACE: pre-campaign audit for April 28 Vinted send (VintedCampaignButton, Resend env, unsubscribe flow, trust messaging live, email template render). Sage: visual QA the 16 products with defectsNote on PDP. 11 days to April 28 17:00 CET campaign send. Bectly action STILL pending: openssl rand -hex 32 → Vercel UNSUBSCRIBE_HMAC_SECRET.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",
