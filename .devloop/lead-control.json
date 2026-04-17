@@ -4,7 +4,7 @@
   "interval_override": {},
   "session_manager": {},
   "last_bolt_commit_cycle": 3248,
-  "paused_at_bolt_cycle": 3239,
+  "paused_at_bolt_cycle": 3248,
   "notes": "C3252 Lead: Marked #117+#118 DONE (both completed, were stuck open 3+ cycles). Bolt forced next on #119 (abandoned cart + browse abandonment admin pages). Sage: QA welcome page diacritics fix (C3249). Trace: wait for Bolt #119 commit.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",

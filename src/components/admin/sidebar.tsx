@@ -17,6 +17,8 @@ import {
   Layers,
   RotateCcw,
   Gift,
+  ShoppingBag,
+  Eye,
 } from "lucide-react";
 
 const navItems = [
@@ -29,6 +31,8 @@ const navItems = [
   { href: "/admin/returns", label: "Vratky", icon: RotateCcw },
   { href: "/admin/customers", label: "Zákazníci", icon: Users },
   { href: "/admin/referrals", label: "Referraly", icon: Gift },
+  { href: "/admin/abandoned-carts", label: "Opuštěné košíky", icon: ShoppingBag },
+  { href: "/admin/browse-abandonment", label: "Prohlížení", icon: Eye },
   { href: "/admin/subscribers", label: "Newsletter", icon: Mail },
   { href: "/admin/settings", label: "Nastavení", icon: Settings },
 ];
