@@ -164,7 +164,7 @@ export function CampaignDryRunDialog({
   if (!open) return null;
 
   const canSendAll =
-    !!testSent?.success && confirmation === CONFIRMATION_WORD && !result?.type;
+    !!testSent?.success && confirmation === CONFIRMATION_WORD && result?.type !== "success";
 
   return (
     <div
@@ -366,7 +366,16 @@ export function CampaignDryRunDialog({
                 ) : (
                   <AlertCircle className="mt-0.5 size-4 shrink-0" />
                 )}
-                <span>{result.message}</span>
+                <span className="flex-1">{result.message}</span>
+                {result.type === "error" && (
+                  <button
+                    type="button"
+                    onClick={() => setResult(null)}
+                    className="shrink-0 text-xs underline underline-offset-2 opacity-70 hover:opacity-100"
+                  >
+                    Zkusit znovu
+                  </button>
+                )}
               </div>
             )}
 
