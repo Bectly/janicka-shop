@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { signUnsubscribeToken } from "@/lib/unsubscribe-token";
 
 let cachedResend: Resend | null | undefined;
 
@@ -743,7 +744,7 @@ function buildNewsletterWelcomeHtml(email: string): string {
     <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
       <p style="margin: 0;">Janička Shop — Second hand móda</p>
       <p style="margin: 4px 0 0;">Tento email jsi dostala, protože jsi se přihlásila k odběru novinek.</p>
-      <p style="margin: 4px 0 0;"><a href="${baseUrl}/odhlasit-novinky?email=${encodeURIComponent(email)}" style="color: #999; text-decoration: underline;">Odhlásit se z odběru</a></p>
+      <p style="margin: 4px 0 0;"><a href="${baseUrl}/odhlasit-novinky?token=${encodeURIComponent(signUnsubscribeToken(email))}" style="color: #999; text-decoration: underline;">Odhlásit se z odběru</a></p>
     </div>
   </div>
 </body>
@@ -1569,7 +1570,7 @@ function buildNewArrivalHtml(data: NewArrivalEmailData): string {
     <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
       <p style="margin: 0;">Janička Shop — Second hand móda</p>
       <p style="margin: 4px 0 0;">
-        <a href="${baseUrl}/odhlasit-novinky?email=${encodeURIComponent(data.email)}" style="color: #999; text-decoration: underline;">Odhlásit se z odběru</a>
+        <a href="${baseUrl}/odhlasit-novinky?token=${encodeURIComponent(signUnsubscribeToken(data.email))}" style="color: #999; text-decoration: underline;">Odhlásit se z odběru</a>
       </p>
     </div>
   </div>
@@ -1685,7 +1686,7 @@ function buildBrowseAbandonmentHtml(data: BrowseAbandonmentEmailData): string {
     <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
       <p style="margin: 0;">Janička Shop — Second hand móda</p>
       <p style="margin: 4px 0 0;">
-        <a href="${baseUrl}/api/unsubscribe/browse-abandonment?email=${encodeURIComponent(data.email)}" style="color: #999; text-decoration: underline;">Odhlásit se z odběru</a>
+        <a href="${baseUrl}/api/unsubscribe/browse-abandonment?token=${encodeURIComponent(signUnsubscribeToken(data.email))}" style="color: #999; text-decoration: underline;">Odhlásit se z odběru</a>
       </p>
     </div>
   </div>
@@ -1779,7 +1780,7 @@ function buildCrossSellFollowUpHtml(data: CrossSellFollowUpData): string {
     <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
       <p style="margin: 0;">Jani&ccaron;ka Shop &mdash; Second hand m&oacute;da</p>
       <p style="margin: 8px 0 0;">
-        <a href="${baseUrl}/odhlasit-novinky?email=${encodeURIComponent(data.customerEmail)}" style="color: #999; text-decoration: underline;">Odhl&aacute;sit se z odb&ecaron;ru</a>
+        <a href="${baseUrl}/odhlasit-novinky?token=${encodeURIComponent(signUnsubscribeToken(data.customerEmail))}" style="color: #999; text-decoration: underline;">Odhl&aacute;sit se z odb&ecaron;ru</a>
       </p>
     </div>
   </div>
@@ -1868,7 +1869,7 @@ function buildWinBackHtml(data: WinBackEmailData): string {
     <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
       <p style="margin: 0;">Jani&ccaron;ka Shop &mdash; Second hand m&oacute;da</p>
       <p style="margin: 8px 0 0;">
-        <a href="${baseUrl}/odhlasit-novinky?email=${encodeURIComponent(data.customerEmail)}" style="color: #999; text-decoration: underline;">Odhl&aacute;sit se z odb&ecaron;ru</a>
+        <a href="${baseUrl}/odhlasit-novinky?token=${encodeURIComponent(signUnsubscribeToken(data.customerEmail))}" style="color: #999; text-decoration: underline;">Odhl&aacute;sit se z odb&ecaron;ru</a>
       </p>
     </div>
   </div>
@@ -1971,7 +1972,7 @@ function buildCampaignProductGridHtml(products: CampaignProduct[]): string {
 
 function buildCampaignHtml(data: CampaignEmailData, recipientEmail: string): string {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
-  const unsubscribeUrl = `${baseUrl}/odhlasit-novinky?email=${encodeURIComponent(recipientEmail)}`;
+  const unsubscribeUrl = `${baseUrl}/odhlasit-novinky?token=${encodeURIComponent(signUnsubscribeToken(recipientEmail))}`;
 
   const productsHtml = data.products.length > 0
     ? buildCampaignProductGridHtml(data.products)
@@ -2069,7 +2070,7 @@ function buildVintedCampaignHtml(
 ): string {
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
-  const unsubscribeUrl = `${baseUrl}/odhlasit-novinky?email=${encodeURIComponent(recipientEmail)}`;
+  const unsubscribeUrl = `${baseUrl}/odhlasit-novinky?token=${encodeURIComponent(signUnsubscribeToken(recipientEmail))}`;
   const soukromiUrl = `${baseUrl}/soukromi`;
   const shopUrl = `${baseUrl}/products?sort=newest`;
 
@@ -2319,7 +2320,7 @@ function buildMothersDayEmailShell(
   innerHtml: string,
 ): string {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
-  const unsubscribeUrl = `${baseUrl}/odhlasit-novinky?email=${encodeURIComponent(recipientEmail)}`;
+  const unsubscribeUrl = `${baseUrl}/odhlasit-novinky?token=${encodeURIComponent(signUnsubscribeToken(recipientEmail))}`;
 
   return `<!DOCTYPE html>
 <html lang="cs">
@@ -2662,7 +2663,7 @@ function buildCustomsEmailShell(
   innerHtml: string,
 ): string {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
-  const unsubscribeUrl = `${baseUrl}/odhlasit-novinky?email=${encodeURIComponent(recipientEmail)}`;
+  const unsubscribeUrl = `${baseUrl}/odhlasit-novinky?token=${encodeURIComponent(signUnsubscribeToken(recipientEmail))}`;
 
   return `<!DOCTYPE html>
 <html lang="cs">

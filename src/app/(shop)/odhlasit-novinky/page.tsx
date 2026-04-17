@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
+import { verifyUnsubscribeToken } from "@/lib/unsubscribe-token";
 import { PreferenceCenter } from "./preference-center";
 import { BellOff } from "lucide-react";
 import type { Metadata } from "next";
@@ -12,22 +13,24 @@ export const metadata: Metadata = {
 };
 
 interface Props {
-  searchParams: Promise<{ email?: string }>;
+  searchParams: Promise<{ token?: string }>;
 }
 
 /**
  * Newsletter unsubscribe page.
- * Linked from new-arrival email footer: /odhlasit-novinky?email=...
+ * Linked from new-arrival email footer: /odhlasit-novinky?token=...
+ * Token is HMAC-signed to prevent enumeration (UNSUBSCRIBE_HMAC_SECRET).
  *
  * Performs the unsubscribe at render time — GET-triggered mutation is
  * intentional and expected for email unsubscribe links. The operation
  * is idempotent (setting active=false repeatedly is safe).
  */
 export default async function UnsubscribeNewsletterPage({ searchParams }: Props) {
-  const { email } = await searchParams;
+  const { token } = await searchParams;
 
-  // Basic validation — no email → redirect home
-  if (!email || typeof email !== "string" || !email.includes("@") || email.length > 255) {
+  const email = token ? verifyUnsubscribeToken(token) : null;
+
+  if (!email) {
     redirect("/");
   }
 

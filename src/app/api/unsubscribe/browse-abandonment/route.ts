@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
+import { verifyUnsubscribeToken } from "@/lib/unsubscribe-token";
 
 /**
- * GET /api/unsubscribe/browse-abandonment?email=...
+ * GET /api/unsubscribe/browse-abandonment?token=...
  *
  * Opt-out from browse abandonment emails.
+ * Token is HMAC-signed (UNSUBSCRIBE_HMAC_SECRET) to prevent enumeration.
  * Marks all pending BrowseAbandonment records for this email as "sent"
  * (with sentAt = now), which activates the 7-day frequency cap and
  * prevents both the cron and trackBrowseView from sending further emails.
@@ -17,9 +19,11 @@ import { getDb } from "@/lib/db";
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const email = searchParams.get("email");
+  const token = searchParams.get("token");
 
-  if (!email || !email.includes("@") || email.length > 255) {
+  const email = token ? verifyUnsubscribeToken(token) : null;
+
+  if (!email) {
     return new NextResponse(buildHtml(false), {
       status: 400,
       headers: { "Content-Type": "text/html; charset=utf-8" },
