@@ -99,6 +99,8 @@ model Order {
   status                   String      @default("pending")
   paymentMethod            String?
   paymentId                String?
+  paymentMethodAttempt     String? // Last Comgate method attempted (CARD/APPLE_PAY/GOOGLE_PAY) — for detecting method switches
+  paymentRedirect          String? // Comgate redirect URL (inline iframe src for CARD, hosted page otherwise)
   subtotal                 Float
   shipping                 Float       @default(0)
   total                    Float

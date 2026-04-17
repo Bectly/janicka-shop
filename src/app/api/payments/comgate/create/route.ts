@@ -59,6 +59,8 @@ export async function POST(req: NextRequest) {
       total: true,
       accessToken: true,
       paymentId: true,
+      paymentMethodAttempt: true,
+      paymentRedirect: true,
       customer: { select: { email: true } },
     },
   });
@@ -75,12 +77,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Reuse existing transId if we already created one for this order
-  // This prevents duplicate payment creation if user clicks twice
-  if (order.paymentId) {
+  // Reuse existing transId only when the payment method matches the stored attempt.
+  // When method changes (e.g. bank transfer → card, or card → Apple Pay), the original
+  // redirect URL is wrong for the new method — we must create a fresh Comgate transaction.
+  if (order.paymentId && order.paymentRedirect && order.paymentMethodAttempt === method) {
     return NextResponse.json({
       transactionId: order.paymentId,
-      redirect: `https://payments.comgate.cz/client/instructions/index?id=${order.paymentId}`,
+      redirect: order.paymentRedirect,
       embedded: method === "CARD",
       reused: true,
     });
@@ -97,10 +100,16 @@ export async function POST(req: NextRequest) {
       embedded: method === "CARD",
     });
 
-    // Store transId on order
+    // Store transId, redirect URL, and method attempt on order so retries with the
+    // same method can be idempotent, and retries with a different method trigger a
+    // fresh Comgate transaction (the redirect URL differs per method / embedded flag).
     await db.order.update({
       where: { id: order.id },
-      data: { paymentId: payment.transId },
+      data: {
+        paymentId: payment.transId,
+        paymentRedirect: payment.redirect,
+        paymentMethodAttempt: method,
+      },
     });
 
     return NextResponse.json({
