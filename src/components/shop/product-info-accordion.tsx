@@ -74,9 +74,6 @@ export function ProductInfoAccordion() {
           Každý kousek pečlivě kontrolujeme a fotografujeme. Stav je vždy
           přesně popsán — žádná nepříjemná překvapení.
         </p>
-        <p className="mt-1.5">
-          Na Vintedu nevíš, co kupuješ. <strong>U nás ano.</strong>
-        </p>
       </AccordionItem>
     </div>
   );

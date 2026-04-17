@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShieldCheck, Truck, RotateCcw, Camera, Sparkles, Star } from "lucide-react";
+import { ShieldCheck, Truck, RotateCcw, Sparkles, Star } from "lucide-react";
 
 const badges: {
   icon: typeof ShieldCheck;
@@ -35,15 +35,6 @@ const badges: {
     border: "border-brand/15",
   },
   {
-    icon: Camera,
-    title: "Tvoje fotky jsou tvoje",
-    description: "Nikdy nepoužijeme tvoje fotky k trénování AI. Tečka.",
-    cardBg: "from-blush-dark/20 to-blush/[0.05]",
-    iconBg: "from-blush-dark/45 to-brand-light/20",
-    border: "border-blush-dark/20",
-    href: "/soukromi",
-  },
-  {
     icon: Sparkles,
     title: "Unikátní kousky",
     description: "Každý kus je originál — značková móda za zlomek ceny",
@@ -69,7 +60,7 @@ export function TrustBadges() {
         </div>
 
         {/* Badges grid */}
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-5">
           {badges.map((badge) => {
             const inner = (
               <>

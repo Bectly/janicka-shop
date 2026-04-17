@@ -351,7 +351,7 @@ export default async function ProductDetailPage({ params }: Props) {
     {
       question: "Jak zajišťujete kvalitu second hand oblečení?",
       answer:
-        "Každý kousek pečlivě kontrolujeme a fotografujeme. Stav je vždy přesně popsán — žádná nepříjemná překvapení. Na rozdíl od Vintedu u nás přesně víte, co kupujete.",
+        "Každý kousek pečlivě kontrolujeme a fotografujeme. Stav je vždy přesně popsán — žádná nepříjemná překvapení.",
     },
   ]);
 

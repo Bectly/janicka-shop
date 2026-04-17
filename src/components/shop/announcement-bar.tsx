@@ -1,14 +1,4 @@
-import { Truck, Sparkles, RotateCcw, Star, Diamond, Shield, type LucideIcon } from "lucide-react";
-import { connection } from "next/server";
-import Link from "next/link";
-
-const VINTED_WINDOW_FROM = new Date("2026-04-28T00:00:00+02:00");
-const VINTED_WINDOW_UNTIL = new Date("2026-05-02T00:00:00+02:00"); // May 1 inclusive
-
-function isVintedWindow(): boolean {
-  const now = new Date();
-  return now >= VINTED_WINDOW_FROM && now < VINTED_WINDOW_UNTIL;
-}
+import { Truck, Sparkles, RotateCcw, Star, Diamond, type LucideIcon } from "lucide-react";
 
 const messages: { icon: LucideIcon; text: string }[] = [
   { icon: Truck,      text: "Doprava zdarma od 1 500 Kč" },
@@ -39,36 +29,7 @@ function MarqueeTrack() {
   );
 }
 
-export async function AnnouncementBar() {
-  // Opt out of prerendering — the Vinted window check uses `new Date()` which
-  // Next.js 16 forbids in a Server Component unless dynamic data is read first.
-  await connection();
-  const vintedWindow = isVintedWindow();
-
-  if (vintedWindow) {
-    return (
-      <Link
-        href="/soukromi"
-        className="group relative block overflow-hidden bg-gradient-to-r from-charcoal-dark via-charcoal to-charcoal-dark text-white transition-colors hover:from-brand-dark hover:via-charcoal-dark hover:to-brand-dark"
-        aria-label="Tvoje fotky jsou tvoje — přečti si víc"
-      >
-        <div className="announcement-shimmer pointer-events-none absolute inset-0" aria-hidden="true" />
-        <div className="flex min-h-10 items-center justify-center gap-2.5 px-4 sm:min-h-11">
-          <Shield className="size-3.5 shrink-0 text-brand-light" aria-hidden="true" />
-          <p className="text-xs font-medium tracking-wide sm:text-sm">
-            <span className="font-semibold sm:hidden">Tvoje fotky jsou tvoje. Vždy.</span>
-            <span className="hidden font-semibold text-brand-light sm:inline">Zatímco Vinted školí AI na tvých fotkách</span>
-            <span className="text-white/60 mx-2 hidden sm:inline">—</span>
-            <span className="hidden sm:inline">u&nbsp;nás jsou tvoje fotky tvoje. Vždy.</span>
-          </p>
-          <span className="hidden text-[11px] font-semibold tracking-wider text-brand-light/70 uppercase transition-colors group-hover:text-brand-light sm:block">
-            Přečti si víc →
-          </span>
-        </div>
-      </Link>
-    );
-  }
-
+export function AnnouncementBar() {
   return (
     <div className="announcement-bar relative overflow-hidden bg-gradient-to-r from-brand via-brand-dark to-brand text-white">
       <div className="announcement-shimmer pointer-events-none absolute inset-0" aria-hidden="true" />
