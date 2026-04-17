@@ -42,7 +42,6 @@ export default async function AdminCustomersPage({
             createdAt: true,
           },
           orderBy: { createdAt: "desc" },
-          take: 20,
         },
       },
     }),
