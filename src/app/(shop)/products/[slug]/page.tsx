@@ -546,13 +546,13 @@ export default async function ProductDetailPage({ params }: Props) {
           </div>
 
           {/* Description */}
-          <p className="mt-5 leading-relaxed text-muted-foreground">
+          <p className="mt-5 text-sm leading-relaxed text-foreground/80 sm:text-base">
             {product.description}
           </p>
 
           {/* Fit note */}
           {product.fitNote && (
-            <p className="mt-3 text-sm italic text-muted-foreground">
+            <p className="mt-2 text-sm italic text-muted-foreground">
               {product.fitNote}
             </p>
           )}
@@ -628,6 +628,16 @@ export default async function ProductDetailPage({ params }: Props) {
             />
           </div>
 
+          {/* Urgency signal — shown BEFORE the ATC button so scarcity drives the click */}
+          {product.stock > 0 && (
+            <div className="mt-4">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1.5 text-xs font-semibold text-brand-dark">
+                <Sparkles className="size-3" />
+                Jediný kus — existuje jen jednou
+              </span>
+            </div>
+          )}
+
           {/* Add to cart — reservation status computed client-side */}
           <AddToCartButton
             product={{
@@ -643,16 +653,8 @@ export default async function ProductDetailPage({ params }: Props) {
             }}
           />
 
-          {/* Stock info — delivery + shipping shown unconditionally;
-              AddToCartButton handles the "reserved by other" state client-side */}
-          {product.stock > 0 ? (
-            <div className="mt-4">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1.5 text-xs font-semibold text-brand-dark">
-                <Sparkles className="size-3" />
-                Jediný kus — existuje jen jednou
-              </span>
-            </div>
-          ) : (
+          {/* Out-of-stock label */}
+          {product.stock === 0 && (
             <p className="mt-4 text-xs text-muted-foreground">
               Momentálně nedostupné
             </p>
