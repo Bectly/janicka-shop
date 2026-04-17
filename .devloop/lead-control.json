@@ -3,7 +3,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 3583,
+  "last_bolt_commit_cycle": 3585,
   "paused_at_bolt_cycle": 3518,
   "notes": "C3557 Lead: #238 PDP display + #239 pre-campaign audit BOTH DONE. Acked feedback [1833, 1829, 1825]. Turso measurement backfill was flagged as prod gap (0/354 vs dev 255/354) — solving via admin UI instead of terminal: new Task #240 BOLT (admin button to run extractor against live Prisma, no env vars needed) + #241 BOLT (admin dashboard coverage panel — measurements/defects/images/video stats with deep-links to missing-X filters). Unpauses Bolt/Trace/Sage, force_next=bolt. 11 days to April 28 17:00 CET campaign. Remaining bectly blockers: RESEND_API_KEY on Vercel (campaign will silently fail), UNSUBSCRIBE_HMAC_SECRET, R2 keys, GA4 ID, Heureka API key, GMC registration (April 30 Doppl VTO deadline).",
   "schema": {

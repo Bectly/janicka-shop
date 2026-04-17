@@ -460,11 +460,7 @@ export function DevChatWidget() {
               </div>
 
               <div
-                className="shrink-0 border-t bg-background p-3"
-                style={{
-                  paddingBottom:
-                    "calc(0.75rem + env(safe-area-inset-bottom, 0px))",
-                }}
+                className="shrink-0 border-t bg-background p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,_0px))]"
               >
                 <div className="flex gap-2">
                   <textarea
@@ -501,9 +497,8 @@ export function DevChatWidget() {
 
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="devchat-bubble-pos fixed right-6 z-50 flex size-14 items-center justify-center rounded-full bg-rose-500 text-white shadow-lg transition-all hover:bg-rose-600 hover:shadow-xl active:scale-95"
-        aria-label={isOpen ? "Zavřít chat" : "Otevřít DevChat"}
         className="devchat-bubble-pos fixed right-6 z-50 flex size-14 items-center justify-center rounded-full bg-rose-500 text-white shadow-lg transition-all hover:bg-rose-600 hover:shadow-xl active:scale-95 bottom-[calc(1.5rem+env(safe-area-inset-bottom,_0px))]"
+        aria-label={isOpen ? "Zavřít chat" : "Otevřít DevChat"}
       >
         {!isOpen && unreadCount > 0 && (
           <span className="absolute inset-0 animate-ping rounded-full bg-rose-400 opacity-30" />

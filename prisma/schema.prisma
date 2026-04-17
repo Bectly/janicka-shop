@@ -49,6 +49,9 @@ model Product {
   vintedId      String?        @unique // Vinted source item ID (for re-import matching)
   originalDescription String? // Untouched original Vinted description (never overwrite after import)
   originalVintedData  String? // Full original Vinted record as JSON string (permanent backup)
+  metaTitle        String? // SEO: custom <title> override (<=70 chars); falls back to name when null
+  metaDescription  String? // SEO: custom meta description (<=160 chars); falls back to description when null
+  internalNote     String? // Admin-only private note (not visible to customer)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   orderItems    OrderItem[]
