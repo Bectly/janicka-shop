@@ -1,8 +1,8 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { cacheLife, cacheTag } from "next/cache";
-import { connection } from "next/server";
 import { formatPrice } from "@/lib/format";
 import { CONDITION_LABELS, CONDITION_COLORS } from "@/lib/constants";
 import { ProductCard } from "@/components/shop/product-card";
@@ -67,12 +67,155 @@ async function getProduct(slug: string) {
   cacheLife("hours");
   cacheTag(`product-${slug}`, "products");
   const db = await getDb();
-  return db.product.findUnique({
+  const product = await db.product.findUnique({
     where: { slug, active: true },
     include: { category: true },
   });
+  if (!product) return null;
+  const lowestPricesMap = await getLowestPrices30d([product.id]);
+  return { ...product, lowestPrice30d: lowestPricesMap.get(product.id) ?? null };
 }
 
+async function RelatedProductsSection({
+  productId,
+  categoryId,
+  sold,
+  productSizes,
+  productPrice,
+  productBrand,
+}: {
+  productId: string;
+  categoryId: string;
+  sold: boolean;
+  productSizes: string;
+  productPrice: number;
+  productBrand: string | null;
+}) {
+  const db = await getDb();
+  const relatedQuery = {
+    where: {
+      categoryId,
+      id: { not: productId },
+      active: true,
+      sold: false,
+    },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      price: true,
+      compareAt: true,
+      images: true,
+      brand: true,
+      condition: true,
+      sizes: true,
+      colors: true,
+      stock: true,
+      createdAt: true,
+      reservedUntil: true,
+      reservedBy: true,
+      category: { select: { name: true } },
+    },
+  } as const;
+
+  const relatedProducts = sold
+    ? await (async () => {
+        const candidates = await db.product.findMany({ ...relatedQuery, take: 20 });
+        let soldSizes: string[] = [];
+        try { soldSizes = JSON.parse(productSizes); } catch { /* */ }
+        const scored = candidates.map((p) => {
+          let score = 0;
+          try {
+            const pSizes: string[] = JSON.parse(p.sizes);
+            if (soldSizes.length > 0 && pSizes.some((s) => soldSizes.includes(s))) score += 10;
+          } catch { /* */ }
+          const priceDiff = Math.abs(p.price - productPrice);
+          score += Math.max(0, 5 - priceDiff / 100);
+          if (p.brand && p.brand === productBrand) score += 3;
+          return { product: p, score };
+        });
+        scored.sort((a, b) => b.score - a.score);
+        return scored.slice(0, 8).map((s) => s.product);
+      })()
+    : await db.product.findMany({ ...relatedQuery, take: 4 });
+
+  if (relatedProducts.length === 0) return null;
+
+  const allIds = [productId, ...relatedProducts.map((p) => p.id)];
+  const lowestPricesMap = await getLowestPrices30d(allIds);
+
+  if (sold) {
+    return (
+      <section className="mt-16">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-sage-light/60 px-3 py-1 text-xs font-semibold tracking-wider text-sage-dark uppercase mb-3">
+          <span aria-hidden="true">◈</span> Podobné
+        </span>
+        <h2 className="font-heading text-xl font-bold text-foreground">
+          Podobné dostupné kousky
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Vybrali jsme kousky podobné velikosti, ceny a stylu
+        </p>
+        <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+          {relatedProducts.map((p) => (
+            <ProductCard
+              key={p.id}
+              id={p.id}
+              name={p.name}
+              slug={p.slug}
+              price={p.price}
+              compareAt={p.compareAt}
+              images={p.images}
+              categoryName={p.category.name}
+              brand={p.brand}
+              condition={p.condition}
+              sizes={p.sizes}
+              colors={p.colors}
+              stock={p.stock}
+              createdAt={p.createdAt.toISOString()}
+              isReserved={false}
+              lowestPrice30d={lowestPricesMap.get(p.id) ?? null}
+            />
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="mt-16">
+      <div className="mb-6">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-champagne/50 px-3 py-1 text-xs font-semibold tracking-wider text-champagne-dark uppercase mb-3">
+          <span aria-hidden="true">★</span> Výběr
+        </span>
+        <h2 className="font-heading text-xl font-bold text-foreground">
+          Mohlo by se vám líbit
+        </h2>
+      </div>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+        {relatedProducts.map((p) => (
+          <ProductCard
+            key={p.id}
+            id={p.id}
+            name={p.name}
+            slug={p.slug}
+            price={p.price}
+            compareAt={p.compareAt}
+            images={p.images}
+            categoryName={p.category.name}
+            brand={p.brand}
+            condition={p.condition}
+            sizes={p.sizes}
+            colors={p.colors}
+            createdAt={p.createdAt.toISOString()}
+            isReserved={false}
+            lowestPrice30d={lowestPricesMap.get(p.id) ?? null}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -147,71 +290,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ProductDetailPage({ params }: Props) {
-  await connection();
   const { slug } = await params;
 
   const product = await getProduct(slug);
 
   if (!product) notFound();
 
-  const db = await getDb();
-  // Fetch related products — smart matching for sold pages, simple for regular
-  const relatedQuery = {
-    where: {
-      categoryId: product.categoryId,
-      id: { not: product.id },
-      active: true,
-      sold: false,
-    },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      price: true,
-      compareAt: true,
-      images: true,
-      brand: true,
-      condition: true,
-      sizes: true,
-      colors: true,
-      stock: true,
-      createdAt: true,
-      reservedUntil: true,
-      reservedBy: true,
-      category: { select: { name: true } },
-    },
-  } as const;
-
-  const relatedProducts = product.sold
-    ? await (async () => {
-        // Sold page: fetch more candidates and score by size/price/brand similarity
-        const candidates = await db.product.findMany({ ...relatedQuery, take: 20 });
-
-        let soldSizes: string[] = [];
-        try { soldSizes = JSON.parse(product.sizes); } catch { /* */ }
-
-        const scored = candidates.map((p) => {
-          let score = 0;
-          // Size match is most important — customer likely needs same size
-          try {
-            const pSizes: string[] = JSON.parse(p.sizes);
-            if (soldSizes.length > 0 && pSizes.some((s) => soldSizes.includes(s))) score += 10;
-          } catch { /* */ }
-          // Price proximity (within 200 CZK = full points, fades out)
-          const priceDiff = Math.abs(p.price - product.price);
-          score += Math.max(0, 5 - priceDiff / 100);
-          // Same brand bonus
-          if (p.brand && p.brand === product.brand) score += 3;
-          return { product: p, score };
-        });
-
-        scored.sort((a, b) => b.score - a.score);
-        return scored.slice(0, 8).map((s) => s.product);
-      })()
-    : await db.product.findMany({ ...relatedQuery, take: 4 });
-
-  const allIds = [product.id, ...relatedProducts.map((p) => p.id)];
-  const lowestPricesMap = await getLowestPrices30d(allIds);
 
   // JSON-LD structured data for SEO (Google Shopping + AI search visibility)
   // "Golden Record" — complete attributes for 3-4x higher AI visibility
@@ -368,42 +452,17 @@ export default async function ProductDetailPage({ params }: Props) {
           </div>
         </div>
 
-        {/* Smart similar products — scored by size/price/brand match */}
-        {relatedProducts.length > 0 && (
-          <section className="mt-16">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-sage-light/60 px-3 py-1 text-xs font-semibold tracking-wider text-sage-dark uppercase mb-3">
-              <span aria-hidden="true">◈</span> Podobné
-            </span>
-            <h2 className="font-heading text-xl font-bold text-foreground">
-              Podobné dostupné kousky
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Vybrali jsme kousky podobné velikosti, ceny a stylu
-            </p>
-            <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
-              {relatedProducts.map((p) => (
-                  <ProductCard
-                    key={p.id}
-                    id={p.id}
-                    name={p.name}
-                    slug={p.slug}
-                    price={p.price}
-                    compareAt={p.compareAt}
-                    images={p.images}
-                    categoryName={p.category.name}
-                    brand={p.brand}
-                    condition={p.condition}
-                    sizes={p.sizes}
-                    colors={p.colors}
-                    stock={p.stock}
-                    createdAt={p.createdAt.toISOString()}
-                    isReserved={false}
-                    lowestPrice30d={lowestPricesMap.get(p.id) ?? null}
-                  />
-                ))}
-            </div>
-          </section>
-        )}
+        {/* Smart similar products — scored by size/price/brand match — streams independently */}
+        <Suspense fallback={null}>
+          <RelatedProductsSection
+            productId={product.id}
+            categoryId={product.categoryId}
+            sold={true}
+            productSizes={product.sizes}
+            productPrice={product.price}
+            productBrand={product.brand}
+          />
+        </Suspense>
       </div>
     );
   }
@@ -430,7 +489,7 @@ export default async function ProductDetailPage({ params }: Props) {
   try { sizes = JSON.parse(product.sizes); } catch { /* corrupted data fallback */ }
   try { colors = JSON.parse(product.colors); } catch { /* corrupted data fallback */ }
   const hasDiscount = product.compareAt && product.compareAt > product.price;
-  const lowestPrice30d = lowestPricesMap.get(product.id) ?? null;
+  const lowestPrice30d = product.lowestPrice30d;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -546,7 +605,7 @@ export default async function ProductDetailPage({ params }: Props) {
           </div>
 
           {/* Description */}
-          <p className="mt-5 text-sm leading-relaxed text-foreground/80 sm:text-base">
+          <p className="mt-5 whitespace-pre-wrap text-sm leading-relaxed text-foreground/80 sm:text-base">
             {product.description}
           </p>
 
@@ -651,6 +710,7 @@ export default async function ProductDetailPage({ params }: Props) {
               stock: product.stock,
               reservedUntil: reservedUntilIso,
             }}
+            hideSize={product.category.slug === "doplnky"}
           />
 
           {/* Out-of-stock label */}
@@ -697,40 +757,17 @@ export default async function ProductDetailPage({ params }: Props) {
         </div>
       </div>
 
-      {/* Related products */}
-      {relatedProducts.length > 0 && (
-        <section className="mt-16">
-          <div className="mb-6">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-champagne/50 px-3 py-1 text-xs font-semibold tracking-wider text-champagne-dark uppercase mb-3">
-              <span aria-hidden="true">★</span> Výběr
-            </span>
-            <h2 className="font-heading text-xl font-bold text-foreground">
-              Mohlo by se vám líbit
-            </h2>
-          </div>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
-            {relatedProducts.map((p) => (
-                <ProductCard
-                  key={p.id}
-                  id={p.id}
-                  name={p.name}
-                  slug={p.slug}
-                  price={p.price}
-                  compareAt={p.compareAt}
-                  images={p.images}
-                  categoryName={p.category.name}
-                  brand={p.brand}
-                  condition={p.condition}
-                  sizes={p.sizes}
-                  colors={p.colors}
-                  createdAt={p.createdAt.toISOString()}
-                  isReserved={false}
-                  lowestPrice30d={lowestPricesMap.get(p.id) ?? null}
-                />
-              ))}
-          </div>
-        </section>
-      )}
+      {/* Related products — streams independently */}
+      <Suspense fallback={null}>
+        <RelatedProductsSection
+          productId={product.id}
+          categoryId={product.categoryId}
+          sold={false}
+          productSizes={product.sizes}
+          productPrice={product.price}
+          productBrand={product.brand}
+        />
+      </Suspense>
 
       {/* Recently viewed */}
       <RecentlyViewedSection excludeProductId={product.id} />

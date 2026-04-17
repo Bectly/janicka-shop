@@ -24,9 +24,10 @@ interface AddToCartProps {
     stock: number;
     reservedUntil?: string | null; // ISO date string — computed client-side to avoid server cookies()
   };
+  hideSize?: boolean;
 }
 
-export function AddToCartButton({ product }: AddToCartProps) {
+export function AddToCartButton({ product, hideSize = false }: AddToCartProps) {
   const addItem = useCartStore((s) => s.addItem);
   const items = useCartStore((s) => s.items);
   // Second-hand pieces are unique (stock = 1). The `sizes` array holds the SAME
@@ -101,8 +102,8 @@ export function AddToCartButton({ product }: AddToCartProps) {
   return (
     <>
       <div id="atc-sentinel" className="mt-6 space-y-4">
-        {/* Size — static label (second-hand = 1 kus, sizes array = equivalents) */}
-        {product.sizes.length > 0 && (
+        {/* Size — static label (second-hand = 1 kus, sizes array = equivalents). Hidden for accessories. */}
+        {!hideSize && product.sizes.length > 0 && (
           <div>
             <div className="mb-2 flex items-center justify-between">
               <p className="text-sm font-medium">Velikost</p>
