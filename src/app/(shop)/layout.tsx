@@ -38,9 +38,11 @@ export default function ShopLayout({
       <Suspense>
         <ReferralTracker />
       </Suspense>
-      <Suspense>
-        <DevChatWidget />
-      </Suspense>
+      {false && (
+        <Suspense>
+          <DevChatWidget />
+        </Suspense>
+      )}
     </>
   );
 }
