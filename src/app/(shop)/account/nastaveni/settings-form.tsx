@@ -48,7 +48,7 @@ export function SettingsForm({ email, initial }: Props) {
         </div>
 
         <div className="space-y-3">
-          <label className="flex items-start gap-3 rounded-lg border bg-muted/30 p-3">
+          <label className="flex cursor-not-allowed items-start gap-3 rounded-lg border bg-muted/30 p-3 opacity-70">
             <input
               type="checkbox"
               checked

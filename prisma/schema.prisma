@@ -87,6 +87,11 @@ model Customer {
   tags                String             @default("[]")
   notifyMarketing     Boolean            @default(true)
   deletedAt           DateTime?
+  disabled            Boolean            @default(false)
+  emailVerified       DateTime?
+  loginAttempts       Int                @default(0)
+  lockedUntil         DateTime?
+  lastLoginAt         DateTime?
   createdAt           DateTime           @default(now())
   updatedAt           DateTime           @updatedAt
   orders              Order[]
@@ -95,6 +100,7 @@ model Customer {
   wishlist            CustomerWishlist[]
 
   @@index([deletedAt])
+  @@index([disabled])
 }
 
 model CustomerAddress {

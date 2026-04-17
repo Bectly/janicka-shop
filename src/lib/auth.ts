@@ -86,8 +86,26 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         if (!customer || !customer.password || !isValid) {
           await recordLoginFailure();
+          if (customer?.password) {
+            await db.customer.update({
+              where: { id: customer.id },
+              data: { loginAttempts: { increment: 1 } },
+            });
+          }
           return null;
         }
+
+        if (customer.deletedAt || customer.disabled) {
+          return null;
+        }
+        if (customer.lockedUntil && customer.lockedUntil.getTime() > Date.now()) {
+          return null;
+        }
+
+        await db.customer.update({
+          where: { id: customer.id },
+          data: { loginAttempts: 0, lastLoginAt: new Date() },
+        });
 
         return {
           id: customer.id,

@@ -4,7 +4,16 @@ import { formatPrice, formatDate } from "@/lib/format";
 import { connection } from "next/server";
 
 import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from "@/lib/constants";
-import { Users, Mail, Phone, MapPin, StickyNote } from "lucide-react";
+import {
+  Users,
+  Mail,
+  Phone,
+  MapPin,
+  StickyNote,
+  Ban,
+  Lock,
+  ShieldCheck,
+} from "lucide-react";
 import Link from "next/link";
 import { Pagination } from "@/components/shop/pagination";
 import { CustomerSearchInput } from "./customer-search-input";

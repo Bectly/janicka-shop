@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Heart } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/format";
 import { CONDITION_LABELS, CONDITION_COLORS } from "@/lib/constants";
 import { useWishlistStore } from "@/lib/wishlist-store";
@@ -47,12 +48,9 @@ export function WishlistGrid({ items }: Props) {
         <p className="mt-3 text-sm text-muted-foreground">
           Zatím sis nic neuložila do oblíbených.
         </p>
-        <Link
-          href="/novinky"
-          className="mt-4 inline-flex rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-        >
+        <Button render={<Link href="/novinky" />} className="mt-4">
           Prohlédnout novinky
-        </Link>
+        </Button>
       </div>
     );
   }

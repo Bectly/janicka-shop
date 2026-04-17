@@ -8,7 +8,21 @@ import { ORDER_STATUS_LABELS } from "@/lib/constants";
 
 async function requireAdmin() {
   const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
+  if (!session?.user || session.user.role !== "admin") {
+    throw new Error("Unauthorized");
+  }
+}
+
+function appendAudit(existing: string | null, line: string): string {
+  const stamp = new Intl.DateTimeFormat("cs-CZ", {
+    day: "numeric",
+    month: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date());
+  const entry = `[${stamp}] ${line}`;
+  return existing && existing.trim() ? `${existing.trim()}\n${entry}` : entry;
 }
 
 /** Escape a CSV field with formula-injection guard and quoting. */
@@ -185,4 +199,201 @@ export async function exportCustomersCsv(
     rows.map((row) => row.map(csvField).join(",")).join("\n");
 
   return "\uFEFF" + csv;
+}
+
+/** Update admin-editable profile fields on a customer. */
+export async function updateCustomerProfile(
+  customerId: string,
+  data: {
+    firstName: string;
+    lastName: string;
+    phone?: string | null;
+    street?: string | null;
+    city?: string | null;
+    zip?: string | null;
+    country?: string | null;
+  },
+): Promise<void> {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
+
+  const firstName = data.firstName.trim().slice(0, 80);
+  const lastName = data.lastName.trim().slice(0, 80);
+  if (!firstName || !lastName) throw new Error("Jméno a příjmení jsou povinné.");
+
+  const db = await getDb();
+  await db.customer.update({
+    where: { id: customerId },
+    data: {
+      firstName,
+      lastName,
+      phone: data.phone?.trim().slice(0, 40) || null,
+      street: data.street?.trim().slice(0, 160) || null,
+      city: data.city?.trim().slice(0, 80) || null,
+      zip: data.zip?.trim().slice(0, 10) || null,
+      country: data.country?.trim().slice(0, 2).toUpperCase() || "CZ",
+    },
+  });
+
+  revalidatePath(`/admin/customers/${customerId}`);
+  revalidatePath("/admin/customers");
+}
+
+/** Unlock a customer account — reset login attempts and clear lockout. */
+export async function unlockCustomerAccount(customerId: string): Promise<void> {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
+
+  const db = await getDb();
+  const customer = await db.customer.findUnique({
+    where: { id: customerId },
+    select: { internalNote: true },
+  });
+  if (!customer) throw new Error("Zákaznice nenalezena");
+
+  await db.customer.update({
+    where: { id: customerId },
+    data: {
+      loginAttempts: 0,
+      lockedUntil: null,
+      internalNote: appendAudit(customer.internalNote, "Admin: účet odemknut"),
+    },
+  });
+
+  revalidatePath(`/admin/customers/${customerId}`);
+}
+
+/** Disable an account — prevents login. */
+export async function disableCustomerAccount(
+  customerId: string,
+  reason?: string,
+): Promise<void> {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
+
+  const db = await getDb();
+  const customer = await db.customer.findUnique({
+    where: { id: customerId },
+    select: { internalNote: true },
+  });
+  if (!customer) throw new Error("Zákaznice nenalezena");
+
+  const reasonText = reason?.trim().slice(0, 200);
+  const auditLine = reasonText
+    ? `Admin: účet pozastaven — ${reasonText}`
+    : "Admin: účet pozastaven";
+
+  await db.customer.update({
+    where: { id: customerId },
+    data: {
+      disabled: true,
+      internalNote: appendAudit(customer.internalNote, auditLine),
+    },
+  });
+
+  revalidatePath(`/admin/customers/${customerId}`);
+  revalidatePath("/admin/customers");
+}
+
+/** Re-enable a disabled account. */
+export async function enableCustomerAccount(customerId: string): Promise<void> {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
+
+  const db = await getDb();
+  const customer = await db.customer.findUnique({
+    where: { id: customerId },
+    select: { internalNote: true },
+  });
+  if (!customer) throw new Error("Zákaznice nenalezena");
+
+  await db.customer.update({
+    where: { id: customerId },
+    data: {
+      disabled: false,
+      internalNote: appendAudit(customer.internalNote, "Admin: účet aktivován"),
+    },
+  });
+
+  revalidatePath(`/admin/customers/${customerId}`);
+  revalidatePath("/admin/customers");
+}
+
+/** GDPR anonymize — same as customer-initiated delete but initiated by admin. Keeps orders intact. */
+export async function anonymizeCustomerAccount(
+  customerId: string,
+  reason?: string,
+): Promise<void> {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
+
+  const db = await getDb();
+  const customer = await db.customer.findUnique({
+    where: { id: customerId },
+    select: { id: true, deletedAt: true, internalNote: true },
+  });
+  if (!customer) throw new Error("Zákaznice nenalezena");
+  if (customer.deletedAt) throw new Error("Účet už je smazaný.");
+
+  const reasonText = reason?.trim().slice(0, 200);
+  const auditLine = reasonText
+    ? `Admin: GDPR anonymizace — ${reasonText}`
+    : "Admin: GDPR anonymizace";
+
+  const anonEmail = `deleted-${customer.id}@anonymized.local`;
+  await db.customer.update({
+    where: { id: customerId },
+    data: {
+      email: anonEmail,
+      password: null,
+      firstName: "Anonymizováno",
+      lastName: "Anonymizováno",
+      phone: null,
+      street: null,
+      city: null,
+      zip: null,
+      notifyMarketing: false,
+      deletedAt: new Date(),
+      internalNote: appendAudit(customer.internalNote, auditLine),
+    },
+  });
+
+  revalidatePath(`/admin/customers/${customerId}`);
+  revalidatePath("/admin/customers");
+}
+
+/** Force password reset — clears password and marks for audit. Customer must use "forgot password" flow. */
+export async function forceCustomerPasswordReset(
+  customerId: string,
+): Promise<void> {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
+
+  const db = await getDb();
+  const customer = await db.customer.findUnique({
+    where: { id: customerId },
+    select: { internalNote: true },
+  });
+  if (!customer) throw new Error("Zákaznice nenalezena");
+
+  await db.customer.update({
+    where: { id: customerId },
+    data: {
+      password: null,
+      loginAttempts: 0,
+      lockedUntil: null,
+      internalNote: appendAudit(
+        customer.internalNote,
+        'Admin: vynucen reset hesla — zákaznice musí použít „Zapomenuté heslo"',
+      ),
+    },
+  });
+
+  revalidatePath(`/admin/customers/${customerId}`);
 }

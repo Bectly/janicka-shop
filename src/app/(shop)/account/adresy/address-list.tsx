@@ -101,7 +101,7 @@ export function AddressList({ addresses }: Props) {
                 <button
                   type="button"
                   onClick={() => setEditingId(a.id)}
-                  className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+                  className="inline-flex size-8 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                   aria-label="Upravit adresu"
                 >
                   <Edit2 className="size-4" />
@@ -109,7 +109,7 @@ export function AddressList({ addresses }: Props) {
                 <button
                   type="button"
                   onClick={() => setConfirmDelete(a.id)}
-                  className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                  className="inline-flex size-8 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-50"
                   aria-label="Smazat adresu"
                   disabled={pending}
                 >

@@ -65,9 +65,9 @@ export default async function AccountProfilePage() {
 
       <Link
         href="/account/adresy"
-        className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm transition-colors hover:bg-muted/40"
+        className="group flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm transition-colors hover:bg-muted/40 hover:border-primary/30"
       >
-        <MapPin className="size-5 shrink-0 text-muted-foreground" />
+        <MapPin className="size-5 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
         <div className="min-w-0 flex-1">
           <p className="font-medium text-foreground">Doručovací adresy</p>
           {addressCount === 0 ? (
