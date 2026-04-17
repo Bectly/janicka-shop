@@ -1,6 +1,15 @@
+import Link from "next/link";
 import { ShieldCheck, Truck, RotateCcw, Camera, Sparkles, Star } from "lucide-react";
 
-const badges = [
+const badges: {
+  icon: typeof ShieldCheck;
+  title: string;
+  description: string;
+  cardBg: string;
+  iconBg: string;
+  border: string;
+  href?: string;
+}[] = [
   {
     icon: ShieldCheck,
     title: "Ověřená kvalita",
@@ -27,11 +36,12 @@ const badges = [
   },
   {
     icon: Camera,
-    title: "Reálné foto — žádné AI",
-    description: "Každý kousek fotografujeme my — přesně to, co dostaneš",
+    title: "Tvoje fotky jsou tvoje",
+    description: "Nikdy nepoužijeme tvoje fotky k trénování AI. Tečka.",
     cardBg: "from-blush-dark/20 to-blush/[0.05]",
     iconBg: "from-blush-dark/45 to-brand-light/20",
     border: "border-blush-dark/20",
+    href: "/soukromi",
   },
   {
     icon: Sparkles,
@@ -60,24 +70,40 @@ export function TrustBadges() {
 
         {/* Badges grid */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-5">
-          {badges.map((badge) => (
-            <div
-              key={badge.title}
-              className={`flex flex-col items-center rounded-2xl border ${badge.border} bg-gradient-to-br ${badge.cardBg} p-5 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-sm`}
-            >
-              <div
-                className={`flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br ${badge.iconBg} text-primary ring-1 ring-inset ring-black/[0.06]`}
-              >
-                <badge.icon className="size-6" />
+          {badges.map((badge) => {
+            const inner = (
+              <>
+                <div
+                  className={`flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br ${badge.iconBg} text-primary ring-1 ring-inset ring-black/[0.06]`}
+                >
+                  <badge.icon className="size-6" />
+                </div>
+                <h3 className="mt-3.5 text-sm font-semibold leading-snug text-foreground">
+                  {badge.title}
+                </h3>
+                <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                  {badge.description}
+                </p>
+                {badge.href && (
+                  <span className="mt-2 text-[11px] font-semibold text-primary/70">
+                    Přečti si víc →
+                  </span>
+                )}
+              </>
+            );
+
+            const sharedClass = `flex flex-col items-center rounded-2xl border ${badge.border} bg-gradient-to-br ${badge.cardBg} p-5 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-sm`;
+
+            return badge.href ? (
+              <Link key={badge.title} href={badge.href} className={sharedClass}>
+                {inner}
+              </Link>
+            ) : (
+              <div key={badge.title} className={sharedClass}>
+                {inner}
               </div>
-              <h3 className="mt-3.5 text-sm font-semibold leading-snug text-foreground">
-                {badge.title}
-              </h3>
-              <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
-                {badge.description}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

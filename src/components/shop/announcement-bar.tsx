@@ -1,4 +1,5 @@
 import { Truck, Sparkles, RotateCcw, Star, Diamond, Shield, type LucideIcon } from "lucide-react";
+import { connection } from "next/server";
 import Link from "next/link";
 
 const VINTED_WINDOW_FROM = new Date("2026-04-28T00:00:00+02:00");
@@ -38,7 +39,10 @@ function MarqueeTrack() {
   );
 }
 
-export function AnnouncementBar() {
+export async function AnnouncementBar() {
+  // Opt out of prerendering — the Vinted window check uses `new Date()` which
+  // Next.js 16 forbids in a Server Component unless dynamic data is read first.
+  await connection();
   const vintedWindow = isVintedWindow();
 
   if (vintedWindow) {
