@@ -8,6 +8,26 @@ export interface CampaignLockResult {
 }
 
 /**
+ * Segment overlap matrix. Two campaign keys conflict when their recipient sets
+ * intersect — sending one while the other is locked risks double-delivery to
+ * the overlapping subscribers. Currently only Vinted segments overlap:
+ *   vinted:all ⊇ vinted:warm ∪ vinted:cold   (warm and cold are disjoint)
+ * Mothers-day and customs keys are per-email-number and never overlap, so
+ * they simply return [].
+ */
+export function getConflictingCampaignKeys(campaignKey: string): string[] {
+  switch (campaignKey) {
+    case "vinted:all":
+      return ["vinted:warm", "vinted:cold"];
+    case "vinted:warm":
+    case "vinted:cold":
+      return ["vinted:all"];
+    default:
+      return [];
+  }
+}
+
+/**
  * Atomically claim a send lock for a campaign key. Backed by a unique DB row
  * so concurrent Vercel serverless invocations cannot both send — the second
  * caller hits the unique constraint and is rejected.
@@ -23,9 +43,24 @@ export async function claimCampaignSendLock(
   const now = new Date();
   const expiresAt = new Date(now.getTime() + windowMs);
 
+  const conflictingKeys = getConflictingCampaignKeys(campaignKey);
+  const keysToSweep = [campaignKey, ...conflictingKeys];
   await db.campaignSendLock.deleteMany({
-    where: { campaignKey, expiresAt: { lt: now } },
+    where: { campaignKey: { in: keysToSweep }, expiresAt: { lt: now } },
   });
+
+  if (conflictingKeys.length > 0) {
+    const conflict = await db.campaignSendLock.findFirst({
+      where: { campaignKey: { in: conflictingKeys }, expiresAt: { gt: now } },
+      select: { campaignKey: true },
+    });
+    if (conflict) {
+      return {
+        success: false,
+        error: `Překrývající se kampaň "${conflict.campaignKey}" právě běží nebo byla odeslána v posledních 60 minutách. Hrozí dvojité odeslání stejným odběratelům — počkej.`,
+      };
+    }
+  }
 
   try {
     await db.campaignSendLock.create({

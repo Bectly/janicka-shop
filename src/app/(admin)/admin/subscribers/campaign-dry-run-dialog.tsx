@@ -47,6 +47,10 @@ interface Props {
   onSent?: () => void;
   /** Typed phrase the admin must enter to enable the final Send button. */
   confirmationWord?: string;
+  /** Campaign key prefix used for cross-segment lock conflict detection (e.g. "vinted"). */
+  campaignFamily?: string;
+  /** Which segment this dialog sends to — used to label cross-segment lock conflicts. */
+  segment?: "warm" | "cold" | "all";
 }
 
 const DEFAULT_CONFIRMATION_WORD = "OSLOVIT";
@@ -88,6 +92,8 @@ export function CampaignDryRunDialog({
   sendAll,
   onSent,
   confirmationWord = DEFAULT_CONFIRMATION_WORD,
+  campaignFamily,
+  segment,
 }: Props) {
   const accent = ACCENT_CLASSES[accentColor];
   const CONFIRMATION_WORD = confirmationWord;
@@ -170,8 +176,21 @@ export function CampaignDryRunDialog({
 
   if (!open) return null;
 
+  const activeLocks = preview?.lockStatus ?? [];
+
+  // Classify locks: "exact" = same key as current send, "cross" = different segment of same family.
+  const exactLocks = activeLocks.filter(
+    (l) => !segment || !campaignFamily || l.campaignKey === `${campaignFamily}:${segment}`,
+  );
+  const crossLocks = activeLocks.filter(
+    (l) => !exactLocks.includes(l),
+  );
+
   const canSendAll =
-    !!testSent?.success && confirmation === CONFIRMATION_WORD && result?.type !== "success";
+    !!testSent?.success &&
+    confirmation === CONFIRMATION_WORD &&
+    result?.type !== "success" &&
+    activeLocks.length === 0;
 
   return (
     <div
@@ -251,20 +270,29 @@ export function CampaignDryRunDialog({
 
           {/* Steps pane */}
           <div className="flex flex-col gap-4 overflow-y-auto p-5 md:col-span-2">
-            {preview?.lockStatus && preview.lockStatus.length > 0 && (
+            {activeLocks.length > 0 && (
               <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
-                <p className="font-semibold">⚠ Aktivní send-lock</p>
+                <p className="font-semibold">⚠ Aktivní send-lock — odeslání zablokováno</p>
                 <ul className="mt-1 space-y-0.5">
-                  {preview.lockStatus.map((l) => (
+                  {exactLocks.map((l) => (
                     <li key={l.campaignKey}>
-                      <code className="font-mono">{l.campaignKey}</code> expiruje{" "}
+                      <code className="font-mono">{l.campaignKey}</code> — expiruje{" "}
                       {new Date(l.expiresAt).toLocaleString("cs-CZ")}
                     </li>
                   ))}
+                  {crossLocks.map((l) => (
+                    <li key={l.campaignKey} className="flex items-start gap-1">
+                      <span className="mt-0.5 shrink-0">↔</span>
+                      <span>
+                        <code className="font-mono">{l.campaignKey}</code> — expiruje{" "}
+                        {new Date(l.expiresAt).toLocaleString("cs-CZ")}
+                        <span className="ml-1 opacity-80">(překryv segmentů — riziko dvojitého odeslání)</span>
+                      </span>
+                    </li>
+                  ))}
                 </ul>
-                <p className="mt-1">
-                  Send tento klíč odmítne (P2002). Počkej na vypršení, nebo uvolni lock přes DB,
-                  než to pustíš na všechny.
+                <p className="mt-1.5">
+                  Odeslání je zablokováno. Počkej na vypršení, nebo uvolni lock přes DB.
                 </p>
               </div>
             )}
