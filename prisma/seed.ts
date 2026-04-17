@@ -40,7 +40,9 @@ async function main() {
       });
     }
 
-    console.log("Seed: admin + categories ensured (upsert). Products untouched.");
+    await ensureSeasonalCollections();
+
+    console.log("Seed: admin + categories + seasonal collections ensured (upsert). Products untouched.");
     return;
   }
 
@@ -101,7 +103,40 @@ async function main() {
     }),
   ]);
 
-  console.log("Seed complete: 1 admin, 5 categories. Use import scripts for products.");
+  await ensureSeasonalCollections();
+
+  console.log("Seed complete: 1 admin, 5 categories, seasonal collections. Use import scripts for products.");
+}
+
+async function ensureSeasonalCollections() {
+  const seasonal = [
+    {
+      slug: "den-matek-2026",
+      title: "Dárek pro mámu — Den matek 2026",
+      description:
+        "Jedinečné kousky pro tu nejdůležitější ženu ve vašem životě.",
+      startDate: new Date("2026-05-01T00:00:00+02:00"),
+      endDate: new Date("2026-05-11T00:00:00+02:00"),
+    },
+  ];
+
+  for (const c of seasonal) {
+    await prisma.collection.upsert({
+      where: { slug: c.slug },
+      update: {},
+      create: {
+        title: c.title,
+        description: c.description,
+        slug: c.slug,
+        productIds: "[]",
+        featured: false,
+        sortOrder: 0,
+        active: true,
+        startDate: c.startDate,
+        endDate: c.endDate,
+      },
+    });
+  }
 }
 
 main()

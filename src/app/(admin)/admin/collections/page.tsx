@@ -5,6 +5,7 @@ import { connection } from "next/server";
 import { Plus, Layers } from "lucide-react";
 import type { Metadata } from "next";
 import { CollectionRow } from "./collection-row";
+import { EnsureSeasonalButton } from "./ensure-seasonal-button";
 
 export const metadata: Metadata = {
   title: "Kolekce",
@@ -38,13 +39,16 @@ export default async function AdminCollectionsPage() {
             Kurátorské sbírky produktů pro tematické nákupy.
           </p>
         </div>
-        <Link
-          href="/admin/collections/new"
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-        >
-          <Plus className="size-4" />
-          Nová kolekce
-        </Link>
+        <div className="flex items-start gap-2">
+          <EnsureSeasonalButton />
+          <Link
+            href="/admin/collections/new"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            <Plus className="size-4" />
+            Nová kolekce
+          </Link>
+        </div>
       </div>
 
       <div className="mt-6 overflow-hidden rounded-xl border bg-card shadow-sm">
