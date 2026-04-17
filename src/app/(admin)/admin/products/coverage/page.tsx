@@ -323,7 +323,7 @@ function StatCard({
     tone === "good"
       ? "text-primary"
       : tone === "warn"
-        ? "text-amber-600"
+        ? "text-foreground"
         : tone === "bad"
           ? "text-destructive"
           : "text-foreground";
@@ -367,7 +367,7 @@ function CoverageBadge({ filled, total }: { filled: number; total: number }) {
     pct === 100
       ? "bg-primary/15 text-primary"
       : pct >= 50
-        ? "bg-amber-500/15 text-amber-700"
+        ? "bg-muted text-foreground"
         : "bg-destructive/15 text-destructive";
   return (
     <span
