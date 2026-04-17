@@ -875,8 +875,7 @@ export function ProductFilters({
             <DrawerFooter className="border-t pt-3 pb-[env(safe-area-inset-bottom)]">
               <button
                 onClick={() => setIsDrawerOpen(false)}
-                className="w-full rounded-xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-                style={{ minHeight: "56px" }}
+                className="w-full min-h-14 rounded-xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
               >
                 Zobrazit {totalFiltered} {productPlural(totalFiltered)}
               </button>

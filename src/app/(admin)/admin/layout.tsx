@@ -39,7 +39,9 @@ async function AdminAuthGate({
           {children}
         </div>
       </main>
-      <DevChatWidget />
+      <Suspense>
+        <DevChatWidget />
+      </Suspense>
     </>
   );
 }
