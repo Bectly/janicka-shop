@@ -5,6 +5,8 @@ import { connection } from "next/server";
 import {
   ORDER_STATUS_LABELS,
   ORDER_STATUS_COLORS,
+  CONDITION_LABELS,
+  CONDITION_COLORS,
 } from "@/lib/constants";
 import {
   Package,
@@ -17,6 +19,7 @@ import {
   Ruler,
   AlertTriangle,
   Video,
+  Shirt,
 } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -79,11 +82,7 @@ export default async function AdminDashboardPage({
     recentOrders,
     revenueAgg,
     statusGroups,
-    coverageWithImages,
-    coverageWithMeasurements,
-    coverageWithDefects,
-    coverageWithVideo,
-    coverageTotal,
+    coverageProducts,
   ] = await Promise.all([
     db.product.count(dateFilter ? { where: { createdAt: dateFilter } } : undefined),
     db.product.count({ where: { active: true, sold: false, ...(dateFilter ? { createdAt: dateFilter } : {}) } }),
@@ -111,19 +110,62 @@ export default async function AdminDashboardPage({
       _count: { status: true },
       ...(dateFilter ? { where: { createdAt: dateFilter } } : {}),
     }),
-    // Coverage stats — always across ALL active unsold products (not period-filtered)
-    db.product.count({ where: { active: true, sold: false, images: { not: "[]" } } }),
-    db.product.count({ where: { active: true, sold: false, measurements: { not: "{}" } } }),
-    db.product.count({
-      where: {
-        active: true,
-        sold: false,
-        OR: [{ defectsNote: { not: null } }, { defectImages: { not: "[]" } }],
+    // Coverage stats — across ALL active unsold products (not period-filtered).
+    // Threshold logic requires parsing JSON strings → fetch minimal fields and filter in JS.
+    db.product.findMany({
+      where: { active: true, sold: false },
+      select: {
+        images: true,
+        measurements: true,
+        defectsNote: true,
+        videoUrl: true,
+        condition: true,
+        fitNote: true,
       },
     }),
-    db.product.count({ where: { active: true, sold: false, videoUrl: { not: null } } }),
-    db.product.count({ where: { active: true, sold: false } }),
   ]);
+
+  // Coverage counts with proper thresholds
+  const NEW_CONDITIONS = new Set(["new_with_tags", "new_without_tags"]);
+  const coverageTotal = coverageProducts.length;
+  let coverageWithImages = 0; // 4+ images (Baymard mobile PDP minimum)
+  let coverageWithMeasurements = 0; // has both chest AND length
+  let coverageWithVideo = 0;
+  let coverageWithFitNote = 0;
+  let coverageNonNewTotal = 0; // denominator for defects (new items don't need defects)
+  let coverageWithDefects = 0; // non-new items with defectsNote populated
+  const conditionCounts: Record<string, number> = {};
+
+  for (const p of coverageProducts) {
+    try {
+      const imgs = JSON.parse(p.images) as unknown;
+      if (Array.isArray(imgs) && imgs.length >= 4) coverageWithImages++;
+    } catch {}
+    try {
+      const m = JSON.parse(p.measurements) as Record<string, unknown>;
+      const chest = m?.chest;
+      const length = m?.length;
+      if (
+        (typeof chest === "number" || (typeof chest === "string" && chest.trim() !== "")) &&
+        (typeof length === "number" || (typeof length === "string" && length.trim() !== ""))
+      ) {
+        coverageWithMeasurements++;
+      }
+    } catch {}
+    if (p.videoUrl && p.videoUrl.trim() !== "") coverageWithVideo++;
+    if (p.fitNote && p.fitNote.trim() !== "") coverageWithFitNote++;
+    if (!NEW_CONDITIONS.has(p.condition)) {
+      coverageNonNewTotal++;
+      if (p.defectsNote && p.defectsNote.trim() !== "") coverageWithDefects++;
+    }
+    conditionCounts[p.condition] = (conditionCounts[p.condition] ?? 0) + 1;
+  }
+
+  // Sorted condition entries by count desc, using defined order as tiebreaker
+  const CONDITION_ORDER = ["new_with_tags", "new_without_tags", "excellent", "good", "visible_wear"];
+  const conditionEntries = Object.entries(conditionCounts).sort(
+    ([a, ca], [b, cb]) => cb - ca || CONDITION_ORDER.indexOf(a) - CONDITION_ORDER.indexOf(b)
+  );
 
   const totalRevenue = revenueAgg._sum.total ?? 0;
 
@@ -222,39 +264,53 @@ export default async function AdminDashboardPage({
               Aktivních produktů: {coverageTotal} — jak úplné jsou informace
             </p>
           </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {(
               [
                 {
                   label: "Fotografie",
                   icon: Images,
                   count: coverageWithImages,
-                  hint: "cíl: 4–6 fotek na produkt",
+                  total: coverageTotal,
+                  hint: "cíl: 4+ fotek na mobilu (Baymard)",
+                  missing: "images",
                 },
                 {
                   label: "Míry",
                   icon: Ruler,
                   count: coverageWithMeasurements,
-                  hint: "hruď / pas / boky / délka",
+                  total: coverageTotal,
+                  hint: "min. hruď + délka",
+                  missing: "measurements",
                 },
                 {
                   label: "Závady",
                   icon: AlertTriangle,
                   count: coverageWithDefects,
-                  hint: "upřímnost buduje důvěru",
+                  total: coverageNonNewTotal,
+                  hint: "z použitých kusů – upřímnost buduje důvěru",
+                  missing: "defects",
                 },
                 {
                   label: "Video",
                   icon: Video,
                   count: coverageWithVideo,
+                  total: coverageTotal,
                   hint: "+65 % konverze s videem",
+                  missing: "video",
+                },
+                {
+                  label: "Poznámka k střihu",
+                  icon: Shirt,
+                  count: coverageWithFitNote,
+                  total: coverageTotal,
+                  hint: "jak kus sedí a padá",
+                  missing: "fitnote",
                 },
               ] as const
-            ).map(({ label, icon: Icon, count, hint }) => {
+            ).map(({ label, icon: Icon, count, total, hint, missing }) => {
               const pct =
-                coverageTotal > 0
-                  ? Math.round((count / coverageTotal) * 100)
-                  : 0;
+                total > 0 ? Math.round((count / total) * 100) : 0;
               const barColor =
                 pct >= 80
                   ? "bg-emerald-500"
@@ -273,10 +329,12 @@ export default async function AdminDashboardPage({
                   : pct >= 50
                     ? "bg-amber-100"
                     : "bg-rose-100";
+              const missingCount = Math.max(0, total - count);
               return (
-                <div
+                <Link
                   key={label}
-                  className="rounded-xl border bg-card p-4 shadow-sm"
+                  href={`/admin/products?missing=${missing}`}
+                  className="group rounded-xl border bg-card p-4 shadow-sm transition-colors hover:border-primary/50 hover:bg-muted/30"
                 >
                   <div className="flex items-center justify-between">
                     <div className={`rounded-lg p-2 ${iconBg}`}>
@@ -288,7 +346,7 @@ export default async function AdminDashboardPage({
                   </div>
                   <p className="mt-3 font-medium text-foreground">{label}</p>
                   <p className="text-xs text-muted-foreground">
-                    {count} / {coverageTotal} produktů
+                    {count} / {total} produktů
                   </p>
                   <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-muted">
                     <div
@@ -297,9 +355,57 @@ export default async function AdminDashboardPage({
                     />
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">{hint}</p>
-                </div>
+                  {missingCount > 0 && (
+                    <p className="mt-1 text-xs font-medium text-primary group-hover:underline">
+                      Zobrazit {missingCount} k doplnění →
+                    </p>
+                  )}
+                </Link>
               );
             })}
+          </div>
+        </section>
+      )}
+
+      {/* Condition distribution */}
+      {coverageTotal > 0 && conditionEntries.length > 0 && (
+        <section className="mt-6">
+          <h2 className="font-heading text-lg font-semibold text-foreground">
+            Stav zboží v katalogu
+          </h2>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Rozložení aktivních produktů podle stavu
+          </p>
+          <div className="mt-4 overflow-hidden rounded-xl border bg-card shadow-sm">
+            <div className="divide-y">
+              {conditionEntries.map(([condition, count]) => {
+                const pct = Math.round((count / coverageTotal) * 100);
+                const label = CONDITION_LABELS[condition] ?? condition;
+                const colorClass =
+                  CONDITION_COLORS[condition] ?? "bg-muted text-muted-foreground";
+                return (
+                  <div key={condition} className="flex items-center gap-4 px-4 py-3">
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${colorClass}`}
+                    >
+                      {label}
+                    </span>
+                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-primary/50 transition-all"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <span className="w-8 text-right text-sm font-semibold text-foreground">
+                      {count}
+                    </span>
+                    <span className="w-9 text-right text-xs text-muted-foreground">
+                      {pct}%
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </section>
       )}

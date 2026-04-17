@@ -24,6 +24,38 @@ const STATUS_FILTERS = [
   { value: "hidden", label: "Skryto" },
 ];
 
+type MissingKind = "images" | "measurements" | "defects" | "video";
+const MISSING_KINDS: MissingKind[] = ["images", "measurements", "defects", "video"];
+const MISSING_LABELS: Record<MissingKind, string> = {
+  images: "bez 4+ fotek",
+  measurements: "bez měr (hruď + délka)",
+  defects: "použité bez popisu závad",
+  video: "bez videa",
+};
+const NEW_CONDITIONS = new Set(["new_with_tags", "new_without_tags"]);
+
+function parseJsonArray(raw: string): unknown[] {
+  try {
+    const v = JSON.parse(raw);
+    return Array.isArray(v) ? v : [];
+  } catch {
+    return [];
+  }
+}
+
+function hasChestAndLength(raw: string): boolean {
+  try {
+    const m = JSON.parse(raw) as Record<string, unknown>;
+    const chest = m?.chest;
+    const length = m?.length;
+    const filled = (v: unknown) =>
+      typeof v === "number" || (typeof v === "string" && v.trim() !== "");
+    return filled(chest) && filled(length);
+  } catch {
+    return false;
+  }
+}
+
 export default async function AdminProductsPage({
   searchParams,
 }: {
@@ -32,6 +64,7 @@ export default async function AdminProductsPage({
     q?: string;
     status?: string;
     category?: string;
+    missing?: string;
   }>;
 }) {
   const params = await searchParams;
@@ -39,6 +72,11 @@ export default async function AdminProductsPage({
   const query = params.q?.trim() ?? "";
   const statusFilter = params.status ?? "all";
   const categoryFilter = params.category ?? "";
+  const missingFilter = (
+    MISSING_KINDS.includes(params.missing as MissingKind)
+      ? (params.missing as MissingKind)
+      : null
+  );
 
   // Build Prisma where clause
   const where: Prisma.ProductWhereInput = {};
@@ -71,20 +109,67 @@ export default async function AdminProductsPage({
   await connection();
   const db = await getDb();
 
-  const [totalCount, products, categories] = await Promise.all([
-    db.product.count({ where }),
-    db.product.findMany({
+  // When filtering by "missing" field, JSON-string fields require in-memory
+  // filtering. Default the status to active unsold if caller didn't restrict
+  // (catalog quality only matters for what's actually on sale).
+  if (missingFilter && statusFilter === "all") {
+    where.active = true;
+    where.sold = false;
+  }
+
+  const categoriesPromise = db.category.findMany({
+    orderBy: { name: "asc" },
+    select: { id: true, name: true },
+  });
+
+  let totalCount: number;
+  let products: Awaited<
+    ReturnType<typeof db.product.findMany<{
+      include: { category: { select: { name: true } } };
+    }>>
+  >;
+
+  if (missingFilter) {
+    // Fetch all matching rows (catalog is bounded — hundreds to low thousands),
+    // filter in JS, then paginate.
+    const all = await db.product.findMany({
       where,
       orderBy: { createdAt: "desc" },
       include: { category: { select: { name: true } } },
-      skip: (currentPage - 1) * ADMIN_PRODUCTS_PER_PAGE,
-      take: ADMIN_PRODUCTS_PER_PAGE,
-    }),
-    db.category.findMany({
-      orderBy: { name: "asc" },
-      select: { id: true, name: true },
-    }),
-  ]);
+    });
+
+    const filtered = all.filter((p) => {
+      if (missingFilter === "images") {
+        return parseJsonArray(p.images).length < 4;
+      }
+      if (missingFilter === "measurements") {
+        return !hasChestAndLength(p.measurements);
+      }
+      if (missingFilter === "video") {
+        return !p.videoUrl || p.videoUrl.trim() === "";
+      }
+      // "defects": non-new items without defectsNote
+      if (NEW_CONDITIONS.has(p.condition)) return false;
+      return !p.defectsNote || p.defectsNote.trim() === "";
+    });
+
+    totalCount = filtered.length;
+    const start = (currentPage - 1) * ADMIN_PRODUCTS_PER_PAGE;
+    products = filtered.slice(start, start + ADMIN_PRODUCTS_PER_PAGE);
+  } else {
+    [totalCount, products] = await Promise.all([
+      db.product.count({ where }),
+      db.product.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        include: { category: { select: { name: true } } },
+        skip: (currentPage - 1) * ADMIN_PRODUCTS_PER_PAGE,
+        take: ADMIN_PRODUCTS_PER_PAGE,
+      }),
+    ]);
+  }
+
+  const categories = await categoriesPromise;
 
   // Build URL helper preserving other params
   function filterUrl(overrides: Record<string, string>) {
@@ -92,6 +177,7 @@ export default async function AdminProductsPage({
     if (query) p.set("q", query);
     if (statusFilter !== "all") p.set("status", statusFilter);
     if (categoryFilter) p.set("category", categoryFilter);
+    if (missingFilter) p.set("missing", missingFilter);
     // Apply overrides
     for (const [k, v] of Object.entries(overrides)) {
       if (v) {
@@ -119,7 +205,7 @@ export default async function AdminProductsPage({
               : totalCount >= 2 && totalCount <= 4
                 ? "produkty"
                 : "produktů"}
-            {query || statusFilter !== "all" || categoryFilter
+            {query || statusFilter !== "all" || categoryFilter || missingFilter
               ? " (filtrováno)"
               : " celkem"}
           </p>
@@ -143,6 +229,21 @@ export default async function AdminProductsPage({
         <Suspense fallback={null}>
           <ProductSearch />
         </Suspense>
+
+        {/* Missing-field filter (from dashboard coverage cards) */}
+        {missingFilter && (
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            <span className="font-medium">K doplnění:</span>
+            <span>{MISSING_LABELS[missingFilter]}</span>
+            <span className="text-xs text-amber-700">• {totalCount} {totalCount === 1 ? "produkt" : totalCount >= 2 && totalCount <= 4 ? "produkty" : "produktů"}</span>
+            <Link
+              href={filterUrl({ missing: "" })}
+              className="ml-auto rounded-full bg-white px-3 py-1 text-xs font-medium text-amber-900 shadow-sm transition-colors hover:bg-amber-100"
+            >
+              Zrušit filtr ✕
+            </Link>
+          </div>
+        )}
 
         <div className="flex flex-wrap items-center gap-2">
           {/* Status filter pills */}
