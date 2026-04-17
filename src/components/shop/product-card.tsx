@@ -6,7 +6,7 @@ import { getImageUrls } from "@/lib/images";
 import { cn } from "@/lib/utils";
 import { WishlistButton } from "./wishlist-button";
 import { QuickViewButton } from "./quick-view-modal";
-import { Flame } from "lucide-react";
+import { Flame, Truck } from "lucide-react";
 
 const BLUR_DATA_URL =
   "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNlNWUwZGIiLz48L3N2Zz4=";
@@ -255,9 +255,12 @@ export function ProductCard({
           </p>
         )}
         {price >= FREE_SHIPPING_THRESHOLD && (
-          <p className="text-[10px] font-medium leading-tight text-sage-dark">
-            Doprava zdarma
-          </p>
+          <div className="flex items-center gap-1">
+            <Truck className="size-3 text-sage-dark" />
+            <p className="text-[10px] font-medium leading-tight text-sage-dark">
+              Doprava zdarma
+            </p>
+          </div>
         )}
         {/* Size & color indicators */}
         {(parsedSizes.length > 0 || parsedColors.length > 0) && (

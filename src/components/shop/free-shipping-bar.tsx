@@ -1,6 +1,6 @@
 "use client";
 
-import { Truck } from "lucide-react";
+import { Truck, CheckCircle2 } from "lucide-react";
 import { formatPrice } from "@/lib/format";
 import { FREE_SHIPPING_THRESHOLD, SHIPPING_PRICES } from "@/lib/constants";
 import { useCartStore } from "@/lib/cart-store";
@@ -35,8 +35,8 @@ export function FreeShippingBar({
   return (
     <div className="mt-3">
       {isFree ? (
-        <div className="flex items-center gap-2 text-sm font-medium text-sage-dark">
-          <Truck className="size-4" />
+        <div className="flex items-center gap-2 rounded-lg bg-sage-light/60 px-3 py-2 text-sm font-medium text-sage-dark">
+          <CheckCircle2 className="size-4 shrink-0" />
           <span>Doprava zdarma!</span>
         </div>
       ) : (
@@ -48,7 +48,7 @@ export function FreeShippingBar({
             </span>{" "}
             do dopravy zdarma
           </p>
-          <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
+          <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-muted">
             <div
               className="h-full rounded-full bg-primary transition-all duration-500"
               style={{ width: `${progress}%` }}
