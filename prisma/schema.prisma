@@ -82,6 +82,8 @@ model Customer {
   zip           String?
   country       String    @default("CZ")
   winBackSentAt DateTime? // Last win-back email sent (prevents spam)
+  internalNote  String? // Admin-only private note (not visible to customer)
+  tags          String    @default("[]") // JSON string array of admin-managed tags (e.g. "VIP", "reklamace")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   orders        Order[]

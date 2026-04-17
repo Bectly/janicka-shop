@@ -3,6 +3,10 @@
 import { useActionState } from "react";
 import { submitContactForm } from "./actions";
 import { CheckCircle, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 
 export function ContactForm() {
   const [state, formAction, isPending] = useActionState(submitContactForm, null);
@@ -31,52 +35,37 @@ export function ContactForm() {
       </h2>
       <form action={formAction} className="mt-4 space-y-4">
         <div>
-          <label
-            htmlFor="name"
-            className="block text-sm font-medium text-foreground"
-          >
-            Jméno
-          </label>
-          <input
+          <Label htmlFor="name">Jméno</Label>
+          <Input
             type="text"
             id="name"
             name="name"
             required
             maxLength={100}
-            className="mt-1 min-h-[44px] w-full rounded-lg border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            className="mt-1 min-h-[44px]"
             placeholder="Vaše jméno"
           />
         </div>
 
         <div>
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-foreground"
-          >
-            E-mail
-          </label>
-          <input
+          <Label htmlFor="email">E-mail</Label>
+          <Input
             type="email"
             id="email"
             name="email"
             required
             maxLength={200}
-            className="mt-1 min-h-[44px] w-full rounded-lg border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            className="mt-1 min-h-[44px]"
             placeholder="vas@email.cz"
           />
         </div>
 
         <div>
-          <label
-            htmlFor="subject"
-            className="block text-sm font-medium text-foreground"
-          >
-            Předmět
-          </label>
+          <Label htmlFor="subject">Předmět</Label>
           <select
             id="subject"
             name="subject"
-            className="mt-1 min-h-[44px] w-full rounded-lg border bg-background px-3 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            className="mt-1 min-h-[44px] w-full rounded-lg border bg-background px-3 py-2.5 text-sm text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
           >
             <option value="order">Dotaz k objednávce</option>
             <option value="product">Dotaz k produktu</option>
@@ -87,20 +76,15 @@ export function ContactForm() {
         </div>
 
         <div>
-          <label
-            htmlFor="message"
-            className="block text-sm font-medium text-foreground"
-          >
-            Zpráva
-          </label>
-          <textarea
+          <Label htmlFor="message">Zpráva</Label>
+          <Textarea
             id="message"
             name="message"
             rows={4}
             required
             minLength={10}
             maxLength={5000}
-            className="mt-1 min-h-[44px] w-full rounded-lg border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            className="mt-1 min-h-[44px]"
             placeholder="Jak vám můžeme pomoci?"
           />
         </div>
@@ -111,14 +95,10 @@ export function ContactForm() {
           </p>
         )}
 
-        <button
-          type="submit"
-          disabled={isPending}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
-        >
+        <Button type="submit" disabled={isPending} className="w-full">
           {isPending && <Loader2 className="size-4 animate-spin" />}
           {isPending ? "Odesílám…" : "Odeslat zprávu"}
-        </button>
+        </Button>
         <p className="text-xs text-muted-foreground">
           Odesláním formuláře souhlasíte se zpracováním osobních údajů za účelem
           vyřízení vašeho dotazu.

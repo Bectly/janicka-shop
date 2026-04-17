@@ -7,6 +7,10 @@ import {
   getCampaignHistory,
 } from "./actions";
 import { formatDate } from "@/lib/format";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 
 interface CollectionOption {
   id: string;
@@ -68,17 +72,16 @@ export function CampaignSender({
     <div className="mt-6 space-y-4">
       {/* Toggle button */}
       {!showForm && (
-        <button
+        <Button
           type="button"
           onClick={() => {
             setShowForm(true);
             setResult(null);
           }}
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
         >
           <Send className="size-4" />
           Odeslat kampaň
-        </button>
+        </Button>
       )}
 
       {/* Result message */}
@@ -117,36 +120,28 @@ export function CampaignSender({
           <div className="space-y-4">
             {/* Subject */}
             <div>
-              <label
-                htmlFor="campaign-subject"
-                className="mb-1 block text-sm font-medium text-foreground"
-              >
+              <Label htmlFor="campaign-subject" className="mb-1">
                 Předmět e-mailu *
-              </label>
-              <input
+              </Label>
+              <Input
                 id="campaign-subject"
                 name="subject"
                 type="text"
                 required
                 placeholder="Např: Den matek — darujte styl"
-                className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
               />
             </div>
 
             {/* Preview text */}
             <div>
-              <label
-                htmlFor="campaign-preview"
-                className="mb-1 block text-sm font-medium text-foreground"
-              >
+              <Label htmlFor="campaign-preview" className="mb-1">
                 Náhledový text
-              </label>
-              <input
+              </Label>
+              <Input
                 id="campaign-preview"
                 name="previewText"
                 type="text"
                 placeholder="Text zobrazený v náhledu e-mailu (volitelné)"
-                className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
               />
               <p className="mt-1 text-xs text-muted-foreground">
                 Zobrazí se v e-mailovém klientu před otevřením zprávy.
@@ -155,51 +150,41 @@ export function CampaignSender({
 
             {/* Heading */}
             <div>
-              <label
-                htmlFor="campaign-heading"
-                className="mb-1 block text-sm font-medium text-foreground"
-              >
+              <Label htmlFor="campaign-heading" className="mb-1">
                 Nadpis v e-mailu *
-              </label>
-              <input
+              </Label>
+              <Input
                 id="campaign-heading"
                 name="heading"
                 type="text"
                 required
                 placeholder="Např: Darujte něco, co má příběh"
-                className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
               />
             </div>
 
             {/* Body text */}
             <div>
-              <label
-                htmlFor="campaign-body"
-                className="mb-1 block text-sm font-medium text-foreground"
-              >
+              <Label htmlFor="campaign-body" className="mb-1">
                 Text zprávy
-              </label>
-              <textarea
+              </Label>
+              <Textarea
                 id="campaign-body"
                 name="bodyText"
                 rows={4}
                 placeholder="Volitelný text pod nadpisem..."
-                className="w-full resize-y rounded-lg border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
+                className="resize-y"
               />
             </div>
 
             {/* Collection picker */}
             <div>
-              <label
-                htmlFor="campaign-collection"
-                className="mb-1 block text-sm font-medium text-foreground"
-              >
+              <Label htmlFor="campaign-collection" className="mb-1">
                 Kolekce produktů (volitelné)
-              </label>
+              </Label>
               <select
                 id="campaign-collection"
                 name="collectionId"
-                className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
+                className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition-colors focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary"
               >
                 <option value="">Bez produktů — jen text</option>
                 {collections.map((c) => (
@@ -216,34 +201,26 @@ export function CampaignSender({
             {/* CTA text */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label
-                  htmlFor="campaign-cta-text"
-                  className="mb-1 block text-sm font-medium text-foreground"
-                >
+                <Label htmlFor="campaign-cta-text" className="mb-1">
                   Text tlačítka
-                </label>
-                <input
+                </Label>
+                <Input
                   id="campaign-cta-text"
                   name="ctaText"
                   type="text"
                   placeholder="Prohlédnout"
                   defaultValue="Prohlédnout novinky"
-                  className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
                 />
               </div>
               <div>
-                <label
-                  htmlFor="campaign-cta-url"
-                  className="mb-1 block text-sm font-medium text-foreground"
-                >
+                <Label htmlFor="campaign-cta-url" className="mb-1">
                   URL tlačítka
-                </label>
-                <input
+                </Label>
+                <Input
                   id="campaign-cta-url"
                   name="ctaUrl"
                   type="url"
                   placeholder="https://janicka-shop.vercel.app/products"
-                  className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
                 />
                 <p className="mt-1 text-xs text-muted-foreground">
                   Prázdné = odkaz na novinky.
@@ -254,11 +231,7 @@ export function CampaignSender({
 
           {/* Actions */}
           <div className="mt-6 flex items-center gap-3">
-            <button
-              type="submit"
-              disabled={isPending}
-              className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-50"
-            >
+            <Button type="submit" disabled={isPending}>
               {isPending ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
@@ -270,15 +243,15 @@ export function CampaignSender({
                   Odeslat kampaň
                 </>
               )}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="outline"
               onClick={() => setShowForm(false)}
               disabled={isPending}
-              className="rounded-lg border px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted disabled:opacity-50"
             >
               Zrušit
-            </button>
+            </Button>
           </div>
         </form>
       )}
