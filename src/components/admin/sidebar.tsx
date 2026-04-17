@@ -52,7 +52,7 @@ export function AdminSidebar({ userName }: { userName: string }) {
       </div>
 
       {/* Navigation */}
-      <nav aria-label="Administrace" className="flex-1 space-y-1 px-3 py-4">
+      <nav aria-label="Hlavní menu" className="flex-1 space-y-1 px-3 py-4">
         {navItems.map((item) => {
           const isActive = pathname.startsWith(item.href);
           const Icon = item.icon;

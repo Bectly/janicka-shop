@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { auth } from "@/lib/auth";
+import { hasWidgetCookie } from "@/lib/devchat-widget-auth";
 import { z } from "zod";
 
 const createMessageSchema = z.object({
@@ -46,9 +47,10 @@ async function isDuplicate(
  * Auth: Admin session (owner writing from widget).
  */
 export async function POST(request: Request) {
-  // Require admin session for posting messages
+  // Allow either admin session or widget cookie (owner-only channels)
   const session = await auth();
-  if (!session?.user) {
+  const widgetOk = session?.user ? false : await hasWidgetCookie();
+  if (!session?.user && !widgetOk) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -98,10 +100,12 @@ export async function POST(request: Request) {
  * Query params: status (new|read|resolved), sender, limit, page.
  */
 export async function GET(request: Request) {
-  // Allow both admin session and Lead API key
+  // Allow admin session, Lead API key, or widget cookie
   const session = await auth();
   const isLead = isLeadAuthorized(request);
-  if (!session?.user && !isLead) {
+  const widgetOk =
+    session?.user || isLead ? false : await hasWidgetCookie();
+  if (!session?.user && !isLead && !widgetOk) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { auth } from "@/lib/auth";
+import { hasWidgetCookie } from "@/lib/devchat-widget-auth";
 import { z } from "zod";
 
 const updateMessageSchema = z.object({
@@ -26,7 +27,9 @@ export async function PATCH(
 ) {
   const session = await auth();
   const isLead = isLeadAuthorized(request);
-  if (!session?.user && !isLead) {
+  const widgetOk =
+    session?.user || isLead ? false : await hasWidgetCookie();
+  if (!session?.user && !isLead && !widgetOk) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -86,7 +89,9 @@ export async function GET(
 ) {
   const session = await auth();
   const isLead = isLeadAuthorized(request);
-  if (!session?.user && !isLead) {
+  const widgetOk =
+    session?.user || isLead ? false : await hasWidgetCookie();
+  if (!session?.user && !isLead && !widgetOk) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

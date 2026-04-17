@@ -11,21 +11,33 @@ import {
 } from "@/components/ui/dialog";
 
 const TOP_SIZES = [
+  { eu: "XXS (32)", bust: "76–80", waist: "56–60", hips: "82–86" },
   { eu: "XS (34)", bust: "80–84", waist: "60–64", hips: "86–90" },
   { eu: "S (36)", bust: "84–88", waist: "64–68", hips: "90–94" },
   { eu: "M (38)", bust: "88–92", waist: "68–72", hips: "94–98" },
   { eu: "L (40)", bust: "92–96", waist: "72–76", hips: "98–102" },
   { eu: "XL (42)", bust: "96–100", waist: "76–80", hips: "102–106" },
   { eu: "XXL (44)", bust: "100–104", waist: "80–84", hips: "106–110" },
+  { eu: "XXXL (46)", bust: "104–108", waist: "84–88", hips: "110–114" },
+  { eu: "4XL (48)", bust: "108–112", waist: "88–92", hips: "114–118" },
+  { eu: "5XL (50)", bust: "112–116", waist: "92–96", hips: "118–122" },
+  { eu: "6XL (52)", bust: "116–120", waist: "96–100", hips: "122–126" },
+  { eu: "7XL (54)", bust: "120–124", waist: "100–104", hips: "126–130" },
 ];
 
 const BOTTOM_SIZES = [
+  { eu: "XXS (32)", waist: "56–60", hips: "82–86", inseam: "75" },
   { eu: "XS (34)", waist: "60–64", hips: "86–90", inseam: "76" },
   { eu: "S (36)", waist: "64–68", hips: "90–94", inseam: "77" },
   { eu: "M (38)", waist: "68–72", hips: "94–98", inseam: "78" },
   { eu: "L (40)", waist: "72–76", hips: "98–102", inseam: "79" },
   { eu: "XL (42)", waist: "76–80", hips: "102–106", inseam: "80" },
   { eu: "XXL (44)", waist: "80–84", hips: "106–110", inseam: "81" },
+  { eu: "XXXL (46)", waist: "84–88", hips: "110–114", inseam: "82" },
+  { eu: "4XL (48)", waist: "88–92", hips: "114–118", inseam: "83" },
+  { eu: "5XL (50)", waist: "92–96", hips: "118–122", inseam: "84" },
+  { eu: "6XL (52)", waist: "96–100", hips: "122–126", inseam: "85" },
+  { eu: "7XL (54)", waist: "100–104", hips: "126–130", inseam: "86" },
 ];
 
 function SizeTable({
