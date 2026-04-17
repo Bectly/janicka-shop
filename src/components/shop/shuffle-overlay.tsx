@@ -3,9 +3,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Shuffle, Heart, ShoppingBag, ArrowLeft, Check, Loader2, Sparkles } from "lucide-react";
+import {
+  Shuffle,
+  Heart,
+  ShoppingBag,
+  X,
+  Check,
+  Loader2,
+  Sparkles,
+} from "lucide-react";
 import { useWishlistStore } from "@/lib/wishlist-store";
 import { useCartStore } from "@/lib/cart-store";
+import { useShuffleStore } from "@/lib/shuffle-store";
 import { reserveProduct } from "@/lib/actions/reservation";
 import { formatPrice } from "@/lib/format";
 import { CONDITION_LABELS, CONDITION_COLORS } from "@/lib/constants";
@@ -19,9 +28,12 @@ const SWIPE_THRESHOLD = 80;
 
 type Direction = "left" | "right" | null;
 
-export function ShuffleClient() {
+export function ShuffleOverlay() {
+  const open = useShuffleStore((s) => s.open);
+  const close = useShuffleStore((s) => s.closeShuffle);
+
   const [queue, setQueue] = useState<ShuffleProduct[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [exhausted, setExhausted] = useState(false);
   const [exitDir, setExitDir] = useState<Direction>(null);
   const [animating, setAnimating] = useState(false);
@@ -38,8 +50,9 @@ export function ShuffleClient() {
   const seenRef = useRef<Set<string>>(new Set());
   const fetchingRef = useRef(false);
   const touchStartX = useRef<number | null>(null);
+  const initializedRef = useRef(false);
 
-  // Load seen set from sessionStorage
+  // Hydrate seen set from sessionStorage once
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem(SEEN_KEY);
@@ -67,13 +80,18 @@ export function ShuffleClient() {
       fetchingRef.current = true;
       try {
         const exclude = Array.from(seenRef.current).slice(-200).join(",");
-        const url = `/api/products/random?limit=${BATCH_SIZE}${exclude ? `&exclude=${encodeURIComponent(exclude)}` : ""}`;
+        const url = `/api/products/random?limit=${BATCH_SIZE}${
+          exclude ? `&exclude=${encodeURIComponent(exclude)}` : ""
+        }`;
         const res = await fetch(url, { cache: "no-store" });
         if (!res.ok) throw new Error("fetch-failed");
         const data = (await res.json()) as { items: ShuffleProduct[] };
         const fresh = data.items.filter((p) => !seenRef.current.has(p.id));
         if (fresh.length === 0) {
-          if (!append || queue.length === 0) setExhausted(true);
+          setQueue((prev) => {
+            if (!append || prev.length === 0) setExhausted(true);
+            return prev;
+          });
           return;
         }
         setExhausted(false);
@@ -85,21 +103,35 @@ export function ShuffleClient() {
         setLoading(false);
       }
     },
-    [queue.length]
+    []
   );
 
-  // Initial load
+  // Initial fetch when overlay opens for the first time
   useEffect(() => {
+    if (!open) return;
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+    setLoading(true);
     fetchBatch(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [open, fetchBatch]);
+
+  // Body scroll lock while open
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
 
   // Top-up when running low
   useEffect(() => {
+    if (!open) return;
     if (!loading && !exhausted && queue.length > 0 && queue.length <= LOW_WATER_MARK) {
       fetchBatch(true);
     }
-  }, [queue.length, loading, exhausted, fetchBatch]);
+  }, [queue.length, loading, exhausted, fetchBatch, open]);
 
   const current = queue[0];
   const next = queue[1];
@@ -169,9 +201,15 @@ export function ShuffleClient() {
     }
   }, [current, adding, cartItems, addItem, advance]);
 
-  // Keyboard
+  // Keyboard: Escape closes; arrows/space/enter control deck
   useEffect(() => {
+    if (!open) return;
     const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        close();
+        return;
+      }
       if (e.key === "ArrowRight" || e.key === " ") {
         e.preventDefault();
         handleShuffle();
@@ -185,7 +223,7 @@ export function ShuffleClient() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [handleShuffle, handleWishlistSwipe, handleAddToCart]);
+  }, [open, close, handleShuffle, handleWishlistSwipe, handleAddToCart]);
 
   // Touch
   const onTouchStart = (e: React.TouchEvent) => {
@@ -209,6 +247,8 @@ export function ShuffleClient() {
     }
   };
 
+  if (!open) return null;
+
   const cardTransform = (() => {
     if (exitDir === "right") return "translate3d(120%, -40px, 0) rotate(18deg)";
     if (exitDir === "left") return "translate3d(-120%, -40px, 0) rotate(-18deg)";
@@ -221,148 +261,164 @@ export function ShuffleClient() {
   const showLeftHint = dragDx < -20;
 
   return (
-    <div className="relative mx-auto flex min-h-[calc(100vh-8rem)] max-w-xl flex-col px-4 pb-24 pt-4 sm:pt-6">
-      {/* Header row */}
-      <div className="mb-3 flex items-center justify-between">
-        <Link
-          href="/products"
-          className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" />
-          Zpět
-        </Link>
-        <div className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground">
-          <Sparkles className="size-4 text-primary" />
-          Objevuj
-        </div>
-        <div className="w-[56px]" aria-hidden />
-      </div>
+    <div
+      className="fixed inset-0 z-[100] flex items-stretch justify-center overflow-hidden bg-background/70 backdrop-blur-xl animate-in fade-in duration-200"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Objevuj náhodné kousky"
+    >
+      {/* Click-outside backdrop (behind panel) */}
+      <button
+        type="button"
+        aria-label="Zavřít"
+        onClick={close}
+        className="absolute inset-0 cursor-default"
+      />
 
-      <p className="mb-4 text-center text-sm text-muted-foreground">
-        Swipe ← do oblíbených · swipe → další kousek
-      </p>
-
-      {/* Card area */}
-      <div className="relative mx-auto flex w-full max-w-md flex-1 items-center justify-center">
-        {loading ? (
-          <div className="flex aspect-[3/4] w-full items-center justify-center rounded-3xl bg-muted/40">
-            <Loader2 className="size-8 animate-spin text-muted-foreground" />
+      <div className="relative mx-auto flex w-full max-w-xl flex-col px-4 pb-6 pt-4 sm:pt-6">
+        {/* Header row */}
+        <div className="mb-3 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={close}
+            aria-label="Zavřít"
+            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <X className="size-5" />
+          </button>
+          <div className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground">
+            <Sparkles className="size-4 text-primary" />
+            Objevuj
           </div>
-        ) : !current ? (
-          <EmptyState exhausted={exhausted} onReset={() => {
-            seenRef.current.clear();
-            persistSeen();
-            setExhausted(false);
-            setLoading(true);
-            fetchBatch(false);
-          }} />
-        ) : (
-          <div className="relative aspect-[3/4] w-full">
-            {/* Next card (peek behind) */}
-            {next && (
-              <ShuffleCard
-                product={next}
-                peek
-                className="absolute inset-0 scale-[0.96] opacity-70"
-              />
-            )}
+          <div className="w-[40px]" aria-hidden />
+        </div>
 
-            {/* Current card */}
-            <div
-              className="absolute inset-0 touch-pan-y"
-              onTouchStart={onTouchStart}
-              onTouchMove={onTouchMove}
-              onTouchEnd={onTouchEnd}
-              style={{
-                transform: cardTransform,
-                transition: dragging
-                  ? "none"
-                  : "transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1)",
-                willChange: "transform",
-              }}
-            >
-              <ShuffleCard product={current}>
-                {/* Swipe direction overlays */}
-                {showRightHint && (
-                  <div
-                    className="pointer-events-none absolute top-6 left-6 rotate-[-14deg] rounded-xl border-2 border-primary bg-background/90 px-4 py-1.5 text-lg font-black tracking-wider text-primary"
-                    style={{ opacity: overlayOpacity }}
-                  >
-                    DALŠÍ
-                  </div>
-                )}
-                {showLeftHint && (
-                  <div
-                    className="pointer-events-none absolute top-6 right-6 rotate-[14deg] rounded-xl border-2 border-red-500 bg-background/90 px-4 py-1.5 text-lg font-black tracking-wider text-red-500"
-                    style={{ opacity: overlayOpacity }}
-                  >
-                    ♥ ULOŽIT
-                  </div>
-                )}
-              </ShuffleCard>
+        <p className="mb-4 text-center text-sm text-muted-foreground">
+          Swipe ← do oblíbených · swipe → další kousek
+        </p>
+
+        {/* Card area */}
+        <div className="relative mx-auto flex w-full max-w-md flex-1 items-center justify-center">
+          {loading ? (
+            <div className="flex aspect-[3/4] w-full items-center justify-center rounded-3xl bg-muted/40">
+              <Loader2 className="size-8 animate-spin text-muted-foreground" />
             </div>
+          ) : !current ? (
+            <EmptyState
+              exhausted={exhausted}
+              onReset={() => {
+                seenRef.current.clear();
+                persistSeen();
+                setExhausted(false);
+                setLoading(true);
+                fetchBatch(false);
+              }}
+            />
+          ) : (
+            <div className="relative aspect-[3/4] w-full">
+              {next && (
+                <ShuffleCard
+                  product={next}
+                  peek
+                  className="absolute inset-0 scale-[0.96] opacity-70"
+                />
+              )}
 
-            {/* Flash toast */}
-            {addedFlash && (
-              <div className="pointer-events-none absolute inset-x-0 top-1/2 z-20 flex -translate-y-1/2 items-center justify-center">
-                <div className="rounded-full bg-background/95 px-5 py-2.5 text-sm font-semibold shadow-xl backdrop-blur-sm animate-in fade-in zoom-in">
-                  {addedFlash === "cart" ? (
-                    <span className="inline-flex items-center gap-2 text-foreground">
-                      <Check className="size-4 text-primary" />
-                      Přidáno do košíku
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-2 text-foreground">
-                      <Heart className="size-4 fill-red-500 text-red-500" />
-                      Uloženo do oblíbených
-                    </span>
+              <div
+                className="absolute inset-0 touch-pan-y"
+                onTouchStart={onTouchStart}
+                onTouchMove={onTouchMove}
+                onTouchEnd={onTouchEnd}
+                style={{
+                  transform: cardTransform,
+                  transition: dragging
+                    ? "none"
+                    : "transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1)",
+                  willChange: "transform",
+                }}
+              >
+                <ShuffleCard product={current} onProductClick={close}>
+                  {showRightHint && (
+                    <div
+                      className="pointer-events-none absolute top-6 left-6 rotate-[-14deg] rounded-xl border-2 border-primary bg-background/90 px-4 py-1.5 text-lg font-black tracking-wider text-primary"
+                      style={{ opacity: overlayOpacity }}
+                    >
+                      DALŠÍ
+                    </div>
                   )}
-                </div>
+                  {showLeftHint && (
+                    <div
+                      className="pointer-events-none absolute top-6 right-6 rotate-[14deg] rounded-xl border-2 border-red-500 bg-background/90 px-4 py-1.5 text-lg font-black tracking-wider text-red-500"
+                      style={{ opacity: overlayOpacity }}
+                    >
+                      ♥ ULOŽIT
+                    </div>
+                  )}
+                </ShuffleCard>
               </div>
-            )}
+
+              {addedFlash && (
+                <div className="pointer-events-none absolute inset-x-0 top-1/2 z-20 flex -translate-y-1/2 items-center justify-center">
+                  <div className="rounded-full bg-background/95 px-5 py-2.5 text-sm font-semibold shadow-xl backdrop-blur-sm animate-in fade-in zoom-in">
+                    {addedFlash === "cart" ? (
+                      <span className="inline-flex items-center gap-2 text-foreground">
+                        <Check className="size-4 text-primary" />
+                        Přidáno do košíku
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-2 text-foreground">
+                        <Heart className="size-4 fill-red-500 text-red-500" />
+                        Uloženo do oblíbených
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {current && !loading && (
+          <div className="mt-6 flex items-center justify-center gap-5">
+            <ActionButton
+              onClick={handleWishlistSwipe}
+              label="Do oblíbených"
+              size="md"
+              tone="rose"
+            >
+              <Heart
+                className={`size-6 ${
+                  hasWishlist(current.id) ? "fill-red-500 text-red-500" : ""
+                }`}
+              />
+            </ActionButton>
+
+            <ActionButton
+              onClick={handleShuffle}
+              label="Další náhodný kousek"
+              size="lg"
+              tone="primary"
+              pulse
+            >
+              <Shuffle className="size-8" />
+            </ActionButton>
+
+            <ActionButton
+              onClick={handleAddToCart}
+              label="Přidat do košíku"
+              size="md"
+              tone="sage"
+              disabled={adding}
+            >
+              {adding ? (
+                <Loader2 className="size-6 animate-spin" />
+              ) : (
+                <ShoppingBag className="size-6" />
+              )}
+            </ActionButton>
           </div>
         )}
       </div>
-
-      {/* Action buttons */}
-      {current && !loading && (
-        <div className="mt-6 flex items-center justify-center gap-5">
-          <ActionButton
-            onClick={handleWishlistSwipe}
-            label="Do oblíbených"
-            size="md"
-            tone="rose"
-          >
-            <Heart
-              className={`size-6 ${hasWishlist(current.id) ? "fill-red-500 text-red-500" : ""}`}
-            />
-          </ActionButton>
-
-          <ActionButton
-            onClick={handleShuffle}
-            label="Další náhodný kousek"
-            size="lg"
-            tone="primary"
-            pulse
-          >
-            <Shuffle className="size-8" />
-          </ActionButton>
-
-          <ActionButton
-            onClick={handleAddToCart}
-            label="Přidat do košíku"
-            size="md"
-            tone="sage"
-            disabled={adding}
-          >
-            {adding ? (
-              <Loader2 className="size-6 animate-spin" />
-            ) : (
-              <ShoppingBag className="size-6" />
-            )}
-          </ActionButton>
-        </div>
-      )}
     </div>
   );
 }
@@ -404,11 +460,13 @@ function ShuffleCard({
   children,
   peek = false,
   className = "",
+  onProductClick,
 }: {
   product: ShuffleProduct;
   children?: React.ReactNode;
   peek?: boolean;
   className?: string;
+  onProductClick?: () => void;
 }) {
   const img = product.images[0];
   const discount =
@@ -439,7 +497,6 @@ function ShuffleCard({
         </div>
       )}
 
-      {/* Top chips */}
       <div className="absolute inset-x-4 top-4 flex items-start justify-between gap-2">
         <span
           className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${conditionColor}`}
@@ -453,7 +510,6 @@ function ShuffleCard({
         )}
       </div>
 
-      {/* Bottom info overlay — Instagram story style */}
       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-5 pt-16 text-white">
         {product.brand && (
           <p className="mb-1 text-xs font-semibold uppercase tracking-wider opacity-90">
@@ -463,7 +519,10 @@ function ShuffleCard({
         <Link
           href={`/products/${product.slug}`}
           className="block text-lg font-bold leading-tight hover:underline"
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            onProductClick?.();
+          }}
         >
           {product.name}
         </Link>

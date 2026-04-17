@@ -323,6 +323,18 @@
   animation: cart-bounce 500ms cubic-bezier(0.36, 0.07, 0.19, 0.97);
 }
 
+@keyframes shuffle-bounce {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  20% { transform: translateY(-6px) rotate(-8deg); }
+  40% { transform: translateY(0) rotate(6deg); }
+  60% { transform: translateY(-3px) rotate(-3deg); }
+  80% { transform: translateY(0) rotate(0deg); }
+}
+
+@utility animate-shuffle-bounce {
+  animation: shuffle-bounce 2.4s ease-in-out infinite;
+}
+
 /* ─── Button fill-sweep hover effect ─── */
 @utility btn-fill-hover {
   position: relative;

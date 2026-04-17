@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, User, LogIn } from "lucide-react";
+import { Menu, User, LogIn, Shuffle } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +14,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { InstantSearch } from "./instant-search";
+import { useShuffleStore } from "@/lib/shuffle-store";
 
 const categories = [
   { name: "Šaty", href: "/products?category=saty" },
@@ -25,7 +26,6 @@ const categories = [
 
 const topLinks = [
   { name: "Novinky", href: "/products?sort=newest" },
-  { name: "Objevuj", href: "/objevuj" },
   { name: "Všechny produkty", href: "/products" },
   { name: "Oblíbené", href: "/oblibene" },
 ];
@@ -41,6 +41,7 @@ export function MobileNav({ categoryCounts, sessionRole }: MobileNavProps) {
   const searchParams = useSearchParams();
   const activeCategory = searchParams.get("category");
   const activeSort = searchParams.get("sort");
+  const openShuffle = useShuffleStore((s) => s.openShuffle);
 
   // Close sheet on any route/search-param change (handles cases where
   // onClick={() => setOpen(false)} on Link doesn't propagate through
@@ -102,6 +103,17 @@ export function MobileNav({ categoryCounts, sessionRole }: MobileNavProps) {
               </Link>
             );
           })}
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              openShuffle();
+            }}
+            className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-foreground/80 transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <Shuffle className="size-4 text-primary" />
+            Objevuj
+          </button>
           <div className="my-1 border-t" />
           <p className="px-3 pt-1 pb-0.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Kategorie

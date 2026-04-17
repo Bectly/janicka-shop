@@ -8,6 +8,8 @@ import { DevChatWidget } from "@/components/dev-chat/dev-chat-widget";
 import { ReferralTracker } from "@/components/shop/referral-tracker";
 import { BottomNav } from "@/components/shop/bottom-nav";
 import { PullToRefresh } from "@/components/shop/pull-to-refresh";
+import { ShuffleOverlay } from "@/components/shop/shuffle-overlay";
+import { ShuffleButton } from "@/components/shop/shuffle-button";
 
 export default function ShopLayout({
   children,
@@ -40,6 +42,10 @@ export default function ShopLayout({
       <Suspense>
         <ReferralTracker />
       </Suspense>
+      <Suspense>
+        <ShuffleButton />
+      </Suspense>
+      <ShuffleOverlay />
       {false && (
         <Suspense>
           <DevChatWidget />

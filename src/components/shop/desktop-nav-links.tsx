@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { useShuffleStore } from "@/lib/shuffle-store";
 
 const navLinks = [
   { name: "Novinky", href: "/products?sort=newest", checkParam: null, slug: null },
-  { name: "Objevuj", href: "/objevuj", checkParam: "__objevuj__", slug: null },
   { name: "Šaty", href: "/products?category=saty", checkParam: "saty", slug: "saty" },
   { name: "Topy & Halenky", href: "/products?category=topy-halenky", checkParam: "topy-halenky", slug: "topy-halenky" },
   { name: "Kalhoty & Sukně", href: "/products?category=kalhoty-sukne", checkParam: "kalhoty-sukne", slug: "kalhoty-sukne" },
@@ -21,19 +21,19 @@ export function DesktopNavLinks({ categoryCounts }: DesktopNavLinksProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const activeCategory = searchParams.get("category");
+  const openShuffle = useShuffleStore((s) => s.openShuffle);
 
   return (
     <>
-      {navLinks.map((link) => {
-        const isActive =
-          link.checkParam === "__objevuj__"
-            ? pathname === "/objevuj"
-            : link.checkParam
-              ? pathname === "/products" && activeCategory === link.checkParam
-              : pathname === "/products" && !activeCategory && searchParams.get("sort") === "newest";
+      {navLinks.map((link, idx) => {
+        const isActive = link.checkParam
+          ? pathname === "/products" && activeCategory === link.checkParam
+          : pathname === "/products" &&
+            !activeCategory &&
+            searchParams.get("sort") === "newest";
         const count = link.slug && categoryCounts ? categoryCounts[link.slug] : undefined;
 
-        return (
+        const linkEl = (
           <Link
             key={link.href}
             href={link.href}
@@ -50,6 +50,25 @@ export function DesktopNavLinks({ categoryCounts }: DesktopNavLinksProps) {
             )}
           </Link>
         );
+
+        // Inject "Objevuj" button right after "Novinky" (idx === 0)
+        if (idx === 0) {
+          return (
+            <span key="novinky-plus-objevuj" className="contents">
+              {linkEl}
+              <button
+                key="objevuj"
+                type="button"
+                onClick={openShuffle}
+                className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
+              >
+                Objevuj
+              </button>
+            </span>
+          );
+        }
+
+        return linkEl;
       })}
     </>
   );
