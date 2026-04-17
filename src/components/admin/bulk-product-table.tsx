@@ -5,10 +5,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { formatPrice } from "@/lib/format";
 import { CONDITION_LABELS, CONDITION_COLORS } from "@/lib/constants";
-import { ImageIcon, Eye, EyeOff, Star, StarOff, Trash2, X, Check, AlertCircle } from "lucide-react";
+import { ImageIcon, Eye, EyeOff, Star, StarOff, Trash2, X, Check, AlertCircle, CircleDollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DeleteProductButton } from "@/components/admin/delete-product-button";
 import { DuplicateProductButton } from "@/components/admin/duplicate-product-button";
+import { BulkPriceDialog } from "@/components/admin/bulk-price-dialog";
 import { getImageUrls } from "@/lib/images";
 import { bulkUpdateProducts } from "@/app/(admin)/admin/products/actions";
 
@@ -35,6 +36,11 @@ export function BulkProductTable({ products, query }: BulkProductTableProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<{ text: string; error: boolean } | null>(null);
+  const [priceDialogOpen, setPriceDialogOpen] = useState(false);
+
+  const selectedProductsLite = products
+    .filter((p) => selected.has(p.id))
+    .map((p) => ({ id: p.id, name: p.name, price: p.price }));
 
   const allOnPage = products.map((p) => p.id);
   const allSelected = allOnPage.length > 0 && allOnPage.every((id) => selected.has(id));
@@ -284,6 +290,15 @@ export function BulkProductTable({ products, query }: BulkProductTableProps) {
               </Button>
               <Button
                 size="sm"
+                variant="outline"
+                onClick={() => setPriceDialogOpen(true)}
+                disabled={isPending}
+              >
+                <CircleDollarSign className="size-3.5" />
+                <span className="hidden sm:inline">Změnit cenu</span>
+              </Button>
+              <Button
+                size="sm"
                 variant="destructive"
                 onClick={() => runBulk("delete", "Smazáno")}
                 disabled={isPending}
@@ -303,6 +318,22 @@ export function BulkProductTable({ products, query }: BulkProductTableProps) {
           </div>
         </div>
       )}
+
+      {/* Bulk price change dialog */}
+      <BulkPriceDialog
+        open={priceDialogOpen}
+        onOpenChange={setPriceDialogOpen}
+        selectedProducts={selectedProductsLite}
+        onSuccess={(affected) => {
+          setMessage({ text: `Ceny změněny: ${affected} produktů`, error: false });
+          setSelected(new Set());
+          setTimeout(() => setMessage(null), 3000);
+        }}
+        onError={(msg) => {
+          setMessage({ text: `Chyba: ${msg}`, error: true });
+          setTimeout(() => setMessage(null), 5000);
+        }}
+      />
 
       {/* Success/error message toast */}
       {message && (

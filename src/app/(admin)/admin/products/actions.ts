@@ -8,6 +8,7 @@ import { z } from "zod";
 import { rateLimitAdmin } from "@/lib/rate-limit";
 import { parseDefectImages, serializeDefectImages } from "@/lib/defects";
 import { ALL_SIZES } from "@/lib/sizes";
+import { computeBulkPrice } from "./bulk-price";
 
 const CONDITION_VALUES = [
   "new_with_tags",
@@ -547,6 +548,63 @@ export async function bulkUpdateProducts(ids: string[], action: string) {
       affected = softRes.count + hardRes.count;
       break;
     }
+  }
+
+  revalidateTag("products", "seconds");
+  revalidatePath("/admin/products");
+  revalidatePath("/products");
+  revalidatePath("/");
+
+  return { affected };
+}
+
+// ── Bulk price change ────────────────────────────────────────
+//
+// Three modes:
+//   - "absolute": set all selected products to `value` (CZK)
+//   - "percent": reduce current price by `value` % (e.g. 20 = -20%)
+//   - "add": add `value` CZK to current price (can be negative)
+//
+// Writes a PriceHistory row per product whose price actually changed
+// (30-day lowest-price rule — Czech "fake discount" law).
+
+const bulkPriceSchema = z.object({
+  ids: z.array(z.string().min(1)).min(1).max(200),
+  mode: z.enum(["absolute", "percent", "add"]),
+  value: z.number().finite(),
+});
+
+export async function bulkUpdatePrice(
+  ids: string[],
+  mode: string,
+  value: number,
+): Promise<{ affected: number }> {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
+
+  const parsed = bulkPriceSchema.parse({ ids, mode, value });
+  const db = await getDb();
+
+  const products = await db.product.findMany({
+    where: { id: { in: parsed.ids } },
+    select: { id: true, slug: true, price: true },
+  });
+
+  let affected = 0;
+  for (const p of products) {
+    const next = computeBulkPrice(p.price, parsed.mode, parsed.value);
+    if (next === p.price) continue;
+    // Log OLD price to price history BEFORE updating (30-day lowest-price rule)
+    await db.priceHistory.create({
+      data: { productId: p.id, price: p.price },
+    });
+    await db.product.update({
+      where: { id: p.id },
+      data: { price: next },
+    });
+    revalidateTag(`product-${p.slug}`, "seconds");
+    affected++;
   }
 
   revalidateTag("products", "seconds");
