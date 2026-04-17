@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { getDb } from "@/lib/db";
+import { signUnsubscribeToken } from "@/lib/unsubscribe-token";
 
 let cachedResend: Resend | null | undefined;
 
@@ -164,7 +165,7 @@ function buildSimilarItemHtml(
     <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
       <p style="margin: 0;">Jani&ccaron;ka Shop &mdash; Second hand m&oacute;da</p>
       <p style="margin: 8px 0 0;">
-        <a href="${baseUrl}/odhlasit-novinky?email=${encodeURIComponent(recipientEmail)}" style="color: #999; text-decoration: underline;">Odhl&aacute;sit se z odb&ecaron;ru</a>
+        <a href="${baseUrl}/odhlasit-novinky?token=${signUnsubscribeToken(recipientEmail)}" style="color: #999; text-decoration: underline;">Odhl&aacute;sit se z odb&ecaron;ru</a>
       </p>
     </div>
   </div>
@@ -282,7 +283,7 @@ export function buildSimilarItemsArrivedHtml(
     <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
       <p style="margin: 0;">Jani&ccaron;ka Shop &mdash; Second hand m&oacute;da</p>
       <p style="margin: 8px 0 0;">
-        <a href="${baseUrl}/odhlasit-novinky?email=${encodeURIComponent(recipientEmail)}" style="color: #999; text-decoration: underline;">Odhl&aacute;sit se z odb&ecaron;ru</a>
+        <a href="${baseUrl}/odhlasit-novinky?token=${signUnsubscribeToken(recipientEmail)}" style="color: #999; text-decoration: underline;">Odhl&aacute;sit se z odb&ecaron;ru</a>
       </p>
     </div>
   </div>
