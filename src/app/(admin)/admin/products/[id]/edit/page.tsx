@@ -58,7 +58,8 @@ export default async function EditProductPage({ params }: Props) {
     active: product.active,
     images: product.images,
     measurements: product.measurements,
-    defects: product.defects,
+    defectsNote: product.defectsNote,
+    defectImages: product.defectImages ?? undefined,
     fitNote: product.fitNote,
     videoUrl: product.videoUrl,
   };

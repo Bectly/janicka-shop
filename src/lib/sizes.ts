@@ -213,8 +213,8 @@ const DEFAULT_GROUPS: SizeGroupKey[] = [
 export function getSizeGroupsForCategory(
   categorySlug: string | null | undefined,
 ): SizeGroup[] {
-  const keys =
-    (categorySlug && CATEGORY_SIZE_GROUPS[categorySlug]) ?? DEFAULT_GROUPS;
+  const keys: SizeGroupKey[] =
+    (categorySlug ? CATEGORY_SIZE_GROUPS[categorySlug] : null) ?? DEFAULT_GROUPS;
   return keys.map((k) => SIZE_GROUPS[k]);
 }
 

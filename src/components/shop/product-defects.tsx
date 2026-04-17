@@ -1,14 +1,18 @@
 import Image from "next/image";
 import { Sparkles } from "lucide-react";
 
+const NEW_CONDITIONS = new Set(["new_with_tags", "new_without_tags"]);
+
 interface ProductDefectsProps {
   note: string | null;
   images: string[];
+  condition?: string;
 }
 
-export function ProductDefects({ note, images }: ProductDefectsProps) {
+export function ProductDefects({ note, images, condition }: ProductDefectsProps) {
   const trimmedNote = note?.trim() ?? "";
   const hasContent = trimmedNote.length > 0 || images.length > 0;
+  const isNew = condition ? NEW_CONDITIONS.has(condition) : false;
 
   if (!hasContent) {
     return (
@@ -19,10 +23,12 @@ export function ProductDefects({ note, images }: ProductDefectsProps) {
           </div>
           <div>
             <p className="font-heading text-base font-semibold text-foreground">
-              Bez viditelných vad
+              {isNew ? "Nové zboží — bez vad" : "Bez viditelných vad"}
             </p>
             <p className="mt-0.5 text-sm text-muted-foreground">
-              Kousek je v perfektním stavu — nic jsme neobjevili.
+              {isNew
+                ? "Nepoužitý kousek v původním stavu."
+                : "Kousek je v perfektním stavu — nic jsme neobjevili."}
             </p>
           </div>
         </div>

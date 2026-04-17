@@ -657,7 +657,7 @@ export default async function ProductDetailPage({ params }: Props) {
           />
 
           {/* Defects / flaws — honest transparent disclosure (trust builder) */}
-          <ProductDefects note={product.defectsNote} images={defectImages} />
+          <ProductDefects note={product.defectsNote} images={defectImages} condition={product.condition} />
 
           {/* Shipping, returns & quality guarantee info */}
           <ProductInfoAccordion />
