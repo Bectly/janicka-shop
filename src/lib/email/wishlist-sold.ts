@@ -34,6 +34,7 @@ function formatPriceCzk(price: number): string {
 
 const CONDITION_LABELS: Record<string, string> = {
   new_with_tags: "Nov\u00e9 s visa\u010dkou",
+  new_without_tags: "Nov\u00e9 bez visa\u010dky",
   excellent: "V\u00fdborn\u00fd stav",
   good: "Dobr\u00fd stav",
   visible_wear: "Viditeln\u00e9 opot\u0159eben\u00ed",

@@ -18,6 +18,7 @@ const BASE_URL =
  */
 const CONDITION_MAP: Record<string, string> = {
   new_with_tags: "new",
+  new_without_tags: "new",
   excellent: "used",
   good: "used",
   visible_wear: "used",

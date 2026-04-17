@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { X, SlidersHorizontal, ChevronDown, Check } from "lucide-react";
-import { CONDITION_LABELS, COLOR_MAP } from "@/lib/constants";
+import { CONDITION_LABELS, CONDITION_COLORS, COLOR_MAP } from "@/lib/constants";
 import {
   Drawer,
   DrawerContent,
@@ -317,7 +317,7 @@ export function ProductFilters({
               onClick={() => !isDisabled && toggleMulti("condition", key, activeConditions)}
               aria-pressed={isActive}
               aria-disabled={isDisabled}
-              className={`min-h-11 inline-flex items-center rounded-lg px-3 py-1 text-xs font-medium transition-colors ${
+              className={`min-h-11 inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-colors ${
                 isActive
                   ? "bg-primary text-primary-foreground"
                   : isDisabled
@@ -325,8 +325,12 @@ export function ProductFilters({
                     : "bg-muted text-muted-foreground hover:bg-muted/80"
               }`}
             >
+              <span
+                className={`size-2 shrink-0 rounded-full ring-1 ring-inset ring-foreground/10 ${(CONDITION_COLORS[key] ?? "").split(" ")[0]}`}
+                aria-hidden="true"
+              />
               {label}
-              <span className="ml-1 opacity-60">({count})</span>
+              <span className="opacity-60">({count})</span>
             </button>
           );
         })}
@@ -780,7 +784,7 @@ export function ProductFilters({
                             onClick={() => !isDisabled && toggleMulti("condition", key, activeConditions)}
                             aria-pressed={isActive}
                             aria-disabled={isDisabled}
-                            className={`min-h-11 inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                            className={`min-h-11 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                               isActive
                                 ? "bg-primary text-primary-foreground"
                                 : isDisabled
@@ -788,8 +792,12 @@ export function ProductFilters({
                                   : "bg-muted text-muted-foreground hover:bg-muted/80"
                             }`}
                           >
+                            <span
+                              className={`size-2 shrink-0 rounded-full ring-1 ring-inset ring-foreground/10 ${(CONDITION_COLORS[key] ?? "").split(" ")[0]}`}
+                              aria-hidden="true"
+                            />
                             {label}
-                            <span className="ml-1 opacity-60">({count})</span>
+                            <span className="opacity-60">({count})</span>
                           </button>
                         );
                       })}
