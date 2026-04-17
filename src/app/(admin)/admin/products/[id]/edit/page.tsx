@@ -5,7 +5,7 @@ import { connection } from "next/server";
 
 import { ProductForm } from "@/components/admin/product-form";
 import { updateProduct } from "../../actions";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, BookOpen } from "lucide-react";
 import type { Metadata } from "next";
 
 interface Props {
@@ -82,6 +82,23 @@ export default async function EditProductPage({ params }: Props) {
         Upravit produkt
       </h1>
       <p className="mt-1 text-sm text-muted-foreground">{product.name}</p>
+
+      {product.originalDescription && (
+        <details className="mt-6 rounded-xl border border-amber-200 bg-amber-50/60 dark:border-amber-900/50 dark:bg-amber-950/20">
+          <summary className="flex cursor-pointer select-none items-center gap-2 px-5 py-3.5 text-sm font-medium text-amber-800 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/30 rounded-xl transition-colors">
+            <BookOpen className="size-4 shrink-0" />
+            Původní popis z Vinted
+            <span className="ml-auto text-xs font-normal text-amber-600/70 dark:text-amber-400/70">
+              klikni pro zobrazení
+            </span>
+          </summary>
+          <div className="border-t border-amber-200/70 dark:border-amber-900/40 px-5 py-4">
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-amber-900/80 dark:text-amber-200/80">
+              {product.originalDescription}
+            </p>
+          </div>
+        </details>
+      )}
 
       <div className="mt-6 rounded-xl border bg-card p-6 shadow-sm">
         <ProductForm
