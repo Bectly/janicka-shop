@@ -16,7 +16,7 @@ export default async function QuickAddPage() {
   const db = await getDb();
   const categories = await db.category.findMany({
     orderBy: { sortOrder: "asc" },
-    select: { id: true, name: true },
+    select: { id: true, name: true, slug: true },
   });
 
   return (

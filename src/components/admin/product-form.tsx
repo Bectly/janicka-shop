@@ -12,11 +12,13 @@ import { parseProductImages, parseMeasurements } from "@/lib/images";
 import { parseDefects } from "@/lib/defects";
 import type { ProductImage, ProductMeasurements } from "@/lib/images";
 import { uploadFiles } from "@/lib/uploadthing";
+import { getSizeGroupsForCategory } from "@/lib/sizes";
 import { Save, Ruler, Video, X, Loader2 } from "lucide-react";
 
 interface Category {
   id: string;
   name: string;
+  slug: string;
 }
 
 interface ProductData {

@@ -31,7 +31,7 @@ export default async function EditProductPage({ params }: Props) {
     db.product.findUnique({ where: { id } }),
     db.category.findMany({
       orderBy: { sortOrder: "asc" },
-      select: { id: true, name: true },
+      select: { id: true, name: true, slug: true },
     }),
   ]);
 

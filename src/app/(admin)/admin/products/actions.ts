@@ -6,7 +6,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { rateLimitAdmin } from "@/lib/rate-limit";
-import { parseDefects, serializeDefects } from "@/lib/defects";
+import { parseDefectImages, serializeDefectImages } from "@/lib/defects";
 
 const productSchema = z.object({
   name: z.string().min(1, "Název je povinný").max(200),

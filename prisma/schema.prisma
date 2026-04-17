@@ -38,7 +38,8 @@ model Product {
   measurements  String         @default("{}") // JSON: {chest?, waist?, hips?, length?} in cm
   fitNote       String? // Human-readable fit note, max 120 chars
   videoUrl      String? // Product video URL (15-30s, portrait 9:16)
-  defects       String         @default("[]") // JSON: [{type, description?, severity, imageIndex?}]
+  defectsNote   String? // Free-text description of flaws/imperfections
+  defectImages  String         @default("[]") // JSON: string[] of defect-detail photo URLs
   stock         Int            @default(1) // second-hand: each piece is unique
   featured      Boolean        @default(false)
   active        Boolean        @default(true)
