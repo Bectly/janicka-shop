@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
 import { LayoutGrid, Grid3X3, List } from "lucide-react";
 
 export type ViewMode = "grid-2" | "grid-3" | "list";
@@ -11,21 +10,12 @@ const VIEW_OPTIONS: { value: ViewMode; label: string; icon: typeof LayoutGrid }[
   { value: "list", label: "Seznam", icon: List },
 ];
 
-export function GridViewSwitcher() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const currentView = (searchParams.get("view") as ViewMode) || "grid-3";
+interface GridViewSwitcherProps {
+  currentView: ViewMode;
+  onChange: (view: ViewMode) => void;
+}
 
-  function setView(view: ViewMode) {
-    const params = new URLSearchParams(searchParams.toString());
-    if (view === "grid-3") {
-      params.delete("view");
-    } else {
-      params.set("view", view);
-    }
-    router.push(`/products?${params.toString()}`, { scroll: false });
-  }
-
+export function GridViewSwitcher({ currentView, onChange }: GridViewSwitcherProps) {
   return (
     <div
       className="hidden sm:flex items-center gap-0.5 rounded-lg border bg-muted/50 p-0.5"
@@ -35,7 +25,7 @@ export function GridViewSwitcher() {
       {VIEW_OPTIONS.map(({ value, label, icon: Icon }) => (
         <button
           key={value}
-          onClick={() => setView(value)}
+          onClick={() => onChange(value)}
           role="radio"
           aria-checked={currentView === value}
           aria-label={label}

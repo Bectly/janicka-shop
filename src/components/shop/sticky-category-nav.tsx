@@ -1,28 +1,18 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
-
 interface StickyCategoryNavProps {
   categories: { slug: string; name: string }[];
   categoryCounts?: Record<string, number>;
+  activeCategory: string;
+  onChange: (slug: string | null) => void;
 }
 
-export function StickyCategoryNav({ categories, categoryCounts }: StickyCategoryNavProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const activeCategory = searchParams.get("category") ?? "";
-
-  function setCategory(slug: string | null) {
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete("page");
-    if (slug) {
-      params.set("category", slug);
-    } else {
-      params.delete("category");
-    }
-    router.push(`/products?${params.toString()}`, { scroll: false });
-  }
-
+export function StickyCategoryNav({
+  categories,
+  categoryCounts,
+  activeCategory,
+  onChange,
+}: StickyCategoryNavProps) {
   return (
     <div
       className="flex gap-1.5 overflow-x-auto scrollbar-none"
@@ -30,7 +20,7 @@ export function StickyCategoryNav({ categories, categoryCounts }: StickyCategory
       aria-label="Kategorie"
     >
       <button
-        onClick={() => setCategory(null)}
+        onClick={() => onChange(null)}
         aria-current={!activeCategory ? "page" : undefined}
         className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
           !activeCategory
@@ -45,7 +35,7 @@ export function StickyCategoryNav({ categories, categoryCounts }: StickyCategory
         return (
           <button
             key={cat.slug}
-            onClick={() => setCategory(cat.slug)}
+            onClick={() => onChange(cat.slug)}
             aria-current={activeCategory === cat.slug ? "page" : undefined}
             className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
               activeCategory === cat.slug

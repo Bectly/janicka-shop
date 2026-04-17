@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import { X, SlidersHorizontal, ChevronDown, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +33,19 @@ interface FilterCounts {
   colors: Record<string, number>;
 }
 
+/** Controlled filter state — owned by parent (ProductsClient). */
+export interface ProductFiltersState {
+  category: string;
+  sort: string;
+  sale: boolean;
+  brands: string[];
+  sizes: string[];
+  conditions: string[];
+  colors: string[];
+  minPrice: number | null;
+  maxPrice: number | null;
+}
+
 interface ProductFiltersProps {
   brands: string[];
   sizes: string[];
@@ -42,6 +54,9 @@ interface ProductFiltersProps {
   counts: FilterCounts;
   categoryCounts?: Record<string, number>;
   totalFiltered: number;
+  filters: ProductFiltersState;
+  onChange: (patch: Partial<ProductFiltersState>) => void;
+  onClearAll: () => void;
 }
 
 /** Returns true if a hex color (e.g. "#FFFFFF") is perceptually light. */
@@ -111,39 +126,70 @@ export function ProductFilters({
   counts,
   categoryCounts,
   totalFiltered,
+  filters,
+  onChange,
+  onClearAll,
 }: ProductFiltersProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [showAllBrands, setShowAllBrands] = useState(false);
   const [showAllBrandsDrawer, setShowAllBrandsDrawer] = useState(false);
 
-  const activeCategory = searchParams.get("category") ?? "";
-  const activeSort = searchParams.get("sort") ?? "newest";
-  const activeBrands = searchParams.getAll("brand");
-  const activeSizes = searchParams.getAll("size");
-  const activeConditions = searchParams.getAll("condition");
-  const activeColors = searchParams.getAll("color");
-  const minPrice = searchParams.get("minPrice") ?? "";
-  const maxPrice = searchParams.get("maxPrice") ?? "";
-  const saleOnly = searchParams.get("sale") === "true";
+  const activeCategory = filters.category;
+  const activeSort = filters.sort;
+  const activeBrands = filters.brands;
+  const activeSizes = filters.sizes;
+  const activeConditions = filters.conditions;
+  const activeColors = filters.colors;
+  const minPrice = filters.minPrice !== null ? String(filters.minPrice) : "";
+  const maxPrice = filters.maxPrice !== null ? String(filters.maxPrice) : "";
+  const saleOnly = filters.sale;
 
+  /**
+   * Adapter: the old codebase spoke in URL-param keys ("brand", "size", "sale",
+   * "minPrice", "maxPrice", "category", "sort"). Translate that vocabulary into
+   * the controlled-state shape `ProductFiltersState`.
+   */
   const updateParams = useCallback(
     (updates: Record<string, string | string[] | null>) => {
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete("page");
+      const patch: Partial<ProductFiltersState> = {};
       for (const [key, value] of Object.entries(updates)) {
-        params.delete(key);
-        if (value === null || value === "") continue;
-        if (Array.isArray(value)) {
-          for (const v of value) params.append(key, v);
-        } else {
-          params.set(key, value);
+        switch (key) {
+          case "category":
+            patch.category = typeof value === "string" ? value : "";
+            break;
+          case "sort":
+            patch.sort = typeof value === "string" && value ? value : "newest";
+            break;
+          case "sale":
+            patch.sale = value === "true";
+            break;
+          case "brand":
+            patch.brands = Array.isArray(value) ? value : value ? [value] : [];
+            break;
+          case "size":
+            patch.sizes = Array.isArray(value) ? value : value ? [value] : [];
+            break;
+          case "condition":
+            patch.conditions = Array.isArray(value) ? value : value ? [value] : [];
+            break;
+          case "color":
+            patch.colors = Array.isArray(value) ? value : value ? [value] : [];
+            break;
+          case "minPrice": {
+            const n = typeof value === "string" && value ? parseFloat(value) : NaN;
+            patch.minPrice = Number.isFinite(n) ? n : null;
+            break;
+          }
+          case "maxPrice": {
+            const n = typeof value === "string" && value ? parseFloat(value) : NaN;
+            patch.maxPrice = Number.isFinite(n) ? n : null;
+            break;
+          }
         }
       }
-      router.push(`/products?${params.toString()}`, { scroll: false });
+      onChange(patch);
     },
-    [router, searchParams],
+    [onChange],
   );
 
   const toggleMulti = useCallback(
@@ -157,8 +203,8 @@ export function ProductFilters({
   );
 
   const clearAll = useCallback(() => {
-    router.push("/products");
-  }, [router]);
+    onClearAll();
+  }, [onClearAll]);
 
   const activeFilterCount =
     activeBrands.length +

@@ -7,14 +7,30 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 interface PaginationProps {
   totalItems: number;
   perPage: number;
-  /** Base path for navigation (default: current pathname) */
+  /** Base path for navigation (default: current pathname). Ignored in controlled mode. */
   basePath?: string;
+  /**
+   * When `currentPage` + `onPageChange` are provided, Pagination is fully
+   * controlled and renders buttons instead of links — used by the client-side
+   * catalog so page changes do NOT trigger an RSC round-trip.
+   */
+  currentPage?: number;
+  onPageChange?: (page: number) => void;
 }
 
-export function Pagination({ totalItems, perPage, basePath }: PaginationProps) {
+export function Pagination({
+  totalItems,
+  perPage,
+  basePath,
+  currentPage: controlledPage,
+  onPageChange,
+}: PaginationProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const currentPage = Math.max(1, parseInt(searchParams.get("page") ?? "1"));
+  const isControlled = typeof controlledPage === "number" && typeof onPageChange === "function";
+  const currentPage = isControlled
+    ? Math.max(1, controlledPage!)
+    : Math.max(1, parseInt(searchParams.get("page") ?? "1"));
   const totalPages = Math.max(1, Math.ceil(totalItems / perPage));
   const path = basePath ?? pathname;
 
@@ -50,6 +66,14 @@ export function Pagination({ totalItems, perPage, basePath }: PaginationProps) {
   const pageBase =
     "inline-flex min-h-[44px] min-w-11 items-center justify-center rounded-lg px-3 py-2 text-center text-sm font-medium transition-colors";
 
+  function goTo(p: number) {
+    if (!isControlled) return;
+    onPageChange!(p);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }
+
   return (
     <nav
       aria-label="Stránkování"
@@ -64,6 +88,16 @@ export function Pagination({ totalItems, perPage, basePath }: PaginationProps) {
           <ChevronLeft className="size-4" />
           <span className="hidden sm:inline">Předchozí</span>
         </span>
+      ) : isControlled ? (
+        <button
+          type="button"
+          onClick={() => goTo(currentPage - 1)}
+          className={`${linkBase} text-muted-foreground hover:bg-muted`}
+          aria-label="Předchozí stránka"
+        >
+          <ChevronLeft className="size-4" />
+          <span className="hidden sm:inline">Předchozí</span>
+        </button>
       ) : (
         <Link
           href={getPageHref(currentPage - 1)}
@@ -94,6 +128,16 @@ export function Pagination({ totalItems, perPage, basePath }: PaginationProps) {
           >
             {page}
           </span>
+        ) : isControlled ? (
+          <button
+            key={page}
+            type="button"
+            onClick={() => goTo(page)}
+            className={`${pageBase} text-muted-foreground hover:bg-muted`}
+            aria-label={`Stránka ${page}`}
+          >
+            {page}
+          </button>
         ) : (
           <Link
             key={page}
@@ -116,6 +160,16 @@ export function Pagination({ totalItems, perPage, basePath }: PaginationProps) {
           <span className="hidden sm:inline">Další</span>
           <ChevronRight className="size-4" />
         </span>
+      ) : isControlled ? (
+        <button
+          type="button"
+          onClick={() => goTo(currentPage + 1)}
+          className={`${linkBase} text-muted-foreground hover:bg-muted`}
+          aria-label="Další stránka"
+        >
+          <span className="hidden sm:inline">Další</span>
+          <ChevronRight className="size-4" />
+        </button>
       ) : (
         <Link
           href={getPageHref(currentPage + 1)}
