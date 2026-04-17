@@ -388,33 +388,31 @@ export function ProductFilters({
         Stav
       </legend>
       <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filtr podle stavu">
-        {Object.entries(CONDITION_LABELS).map(([key, label]) => {
-          const count = counts.conditions[key] ?? 0;
-          const isActive = activeConditions.includes(key);
-          const isDisabled = count === 0 && !isActive;
-          return (
-            <button
-              key={key}
-              onClick={() => !isDisabled && toggleMulti("condition", key, activeConditions)}
-              aria-pressed={isActive}
-              aria-disabled={isDisabled}
-              className={`min-h-11 inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-colors ${
-                isActive
-                  ? "bg-primary text-primary-foreground"
-                  : isDisabled
-                    ? "bg-muted/50 text-muted-foreground/40 cursor-not-allowed"
+        {Object.entries(CONDITION_LABELS)
+          .filter(([key]) => (counts.conditions[key] ?? 0) > 0 || activeConditions.includes(key))
+          .map(([key, label]) => {
+            const count = counts.conditions[key] ?? 0;
+            const isActive = activeConditions.includes(key);
+            return (
+              <button
+                key={key}
+                onClick={() => toggleMulti("condition", key, activeConditions)}
+                aria-pressed={isActive}
+                className={`min-h-11 inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-colors ${
+                  isActive
+                    ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground hover:bg-muted/80"
-              }`}
-            >
-              <span
-                className={`size-2 shrink-0 rounded-full ring-1 ring-inset ring-foreground/10 ${(CONDITION_COLORS[key] ?? "").split(" ")[0]}`}
-                aria-hidden="true"
-              />
-              {label}
-              <span className="opacity-60">({count})</span>
-            </button>
-          );
-        })}
+                }`}
+              >
+                <span
+                  className={`size-2 shrink-0 rounded-full ring-1 ring-inset ring-foreground/10 ${(CONDITION_COLORS[key] ?? "").split(" ")[0]}`}
+                  aria-hidden="true"
+                />
+                {label}
+                <span className="opacity-60">({count})</span>
+              </button>
+            );
+          })}
       </div>
     </fieldset>
   );
@@ -849,33 +847,31 @@ export function ProductFilters({
                   </AccordionTrigger>
                   <AccordionContent>
                     <div className="flex flex-wrap gap-1.5 pb-2" role="group" aria-label="Filtr podle stavu">
-                      {Object.entries(CONDITION_LABELS).map(([key, label]) => {
-                        const count = counts.conditions[key] ?? 0;
-                        const isActive = activeConditions.includes(key);
-                        const isDisabled = count === 0 && !isActive;
-                        return (
-                          <button
-                            key={key}
-                            onClick={() => !isDisabled && toggleMulti("condition", key, activeConditions)}
-                            aria-pressed={isActive}
-                            aria-disabled={isDisabled}
-                            className={`min-h-11 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                              isActive
-                                ? "bg-primary text-primary-foreground"
-                                : isDisabled
-                                  ? "bg-muted/50 text-muted-foreground/40 cursor-not-allowed"
+                      {Object.entries(CONDITION_LABELS)
+                        .filter(([key]) => (counts.conditions[key] ?? 0) > 0 || activeConditions.includes(key))
+                        .map(([key, label]) => {
+                          const count = counts.conditions[key] ?? 0;
+                          const isActive = activeConditions.includes(key);
+                          return (
+                            <button
+                              key={key}
+                              onClick={() => toggleMulti("condition", key, activeConditions)}
+                              aria-pressed={isActive}
+                              className={`min-h-11 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                                isActive
+                                  ? "bg-primary text-primary-foreground"
                                   : "bg-muted text-muted-foreground hover:bg-muted/80"
-                            }`}
-                          >
-                            <span
-                              className={`size-2 shrink-0 rounded-full ring-1 ring-inset ring-foreground/10 ${(CONDITION_COLORS[key] ?? "").split(" ")[0]}`}
-                              aria-hidden="true"
-                            />
-                            {label}
-                            <span className="opacity-60">({count})</span>
-                          </button>
-                        );
-                      })}
+                              }`}
+                            >
+                              <span
+                                className={`size-2 shrink-0 rounded-full ring-1 ring-inset ring-foreground/10 ${(CONDITION_COLORS[key] ?? "").split(" ")[0]}`}
+                                aria-hidden="true"
+                              />
+                              {label}
+                              <span className="opacity-60">({count})</span>
+                            </button>
+                          );
+                        })}
                     </div>
                   </AccordionContent>
                 </AccordionItem>
