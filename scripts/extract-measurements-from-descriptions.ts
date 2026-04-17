@@ -25,6 +25,13 @@
  */
 
 import { PrismaClient } from "@prisma/client";
+import {
+  extractMeasurements,
+  hasAnyMeasurement,
+  parseExistingMeasurements,
+  type ExtractedMeasurements,
+  type MeasurementField,
+} from "../src/lib/measurements-extractor";
 
 async function createDb(): Promise<PrismaClient> {
   const tursoUrl = process.env.TURSO_DATABASE_URL;
@@ -41,120 +48,12 @@ async function createDb(): Promise<PrismaClient> {
   return new PrismaClient();
 }
 
-type Field = "chest" | "waist" | "hips" | "length";
-
-interface FieldRule {
-  field: Field;
-  // Pattern matches a label (diacritics-normalized, lowercased) immediately
-  // before a cm value. Use /u flag; first capturing group MUST be the number.
-  patterns: RegExp[];
-}
-
-// Accept decimal comma or dot, integer or one-decimal. Allow "cca" and
-// punctuation between label and value. Capture 1..3 digits, optional .,5.
-const NUM = String.raw`(\d{2,3}(?:[.,]\d)?)`;
-// Value suffix: optional space, "cm", optional trailing context.
-const CM = String.raw`\s*(?:cm|centimetr\w*)\b`;
-
-const RULES: FieldRule[] = [
-  {
-    // "šířka přes prsa ... 36 cm", "šířka prsa: 43 cm", "prsa 43 cm",
-    // "hrudník 43 cm", "Šířka prsa: 43 cm". Exclude stand-alone "přes prsa"
-    // without a label to avoid capturing unrelated numbers.
-    field: "chest",
-    patterns: [
-      new RegExp(String.raw`\b(?:sirka\s+(?:pres\s+)?prsa|hrudnik|prsa)\b[^0-9\n]{0,30}${NUM}${CM}`, "u"),
-    ],
-  },
-  {
-    // "pas 34 cm", "šířka pas: 33 cm", "v pase 34 cm", "obvod pasu 34 cm"
-    field: "waist",
-    patterns: [
-      new RegExp(String.raw`\b(?:sirka\s+pas|obvod\s+pas\w*|v\s+pas\w*|pas\w*)\b[^0-9\n]{0,30}${NUM}${CM}`, "u"),
-    ],
-  },
-  {
-    // "boky 35 cm", "šířka boky: 37 cm", "obvod boků 90 cm"
-    field: "hips",
-    patterns: [
-      new RegExp(String.raw`\b(?:sirka\s+bok\w*|obvod\s+bok\w*|bok\w*)\b[^0-9\n]{0,30}${NUM}${CM}`, "u"),
-    ],
-  },
-  {
-    // "délka cca 127 cm", "délka: 54 cm", "délka od ramen 40 cm",
-    // "celková délka 100 cm". Avoid "délka rukávu" (sleeve length).
-    field: "length",
-    patterns: [
-      new RegExp(String.raw`\b(?:celkova\s+delka|delka\s+od\s+ramen|delka)\b(?![^0-9\n]{0,30}\brukav)[^0-9\n]{0,30}${NUM}${CM}`, "u"),
-    ],
-  },
-];
-
-// Plausible flat-measurement ranges in cm. Values outside are likely
-// mis-labeled (e.g. size number, weight, sleeve length) and dropped.
-const RANGES: Record<Field, { min: number; max: number }> = {
-  chest: { min: 25, max: 130 },
-  waist: { min: 25, max: 130 },
-  hips: { min: 25, max: 140 },
-  length: { min: 20, max: 200 },
-};
-
-function stripDiacritics(s: string): string {
-  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-}
-
-function normalizeForMatch(s: string): string {
-  return stripDiacritics(s).toLowerCase();
-}
-
-function parseNumber(raw: string): number | null {
-  const v = Number(raw.replace(",", "."));
-  if (!Number.isFinite(v)) return null;
-  return v;
-}
-
-type Extracted = Partial<Record<Field, number>>;
-
-function extractMeasurements(desc: string): Extracted {
-  const norm = normalizeForMatch(desc);
-  const out: Extracted = {};
-
-  for (const rule of RULES) {
-    for (const p of rule.patterns) {
-      const m = p.exec(norm);
-      if (!m) continue;
-      const n = parseNumber(m[1]);
-      if (n === null) continue;
-      const { min, max } = RANGES[rule.field];
-      if (n < min || n > max) continue;
-      // Store as integer if whole; otherwise keep one decimal.
-      out[rule.field] = Number.isInteger(n) ? n : Math.round(n * 10) / 10;
-      break;
-    }
-  }
-
-  return out;
-}
-
-function hasAny(m: Extracted): boolean {
-  return (
-    m.chest !== undefined ||
-    m.waist !== undefined ||
-    m.hips !== undefined ||
-    m.length !== undefined
-  );
-}
-
-function parseExisting(raw: string | null | undefined): Extracted {
-  if (!raw) return {};
-  try {
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === "object") return parsed as Extracted;
-  } catch {
-    // ignore malformed
-  }
-  return {};
-}
+// Extraction logic lives in src/lib/measurements-extractor.ts (shared with the
+// admin Server Action). This script only adds CLI orchestration (dry-run/apply).
+type Field = MeasurementField;
+type Extracted = ExtractedMeasurements;
+const hasAny = hasAnyMeasurement;
+const parseExisting = parseExistingMeasurements;
 
 async function main() {
   const isApply = process.argv.includes("--apply");

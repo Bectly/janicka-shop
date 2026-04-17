@@ -13,6 +13,10 @@ import {
   TrendingUp,
   DollarSign,
   CheckCircle,
+  Images,
+  Ruler,
+  AlertTriangle,
+  Video,
 } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -75,6 +79,11 @@ export default async function AdminDashboardPage({
     recentOrders,
     revenueAgg,
     statusGroups,
+    coverageWithImages,
+    coverageWithMeasurements,
+    coverageWithDefects,
+    coverageWithVideo,
+    coverageTotal,
   ] = await Promise.all([
     db.product.count(dateFilter ? { where: { createdAt: dateFilter } } : undefined),
     db.product.count({ where: { active: true, sold: false, ...(dateFilter ? { createdAt: dateFilter } : {}) } }),
@@ -102,6 +111,18 @@ export default async function AdminDashboardPage({
       _count: { status: true },
       ...(dateFilter ? { where: { createdAt: dateFilter } } : {}),
     }),
+    // Coverage stats — always across ALL active unsold products (not period-filtered)
+    db.product.count({ where: { active: true, sold: false, images: { not: "[]" } } }),
+    db.product.count({ where: { active: true, sold: false, measurements: { not: "{}" } } }),
+    db.product.count({
+      where: {
+        active: true,
+        sold: false,
+        OR: [{ defectsNote: { not: null } }, { defectImages: { not: "[]" } }],
+      },
+    }),
+    db.product.count({ where: { active: true, sold: false, videoUrl: { not: null } } }),
+    db.product.count({ where: { active: true, sold: false } }),
   ]);
 
   const totalRevenue = revenueAgg._sum.total ?? 0;
@@ -189,6 +210,99 @@ export default async function AdminDashboardPage({
           );
         })}
       </div>
+
+      {/* Product coverage panel */}
+      {coverageTotal > 0 && (
+        <section className="mt-8">
+          <div>
+            <h2 className="font-heading text-lg font-semibold text-foreground">
+              Kvalita katalogu
+            </h2>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              Aktivních produktů: {coverageTotal} — jak úplné jsou informace
+            </p>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {(
+              [
+                {
+                  label: "Fotografie",
+                  icon: Images,
+                  count: coverageWithImages,
+                  hint: "cíl: 4–6 fotek na produkt",
+                },
+                {
+                  label: "Míry",
+                  icon: Ruler,
+                  count: coverageWithMeasurements,
+                  hint: "hruď / pas / boky / délka",
+                },
+                {
+                  label: "Závady",
+                  icon: AlertTriangle,
+                  count: coverageWithDefects,
+                  hint: "upřímnost buduje důvěru",
+                },
+                {
+                  label: "Video",
+                  icon: Video,
+                  count: coverageWithVideo,
+                  hint: "+65 % konverze s videem",
+                },
+              ] as const
+            ).map(({ label, icon: Icon, count, hint }) => {
+              const pct =
+                coverageTotal > 0
+                  ? Math.round((count / coverageTotal) * 100)
+                  : 0;
+              const barColor =
+                pct >= 80
+                  ? "bg-emerald-500"
+                  : pct >= 50
+                    ? "bg-amber-500"
+                    : "bg-rose-500";
+              const textColor =
+                pct >= 80
+                  ? "text-emerald-600"
+                  : pct >= 50
+                    ? "text-amber-600"
+                    : "text-rose-600";
+              const iconBg =
+                pct >= 80
+                  ? "bg-emerald-100"
+                  : pct >= 50
+                    ? "bg-amber-100"
+                    : "bg-rose-100";
+              return (
+                <div
+                  key={label}
+                  className="rounded-xl border bg-card p-4 shadow-sm"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className={`rounded-lg p-2 ${iconBg}`}>
+                      <Icon className={`size-4 ${textColor}`} />
+                    </div>
+                    <span className={`text-2xl font-bold ${textColor}`}>
+                      {pct}%
+                    </span>
+                  </div>
+                  <p className="mt-3 font-medium text-foreground">{label}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {count} / {coverageTotal} produktů
+                  </p>
+                  <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                    <div
+                      className={`h-full rounded-full transition-all ${barColor}`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground">{hint}</p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Order status breakdown */}
       {totalOrders > 0 && (

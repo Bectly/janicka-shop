@@ -2,9 +2,15 @@
 
 import { getDb } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 import { rateLimitAdmin, checkRateLimitOnly, recordRateLimitHit, getClientIp } from "@/lib/rate-limit";
+import {
+  extractMeasurements,
+  hasAnyMeasurement,
+  parseExistingMeasurements,
+  type MeasurementField,
+} from "@/lib/measurements-extractor";
 
 async function requireAdmin() {
   const session = await auth();
@@ -161,4 +167,101 @@ export async function updateAdminPassword(
   });
 
   return { success: true, message: "Heslo bylo úspěšně změněno" };
+}
+
+// --- Measurements backfill (extract chest/waist/hips/length from
+// originalDescription into Product.measurements). Mirrors
+// scripts/extract-measurements-from-descriptions.ts but runs against the live
+// Prisma client (Turso in production), so Janička can reseed measurements
+// without terminal access. ---
+
+export type MeasurementsBackfillResult = {
+  success: boolean;
+  message: string;
+  totalScanned: number;
+  updated: number;
+  skipped: number;
+  byField: Record<MeasurementField, number>;
+};
+
+export async function backfillMeasurements(): Promise<MeasurementsBackfillResult> {
+  await requireAdmin();
+
+  // Tighter rate limit than admin default — this is a write-heavy maintenance
+  // op, not an everyday admin click. 1 per 60s per IP is plenty.
+  const ip = await getClientIp();
+  const rl = checkRateLimitOnly(`backfill-measurements:${ip}`, 1, 60 * 1000);
+  if (!rl.success) {
+    return {
+      success: false,
+      message: "Příliš mnoho pokusů. Počkejte minutu a zkuste znovu.",
+      totalScanned: 0,
+      updated: 0,
+      skipped: 0,
+      byField: { chest: 0, waist: 0, hips: 0, length: 0 },
+    };
+  }
+  recordRateLimitHit(`backfill-measurements:${ip}`);
+
+  const db = await getDb();
+  const products = await db.product.findMany({
+    select: {
+      id: true,
+      measurements: true,
+      originalDescription: true,
+    },
+  });
+
+  let totalScanned = 0;
+  let updated = 0;
+  let skipped = 0;
+  const byField: Record<MeasurementField, number> = {
+    chest: 0,
+    waist: 0,
+    hips: 0,
+    length: 0,
+  };
+
+  for (const p of products) {
+    if (!p.originalDescription || !p.originalDescription.trim()) {
+      skipped++;
+      continue;
+    }
+    const existing = parseExistingMeasurements(p.measurements);
+    if (hasAnyMeasurement(existing)) {
+      skipped++;
+      continue;
+    }
+    totalScanned++;
+
+    const extracted = extractMeasurements(p.originalDescription);
+    if (!hasAnyMeasurement(extracted)) continue;
+
+    for (const k of Object.keys(extracted) as MeasurementField[]) {
+      if (extracted[k] !== undefined) byField[k]++;
+    }
+
+    await db.product.update({
+      where: { id: p.id },
+      data: { measurements: JSON.stringify(extracted) },
+    });
+    updated++;
+  }
+
+  // Invalidate product caches so PDP shows the new Rozměry block immediately.
+  try {
+    revalidateTag("products", "max");
+  } catch {
+    // revalidateTag may not be configured — non-fatal.
+  }
+  revalidatePath("/admin/settings");
+
+  return {
+    success: true,
+    message: `Hotovo. Aktualizováno ${updated} produktů (přeskočeno ${skipped}).`,
+    totalScanned,
+    updated,
+    skipped,
+    byField,
+  };
 }

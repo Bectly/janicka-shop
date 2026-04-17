@@ -3,6 +3,7 @@ import { connection } from "next/server";
 import { getShopSettings } from "./actions";
 import { SettingsForm } from "./settings-form";
 import { PasswordChangeForm } from "./password-form";
+import { MeasurementsBackfill } from "./measurements-backfill";
 
 export const metadata: Metadata = {
   title: "Nastavení obchodu",
@@ -34,6 +35,19 @@ export default async function AdminSettingsPage() {
         </p>
         <div className="mt-4">
           <PasswordChangeForm />
+        </div>
+      </div>
+
+      <div className="mt-6 rounded-xl border bg-card p-6 shadow-sm">
+        <h2 className="font-heading text-lg font-semibold text-foreground">
+          Údržba dat — rozměry produktů
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Hromadně doplní rozměry (hrudník, pas, boky, délka) do produktů
+          z původních popisků z Vinted.
+        </p>
+        <div className="mt-4">
+          <MeasurementsBackfill />
         </div>
       </div>
     </>
