@@ -99,9 +99,11 @@ export default async function AdminSubscribersPage({
         <ExportCsvButton />
       </div>
 
-      <MothersDayCampaignButton activeSubscriberCount={activeCount} />
-      <CustomsCampaignButton activeSubscriberCount={activeCount} />
-      <VintedCampaignButton activeSubscriberCount={activeCount} />
+      <div className="mt-6 space-y-4">
+        <VintedCampaignButton activeSubscriberCount={activeCount} />
+        <MothersDayCampaignButton activeSubscriberCount={activeCount} />
+        <CustomsCampaignButton activeSubscriberCount={activeCount} />
+      </div>
 
       <CampaignSender
         collections={collectionOptions}
