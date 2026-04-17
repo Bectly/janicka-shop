@@ -36,7 +36,7 @@ export function VintedCampaignButton({ activeSubscriberCount, onSent }: Props) {
 
         <fieldset className="mb-3 border-0 p-0">
           <legend className="sr-only">Segment</legend>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             {(
               [
                 { value: "all", label: "Auto-segment", description: "Warm 90d / Cold starší" },

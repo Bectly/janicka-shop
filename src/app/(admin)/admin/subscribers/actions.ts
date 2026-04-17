@@ -750,8 +750,11 @@ export async function previewVintedCampaign(
     html,
     subscriberCount,
     sampleEmail,
-    segmentCounts: { warm: warmCount, cold: coldCount },
-    segmentSubjects: { warm: warmPreview.subject, cold: coldPreview.subject },
+    // Only expose A/B breakdown for auto-segment; explicit warm/cold sends are single-segment.
+    ...(segment === "all" ? {
+      segmentCounts: { warm: warmCount, cold: coldCount },
+      segmentSubjects: { warm: warmPreview.subject, cold: coldPreview.subject },
+    } : {}),
   };
 }
 
