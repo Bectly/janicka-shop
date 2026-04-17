@@ -410,25 +410,7 @@
   animation: announcement-shimmer 6s ease-in-out infinite;
 }
 
-/* Soft fade edges — gradient overlays that blend into bar background */
-.announcement-bar::before,
-.announcement-bar::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 3.5rem;
-  z-index: 1;
-  pointer-events: none;
-}
-.announcement-bar::before {
-  left: 0;
-  background: linear-gradient(to right, var(--color-brand), transparent);
-}
-.announcement-bar::after {
-  right: 0;
-  background: linear-gradient(to left, var(--color-brand), transparent);
-}
+/* Soft fade edges removed — were causing right-side gap on desktop */
 
 /* ─── Newsletter animated gradient border ─── */
 @property --newsletter-angle {

@@ -53,13 +53,13 @@ export function AnnouncementBar() {
 
       <div className="flex min-h-10 items-center sm:min-h-11">
         <div
-          className="announcement-marquee flex min-w-0 flex-1 items-center overflow-hidden whitespace-nowrap lg:justify-center lg:[animation:none]"
+          className="announcement-marquee flex min-w-0 flex-1 items-center overflow-hidden whitespace-nowrap"
           aria-live="polite"
         >
           <span className="inline-flex items-center px-6 text-xs font-medium tracking-wide sm:text-sm">
             <MarqueeTrack />
           </span>
-          <span className="inline-flex items-center px-6 text-xs font-medium tracking-wide sm:text-sm lg:hidden" aria-hidden="true">
+          <span className="inline-flex items-center px-6 text-xs font-medium tracking-wide sm:text-sm" aria-hidden="true">
             <MarqueeTrack />
           </span>
         </div>
