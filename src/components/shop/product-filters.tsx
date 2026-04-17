@@ -3,6 +3,8 @@
 import { useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { X, SlidersHorizontal, ChevronDown, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { CONDITION_LABELS, CONDITION_COLORS, COLOR_MAP } from "@/lib/constants";
 import {
   CLOTHING_LETTER_SIZES,
@@ -239,12 +241,13 @@ export function ProductFilters({
         {visibleBrands.map((brand) => renderBrandButton(brand, "sm"))}
       </div>
       {hasMoreBrands && (
-        <button
+        <Button
+          variant="link"
           onClick={() => setShowAllBrands((v) => !v)}
-          className="mt-2 text-xs text-primary underline-offset-2 hover:underline"
+          className="mt-2 h-auto p-0 text-xs"
         >
           {showAllBrands ? "Zobrazit méně" : `Zobrazit všechny (${brands.length})`}
-        </button>
+        </Button>
       )}
     </fieldset>
   );
@@ -392,7 +395,7 @@ export function ProductFilters({
       </legend>
       <div className="flex items-center gap-2">
         <label htmlFor="filter-minPrice" className="sr-only">Minimální cena</label>
-        <input
+        <Input
           id="filter-minPrice"
           type="number"
           min="0"
@@ -406,11 +409,11 @@ export function ProductFilters({
               updateParams({ minPrice: e.currentTarget.value || null });
             }
           }}
-          className="w-full rounded-lg border bg-background px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+          className="h-8 text-xs"
         />
         <span className="text-xs text-muted-foreground" aria-hidden="true">–</span>
         <label htmlFor="filter-maxPrice" className="sr-only">Maximální cena</label>
-        <input
+        <Input
           id="filter-maxPrice"
           type="number"
           min="0"
@@ -424,7 +427,7 @@ export function ProductFilters({
               updateParams({ maxPrice: e.currentTarget.value || null });
             }
           }}
-          className="w-full rounded-lg border bg-background px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+          className="h-8 text-xs"
         />
       </div>
     </fieldset>
@@ -468,9 +471,9 @@ export function ProductFilters({
       {minPrice && <FilterChip label={`od ${minPrice} Kč`} onRemove={() => updateParams({ minPrice: null })} />}
       {maxPrice && <FilterChip label={`do ${maxPrice} Kč`} onRemove={() => updateParams({ maxPrice: null })} />}
       {saleOnly && <FilterChip label="Ve slevě" onRemove={() => updateParams({ sale: null })} />}
-      <button onClick={clearAll} className="text-xs font-medium text-destructive hover:underline">
+      <Button variant="link" onClick={clearAll} className="h-auto p-0 text-xs text-destructive">
         Smazat vše
-      </button>
+      </Button>
     </div>
   );
 
@@ -627,13 +630,15 @@ export function ProductFilters({
           <DrawerContent className="!max-h-[100dvh] !h-[100dvh] !rounded-t-2xl pb-[env(safe-area-inset-bottom)]">
             <DrawerHeader className="flex-row items-center justify-between border-b pb-3">
               <DrawerTitle>Filtry</DrawerTitle>
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setIsDrawerOpen(false)}
-                className="flex min-h-11 min-w-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted"
+                className="rounded-full"
                 aria-label="Zavřít filtry"
               >
                 <X className="size-5" />
-              </button>
+              </Button>
             </DrawerHeader>
 
             {/* Scrollable accordion filter sections — research-backed order: Size → Price → Color → Brand → Condition → Sale */}
@@ -682,7 +687,7 @@ export function ProductFilters({
                   <AccordionContent>
                     <div className="flex items-center gap-2 pb-2">
                       <label htmlFor="drawer-minPrice" className="sr-only">Minimální cena</label>
-                      <input
+                      <Input
                         id="drawer-minPrice"
                         type="number"
                         min="0"
@@ -697,11 +702,10 @@ export function ProductFilters({
                             updateParams({ minPrice: e.currentTarget.value || null });
                           }
                         }}
-                        className="w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                       />
                       <span className="text-sm text-muted-foreground" aria-hidden="true">–</span>
                       <label htmlFor="drawer-maxPrice" className="sr-only">Maximální cena</label>
-                      <input
+                      <Input
                         id="drawer-maxPrice"
                         type="number"
                         min="0"
@@ -716,7 +720,6 @@ export function ProductFilters({
                             updateParams({ maxPrice: e.currentTarget.value || null });
                           }
                         }}
-                        className="w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                       />
                       <span className="text-sm text-muted-foreground">Kč</span>
                     </div>
@@ -792,12 +795,13 @@ export function ProductFilters({
                         {visibleBrandsDrawer.map((brand) => renderBrandButton(brand, "base"))}
                       </div>
                       {hasMoreBrands && (
-                        <button
+                        <Button
+                          variant="link"
                           onClick={() => setShowAllBrandsDrawer((v) => !v)}
-                          className="mt-1 mb-2 text-sm text-primary underline-offset-2 hover:underline"
+                          className="mt-1 mb-2 h-auto p-0 text-sm"
                         >
                           {showAllBrandsDrawer ? "Zobrazit méně" : `Zobrazit všechny (${brands.length})`}
-                        </button>
+                        </Button>
                       )}
                     </AccordionContent>
                   </AccordionItem>
@@ -873,22 +877,23 @@ export function ProductFilters({
 
             {/* Sticky footer with product count + clear all */}
             <DrawerFooter className="border-t pt-3 pb-[env(safe-area-inset-bottom)]">
-              <button
+              <Button
                 onClick={() => setIsDrawerOpen(false)}
-                className="w-full min-h-14 rounded-xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                className="w-full min-h-14 rounded-xl py-3.5 text-sm font-semibold h-auto"
               >
                 Zobrazit {totalFiltered} {productPlural(totalFiltered)}
-              </button>
+              </Button>
               {activeFilterCount > 0 && (
-                <button
+                <Button
+                  variant="link"
                   onClick={() => {
                     clearAll();
                     setIsDrawerOpen(false);
                   }}
-                  className="w-full py-2 text-sm font-medium text-destructive hover:underline"
+                  className="w-full h-auto py-2 text-sm font-medium text-destructive"
                 >
                   Smazat všechny filtry
-                </button>
+                </Button>
               )}
             </DrawerFooter>
           </DrawerContent>
@@ -898,9 +903,10 @@ export function ProductFilters({
         <div
           className="fixed left-1/2 z-30 -translate-x-1/2 bottom-[calc(3.5rem+env(safe-area-inset-bottom,_0px)+0.75rem)]"
         >
-          <button
+          <Button
+            variant="outline"
             onClick={() => setIsDrawerOpen(true)}
-            className="inline-flex items-center gap-2 rounded-full border bg-background px-5 py-3 text-sm font-semibold text-foreground shadow-lg transition-colors hover:bg-muted active:scale-95"
+            className="gap-2 rounded-full px-5 py-3 text-sm font-semibold shadow-lg active:scale-95 h-auto bg-background"
           >
             <SlidersHorizontal className="size-4" />
             Filtry
@@ -909,7 +915,7 @@ export function ProductFilters({
                 {activeFilterCount}
               </span>
             )}
-          </button>
+          </Button>
         </div>
       </div>
     </>

@@ -615,6 +615,62 @@ export async function bulkUpdatePrice(
   return { affected };
 }
 
+// ── Inline quick-edit (single product) ───────────────────────
+//
+// Used by the admin products table for click-to-edit price, toggle active,
+// toggle featured. Writes PriceHistory when price changes (Czech 30-day
+// fake-discount law).
+
+const quickPatchSchema = z
+  .object({
+    price: z.number().positive().max(1_000_000).optional(),
+    active: z.boolean().optional(),
+    featured: z.boolean().optional(),
+  })
+  .refine((v) => Object.keys(v).length > 0, {
+    message: "Chybí data",
+  });
+
+export async function updateProductQuick(
+  id: string,
+  patch: { price?: number; active?: boolean; featured?: boolean },
+): Promise<{ ok: true; product: { id: string; price: number; active: boolean; featured: boolean } }> {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
+
+  if (!id || typeof id !== "string") throw new Error("Neplatné ID");
+  const parsed = quickPatchSchema.parse(patch);
+
+  const db = await getDb();
+  const current = await db.product.findUnique({
+    where: { id },
+    select: { id: true, slug: true, price: true, active: true, featured: true },
+  });
+  if (!current) throw new Error("Produkt nenalezen");
+
+  // Log old price to history BEFORE updating (30-day lowest-price rule)
+  if (parsed.price !== undefined && parsed.price !== current.price) {
+    await db.priceHistory.create({
+      data: { productId: id, price: current.price },
+    });
+  }
+
+  const updated = await db.product.update({
+    where: { id },
+    data: parsed,
+    select: { id: true, price: true, active: true, featured: true },
+  });
+
+  revalidateTag("products", "seconds");
+  revalidateTag(`product-${current.slug}`, "seconds");
+  revalidatePath("/admin/products");
+  revalidatePath("/products");
+  revalidatePath("/");
+
+  return { ok: true, product: updated };
+}
+
 export async function deleteProduct(id: string) {
   await requireAdmin();
   const rl = await rateLimitAdmin();

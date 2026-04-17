@@ -8,7 +8,6 @@ import { CategoryCard } from "@/components/shop/category-card";
 import { CollectionCard } from "@/components/shop/collection-card";
 import { NewsletterForm } from "@/components/shop/newsletter-form";
 import { TrustBadges } from "@/components/shop/trust-badges";
-import { VintedComparisonSection } from "@/components/shop/vinted-comparison";
 import { MothersDayBanner } from "@/components/shop/mothers-day-banner";
 import { RecentlySoldFeed } from "@/components/shop/recently-sold-feed";
 import { RecentlyViewedSection } from "@/components/shop/recently-viewed";
@@ -663,11 +662,6 @@ export default async function HomePage() {
       {/* Trust badges — no data, renders instantly */}
       <ScrollReveal>
         <TrustBadges />
-      </ScrollReveal>
-
-      {/* Vinted trust comparison — no data, renders instantly */}
-      <ScrollReveal>
-        <VintedComparisonSection />
       </ScrollReveal>
 
       {/* Recently sold — streams independently */}

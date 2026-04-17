@@ -3,13 +3,16 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { formatPrice } from "@/lib/format";
 import { CONDITION_LABELS, CONDITION_COLORS } from "@/lib/constants";
 import { ImageIcon, Eye, EyeOff, Star, StarOff, Trash2, X, Check, AlertCircle, CircleDollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DeleteProductButton } from "@/components/admin/delete-product-button";
 import { DuplicateProductButton } from "@/components/admin/duplicate-product-button";
 import { BulkPriceDialog } from "@/components/admin/bulk-price-dialog";
+import {
+  InlinePriceEdit,
+  ProductQuickToggles,
+} from "@/components/admin/product-quick-edit";
 import { getImageUrls } from "@/lib/images";
 import { bulkUpdateProducts } from "@/app/(admin)/admin/products/actions";
 
@@ -195,21 +198,20 @@ export function BulkProductTable({ products, query }: BulkProductTableProps) {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right font-medium">
-                        {formatPrice(product.price)}
+                        <InlinePriceEdit id={product.id} price={product.price} />
                       </td>
                       <td className="px-4 py-3">
                         {product.sold ? (
                           <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
                             Prodáno
                           </span>
-                        ) : product.active ? (
-                          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800">
-                            Aktivní
-                          </span>
                         ) : (
-                          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
-                            Skryto
-                          </span>
+                          <ProductQuickToggles
+                            id={product.id}
+                            active={product.active}
+                            featured={product.featured}
+                            sold={product.sold}
+                          />
                         )}
                       </td>
                       <td className="px-4 py-3 text-right">

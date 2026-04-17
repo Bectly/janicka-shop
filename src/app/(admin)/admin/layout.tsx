@@ -6,6 +6,8 @@ import { getDb } from "@/lib/db";
 import { AdminSidebar } from "@/components/admin/sidebar";
 import { AdminOrderNotifier } from "@/components/admin/order-notifier";
 import { DevChatWidget } from "@/components/dev-chat/dev-chat-widget";
+import { GlobalSearch } from "@/components/admin/global-search";
+import { Breadcrumbs } from "@/components/admin/breadcrumbs";
 
 async function AdminAuthGate({
   children,
@@ -49,6 +51,10 @@ async function AdminAuthGate({
         ordersLast24h={ordersLast24h}
       />
       <main id="main-content" className="flex-1 overflow-auto">
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-card/95 px-4 backdrop-blur-sm sm:px-6 lg:px-8">
+          <Breadcrumbs />
+          <GlobalSearch />
+        </header>
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           {children}
         </div>

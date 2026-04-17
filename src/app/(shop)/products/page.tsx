@@ -330,6 +330,19 @@ export default async function ProductsPage({
     maxPrice,
   });
 
+  // Scope facet options to the current category — only show brands/sizes/colors that
+  // actually exist in the filtered result set. Keep active filter values visible even
+  // if their count drops to zero (e.g. user already selected something).
+  const scopedBrands = brands.filter(
+    (b) => (filterCounts.brands[b] ?? 0) > 0 || brandFilter.includes(b),
+  );
+  const scopedSizes = sizes.filter(
+    (s) => (filterCounts.sizes[s] ?? 0) > 0 || sizeFilter.includes(s),
+  );
+  const scopedColors = colors.filter(
+    (c) => (filterCounts.colors[c] ?? 0) > 0 || colorFilter.includes(c),
+  );
+
   const totalItems = filterCounts.totalFiltered;
   const totalPages = Math.max(1, Math.ceil(totalItems / PRODUCTS_PER_PAGE));
   const safePage = Math.min(currentPage, totalPages);
@@ -434,9 +447,9 @@ export default async function ProductsPage({
       <div className="mt-4">
         <Suspense fallback={null}>
           <ProductFilters
-            brands={brands}
-            sizes={sizes}
-            colors={colors}
+            brands={scopedBrands}
+            sizes={scopedSizes}
+            colors={scopedColors}
             categories={categories.map((c) => ({ slug: c.slug, name: c.name }))}
             counts={filterCounts}
             categoryCounts={filterCounts.categories}
