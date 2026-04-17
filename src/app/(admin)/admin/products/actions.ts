@@ -7,6 +7,35 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { rateLimitAdmin } from "@/lib/rate-limit";
 import { parseDefectImages, serializeDefectImages } from "@/lib/defects";
+import { ALL_SIZES } from "@/lib/sizes";
+
+const CONDITION_VALUES = [
+  "new_with_tags",
+  "new_without_tags",
+  "excellent",
+  "good",
+  "visible_wear",
+] as const;
+
+/** Parse comma-separated sizes string → deduped array of enum-valid values. */
+const sizesSchema = z
+  .string()
+  .max(500)
+  .transform((raw) =>
+    Array.from(
+      new Set(
+        raw
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+      ),
+    ),
+  )
+  .pipe(
+    z
+      .array(z.enum(ALL_SIZES as unknown as [string, ...string[]]))
+      .min(1, "Vyberte alespoň jednu velikost"),
+  );
 
 const productSchema = z.object({
   name: z.string().min(1, "Název je povinný").max(200),
@@ -17,8 +46,8 @@ const productSchema = z.object({
   sku: z.string().min(1, "SKU je povinné").max(50),
   categoryId: z.string().min(1, "Kategorie je povinná"),
   brand: z.string().max(100).nullable(),
-  condition: z.enum(["new_with_tags", "excellent", "good", "visible_wear"]),
-  sizes: z.string().max(500),
+  condition: z.enum(CONDITION_VALUES),
+  sizes: sizesSchema,
   colors: z.string().max(500),
   featured: z.boolean(),
   active: z.boolean(),
@@ -56,9 +85,15 @@ function parseImages(formData: FormData): string {
   }
 }
 
-function parseDefectsInput(formData: FormData): string {
-  const raw = (formData.get("defects") as string) || "[]";
-  return serializeDefects(parseDefects(raw));
+function parseDefectsInput(formData: FormData): {
+  note: string | null;
+  images: string;
+} {
+  const rawNote = ((formData.get("defectsNote") as string) || "").trim();
+  const note = rawNote ? rawNote.slice(0, 1000) : null;
+  const rawImages = (formData.get("defectImages") as string) || "[]";
+  const images = serializeDefectImages(parseDefectImages(rawImages));
+  return { note, images };
 }
 
 function parseMeasurementsInput(formData: FormData): string {
@@ -118,7 +153,7 @@ export async function createProduct(formData: FormData) {
 
   const validatedImages = parseImages(formData);
   const measurements = parseMeasurementsInput(formData);
-  const defects = parseDefectsInput(formData);
+  const { note: defectsNote, images: defectImages } = parseDefectsInput(formData);
   const fitNote = ((formData.get("fitNote") as string) || "").trim().slice(0, 120) || null;
   const rawVideoUrl = ((formData.get("videoUrl") as string) || "").trim();
   const videoUrl = rawVideoUrl && rawVideoUrl.length <= 2048 && /^https?:\/\//.test(rawVideoUrl) ? rawVideoUrl : null;
@@ -134,15 +169,14 @@ export async function createProduct(formData: FormData) {
       categoryId: parsed.categoryId,
       brand: parsed.brand,
       condition: parsed.condition,
-      sizes: JSON.stringify(
-        [...new Set(parsed.sizes.split(",").map((s) => s.trim()).filter(Boolean))]
-      ),
+      sizes: JSON.stringify(parsed.sizes),
       colors: JSON.stringify(
         [...new Set(parsed.colors.split(",").map((s) => s.trim()).filter(Boolean))]
       ),
       images: validatedImages,
       measurements,
-      defects,
+      defectsNote,
+      defectImages,
       fitNote,
       videoUrl,
       stock: 1,
@@ -199,7 +233,7 @@ export async function updateProduct(id: string, formData: FormData) {
 
   const validatedImages = parseImages(formData);
   const measurements = parseMeasurementsInput(formData);
-  const defects = parseDefectsInput(formData);
+  const { note: defectsNote, images: defectImages } = parseDefectsInput(formData);
   const fitNote = ((formData.get("fitNote") as string) || "").trim().slice(0, 120) || null;
   const rawVideoUrl = ((formData.get("videoUrl") as string) || "").trim();
   const videoUrl = rawVideoUrl && rawVideoUrl.length <= 2048 && /^https?:\/\//.test(rawVideoUrl) ? rawVideoUrl : null;
@@ -227,15 +261,14 @@ export async function updateProduct(id: string, formData: FormData) {
       categoryId: parsed.categoryId,
       brand: parsed.brand,
       condition: parsed.condition,
-      sizes: JSON.stringify(
-        [...new Set(parsed.sizes.split(",").map((s) => s.trim()).filter(Boolean))]
-      ),
+      sizes: JSON.stringify(parsed.sizes),
       colors: JSON.stringify(
         [...new Set(parsed.colors.split(",").map((s) => s.trim()).filter(Boolean))]
       ),
       images: validatedImages,
       measurements,
-      defects,
+      defectsNote,
+      defectImages,
       fitNote,
       videoUrl,
       featured: parsed.featured,
@@ -258,8 +291,8 @@ const quickProductSchema = z.object({
   compareAt: z.coerce.number().positive().nullable(),
   categoryId: z.string().min(1, "Kategorie je povinná"),
   brand: z.string().max(100).nullable(),
-  condition: z.enum(["new_with_tags", "excellent", "good", "visible_wear"]),
-  sizes: z.string().min(1, "Velikost je povinná").max(500),
+  condition: z.enum(CONDITION_VALUES),
+  sizes: sizesSchema,
   colors: z.string().max(500),
   description: z.string().max(5000),
 }).refine(
@@ -300,14 +333,24 @@ export async function quickCreateProduct(formData: FormData) {
 
   const validatedImages = parseImages(formData);
   const measurements = parseMeasurementsInput(formData);
-  const defects = parseDefectsInput(formData);
+  const { note: defectsNote, images: defectImages } = parseDefectsInput(formData);
   const fitNote = ((formData.get("fitNote") as string) || "").trim().slice(0, 120) || null;
   const rawVideoUrl = ((formData.get("videoUrl") as string) || "").trim();
   const videoUrl = rawVideoUrl && rawVideoUrl.length <= 2048 && /^https?:\/\//.test(rawVideoUrl) ? rawVideoUrl : null;
 
   // Default description if empty
+  const conditionLabel =
+    parsed.condition === "new_with_tags"
+      ? "nové s visačkou"
+      : parsed.condition === "new_without_tags"
+        ? "nové bez visačky"
+        : parsed.condition === "excellent"
+          ? "výborný"
+          : parsed.condition === "good"
+            ? "dobrý"
+            : "viditelné opotřebení";
   const description = parsed.description.trim()
-    || `${parsed.name}${parsed.brand ? ` od značky ${parsed.brand}` : ""}. Stav: ${parsed.condition === "new_with_tags" ? "nové s visačkou" : parsed.condition === "excellent" ? "výborný" : parsed.condition === "good" ? "dobrý" : "viditelné opotřebení"}.`;
+    || `${parsed.name}${parsed.brand ? ` od značky ${parsed.brand}` : ""}. Stav: ${conditionLabel}.`;
 
   const product = await db.product.create({
     data: {
@@ -320,15 +363,14 @@ export async function quickCreateProduct(formData: FormData) {
       categoryId: parsed.categoryId,
       brand: parsed.brand,
       condition: parsed.condition,
-      sizes: JSON.stringify(
-        [...new Set(parsed.sizes.split(",").map((s) => s.trim()).filter(Boolean))]
-      ),
+      sizes: JSON.stringify(parsed.sizes),
       colors: JSON.stringify(
         [...new Set(parsed.colors.split(",").map((s) => s.trim()).filter(Boolean))]
       ),
       images: validatedImages,
       measurements,
-      defects,
+      defectsNote,
+      defectImages,
       fitNote,
       videoUrl,
       stock: 1,
@@ -382,7 +424,8 @@ export async function duplicateProduct(id: string) {
       colors: source.colors,
       images: source.images,
       measurements: source.measurements,
-      defects: source.defects,
+      defectsNote: source.defectsNote,
+      defectImages: source.defectImages,
       fitNote: source.fitNote,
       videoUrl: source.videoUrl,
       stock: 1,

@@ -18,7 +18,7 @@ import {
 } from "@/components/shop/recently-viewed";
 import { ProductInfoAccordion } from "@/components/shop/product-info-accordion";
 import { ProductDefects } from "@/components/shop/product-defects";
-import { parseDefects } from "@/lib/defects";
+import { parseDefectImages } from "@/lib/defects";
 import { FreeShippingBar } from "@/components/shop/free-shipping-bar";
 import { NotifyMeForm } from "@/components/shop/notify-me-form";
 import { BrowseAbandonmentTracker } from "@/components/shop/browse-abandonment-tracker";
@@ -81,6 +81,7 @@ interface Props {
 /** OG condition label for product meta */
 const OG_CONDITION: Record<string, string> = {
   new_with_tags: "new",
+  new_without_tags: "new",
   excellent: "used",
   good: "used",
   visible_wear: "used",
@@ -266,7 +267,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
   const productImages = parseProductImages(product.images);
   const measurements = parseMeasurements(product.measurements);
-  const defects = parseDefects(product.defects);
+  const defectImages = parseDefectImages(product.defectImages);
 
   // --- SOLD PRODUCT VIEW ---
   if (product.sold) {
@@ -656,7 +657,7 @@ export default async function ProductDetailPage({ params }: Props) {
           />
 
           {/* Defects / flaws — honest transparent disclosure (trust builder) */}
-          <ProductDefects defects={defects} />
+          <ProductDefects note={product.defectsNote} images={defectImages} />
 
           {/* Shipping, returns & quality guarantee info */}
           <ProductInfoAccordion />

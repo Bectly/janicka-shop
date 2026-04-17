@@ -9,7 +9,7 @@ import { CONDITION_LABELS } from "@/lib/constants";
 import { ImageUpload } from "@/components/admin/image-upload";
 import { DefectsEditor } from "@/components/admin/defects-editor";
 import { parseProductImages, parseMeasurements } from "@/lib/images";
-import { parseDefects } from "@/lib/defects";
+import { parseDefectImages } from "@/lib/defects";
 import type { ProductImage, ProductMeasurements } from "@/lib/images";
 import { uploadFiles } from "@/lib/uploadthing";
 import { getSizeGroupsForCategory } from "@/lib/sizes";
@@ -37,7 +37,8 @@ interface ProductData {
   active: boolean;
   images: string;
   measurements?: string;
-  defects?: string;
+  defectsNote?: string | null;
+  defectImages?: string;
   fitNote?: string | null;
   videoUrl?: string | null;
 }
@@ -49,6 +50,26 @@ interface ProductFormProps {
 }
 
 export function ProductForm({ categories, product, action }: ProductFormProps) {
+  // Category + sizes state (sizes depend on selected category)
+  const [categoryId, setCategoryId] = useState<string>(product?.categoryId ?? "");
+  const [selectedSizes, setSelectedSizes] = useState<string[]>(() => {
+    if (!product?.sizes) return [];
+    return product.sizes
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+  });
+
+  const selectedCategorySlug = categories.find((c) => c.id === categoryId)?.slug;
+  const sizeGroups = getSizeGroupsForCategory(selectedCategorySlug);
+  const allowedSizesSet = new Set(sizeGroups.flatMap((g) => g.sizes));
+
+  function toggleSize(size: string) {
+    setSelectedSizes((prev) =>
+      prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size],
+    );
+  }
+
   // Parse structured images from DB (backward-compat)
   const [structuredImages, setStructuredImages] = useState<ProductImage[]>(() => {
     if (!product?.images) return [];
@@ -324,7 +345,8 @@ export function ProductForm({ categories, product, action }: ProductFormProps) {
           <select
             id="categoryId"
             name="categoryId"
-            defaultValue={product?.categoryId}
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
             required
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
@@ -366,19 +388,53 @@ export function ProductForm({ categories, product, action }: ProductFormProps) {
           </select>
         </div>
 
-        {/* Sizes */}
-        <div className="space-y-2">
-          <Label htmlFor="sizes">Velikost</Label>
-          <Input
-            id="sizes"
+        {/* Sizes — category-aware chip grid (no free text) */}
+        <div className="space-y-2 sm:col-span-2">
+          <Label>Velikost</Label>
+          <input
+            type="hidden"
             name="sizes"
-            defaultValue={product?.sizes}
-            required
-            placeholder="M"
+            value={selectedSizes.filter((s) => allowedSizesSet.has(s)).join(", ")}
           />
-          <p className="text-xs text-muted-foreground">
-            Oddělte čárkou, např. S, M, L
-          </p>
+          {!categoryId ? (
+            <p className="rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground">
+              Nejprve vyberte kategorii
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {sizeGroups.map((group) => (
+                <div key={group.key} className="space-y-1.5">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    {group.label}
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {group.sizes.map((size) => {
+                      const selected = selectedSizes.includes(size);
+                      return (
+                        <button
+                          key={size}
+                          type="button"
+                          onClick={() => toggleSize(size)}
+                          className={`min-h-9 min-w-11 rounded-md border px-2.5 py-1 text-sm font-medium transition-colors ${
+                            selected
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-border bg-background text-foreground hover:border-primary/50"
+                          }`}
+                        >
+                          {size}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+              {selectedSizes.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Vybráno: {selectedSizes.filter((s) => allowedSizesSet.has(s)).join(", ") || "—"}
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Colors */}
@@ -434,7 +490,10 @@ export function ProductForm({ categories, product, action }: ProductFormProps) {
       </div>
 
       {/* Defects */}
-      <DefectsEditor initial={parseDefects(product?.defects)} />
+      <DefectsEditor
+        initialNote={product?.defectsNote ?? ""}
+        initialImages={parseDefectImages(product?.defectImages)}
+      />
 
       {/* Toggles */}
       <div className="flex flex-wrap gap-6">

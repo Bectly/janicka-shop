@@ -9,11 +9,13 @@ import { CONDITION_LABELS, COLOR_MAP } from "@/lib/constants";
 import { ImageUpload } from "@/components/admin/image-upload";
 import { DefectsEditor } from "@/components/admin/defects-editor";
 import { uploadFiles } from "@/lib/uploadthing";
+import { getSizeGroupsForCategory } from "@/lib/sizes";
 import { Zap, ChevronDown, ChevronUp, Video, X, Loader2, Ruler } from "lucide-react";
 
 interface Category {
   id: string;
   name: string;
+  slug: string;
 }
 
 interface QuickAddFormProps {
@@ -21,17 +23,22 @@ interface QuickAddFormProps {
   action: (formData: FormData) => Promise<void>;
 }
 
-const COMMON_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "34", "36", "38", "40", "42", "44", "46"];
 const COMMON_COLORS = Object.keys(COLOR_MAP);
 
 export function QuickAddForm({ categories, action }: QuickAddFormProps) {
   const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [categoryId, setCategoryId] = useState<string>("");
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [showExtras, setShowExtras] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string>("");
   const [isVideoUploading, setIsVideoUploading] = useState(false);
   const [videoUploadError, setVideoUploadError] = useState<string | null>(null);
+
+  const selectedCategorySlug = categories.find((c) => c.id === categoryId)?.slug;
+  const sizeGroups = getSizeGroupsForCategory(selectedCategorySlug);
+  const allowedSizesSet = new Set(sizeGroups.flatMap((g) => g.sizes));
+  const validSizes = selectedSizes.filter((s) => allowedSizesSet.has(s));
 
   async function formAction(_prev: string | null, formData: FormData) {
     try {
@@ -69,7 +76,7 @@ export function QuickAddForm({ categories, action }: QuickAddFormProps) {
 
       {/* Hidden fields */}
       <input type="hidden" name="images" value={JSON.stringify(imageUrls)} />
-      <input type="hidden" name="sizes" value={selectedSizes.join(", ")} />
+      <input type="hidden" name="sizes" value={validSizes.join(", ")} />
       <input type="hidden" name="colors" value={selectedColors.join(", ")} />
       <input type="hidden" name="videoUrl" value={videoUrl} />
 
@@ -129,6 +136,8 @@ export function QuickAddForm({ categories, action }: QuickAddFormProps) {
         <select
           id="qa-category"
           name="categoryId"
+          value={categoryId}
+          onChange={(e) => setCategoryId(e.target.value)}
           required
           className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
@@ -141,32 +150,47 @@ export function QuickAddForm({ categories, action }: QuickAddFormProps) {
         </select>
       </div>
 
-      {/* 5. Size — tap-to-select chips */}
+      {/* 5. Size — category-aware chip groups */}
       <div className="space-y-2">
         <Label>Velikost</Label>
-        <div className="flex flex-wrap gap-2">
-          {COMMON_SIZES.map((size) => {
-            const selected = selectedSizes.includes(size);
-            return (
-              <button
-                key={size}
-                type="button"
-                onClick={() => toggleSize(size)}
-                className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
-                  selected
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-background text-foreground hover:border-primary/50"
-                }`}
-              >
-                {size}
-              </button>
-            );
-          })}
-        </div>
-        {selectedSizes.length > 0 && (
-          <p className="text-xs text-muted-foreground">
-            Vybráno: {selectedSizes.join(", ")}
+        {!categoryId ? (
+          <p className="rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground">
+            Nejprve vyberte kategorii
           </p>
+        ) : (
+          <div className="space-y-3">
+            {sizeGroups.map((group) => (
+              <div key={group.key} className="space-y-1.5">
+                <p className="text-xs font-medium text-muted-foreground">
+                  {group.label}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {group.sizes.map((size) => {
+                    const selected = selectedSizes.includes(size);
+                    return (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => toggleSize(size)}
+                        className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+                          selected
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-background text-foreground hover:border-primary/50"
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+            {validSizes.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                Vybráno: {validSizes.join(", ")}
+              </p>
+            )}
+          </div>
         )}
       </div>
 
