@@ -25,7 +25,6 @@ export function ProfileForm({ initial }: Props) {
 
   return (
     <form action={action} className="space-y-6 rounded-xl border bg-card p-6 shadow-sm">
-      {/* Přihlašovací údaje */}
       <fieldset className="space-y-4">
         <legend className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Přihlašovací údaje
@@ -47,7 +46,6 @@ export function ProfileForm({ initial }: Props) {
 
       <hr className="border-border" />
 
-      {/* Kontaktní údaje */}
       <fieldset className="space-y-4">
         <legend className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Kontaktní údaje
@@ -85,44 +83,10 @@ export function ProfileForm({ initial }: Props) {
             placeholder="+420 ..."
           />
         </div>
-      </fieldset>
-
-      <hr className="border-border" />
-
-      {/* Doručovací adresa */}
-      <fieldset className="space-y-4">
-        <legend className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Doručovací adresa
-        </legend>
-        <div className="space-y-2">
-          <Label htmlFor="street">Ulice a číslo</Label>
-          <Input
-            id="street"
-            name="street"
-            defaultValue={initial.street}
-            autoComplete="street-address"
-          />
-        </div>
-        <div className="grid gap-4 sm:grid-cols-[1fr_140px]">
-          <div className="space-y-2">
-            <Label htmlFor="city">Město</Label>
-            <Input
-              id="city"
-              name="city"
-              defaultValue={initial.city}
-              autoComplete="address-level2"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="zip">PSČ</Label>
-            <Input
-              id="zip"
-              name="zip"
-              defaultValue={initial.zip}
-              autoComplete="postal-code"
-            />
-          </div>
-        </div>
+        {/* Hidden legacy fields — persist existing single-address data until cleanup task */}
+        <input type="hidden" name="street" value={initial.street} />
+        <input type="hidden" name="city" value={initial.city} />
+        <input type="hidden" name="zip" value={initial.zip} />
       </fieldset>
 
       {state.error && (

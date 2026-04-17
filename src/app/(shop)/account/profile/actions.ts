@@ -74,3 +74,69 @@ export async function updateProfile(
   revalidatePath("/account");
   return { error: null, success: true };
 }
+
+const passwordSchema = z.object({
+  currentPassword: z.string().min(1, "Zadej aktuální heslo"),
+  newPassword: z
+    .string()
+    .min(10, "Heslo musí mít alespoň 10 znaků")
+    .max(200)
+    .refine(
+      (v) => /[a-z]/.test(v) && /[A-Z]/.test(v) && /\d/.test(v),
+      "Heslo musí obsahovat malé i velké písmeno a číslici",
+    ),
+  confirmPassword: z.string().min(1),
+});
+
+export type ChangePasswordState = {
+  error: string | null;
+  success: boolean;
+};
+
+export async function changePassword(
+  _prev: ChangePasswordState,
+  formData: FormData,
+): Promise<ChangePasswordState> {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "customer") {
+    return { error: "Nejste přihlášena.", success: false };
+  }
+
+  const parsed = passwordSchema.safeParse({
+    currentPassword: formData.get("currentPassword"),
+    newPassword: formData.get("newPassword"),
+    confirmPassword: formData.get("confirmPassword"),
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Neplatná data", success: false };
+  }
+
+  if (parsed.data.newPassword !== parsed.data.confirmPassword) {
+    return { error: "Nová hesla se neshodují.", success: false };
+  }
+
+  const db = await getDb();
+  const customer = await db.customer.findUnique({
+    where: { id: session.user.id },
+    select: { password: true },
+  });
+  if (!customer?.password) {
+    return { error: "Účet nemá nastavené heslo.", success: false };
+  }
+
+  const { compare, hash } = await import("bcryptjs");
+  const ok = await compare(parsed.data.currentPassword, customer.password);
+  if (!ok) {
+    return { error: "Aktuální heslo je nesprávné.", success: false };
+  }
+
+  const newHash = await hash(parsed.data.newPassword, 12);
+  await db.customer.update({
+    where: { id: session.user.id },
+    data: { password: newHash },
+  });
+
+  revalidatePath("/account/profile");
+  return { error: null, success: true };
+}

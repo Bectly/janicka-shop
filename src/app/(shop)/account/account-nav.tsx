@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Package, User } from "lucide-react";
+import { LayoutDashboard, Package, User, MapPin, Heart, Settings } from "lucide-react";
 import { SignOutButton } from "./sign-out-button";
 import { LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -10,7 +10,10 @@ import { cn } from "@/lib/utils";
 const NAV_ITEMS = [
   { href: "/account", icon: LayoutDashboard, label: "Přehled", exact: true },
   { href: "/account/orders", icon: Package, label: "Objednávky", exact: false },
+  { href: "/account/oblibene", icon: Heart, label: "Oblíbené", exact: false },
   { href: "/account/profile", icon: User, label: "Profil", exact: false },
+  { href: "/account/adresy", icon: MapPin, label: "Adresy", exact: false },
+  { href: "/account/nastaveni", icon: Settings, label: "Nastavení", exact: false },
 ];
 
 export function AccountNav() {
