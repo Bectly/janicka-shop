@@ -4,6 +4,8 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { Eye, EyeOff, Star, StarOff, Pencil, Check, X } from "lucide-react";
 import { formatPrice } from "@/lib/format";
 import { updateProductQuick } from "@/app/(admin)/admin/products/actions";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 type TogglesProps = {
   id: string;
@@ -84,7 +86,7 @@ export function InlinePriceEdit({
       className="inline-flex items-center gap-1"
       onClick={(e) => e.stopPropagation()}
     >
-      <input
+      <Input
         ref={inputRef}
         type="number"
         inputMode="decimal"
@@ -100,29 +102,32 @@ export function InlinePriceEdit({
           }
         }}
         disabled={isPending}
-        className="w-24 rounded border px-2 py-1 text-right text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 disabled:opacity-50"
+        className="h-7 w-24 text-right text-sm"
       />
-      <button
+      <Button
         type="button"
+        size="icon"
         onClick={save}
         disabled={isPending}
-        className="rounded bg-emerald-600 p-1 text-white hover:bg-emerald-700 disabled:opacity-50"
+        className="size-7 bg-emerald-600 hover:bg-emerald-700"
         aria-label="Uložit"
       >
         <Check className="size-3" />
-      </button>
-      <button
+      </Button>
+      <Button
         type="button"
+        variant="outline"
+        size="icon"
         onClick={() => {
           setEditing(false);
           setError(null);
         }}
         disabled={isPending}
-        className="rounded bg-muted p-1 text-muted-foreground hover:bg-muted/80 disabled:opacity-50"
+        className="size-7"
         aria-label="Zrušit"
       >
         <X className="size-3" />
-      </button>
+      </Button>
       {error && (
         <span className="ml-1 text-[10px] text-destructive">{error}</span>
       )}

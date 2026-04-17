@@ -303,6 +303,9 @@ model Return {
   adminNote    String? // internal note from admin
   resolvedAt   DateTime? // when status changed to approved/rejected/completed
   completedAt  DateTime? // when refund was actually processed
+  refundedAt   DateTime? // when Comgate refund API call succeeded
+  refundProcessedAmount Float? // actual amount refunded via gateway (for partial refunds)
+  refundTransId String? // Comgate transId used for the refund (copy of Order.paymentId at time of refund)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 

@@ -9,6 +9,8 @@ import {
   type CreditNoteData,
 } from "@/lib/invoice/generate-credit-note";
 import { RETURN_REASON_LABELS } from "@/lib/constants";
+import { refundComgatePayment } from "@/lib/payments/comgate";
+import { ComgateError } from "@/lib/payments/types";
 
 const VALID_STATUSES = ["pending", "approved", "rejected", "completed"];
 const VALID_REASONS = ["withdrawal_14d", "defect", "wrong_item", "other"];
@@ -351,6 +353,106 @@ export async function generateCreditNote(
     creditNoteNumber: creditNote.number,
     pdfBase64,
   };
+}
+
+/**
+ * Trigger a refund on the Comgate payment gateway for a return.
+ * Uses Order.paymentId (Comgate transId) to call Comgate /refund.
+ * On success: records refundedAt + refundProcessedAmount on Return and
+ * auto-transitions status to "completed" if currently "approved".
+ */
+export async function refundViaComgate(
+  returnId: string,
+  amountCzk?: number,
+): Promise<{ refundedAmount: number }> {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success)
+    throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
+
+  const db = await getDb();
+
+  const returnRecord = await db.return.findUnique({
+    where: { id: returnId },
+    include: {
+      order: {
+        select: { id: true, paymentId: true, paymentMethod: true, total: true },
+      },
+      items: { select: { productId: true } },
+    },
+  });
+
+  if (!returnRecord) throw new Error("Vratka nenalezena");
+
+  if (returnRecord.refundedAt) {
+    throw new Error("Peníze již byly vráceny přes Comgate");
+  }
+
+  if (returnRecord.status === "rejected") {
+    throw new Error("Vratka je zamítnutá — nelze vracet peníze");
+  }
+
+  const transId = returnRecord.order.paymentId;
+  if (!transId) {
+    throw new Error(
+      "Objednávka nemá Comgate transId — platba nebyla zpracována přes Comgate",
+    );
+  }
+
+  if (returnRecord.order.paymentMethod === "bank_transfer") {
+    throw new Error(
+      "Objednávka zaplacena převodem — peníze vraťte ručně ze svého účtu",
+    );
+  }
+
+  const amount =
+    amountCzk !== undefined && amountCzk > 0
+      ? Math.min(amountCzk, returnRecord.refundAmount)
+      : returnRecord.refundAmount;
+
+  if (amount <= 0) {
+    throw new Error("Neplatná částka k vrácení");
+  }
+
+  try {
+    await refundComgatePayment(transId, amount);
+  } catch (err) {
+    if (err instanceof ComgateError) {
+      throw new Error(`Comgate chyba ${err.code}: ${err.message}`);
+    }
+    throw err;
+  }
+
+  const now = new Date();
+  const shouldComplete = returnRecord.status === "approved";
+  const productIds = returnRecord.items.map((i) => i.productId);
+
+  await db.$transaction(async (tx) => {
+    await tx.return.update({
+      where: { id: returnId },
+      data: {
+        refundedAt: now,
+        refundProcessedAmount: amount,
+        refundTransId: transId,
+        refundMethod: "original_method",
+        ...(shouldComplete
+          ? { status: "completed", completedAt: now }
+          : {}),
+      },
+    });
+    if (shouldComplete) {
+      await tx.product.updateMany({
+        where: { id: { in: productIds }, active: true, sold: true },
+        data: { sold: false, stock: 1 },
+      });
+    }
+  });
+
+  revalidatePath(`/admin/returns/${returnId}`);
+  revalidatePath("/admin/returns");
+  revalidatePath(`/admin/orders/${returnRecord.order.id}`);
+
+  return { refundedAmount: amount };
 }
 
 /**
