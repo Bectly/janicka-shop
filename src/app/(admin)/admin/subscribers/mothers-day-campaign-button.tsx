@@ -63,7 +63,7 @@ export function MothersDayCampaignButton({ activeSubscriberCount, onSent }: Prop
           </h3>
         </div>
 
-        <fieldset className="mb-3">
+        <fieldset className="mb-3 border-0 p-0">
           <legend className="sr-only">Vyberte e-mail</legend>
           <div className="grid gap-2 sm:grid-cols-3">
             {EMAIL_OPTIONS.map((opt) => (

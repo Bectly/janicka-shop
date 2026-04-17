@@ -16,6 +16,8 @@ interface Preview {
   html: string;
   subscriberCount: number;
   sampleEmail: string;
+  segmentCounts?: { warm: number; cold: number };
+  segmentSubjects?: { warm: string; cold: string };
 }
 
 interface TestResult {
@@ -242,6 +244,35 @@ export function CampaignDryRunDialog({
                 </strong>{" "}
                 aktivním odběratelům.
               </p>
+              {preview?.segmentCounts && preview?.segmentSubjects && (
+                <div className="mt-3 space-y-2 border-t border-border/50 pt-3 text-xs">
+                  <p className="font-semibold text-muted-foreground">
+                    A/B rozdělení (do 90 dní = warm, jinak cold):
+                  </p>
+                  <div className="rounded-md border border-emerald-200 bg-emerald-50/60 p-2">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="font-semibold text-emerald-800">
+                        Warm ({preview.segmentCounts.warm})
+                      </span>
+                      <span className="text-[11px] text-emerald-700">Subject A</span>
+                    </div>
+                    <p className="mt-0.5 truncate text-emerald-900" title={preview.segmentSubjects.warm}>
+                      „{preview.segmentSubjects.warm}“
+                    </p>
+                  </div>
+                  <div className="rounded-md border border-amber-200 bg-amber-50/60 p-2">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="font-semibold text-amber-800">
+                        Cold ({preview.segmentCounts.cold})
+                      </span>
+                      <span className="text-[11px] text-amber-700">Subject B</span>
+                    </div>
+                    <p className="mt-0.5 truncate text-amber-900" title={preview.segmentSubjects.cold}>
+                      „{preview.segmentSubjects.cold}“
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Step 2: Test send */}

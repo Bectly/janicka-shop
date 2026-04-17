@@ -646,6 +646,10 @@ interface CampaignPreview {
   html: string;
   subscriberCount: number;
   sampleEmail: string;
+  /** Present when a campaign splits recipients by segment (e.g. Vinted A/B). */
+  segmentCounts?: { warm: number; cold: number };
+  /** Subject line actually used for each segment (only set on auto-segment preview). */
+  segmentSubjects?: { warm: string; cold: string };
 }
 
 interface TestSendResult {
@@ -718,16 +722,37 @@ export async function previewVintedCampaign(
   await requireAdmin();
   const db = await getDb();
   const now = new Date();
-  const subscriberCount = await db.newsletterSubscriber.count({
+  const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+
+  const subscribers = await db.newsletterSubscriber.findMany({
     where: {
       active: true,
       OR: [{ pausedUntil: null }, { pausedUntil: { lt: now } }],
     },
+    select: { createdAt: true },
   });
+
+  const warmCount = subscribers.filter((s) => s.createdAt >= ninetyDaysAgo).length;
+  const coldCount = subscribers.length - warmCount;
+
+  const subscriberCount =
+    segment === "warm" ? warmCount : segment === "cold" ? coldCount : subscribers.length;
+
   const previewSegment: VintedCampaignSegment = segment === "cold" ? "cold" : "warm";
   const sampleEmail = (await getAdminTestRecipient()) ?? "preview@janicka-shop.cz";
   const { subject, html } = renderVintedCampaignPreview(previewSegment, sampleEmail);
-  return { subject, html, subscriberCount, sampleEmail };
+
+  const warmPreview = renderVintedCampaignPreview("warm", sampleEmail);
+  const coldPreview = renderVintedCampaignPreview("cold", sampleEmail);
+
+  return {
+    subject,
+    html,
+    subscriberCount,
+    sampleEmail,
+    segmentCounts: { warm: warmCount, cold: coldCount },
+    segmentSubjects: { warm: warmPreview.subject, cold: coldPreview.subject },
+  };
 }
 
 /** Send a single Vinted T&C test email to the current admin only. */

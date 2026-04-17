@@ -27,45 +27,54 @@ export function VintedCampaignButton({ activeSubscriberCount, onSent }: Props) {
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold text-foreground">
+            Vinted T&amp;C kampaň — 28. dubna ({activeSubscriberCount})
+          </h3>
+        </div>
+
+        <fieldset className="mb-3 border-0 p-0">
+          <legend className="sr-only">Segment</legend>
+          <div className="flex flex-wrap gap-2">
+            {(
+              [
+                { value: "all", label: "Auto-segment", description: "Warm 90d / Cold starší" },
+                { value: "warm", label: "Warm", description: "Přihlášení do 90 dnů" },
+                { value: "cold", label: "Cold", description: "Starší odběratelé" },
+              ] as const
+            ).map((opt) => (
+              <label
+                key={opt.value}
+                className={`flex cursor-pointer flex-col gap-0.5 rounded-lg border p-2.5 text-xs transition-colors ${
+                  segment === opt.value
+                    ? "border-primary/40 bg-primary/10 text-foreground"
+                    : "border-border bg-white text-muted-foreground hover:bg-muted/50"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="vinted-segment"
+                  value={opt.value}
+                  checked={segment === opt.value}
+                  onChange={() => setSegment(opt.value)}
+                  className="sr-only"
+                />
+                <span className="text-sm font-medium">{opt.label}</span>
+                <span className="text-[11px] text-muted-foreground">{opt.description}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2.5 text-sm font-medium text-primary shadow-sm transition-colors hover:bg-primary/10"
+          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-primary/90"
         >
           <ShieldAlert className="size-4" />
-          Vinted kampaň ({activeSubscriberCount})
+          Otevřít dry-run — {segment === "all" ? "auto-segment" : segment}
         </button>
-
-        <fieldset className="flex flex-wrap gap-2">
-          <legend className="sr-only">Segment</legend>
-          {(
-            [
-              { value: "all", label: "Auto-segment" },
-              { value: "warm", label: "Warm" },
-              { value: "cold", label: "Cold" },
-            ] as const
-          ).map((opt) => (
-            <label
-              key={opt.value}
-              className={`cursor-pointer rounded-md border px-2.5 py-1 text-xs transition-colors ${
-                segment === opt.value
-                  ? "border-primary bg-primary/10 font-medium text-primary"
-                  : "border-border text-muted-foreground hover:bg-muted/50"
-              }`}
-            >
-              <input
-                type="radio"
-                name="vinted-segment"
-                value={opt.value}
-                checked={segment === opt.value}
-                onChange={() => setSegment(opt.value)}
-                className="sr-only"
-              />
-              {opt.label}
-            </label>
-          ))}
-        </fieldset>
       </div>
 
       <CampaignDryRunDialog
