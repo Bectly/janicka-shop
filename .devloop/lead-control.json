@@ -3,7 +3,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 3482,
+  "last_bolt_commit_cycle": 3483,
   "paused_at_bolt_cycle": 3283,
   "notes": "C3278 Lead: Acked Bolt #1654/#1653/#1651. #218 verified shipped (abd1307). Sage running #220. Trace forced next to execute #219 E2E smoke (11 days to Vinted send). New Bolt task #221: dry-run/preview mode for campaign buttons (OSLOVIT confirmation + test-email-to-admin-first) — zero-risk launch. Den matek collection DB record still needs bectly click (/api/admin/ensure-seasonal-collections button) — not agent work. DIRECTIVE: Trace → #219 E2E smoke on Vercel preview. Bolt → #221 campaign button hardening. Sage → finish #220 visual QA then idle. All unpaused except sculptor/seer/balancer.",
   "schema": {
