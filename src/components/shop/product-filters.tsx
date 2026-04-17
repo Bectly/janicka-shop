@@ -10,6 +10,8 @@ import {
   CLOTHING_LETTER_SIZES,
   SHOE_SIZES,
   BRA_SIZES,
+  getSizeGroupsForCategory,
+  getSizesForCategory,
 } from "@/lib/sizes";
 import {
   Drawer,
@@ -58,27 +60,47 @@ function productPlural(n: number): string {
   return "produktů";
 }
 
-/** Split a flat size list into logical groups for display. */
-function groupSizes(sizes: string[]): { label: string; sizes: string[] }[] {
-  const letterSet = new Set<string>(CLOTHING_LETTER_SIZES);
-  const shoeSet = new Set<string>(SHOE_SIZES);
-  const braSet = new Set<string>(BRA_SIZES);
+/**
+ * Split a flat size list into logical groups for display, constrained by
+ * category. When a category is active, only size groups valid for that
+ * category are shown (e.g. "Topy & halenky" never shows shoe sizes).
+ * Each size is assigned to the first allowed group it belongs to, so
+ * overlapping values like "38" (both clothing EU and shoe) are disambiguated
+ * by category context.
+ */
+function groupSizes(
+  sizes: string[],
+  categorySlug: string,
+): { label: string; sizes: string[] }[] {
+  const allowedGroups = getSizeGroupsForCategory(categorySlug || null);
+  const result: { label: string; sizes: string[] }[] = [];
+  const assigned = new Set<string>();
 
-  const letters = sizes.filter((s) => letterSet.has(s));
-  const shoes = sizes.filter((s) => shoeSet.has(s) && !letterSet.has(s));
-  const bras = sizes.filter((s) => braSet.has(s));
-  const one = sizes.filter((s) => s === "Univerzální");
-  const other = sizes.filter(
-    (s) => !letterSet.has(s) && !shoeSet.has(s) && !braSet.has(s) && s !== "Univerzální",
-  );
+  for (const g of allowedGroups) {
+    const groupSet = new Set<string>(g.sizes);
+    const matched = sizes.filter((s) => !assigned.has(s) && groupSet.has(s));
+    for (const s of matched) assigned.add(s);
+    if (matched.length > 0) result.push({ label: g.label, sizes: matched });
+  }
 
-  return [
-    { label: "Oblečení", sizes: letters },
-    { label: "Boty", sizes: shoes },
-    { label: "Podprsenky", sizes: bras },
-    { label: "Univerzální", sizes: one },
-    { label: "Ostatní", sizes: other },
-  ].filter((g) => g.sizes.length > 0);
+  // Fallback bucket: only shown when NO category is selected — keeps any
+  // unusual values (legacy imports, bra sizes on generic view) visible.
+  if (!categorySlug) {
+    const letterSet = new Set<string>(CLOTHING_LETTER_SIZES);
+    const shoeSet = new Set<string>(SHOE_SIZES);
+    const braSet = new Set<string>(BRA_SIZES);
+    const leftover = sizes.filter(
+      (s) =>
+        !assigned.has(s) &&
+        !letterSet.has(s) &&
+        !shoeSet.has(s) &&
+        !braSet.has(s) &&
+        s !== "Univerzální",
+    );
+    if (leftover.length > 0) result.push({ label: "Ostatní", sizes: leftover });
+  }
+
+  return result;
 }
 
 export function ProductFilters({
@@ -252,7 +274,16 @@ export function ProductFilters({
     </fieldset>
   );
 
-  const sizeGroups = groupSizes(sizes);
+  // When a category is active, restrict visible sizes to those valid for it.
+  // Prevents shoe sizes from showing on Topy/Halenky etc. (category-blind data
+  // from Vinted imports can still leave orphan tags, which we silently drop).
+  const categoryAllowedSizes = activeCategory
+    ? new Set(getSizesForCategory(activeCategory))
+    : null;
+  const visibleSizes = categoryAllowedSizes
+    ? sizes.filter((s) => categoryAllowedSizes.has(s) || activeSizes.includes(s))
+    : sizes;
+  const sizeGroups = groupSizes(visibleSizes, activeCategory);
 
   function renderSizeButton(size: string, density: "sm" | "base") {
     const count = counts.sizes[size] ?? 0;
@@ -278,7 +309,7 @@ export function ProductFilters({
     );
   }
 
-  const sizeFilterSection = sizes.length > 0 && (
+  const sizeFilterSection = visibleSizes.length > 0 && (
     <fieldset>
       <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         Velikost
@@ -500,7 +531,7 @@ export function ProductFilters({
   // --- Promoted quick filters (horizontally scrollable, above product grid) ---
   // Shows top sizes and colors as quick-access pills — reduces need to open filter drawer.
   // 61% of sites don't promote filters above the grid (Baymard).
-  const topSizes = sizes.filter((s) => (counts.sizes[s] ?? 0) > 0).slice(0, 12);
+  const topSizes = visibleSizes.filter((s) => (counts.sizes[s] ?? 0) > 0).slice(0, 12);
   const topColors = colors.filter((c) => (counts.colors[c] ?? 0) > 0).slice(0, 10);
   const hasQuickFilters = topSizes.length > 0 || topColors.length > 0;
 
@@ -644,7 +675,7 @@ export function ProductFilters({
             {/* Scrollable accordion filter sections — research-backed order: Size → Price → Color → Brand → Condition → Sale */}
             <div className="flex-1 overflow-y-auto px-4 py-2">
               <Accordion defaultValue={[0]} multiple>
-                {sizes.length > 0 && (
+                {visibleSizes.length > 0 && (
                   <AccordionItem value={0}>
                     <AccordionTrigger className="text-sm font-semibold">
                       Velikost
