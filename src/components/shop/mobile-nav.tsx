@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu } from "lucide-react";
+import { Menu, User, LogIn } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,9 +31,10 @@ const topLinks = [
 
 interface MobileNavProps {
   categoryCounts?: Record<string, number>;
+  sessionRole?: "customer" | null;
 }
 
-export function MobileNav({ categoryCounts }: MobileNavProps) {
+export function MobileNav({ categoryCounts, sessionRole }: MobileNavProps) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -127,6 +128,36 @@ export function MobileNav({ categoryCounts }: MobileNavProps) {
               </Link>
             );
           })}
+          <div className="my-1 border-t" />
+          {sessionRole === "customer" ? (
+            <Link
+              href="/account"
+              onClick={() => setOpen(false)}
+              aria-current={pathname.startsWith("/account") ? "page" : undefined}
+              className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                pathname.startsWith("/account")
+                  ? "bg-muted text-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              }`}
+            >
+              <User className="size-4" />
+              Můj účet
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              onClick={() => setOpen(false)}
+              aria-current={pathname === "/login" ? "page" : undefined}
+              className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                pathname === "/login"
+                  ? "bg-muted text-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              }`}
+            >
+              <LogIn className="size-4" />
+              Přihlásit se
+            </Link>
+          )}
         </nav>
       </SheetContent>
     </Sheet>

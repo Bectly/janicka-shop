@@ -6,7 +6,9 @@ import { WishlistHeaderButton } from "./wishlist-header-button";
 import { MobileNav } from "./mobile-nav";
 import { InstantSearch } from "./instant-search";
 import { DesktopNavLinks } from "./desktop-nav-links";
+import { AccountHeaderButton } from "./account-header-button";
 import { getCategoriesWithCounts } from "@/lib/category-counts";
+import { auth } from "@/lib/auth";
 import { connection } from "next/server";
 
 const NAV_NAMES = ["Novinky", "Šaty", "Topy & Halenky", "Kalhoty & Sukně", "Bundy & Kabáty", "Doplňky"];
@@ -24,11 +26,14 @@ async function HeaderNav() {
     categoryCounts[c.slug] = c.count;
   }
 
+  const session = await auth();
+  const sessionRole = session?.user?.role === "customer" ? "customer" as const : null;
+
   return (
     <>
       {/* Mobile menu */}
       <Suspense fallback={<div className="size-11 md:hidden" />}>
-        <MobileNav categoryCounts={categoryCounts} />
+        <MobileNav categoryCounts={categoryCounts} sessionRole={sessionRole} />
       </Suspense>
 
       {/* Desktop nav — DesktopNavLinks reads searchParams so needs Suspense */}
@@ -89,9 +94,12 @@ export function Header() {
         {/* Spacer to push right-side icons when nav is loading */}
         <div className="hidden flex-1 md:block" />
 
-        {/* Right side: search + cart */}
+        {/* Right side: search + account + wishlist + cart */}
         <div className="ml-auto flex items-center gap-1">
           <InstantSearch />
+          <Suspense fallback={<div className="size-11" />}>
+            <AccountHeaderButton />
+          </Suspense>
           <WishlistHeaderButton />
           <CartButton />
         </div>
