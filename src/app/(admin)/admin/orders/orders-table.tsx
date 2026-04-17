@@ -38,8 +38,6 @@ export function OrdersTable({ orders }: { orders: OrderRow[] }) {
     message: string;
   } | null>(null);
 
-  const selectedArr = useMemo(() => Array.from(selected), [selected]);
-
   const selectedOrders = useMemo(
     () => orders.filter((o) => selected.has(o.id)),
     [orders, selected],
