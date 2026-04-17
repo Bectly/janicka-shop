@@ -164,12 +164,13 @@ export function WishlistContent() {
                   value={notifyEmail}
                   onChange={(e) => setNotifyEmail(e.target.value)}
                   autoComplete="email"
-                  className="w-full min-w-0 rounded-md border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none sm:w-auto"
+                  className="w-full min-w-0 rounded-md border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none sm:w-52"
                   aria-label="Email pro notifikace"
                 />
                 <Button
                   type="submit"
                   size="sm"
+                  className="shrink-0"
                   disabled={notifyState === "submitting"}
                 >
                   {notifyState === "submitting" ? "Odesílám…" : "Chci vědět"}

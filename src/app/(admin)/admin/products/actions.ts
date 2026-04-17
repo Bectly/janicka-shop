@@ -6,6 +6,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { rateLimitAdmin } from "@/lib/rate-limit";
+import { parseDefects, serializeDefects } from "@/lib/defects";
 
 const productSchema = z.object({
   name: z.string().min(1, "Název je povinný").max(200),
@@ -53,6 +54,11 @@ function parseImages(formData: FormData): string {
   } catch {
     return "[]";
   }
+}
+
+function parseDefectsInput(formData: FormData): string {
+  const raw = (formData.get("defects") as string) || "[]";
+  return serializeDefects(parseDefects(raw));
 }
 
 function parseMeasurementsInput(formData: FormData): string {
@@ -112,6 +118,7 @@ export async function createProduct(formData: FormData) {
 
   const validatedImages = parseImages(formData);
   const measurements = parseMeasurementsInput(formData);
+  const defects = parseDefectsInput(formData);
   const fitNote = ((formData.get("fitNote") as string) || "").trim().slice(0, 120) || null;
   const rawVideoUrl = ((formData.get("videoUrl") as string) || "").trim();
   const videoUrl = rawVideoUrl && rawVideoUrl.length <= 2048 && /^https?:\/\//.test(rawVideoUrl) ? rawVideoUrl : null;
@@ -135,6 +142,7 @@ export async function createProduct(formData: FormData) {
       ),
       images: validatedImages,
       measurements,
+      defects,
       fitNote,
       videoUrl,
       stock: 1,
@@ -191,6 +199,7 @@ export async function updateProduct(id: string, formData: FormData) {
 
   const validatedImages = parseImages(formData);
   const measurements = parseMeasurementsInput(formData);
+  const defects = parseDefectsInput(formData);
   const fitNote = ((formData.get("fitNote") as string) || "").trim().slice(0, 120) || null;
   const rawVideoUrl = ((formData.get("videoUrl") as string) || "").trim();
   const videoUrl = rawVideoUrl && rawVideoUrl.length <= 2048 && /^https?:\/\//.test(rawVideoUrl) ? rawVideoUrl : null;
@@ -226,6 +235,7 @@ export async function updateProduct(id: string, formData: FormData) {
       ),
       images: validatedImages,
       measurements,
+      defects,
       fitNote,
       videoUrl,
       featured: parsed.featured,
@@ -290,6 +300,7 @@ export async function quickCreateProduct(formData: FormData) {
 
   const validatedImages = parseImages(formData);
   const measurements = parseMeasurementsInput(formData);
+  const defects = parseDefectsInput(formData);
   const fitNote = ((formData.get("fitNote") as string) || "").trim().slice(0, 120) || null;
   const rawVideoUrl = ((formData.get("videoUrl") as string) || "").trim();
   const videoUrl = rawVideoUrl && rawVideoUrl.length <= 2048 && /^https?:\/\//.test(rawVideoUrl) ? rawVideoUrl : null;

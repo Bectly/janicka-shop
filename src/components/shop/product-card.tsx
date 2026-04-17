@@ -283,19 +283,19 @@ export function ProductCard({
               const mappedColors = parsedColors.filter((c) => COLOR_MAP[c]);
               if (mappedColors.length === 0) return null;
               return (
-                <div className="flex gap-0.5" role="list" aria-label="Barvy">
+                <div className="flex gap-1" role="list" aria-label="Barvy">
                   {mappedColors.slice(0, 5).map((c) => (
                     <span
                       key={c}
                       role="listitem"
-                      className="size-3 rounded-full border border-foreground/10"
+                      className="size-3.5 rounded-full border border-foreground/10"
                       style={{ backgroundColor: COLOR_MAP[c] }}
                       title={c}
                       aria-label={c}
                     />
                   ))}
                   {mappedColors.length > 5 && (
-                    <span className="flex size-3 items-center justify-center rounded-full bg-muted text-[7px] text-muted-foreground">
+                    <span className="flex size-3.5 items-center justify-center rounded-full bg-muted text-[9px] font-medium text-muted-foreground">
                       +{mappedColors.length - 5}
                     </span>
                   )}
