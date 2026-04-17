@@ -336,16 +336,24 @@ export async function sendVintedTcCampaign(
     return { success: true, sentCount: 0, failedCount: 0 };
   }
 
-  // Determine subject line per subscriber
-  const tagged: { email: string; segment: VintedCampaignSegment }[] = subscribers.map((s) => {
-    if (segment === "all") {
-      return {
-        email: s.email,
-        segment: s.createdAt >= ninetyDaysAgo ? "warm" : "cold",
-      };
-    }
-    return { email: s.email, segment };
-  });
+  // Determine recipients and subject line per subscriber.
+  // Explicit "warm"/"cold" filter to only that date cohort; "all" auto-segments everyone.
+  const tagged: { email: string; segment: VintedCampaignSegment }[] = subscribers
+    .filter((s) => {
+      if (segment === "all") return true;
+      if (segment === "warm") return s.createdAt >= ninetyDaysAgo;
+      return s.createdAt < ninetyDaysAgo; // cold
+    })
+    .map((s) => ({
+      email: s.email,
+      segment: segment === "all"
+        ? (s.createdAt >= ninetyDaysAgo ? "warm" : "cold")
+        : segment,
+    }));
+
+  if (tagged.length === 0) {
+    return { success: true, sentCount: 0, failedCount: 0 };
+  }
 
   // Log campaign
   const subjectDesc = segment === "all"

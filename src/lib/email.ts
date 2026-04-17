@@ -2124,9 +2124,9 @@ function buildVintedCampaignHtml(
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <span style="display: none; max-height: 0; overflow: hidden; mso-hide: all;">${escapeHtml(VINTED_PREVIEW_TEXT)}</span>
 </head>
 <body style="margin: 0; padding: 0; background-color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333;">
+  <span style="display: none; max-height: 0; overflow: hidden; mso-hide: all;">${escapeHtml(VINTED_PREVIEW_TEXT)}</span>
   <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
 
     <div style="text-align: center; padding: 24px 0;">
@@ -2326,9 +2326,9 @@ function buildMothersDayEmailShell(
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <span style="display: none; max-height: 0; overflow: hidden; mso-hide: all;">${escapeHtml(previewText)}</span>
 </head>
 <body style="margin: 0; padding: 0; background-color: #fdf4ff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333;">
+  <span style="display: none; max-height: 0; overflow: hidden; mso-hide: all;">${escapeHtml(previewText)}</span>
   <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
 
     <div style="text-align: center; padding: 24px 0;">
