@@ -8,7 +8,11 @@ import { useWishlistStore } from "@/lib/wishlist-store";
 import { formatPrice } from "@/lib/format";
 import { CONDITION_LABELS, CONDITION_COLORS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
-import { getWishlistProducts, type WishlistProduct } from "./actions";
+import {
+  getWishlistProducts,
+  subscribeWishlistNotifications,
+  type WishlistProduct,
+} from "./actions";
 import { getImageUrls } from "@/lib/images";
 
 const emptySubscribe = () => () => {};
@@ -21,6 +25,32 @@ export function WishlistContent() {
   const [products, setProducts] = useState<WishlistProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [shareCopied, setShareCopied] = useState(false);
+  const [notifyEmail, setNotifyEmail] = useState("");
+  const [notifyState, setNotifyState] = useState<
+    "idle" | "submitting" | "done" | "error"
+  >("idle");
+
+  async function handleNotifySubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (notifyState === "submitting") return;
+    const email = notifyEmail.trim();
+    if (!email) return;
+    setNotifyState("submitting");
+    try {
+      const available = products.filter((p) => !p.sold).map((p) => p.id);
+      if (available.length === 0) {
+        setNotifyState("done");
+        return;
+      }
+      const res = await subscribeWishlistNotifications({
+        email,
+        productIds: available,
+      });
+      setNotifyState(res.ok ? "done" : "error");
+    } catch {
+      setNotifyState("error");
+    }
+  }
 
   async function handleShare() {
     const ids = wishlistIds.slice(0, 50);

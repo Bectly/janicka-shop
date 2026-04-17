@@ -202,6 +202,19 @@ model ProductNotifyRequest {
   @@index([notified])
 }
 
+model WishlistSubscription {
+  id         String   @id @default(cuid())
+  email      String
+  productId  String
+  notifiedAt DateTime? // Set when sold-item email was sent (prevents duplicates)
+  createdAt  DateTime @default(now())
+
+  @@unique([email, productId])
+  @@index([productId])
+  @@index([email])
+  @@index([notifiedAt])
+}
+
 model AbandonedCart {
   id               String    @id @default(cuid())
   email            String

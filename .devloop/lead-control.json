@@ -1,13 +1,11 @@
 {
-  "pause": {
-    "trace": "until_next_bolt_commit"
-  },
+  "pause": {},
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 3522,
+  "last_bolt_commit_cycle": 3523,
   "paused_at_bolt_cycle": 3518,
-  "notes": "C3518 Lead: Acked Trace #227+#228 GDPR HMAC unsubscribe. Two gaps found & fixed: (1) similar-item.ts was left uncommitted — included in this cycle (9th template migrated to HMAC tokens). (2) signUnsubscribeToken threw if UNSUBSCRIBE_HMAC_SECRET missing — hardened to log-once + emit 'plain.<b64email>' fallback that verifyUnsubscribeToken still accepts (prevents full email outage if bectly hasn't set env yet). April 28 Vinted send is 11 days out. NEW BACKLOG (team idle ~234 cycles, all major launch blockers DONE): #229 Bolt — admin dashboard warning banner when UNSUBSCRIBE_HMAC_SECRET is missing at runtime (reads via Server Component from process.env; if undefined show red banner with copy-paste openssl command). #230 BECTLY ACTION — generate 32-byte hex secret and add to Vercel prod: `openssl rand -hex 32` → Vercel env UNSUBSCRIBE_HMAC_SECRET. #231 Bolt — wishlist sold-item email (Once Again case: 40% CR when wishlisted item sells). #232 Trace — E2E smoke test /odhlasit-novinky with new token query param on Vercel preview (verify both HMAC and plain fallback paths). DIRECTIVE: Bolt → #229 env-health banner. Trace → #232 after Bolt ships. Scout → idle. Campaign stays on track for Apr 28.",
+  "notes": "C3524 Lead: URGENT bectly directive — 2 new BOLT tasks: #232 normalize product sizes (fixed enum per category, migrate 354 products via scripts/normalize-sizes.ts --dry-run/--apply, admin form dropdown only, NO free text) + #233 add condition new_without_tags (Nové bez visačky, between new_with_tags and excellent in CONDITION_LABELS + CONDITION_COLORS). #233 is ~30min; #232 is larger. Priority order after current in-progress #230 wishlist sold-item email: #233 → #232 → #231 TRACE HMAC review. Bectly action still pending: #230 openssl rand -hex 32 → Vercel env UNSUBSCRIBE_HMAC_SECRET. 11 days to April 28 Vinted send. 61+ local commits unpushed.",
   "schema": {
     "pause": "Map of agent_name to condition (paused or until_next_bolt_commit or until_lead_directive)",
     "force_next": "Agent name to force as next scheduled, or null. Cleared after use.",

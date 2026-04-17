@@ -8,6 +8,7 @@ import { createComgatePayment } from "@/lib/payments/comgate";
 import { rateLimitCheckout } from "@/lib/rate-limit";
 import { sendOrderConfirmationEmail, sendAdminNewOrderEmail } from "@/lib/email";
 import { sendSimilarItemNotifications } from "@/lib/email/similar-item";
+import { sendWishlistSoldNotifications } from "@/lib/email/wishlist-sold";
 import { logOrderToHeureka } from "@/lib/heureka";
 import { revalidatePath } from "next/cache";
 import {
@@ -501,6 +502,11 @@ export async function createOrder(
   // Notify subscribers about similar items when their watched category sells (fire-and-forget)
   sendSimilarItemNotifications(order.soldProducts).catch((e) =>
     console.error("[Checkout] Similar notify:", e),
+  );
+
+  // Notify wishlist subscribers that their saved item just sold (fire-and-forget)
+  sendWishlistSoldNotifications(order.soldProducts).catch((e) =>
+    console.error("[Checkout] Wishlist sold notify:", e),
   );
 
   // Send order confirmation email (fire-and-forget — never blocks checkout)
