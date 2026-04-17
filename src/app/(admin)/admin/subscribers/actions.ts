@@ -2,7 +2,8 @@
 
 import { getDb } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { rateLimitAdmin, checkRateLimitOnly, recordRateLimitHit } from "@/lib/rate-limit";
+import { rateLimitAdmin } from "@/lib/rate-limit";
+import { claimCampaignSendLock, releaseCampaignSendLock } from "@/lib/campaign-lock";
 import {
   sendCampaignEmail,
   sendVintedCampaignEmail,
@@ -22,22 +23,11 @@ async function requireAdmin() {
   return session;
 }
 
-// One full campaign send per 1h window per key (process-wide, not per IP).
-// Resend-level enforcement: prevents accidental double-send even if UI races.
+// One full campaign send per 1h window per key, enforced atomically in the
+// DB (see campaign-lock.ts). This is critical on Vercel where each serverless
+// instance has its own process memory — a prior in-memory guard could
+// double-send if two instances raced.
 const FULL_SEND_WINDOW_MS = 60 * 60 * 1000;
-function guardFullSend(key: string): { success: boolean; error?: string } {
-  const check = checkRateLimitOnly(`campaign-full-send:${key}`, 1, FULL_SEND_WINDOW_MS);
-  if (!check.success) {
-    return {
-      success: false,
-      error: "Tato kampaň už byla odeslána v posledních 60 minutách. Počkej před dalším odesláním.",
-    };
-  }
-  return { success: true };
-}
-function markFullSend(key: string) {
-  recordRateLimitHit(`campaign-full-send:${key}`);
-}
 
 export async function toggleSubscriberActive(id: string, active: boolean) {
   await requireAdmin();
@@ -310,11 +300,11 @@ export async function sendVintedTcCampaign(
   if (!rl.success) {
     return { success: false, sentCount: 0, failedCount: 0, error: "Příliš mnoho požadavků. Zkuste to za chvíli." };
   }
-  const guard = guardFullSend(`vinted:${segment}`);
-  if (!guard.success) {
-    return { success: false, sentCount: 0, failedCount: 0, error: guard.error };
+  const lockKey = `vinted:${segment}`;
+  const lock = await claimCampaignSendLock(lockKey, FULL_SEND_WINDOW_MS);
+  if (!lock.success) {
+    return { success: false, sentCount: 0, failedCount: 0, error: lock.error };
   }
-  markFullSend(`vinted:${segment}`);
 
   const db = await getDb();
   const now = new Date();
@@ -333,6 +323,7 @@ export async function sendVintedTcCampaign(
   });
 
   if (subscribers.length === 0) {
+    await releaseCampaignSendLock(lockKey);
     return { success: true, sentCount: 0, failedCount: 0 };
   }
 
@@ -352,6 +343,7 @@ export async function sendVintedTcCampaign(
     }));
 
   if (tagged.length === 0) {
+    await releaseCampaignSendLock(lockKey);
     return { success: true, sentCount: 0, failedCount: 0 };
   }
 
@@ -428,11 +420,11 @@ export async function sendCustomsDutyCampaign(
   if (!rl.success) {
     return { success: false, sentCount: 0, failedCount: 0, error: "Příliš mnoho požadavků. Zkuste to za chvíli." };
   }
-  const guard = guardFullSend(`customs:${emailNumber}`);
-  if (!guard.success) {
-    return { success: false, sentCount: 0, failedCount: 0, error: guard.error };
+  const customsLockKey = `customs:${emailNumber}`;
+  const customsLock = await claimCampaignSendLock(customsLockKey, FULL_SEND_WINDOW_MS);
+  if (!customsLock.success) {
+    return { success: false, sentCount: 0, failedCount: 0, error: customsLock.error };
   }
-  markFullSend(`customs:${emailNumber}`);
 
   const db = await getDb();
   const now = new Date();
@@ -477,6 +469,7 @@ export async function sendCustomsDutyCampaign(
   });
 
   if (subscribers.length === 0) {
+    await releaseCampaignSendLock(customsLockKey);
     return { success: true, sentCount: 0, failedCount: 0 };
   }
 
@@ -550,11 +543,11 @@ export async function sendMothersDayCampaign(
   if (!rl.success) {
     return { success: false, sentCount: 0, failedCount: 0, error: "Příliš mnoho požadavků. Zkuste to za chvíli." };
   }
-  const guard = guardFullSend(`mothers-day:${emailNumber}`);
-  if (!guard.success) {
-    return { success: false, sentCount: 0, failedCount: 0, error: guard.error };
+  const mdLockKey = `mothers-day:${emailNumber}`;
+  const mdLock = await claimCampaignSendLock(mdLockKey, FULL_SEND_WINDOW_MS);
+  if (!mdLock.success) {
+    return { success: false, sentCount: 0, failedCount: 0, error: mdLock.error };
   }
-  markFullSend(`mothers-day:${emailNumber}`);
 
   const db = await getDb();
   const now = new Date();
@@ -600,6 +593,7 @@ export async function sendMothersDayCampaign(
   });
 
   if (subscribers.length === 0) {
+    await releaseCampaignSendLock(mdLockKey);
     return { success: true, sentCount: 0, failedCount: 0 };
   }
 

@@ -4,9 +4,11 @@ import { rateLimitAdmin } from "@/lib/rate-limit";
 import { getDb } from "@/lib/db";
 import { sendVintedCampaignEmail } from "@/lib/email";
 import type { VintedCampaignSegment } from "@/lib/email";
+import { claimCampaignSendLock, releaseCampaignSendLock } from "@/lib/campaign-lock";
 
 const BATCH_SIZE = 50;
 const BATCH_DELAY_MS = 1100;
+const FULL_SEND_WINDOW_MS = 60 * 60 * 1000;
 
 /**
  * POST /api/admin/campaign/vinted-tc
@@ -49,6 +51,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Atomic double-send guard (Turso row w/ unique constraint). Prevents
+  // two Vercel serverless instances from both sending if the admin double-
+  // clicks or a retry races.
+  const lockKey = `vinted:${segment}`;
+  const lock = await claimCampaignSendLock(lockKey, FULL_SEND_WINDOW_MS);
+  if (!lock.success) {
+    return NextResponse.json({ error: lock.error }, { status: 409 });
+  }
+
   const db = await getDb();
   const now = new Date();
   const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
@@ -65,6 +76,7 @@ export async function POST(request: NextRequest) {
   });
 
   if (subscribers.length === 0) {
+    await releaseCampaignSendLock(lockKey);
     return NextResponse.json({ ok: true, sentCount: 0, failedCount: 0 });
   }
 

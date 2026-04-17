@@ -221,10 +221,10 @@ export function OrdersTable({ orders }: { orders: OrderRow[] }) {
         <div
           className={`mt-3 rounded-lg border px-3 py-2 text-sm ${
             feedback.kind === "success"
-              ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+              ? "border-primary/20 bg-primary/5 text-primary"
               : feedback.kind === "error"
                 ? "border-destructive/30 bg-destructive/10 text-destructive"
-                : "border-sky-200 bg-sky-50 text-sky-800"
+                : "border-border bg-muted text-muted-foreground"
           }`}
         >
           <div className="flex items-center gap-1.5">

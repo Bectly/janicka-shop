@@ -62,7 +62,7 @@ export function NewsletterForm({ variant = "default" }: { variant?: "default" | 
           </div>
         </form>
         {state && !state.success && (
-          <p role="alert" className="mt-2 text-center text-xs text-red-400">{state.message}</p>
+          <p role="alert" className="mt-2 text-center text-xs text-destructive/80">{state.message}</p>
         )}
       </div>
     );

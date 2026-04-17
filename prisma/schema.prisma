@@ -428,6 +428,18 @@ model CampaignLog {
   @@index([createdAt])
 }
 
+// Atomic lock table preventing double-send of a campaign across serverless
+// instances. Row insert under unique(campaignKey) is the claim; only one
+// concurrent Vercel invocation wins. expiresAt lets us GC stale locks so a
+// given campaignKey can be re-sent after the window elapses.
+model CampaignSendLock {
+  campaignKey String   @id
+  claimedAt   DateTime @default(now())
+  expiresAt   DateTime
+
+  @@index([expiresAt])
+}
+
 model ShopSettings {
   id                    String   @id @default("singleton")
   shopName              String   @default("Janička")
