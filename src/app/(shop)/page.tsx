@@ -12,7 +12,6 @@ import { MothersDayBanner } from "@/components/shop/mothers-day-banner";
 import { RecentlySoldFeed } from "@/components/shop/recently-sold-feed";
 import { RecentlyViewedSection } from "@/components/shop/recently-viewed";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { getLowestPrices30d } from "@/lib/price-history";
 import { HeroSection } from "@/components/shop/hero-section";
 import { buildItemListSchema, buildWebSiteSchema, buildOrganizationSchema, jsonLdString } from "@/lib/structured-data";
@@ -74,45 +73,6 @@ async function getFeaturedProductsForPage() {
   }
 }
 
-/* ---------- Skeleton placeholders for streamed sections ---------- */
-
-function ProductGridSkeleton({ count = 8 }: { count?: number }) {
-  return (
-    <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
-      {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className={`space-y-3${i === 0 || i === 5 ? " col-span-2" : ""}`}>
-          <Skeleton className="aspect-[3/4] w-full rounded-2xl" />
-          {i !== 0 && i !== 5 && (
-            <>
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
-            </>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function CategoriesSkeleton() {
-  return (
-    <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <Skeleton key={i} className="h-24 rounded-xl" />
-      ))}
-    </div>
-  );
-}
-
-function BrandsSkeleton() {
-  return (
-    <div className="mt-8 flex flex-wrap justify-center gap-2.5">
-      {Array.from({ length: 8 }).map((_, i) => (
-        <Skeleton key={i} className="h-10 w-24 rounded-full" />
-      ))}
-    </div>
-  );
-}
 
 /* ---------- Async streamed sections ---------- */
 
@@ -587,19 +547,7 @@ async function JsonLdSection() {
   );
 }
 
-/* ---------- Section skeleton wrapper ---------- */
 
-function SectionSkeleton({ title, subtitle }: { title: string; subtitle: string }) {
-  return (
-    <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-      <div>
-        <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">{title}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
-      </div>
-      <ProductGridSkeleton />
-    </section>
-  );
-}
 
 /* ---------- Main page ---------- */
 
@@ -621,50 +569,34 @@ export default async function HomePage() {
       </Suspense>
 
       {/* Categories — streams independently */}
-      <Suspense fallback={
-        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <div>
-            <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">Kategorie</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Najděte přesně to, co hledáte</p>
-          </div>
-          <CategoriesSkeleton />
-        </section>
-      }>
+      <Suspense fallback={null}>
         <CategoriesSection />
       </Suspense>
 
       {/* New products — streams independently */}
       <ScrollReveal>
-        <Suspense fallback={<SectionSkeleton title="Nově přidané" subtitle="Čerstvé kousky za poslední týden" />}>
+        <Suspense fallback={null}>
           <NewProductsSection />
         </Suspense>
       </ScrollReveal>
 
       {/* Featured products — streams independently */}
       <ScrollReveal>
-        <Suspense fallback={<SectionSkeleton title="Doporučujeme" subtitle="Ručně vybrané kousky za nejlepší ceny" />}>
+        <Suspense fallback={null}>
           <FeaturedProductsSection />
         </Suspense>
       </ScrollReveal>
 
       {/* Sale products — streams independently */}
       <ScrollReveal>
-        <Suspense fallback={<SectionSkeleton title="Výprodej" subtitle="Skvělé kousky za ještě lepší ceny" />}>
+        <Suspense fallback={null}>
           <SaleProductsSection />
         </Suspense>
       </ScrollReveal>
 
       {/* Popular brands — streams independently */}
       <ScrollReveal>
-        <Suspense fallback={
-          <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-            <div className="text-center">
-              <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">Populární značky</h2>
-              <p className="mt-1 text-sm text-muted-foreground">Oblíbené značky v naší nabídce</p>
-            </div>
-            <BrandsSkeleton />
-          </section>
-        }>
+        <Suspense fallback={null}>
           <PopularBrandsSection />
         </Suspense>
       </ScrollReveal>
