@@ -534,13 +534,10 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
           {/* Main lightbox image — swipeable with vertical dismiss */}
           <div
             ref={imgContainerRef}
-            className={`relative flex items-center justify-center select-none overflow-hidden ${
+            className={`relative flex items-center justify-center select-none overflow-hidden w-[92vw] h-[85vh] max-w-[40rem] ${
               zoomed ? "cursor-grab active:cursor-grabbing" : "cursor-zoom-in"
             }`}
             style={{
-              width: "92vw",
-              height: "85vh",
-              maxWidth: "40rem",
               transform: lightboxDismissY !== 0
                 ? `translateY(${lightboxDismissY}px)`
                 : undefined,

@@ -255,7 +255,7 @@ export function ComgatePaymentSection({ orderNumber, accessToken, onSuccess }: P
           </div>
           {/* Comgate inline iframe — scales down from 504×679px on mobile */}
           <div className="mx-auto w-full max-w-[504px] overflow-hidden rounded-xl border bg-white shadow-sm">
-            <div className="relative w-full" style={{ paddingBottom: `${(679 / 504) * 100}%` }}>
+            <div className="relative w-full aspect-[504/679]">
               <iframe
                 ref={iframeRef}
                 id="comgate-iframe"
