@@ -86,6 +86,7 @@ export function VintedCampaignButton({ activeSubscriberCount, onSent }: Props) {
         sendTest={sendTest}
         sendAll={sendAll}
         onSent={onSent}
+        confirmationWord="ODESLAT VINTED"
       />
     </div>
   );

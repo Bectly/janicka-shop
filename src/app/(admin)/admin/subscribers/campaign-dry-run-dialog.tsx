@@ -218,10 +218,22 @@ export function CampaignDryRunDialog({
                   <div>
                     <span className="font-medium text-foreground">Předmět:</span> {preview.subject}
                   </div>
+                  {preview.previewText && (
+                    <div className="mt-1">
+                      <span className="font-medium text-foreground">Preheader:</span>{" "}
+                      {preview.previewText}
+                    </div>
+                  )}
                   <div className="mt-1">
                     <span className="font-medium text-foreground">Ukázkový příjemce:</span>{" "}
                     {preview.sampleEmail}
                   </div>
+                  {preview.htmlExcerpt && (
+                    <div className="mt-2 rounded border border-border/60 bg-white px-2 py-1.5 text-[11px] leading-snug text-muted-foreground">
+                      <span className="font-medium text-foreground">Body ~300 znaků:</span>{" "}
+                      {preview.htmlExcerpt}
+                    </div>
+                  )}
                 </div>
                 <iframe
                   title="Email preview"
@@ -239,6 +251,24 @@ export function CampaignDryRunDialog({
 
           {/* Steps pane */}
           <div className="flex flex-col gap-4 overflow-y-auto p-5 md:col-span-2">
+            {preview?.lockStatus && preview.lockStatus.length > 0 && (
+              <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
+                <p className="font-semibold">⚠ Aktivní send-lock</p>
+                <ul className="mt-1 space-y-0.5">
+                  {preview.lockStatus.map((l) => (
+                    <li key={l.campaignKey}>
+                      <code className="font-mono">{l.campaignKey}</code> expiruje{" "}
+                      {new Date(l.expiresAt).toLocaleString("cs-CZ")}
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-1">
+                  Send tento klíč odmítne (P2002). Počkej na vypršení, nebo uvolni lock přes DB,
+                  než to pustíš na všechny.
+                </p>
+              </div>
+            )}
+
             {/* Step 1: Count */}
             <div className={`rounded-lg border ${accent.border} ${accent.bg} p-4`}>
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -256,26 +286,26 @@ export function CampaignDryRunDialog({
                   <p className="font-semibold text-muted-foreground">
                     A/B rozdělení (do 90 dní = warm, jinak cold):
                   </p>
-                  <div className=”rounded-md border border-primary/30 bg-primary/10 p-2”>
-                    <div className=”flex items-baseline justify-between gap-2”>
-                      <span className=”font-semibold text-primary”>
+                  <div className="rounded-md border border-primary/30 bg-primary/10 p-2">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="font-semibold text-primary">
                         Warm ({preview.segmentCounts.warm})
                       </span>
-                      <span className=”text-[11px] text-primary”>Subject A</span>
+                      <span className="text-[11px] text-primary">Subject A</span>
                     </div>
-                    <p className=”mt-0.5 truncate text-foreground” title={preview.segmentSubjects.warm}>
-                      „{preview.segmentSubjects.warm}”
+                    <p className="mt-0.5 truncate text-foreground" title={preview.segmentSubjects.warm}>
+                      „{preview.segmentSubjects.warm}"
                     </p>
                   </div>
-                  <div className=”rounded-md border border-muted-foreground/30 bg-muted/40 p-2”>
-                    <div className=”flex items-baseline justify-between gap-2”>
-                      <span className=”font-semibold text-foreground”>
+                  <div className="rounded-md border border-muted-foreground/30 bg-muted/40 p-2">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="font-semibold text-foreground">
                         Cold ({preview.segmentCounts.cold})
                       </span>
-                      <span className=”text-[11px] text-muted-foreground”>Subject B</span>
+                      <span className="text-[11px] text-muted-foreground">Subject B</span>
                     </div>
-                    <p className=”mt-0.5 truncate text-foreground” title={preview.segmentSubjects.cold}>
-                      „{preview.segmentSubjects.cold}”
+                    <p className="mt-0.5 truncate text-foreground" title={preview.segmentSubjects.cold}>
+                      „{preview.segmentSubjects.cold}"
                     </p>
                   </div>
                 </div>
