@@ -331,8 +331,7 @@ export function QuickAddForm({ categories, action }: QuickAddFormProps) {
                   src={videoUrl}
                   controls
                   preload="metadata"
-                  className="w-full rounded-lg border"
-                  style={{ maxHeight: "200px" }}
+                  className="max-h-[200px] w-full rounded-lg border"
                 />
                 <Button
                   type="button"

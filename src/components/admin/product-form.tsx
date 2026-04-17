@@ -501,7 +501,7 @@ export function ProductForm({ categories, product, action }: ProductFormProps) {
             type="checkbox"
             name="featured"
             defaultChecked={product?.featured ?? false}
-            className="size-4 rounded border-input"
+            className="size-4 rounded border-input accent-primary"
           />
           Doporučený produkt
         </label>
@@ -511,7 +511,7 @@ export function ProductForm({ categories, product, action }: ProductFormProps) {
             name="active"
             defaultChecked={product?.active ?? true}
             value="on"
-            className="size-4 rounded border-input"
+            className="size-4 rounded border-input accent-primary"
           />
           Aktivní (viditelný v obchodě)
         </label>

@@ -145,6 +145,41 @@ export async function getPacketLabel(packetId: string): Promise<string> {
 }
 
 /**
+ * Get shipping labels PDF for multiple packets, merged into a single PDF.
+ * Returns base64-encoded PDF (A6 on A4 format).
+ */
+export async function getPacketLabelsBatch(
+  packetIds: string[],
+): Promise<string> {
+  if (packetIds.length === 0) {
+    throw new Error("Žádné zásilky k tisku");
+  }
+
+  const client = await getClient();
+  const apiPassword = getApiPassword();
+
+  const [result] = await client.packetsLabelsPdfAsync({
+    apiPassword,
+    packetIds: { id: packetIds },
+    format: "A6 on A4",
+    offset: 0,
+  });
+
+  if (result?.fault) {
+    const faultMsg =
+      result.fault.string ?? result.fault.detail ?? JSON.stringify(result.fault);
+    throw new Error(`Packeta chyba (štítky): ${faultMsg}`);
+  }
+
+  const pdfBase64 = result?.pdf;
+  if (!pdfBase64) {
+    throw new Error("Packeta nevrátila PDF štítky");
+  }
+
+  return pdfBase64;
+}
+
+/**
  * Get current status of a packet.
  */
 export async function getPacketStatus(

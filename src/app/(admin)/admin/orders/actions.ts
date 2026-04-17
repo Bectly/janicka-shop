@@ -7,7 +7,7 @@ import { ORDER_STATUS_LABELS, PAYMENT_METHOD_LABELS, SHIPPING_METHOD_LABELS } fr
 import { sendOrderStatusEmail, sendShippingNotificationEmail } from "@/lib/email";
 import { rateLimitAdmin } from "@/lib/rate-limit";
 import { generateInvoicePdf, type InvoiceData } from "@/lib/invoice/generate-invoice";
-import { createPacket, getPacketLabel } from "@/lib/shipping/packeta";
+import { createPacket, getPacketLabel, getPacketLabelsBatch } from "@/lib/shipping/packeta";
 
 const VALID_STATUSES = [
   "pending",
