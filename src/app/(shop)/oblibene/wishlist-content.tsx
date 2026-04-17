@@ -132,8 +132,58 @@ export function WishlistContent() {
     );
   }
 
+  const hasAvailableItems = products.some((p) => !p.sold);
+
   return (
     <>
+      {hasAvailableItems && (
+        <div className="mb-6 rounded-xl border border-border bg-muted/40 p-4 sm:p-5">
+          {notifyState === "done" ? (
+            <div className="flex items-center gap-2 text-sm text-foreground">
+              <Check className="size-4 text-green-600" />
+              Hotovo — ozveme se ti, jakmile se některý z tvých kousků prodá.
+            </div>
+          ) : (
+            <form
+              onSubmit={handleNotifySubmit}
+              className="flex flex-col gap-2 sm:flex-row sm:items-center"
+            >
+              <div className="flex-1">
+                <p className="text-sm font-medium text-foreground">
+                  Chceš vědět, až některý kousek zmizí?
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Pošleme ti email s podobnými kousky — každý je unikát.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="email"
+                  required
+                  placeholder="tvuj@email.cz"
+                  value={notifyEmail}
+                  onChange={(e) => setNotifyEmail(e.target.value)}
+                  autoComplete="email"
+                  className="w-full min-w-0 rounded-md border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none sm:w-auto"
+                  aria-label="Email pro notifikace"
+                />
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={notifyState === "submitting"}
+                >
+                  {notifyState === "submitting" ? "Odesílám…" : "Chci vědět"}
+                </Button>
+              </div>
+            </form>
+          )}
+          {notifyState === "error" && (
+            <p className="mt-2 text-xs text-destructive">
+              Něco se pokazilo. Zkus to prosím znovu.
+            </p>
+          )}
+        </div>
+      )}
       <div className="mb-6 flex justify-end">
         <button
           type="button"
