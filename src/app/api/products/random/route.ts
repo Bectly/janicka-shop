@@ -1,8 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { getDb } from "@/lib/db";
 import { getImageUrls } from "@/lib/images";
-
-export const dynamic = "force-dynamic";
 
 export interface ShuffleProduct {
   id: string;
@@ -21,6 +19,7 @@ export interface ShuffleProduct {
 }
 
 export async function GET(req: NextRequest) {
+  await connection();
   const rawLimit = Number(req.nextUrl.searchParams.get("limit") ?? "10");
   const limit = Math.min(Math.max(Number.isFinite(rawLimit) ? rawLimit : 10, 1), 30);
 

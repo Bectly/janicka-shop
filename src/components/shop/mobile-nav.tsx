@@ -25,6 +25,7 @@ const categories = [
 
 const topLinks = [
   { name: "Novinky", href: "/products?sort=newest" },
+  { name: "Objevuj", href: "/objevuj" },
   { name: "Všechny produkty", href: "/products" },
   { name: "Oblíbené", href: "/oblibene" },
 ];

@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 
 const navLinks = [
   { name: "Novinky", href: "/products?sort=newest", checkParam: null, slug: null },
+  { name: "Objevuj", href: "/objevuj", checkParam: "__objevuj__", slug: null },
   { name: "Šaty", href: "/products?category=saty", checkParam: "saty", slug: "saty" },
   { name: "Topy & Halenky", href: "/products?category=topy-halenky", checkParam: "topy-halenky", slug: "topy-halenky" },
   { name: "Kalhoty & Sukně", href: "/products?category=kalhoty-sukne", checkParam: "kalhoty-sukne", slug: "kalhoty-sukne" },
@@ -24,9 +25,12 @@ export function DesktopNavLinks({ categoryCounts }: DesktopNavLinksProps) {
   return (
     <>
       {navLinks.map((link) => {
-        const isActive = link.checkParam
-          ? pathname === "/products" && activeCategory === link.checkParam
-          : pathname === "/products" && !activeCategory && searchParams.get("sort") === "newest";
+        const isActive =
+          link.checkParam === "__objevuj__"
+            ? pathname === "/objevuj"
+            : link.checkParam
+              ? pathname === "/products" && activeCategory === link.checkParam
+              : pathname === "/products" && !activeCategory && searchParams.get("sort") === "newest";
         const count = link.slug && categoryCounts ? categoryCounts[link.slug] : undefined;
 
         return (
