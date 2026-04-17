@@ -6,7 +6,7 @@ import { getDb } from "@/lib/db";
 import { formatPrice, formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Package, ShoppingBag, User } from "lucide-react";
+import { ArrowRight, ChevronRight, Package, ShoppingBag, User } from "lucide-react";
 import { OrderStatusBadge } from "./order-status-badge";
 import type { Metadata } from "next";
 
@@ -123,6 +123,7 @@ export default async function AccountDashboardPage() {
                     <span className="whitespace-nowrap font-semibold">
                       {formatPrice(o.total)}
                     </span>
+                    <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
                   </div>
                 </Link>
               </li>
