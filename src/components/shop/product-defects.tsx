@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Sparkles } from "lucide-react";
+import { AlertCircle, Sparkles, ZoomIn } from "lucide-react";
 
 const NEW_CONDITIONS = new Set(["new_with_tags", "new_without_tags"]);
 
@@ -42,9 +42,12 @@ export function ProductDefects({ note, images, condition }: ProductDefectsProps)
       className="my-10 rounded-2xl border border-border bg-background p-6"
     >
       <div className="mb-4">
-        <h2 className="font-heading text-base font-semibold text-foreground">
-          Vady a nedokonalosti
-        </h2>
+        <div className="flex items-center gap-2">
+          <AlertCircle className="size-4 shrink-0 text-amber-500 dark:text-amber-400" />
+          <h2 className="font-heading text-base font-semibold text-foreground">
+            Vady a nedokonalosti
+          </h2>
+        </div>
         <p className="mt-1 text-sm text-muted-foreground">
           Každý second-hand kousek má svůj příběh. Tady je všechno otevřeně —
           ať víš přesně, co kupuješ.
