@@ -101,13 +101,13 @@ export function RecentlyViewedSection({
                 </div>
                 <div className="absolute top-2 left-2 flex flex-col gap-1">
                   {hasDiscount && (
-                    <span className="rounded-md bg-destructive/90 px-2 py-0.5 text-xs font-semibold text-white">
+                    <span className="rounded-full bg-destructive/90 px-2.5 py-0.5 text-xs font-semibold text-white shadow-sm">
                       -{discountPercent} %
                     </span>
                   )}
                   {item.condition && (
                     <span
-                      className={`rounded-md px-2 py-0.5 text-xs font-medium ${CONDITION_COLORS[item.condition] ?? "bg-muted text-muted-foreground"}`}
+                      className={`rounded-full px-2.5 py-0.5 text-xs font-medium shadow-sm ${CONDITION_COLORS[item.condition] ?? "bg-muted text-muted-foreground"}`}
                     >
                       {CONDITION_LABELS[item.condition] ?? item.condition}
                     </span>

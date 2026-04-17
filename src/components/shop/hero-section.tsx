@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Percent } from "lucide-react";
 
 /* ─── Cherry blossom petal SVG paths (5 variants) ─── */
 const PETAL_PATHS = [
@@ -134,6 +134,7 @@ export function HeroSection() {
             size="lg"
             render={<Link href="/products?sale=true" />}
           >
+            <Percent data-icon="inline-start" className="size-4" />
             Výprodej
           </Button>
         </div>

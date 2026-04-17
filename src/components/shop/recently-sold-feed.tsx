@@ -64,7 +64,7 @@ export function RecentlySoldFeed({ products }: RecentlySoldFeedProps) {
                   </div>
                 )}
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="rounded-full bg-foreground/70 px-2 py-0.5 text-[10px] font-semibold text-background">
+                  <span className="rounded-full bg-destructive/75 px-2.5 py-0.5 text-[10px] font-semibold text-white shadow-sm">
                     Prodáno
                   </span>
                 </div>
