@@ -23,7 +23,7 @@ function AccordionItem({
         <span className="flex-1">{title}</span>
         <ChevronDown className="size-4 text-muted-foreground transition-transform group-open:rotate-180" />
       </summary>
-      <div className="pb-4 pl-12 pr-4 text-sm leading-relaxed text-muted-foreground">
+      <div className="pb-4 pl-4 pr-4 text-sm leading-relaxed text-muted-foreground">
         {children}
       </div>
     </details>
