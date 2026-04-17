@@ -471,10 +471,9 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
       {/* Lightbox — images only, no video */}
       {lightboxOpen && !isVideoActive && (
         <div
-          className={`fixed inset-0 z-[100] flex items-center justify-center bg-black/95 overscroll-none ${
+          className={`fixed inset-0 z-[100] flex touch-none items-center justify-center bg-black/95 overscroll-none ${
             lightboxClosing ? "animate-lightbox-close" : "animate-lightbox-open"
           }`}
-          style={{ touchAction: "none" }}
           role="dialog"
           aria-modal="true"
           aria-label={`${productName} — galerie`}

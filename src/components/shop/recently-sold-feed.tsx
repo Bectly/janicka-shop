@@ -45,8 +45,7 @@ export function RecentlySoldFeed({ products }: RecentlySoldFeedProps) {
             <Link
               key={product.slug}
               href={`/products/${product.slug}`}
-              className="group flex shrink-0 flex-col items-center gap-2 sm:shrink"
-              style={{ width: "clamp(100px, 20vw, 140px)" }}
+              className="group flex w-[clamp(100px,20vw,140px)] shrink-0 flex-col items-center gap-2 sm:shrink"
             >
               <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-muted">
                 {images[0] ? (

@@ -77,31 +77,27 @@ export function CollectionHero({
         </span>
 
         <h1
-          className="category-hero-stagger text-display text-foreground"
-          style={{ animationDelay: "80ms" }}
+          className="category-hero-stagger [animation-delay:80ms] text-display text-foreground"
         >
           {title}
         </h1>
 
         {/* Decorative accent line */}
         <div
-          className="category-hero-stagger mt-4 h-[3px] w-12 rounded-full bg-gradient-to-r from-brand to-brand-light"
-          style={{ animationDelay: "160ms" }}
+          className="category-hero-stagger [animation-delay:160ms] mt-4 h-[3px] w-12 rounded-full bg-gradient-to-r from-brand to-brand-light"
           aria-hidden="true"
         />
 
         {description && (
           <p
-            className="category-hero-stagger mt-4 max-w-xl text-base text-muted-foreground sm:text-lg"
-            style={{ animationDelay: "220ms" }}
+            className="category-hero-stagger [animation-delay:220ms] mt-4 max-w-xl text-base text-muted-foreground sm:text-lg"
           >
             {description}
           </p>
         )}
 
         <p
-          className="category-hero-stagger mt-4 text-sm font-medium text-muted-foreground/80"
-          style={{ animationDelay: "280ms" }}
+          className="category-hero-stagger [animation-delay:280ms] mt-4 text-sm font-medium text-muted-foreground/80"
         >
           {productCount}{" "}
           {productCount === 1

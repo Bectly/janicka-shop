@@ -168,23 +168,20 @@ export function CategoryHero({
 
         {/* Heading — stagger 2 */}
         <h1
-          className={`category-hero-stagger text-display ${mood.accent}`}
-          style={{ animationDelay: "80ms" }}
+          className={`category-hero-stagger [animation-delay:80ms] text-display ${mood.accent}`}
         >
           {name}
         </h1>
 
         {/* Decorative brand accent line — stagger 3 */}
         <div
-          className="category-hero-stagger mt-4 h-[3px] w-12 rounded-full bg-gradient-to-r from-brand to-brand-light"
-          style={{ animationDelay: "160ms" }}
+          className="category-hero-stagger [animation-delay:160ms] mt-4 h-[3px] w-12 rounded-full bg-gradient-to-r from-brand to-brand-light"
           aria-hidden="true"
         />
 
         {/* Editorial tagline — stagger 4 */}
         <p
-          className="category-hero-stagger mt-4 font-heading text-lg italic text-muted-foreground/70 sm:text-xl"
-          style={{ animationDelay: "220ms" }}
+          className="category-hero-stagger [animation-delay:220ms] mt-4 font-heading text-lg italic text-muted-foreground/70 sm:text-xl"
         >
           {mood.tagline}
         </p>
@@ -192,8 +189,7 @@ export function CategoryHero({
         {/* Description — stagger 5 */}
         {description && (
           <p
-            className="category-hero-stagger mt-3 max-w-xl text-base text-muted-foreground sm:text-lg"
-            style={{ animationDelay: "280ms" }}
+            className="category-hero-stagger [animation-delay:280ms] mt-3 max-w-xl text-base text-muted-foreground sm:text-lg"
           >
             {description}
           </p>
@@ -201,8 +197,7 @@ export function CategoryHero({
 
         {/* Count — stagger 6 */}
         <p
-          className="category-hero-stagger mt-4 text-sm font-medium text-muted-foreground/80"
-          style={{ animationDelay: "340ms" }}
+          className="category-hero-stagger [animation-delay:340ms] mt-4 text-sm font-medium text-muted-foreground/80"
         >
           {productCount} {productCountText(productCount)}
         </p>
@@ -246,37 +241,32 @@ export function CatalogHero({ productCount }: { productCount: number }) {
         </span>
 
         <h1
-          className="category-hero-stagger text-display text-foreground"
-          style={{ animationDelay: "80ms" }}
+          className="category-hero-stagger [animation-delay:80ms] text-display text-foreground"
         >
           Katalog
         </h1>
 
         {/* Decorative accent line */}
         <div
-          className="category-hero-stagger mt-4 h-[3px] w-12 rounded-full bg-gradient-to-r from-brand to-brand-light"
-          style={{ animationDelay: "160ms" }}
+          className="category-hero-stagger [animation-delay:160ms] mt-4 h-[3px] w-12 rounded-full bg-gradient-to-r from-brand to-brand-light"
           aria-hidden="true"
         />
 
         <p
-          className="category-hero-stagger mt-4 font-heading text-lg italic text-muted-foreground/70 sm:text-xl"
-          style={{ animationDelay: "220ms" }}
+          className="category-hero-stagger [animation-delay:220ms] mt-4 font-heading text-lg italic text-muted-foreground/70 sm:text-xl"
         >
           Pečlivě vybraný second hand pro moderní ženy
         </p>
 
         <p
-          className="category-hero-stagger mt-3 max-w-xl text-base text-muted-foreground sm:text-lg"
-          style={{ animationDelay: "280ms" }}
+          className="category-hero-stagger [animation-delay:280ms] mt-3 max-w-xl text-base text-muted-foreground sm:text-lg"
         >
           Prohlédněte si naši kolekci stylového oblečení. Každý kousek je
           unikát — pečlivě vybraný a zkontrolovaný.
         </p>
 
         <p
-          className="category-hero-stagger mt-4 text-sm font-medium text-muted-foreground/80"
-          style={{ animationDelay: "340ms" }}
+          className="category-hero-stagger [animation-delay:340ms] mt-4 text-sm font-medium text-muted-foreground/80"
         >
           {productCount}{" "}
           {productCount === 1

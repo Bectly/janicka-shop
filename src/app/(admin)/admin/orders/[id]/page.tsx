@@ -17,6 +17,7 @@ import { TrackingNumberForm } from "./tracking-number-form";
 import { PacketaSection } from "./packeta-section";
 import { InvoiceSection } from "./invoice-section";
 import { CreateReturnForm } from "./create-return-form";
+import { InternalNoteEditor } from "./internal-note-editor";
 import {
   RETURN_STATUS_LABELS,
   RETURN_STATUS_COLORS,
@@ -382,15 +383,21 @@ export default async function AdminOrderDetailPage({ params }: Props) {
             </div>
           </div>
 
-          {/* Note */}
+          {/* Customer note (from checkout) */}
           {order.note && (
             <div className="rounded-xl border bg-card p-5 shadow-sm">
               <h2 className="font-heading text-base font-semibold text-foreground">
-                Poznámka
+                Poznámka od zákaznice
               </h2>
               <p className="mt-3 whitespace-pre-line text-sm text-muted-foreground">{order.note}</p>
             </div>
           )}
+
+          {/* Internal admin note */}
+          <InternalNoteEditor
+            orderId={order.id}
+            initialValue={order.internalNote}
+          />
         </div>
       </div>
     </>

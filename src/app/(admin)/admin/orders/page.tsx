@@ -3,15 +3,9 @@ import Link from "next/link";
 import { getDb } from "@/lib/db";
 import { connection } from "next/server";
 
-import { formatPrice, formatDate } from "@/lib/format";
-import {
-  ORDER_STATUS_LABELS,
-  ORDER_STATUS_COLORS,
-  PAYMENT_METHOD_LABELS,
-} from "@/lib/constants";
 import { OrderSearch } from "@/components/admin/order-search";
 import { OrderExportButton } from "@/components/admin/order-export-button";
-import { AlertTriangle, Clock } from "lucide-react";
+import { OrdersTable, type OrderRow } from "./orders-table";
 import type { Metadata } from "next";
 import type { Prisma } from "@prisma/client";
 
@@ -50,7 +44,16 @@ export default async function AdminOrdersPage({
     where,
     orderBy: { createdAt: "desc" },
     take: 200,
-    include: {
+    select: {
+      id: true,
+      orderNumber: true,
+      status: true,
+      paymentMethod: true,
+      shippingMethod: true,
+      packetId: true,
+      total: true,
+      createdAt: true,
+      expectedDeliveryDate: true,
       customer: {
         select: { firstName: true, lastName: true, email: true },
       },
@@ -58,10 +61,10 @@ export default async function AdminOrdersPage({
     },
   });
 
-  // Compute delivery deadline urgency for active orders
+  // Compute delivery deadline urgency for active orders + shape for client table
   const now = new Date();
-  const ordersWithDeadline = orders.map((order) => {
-    let deadlineUrgency: "ok" | "approaching" | "urgent" | "overdue" | null = null;
+  const orderRows: OrderRow[] = orders.map((order) => {
+    let deadlineUrgency: OrderRow["deadlineUrgency"] = null;
     if (
       order.expectedDeliveryDate &&
       order.status !== "delivered" &&
@@ -75,7 +78,21 @@ export default async function AdminOrdersPage({
       else if (daysRemaining <= 10) deadlineUrgency = "approaching";
       else deadlineUrgency = "ok";
     }
-    return { ...order, deadlineUrgency };
+    return {
+      id: order.id,
+      orderNumber: order.orderNumber,
+      status: order.status,
+      paymentMethod: order.paymentMethod,
+      shippingMethod: order.shippingMethod,
+      packetId: order.packetId,
+      total: order.total,
+      createdAt: order.createdAt.toISOString(),
+      itemCount: order._count.items,
+      customerFirstName: order.customer.firstName,
+      customerLastName: order.customer.lastName,
+      customerEmail: order.customer.email,
+      deadlineUrgency,
+    };
   });
 
   const statusFilters = [
@@ -99,10 +116,10 @@ export default async function AdminOrdersPage({
             Objednávky
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {ordersWithDeadline.length}{" "}
-            {ordersWithDeadline.length === 1
+            {orderRows.length}{" "}
+            {orderRows.length === 1
               ? "objednávka"
-              : ordersWithDeadline.length >= 2 && ordersWithDeadline.length <= 4
+              : orderRows.length >= 2 && orderRows.length <= 4
                 ? "objednávky"
                 : "objednávek"}
             {isFiltered && " (filtrováno)"}
@@ -143,111 +160,7 @@ export default async function AdminOrdersPage({
         })}
       </div>
 
-      {/* Orders table */}
-      <div className="mt-6 overflow-hidden rounded-xl border bg-card shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                  Objednávka
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                  Zákazník
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                  Platba
-                </th>
-                <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                  Položky
-                </th>
-                <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                  Celkem
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                  Datum
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {ordersWithDeadline.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="px-4 py-12 text-center text-muted-foreground"
-                  >
-                    Žádné objednávky
-                  </td>
-                </tr>
-              ) : (
-                ordersWithDeadline.map((order) => (
-                  <tr
-                    key={order.id}
-                    className="border-b last:border-0 hover:bg-muted/30"
-                  >
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1.5">
-                        <Link
-                          href={`/admin/orders/${order.id}`}
-                          className="font-medium text-primary hover:underline"
-                        >
-                          {order.orderNumber}
-                        </Link>
-                        {order.deadlineUrgency === "overdue" && (
-                          <span title="Po termínu doručení!">
-                            <AlertTriangle className="size-3.5 text-red-500" />
-                          </span>
-                        )}
-                        {order.deadlineUrgency === "urgent" && (
-                          <span title="Termín doručení do 5 dní">
-                            <Clock className="size-3.5 text-amber-500" />
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div>
-                        <p className="font-medium text-foreground">
-                          {order.customer.firstName} {order.customer.lastName}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {order.customer.email}
-                        </p>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${ORDER_STATUS_COLORS[order.status] ?? "bg-muted text-muted-foreground"}`}
-                      >
-                        {ORDER_STATUS_LABELS[order.status] ?? order.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-xs text-muted-foreground">
-                        {PAYMENT_METHOD_LABELS[order.paymentMethod ?? ""] ??
-                          order.paymentMethod ??
-                          "—"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right text-muted-foreground">
-                      {order._count.items}
-                    </td>
-                    <td className="px-4 py-3 text-right font-medium">
-                      {formatPrice(order.total)}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {formatDate(order.createdAt)}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <OrdersTable orders={orderRows} />
     </>
   );
 }

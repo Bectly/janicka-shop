@@ -701,6 +701,122 @@ export async function createPacketaShipment(
  * Download a Packeta shipping label PDF for an order.
  * Returns base64-encoded PDF.
  */
+/**
+ * Update the admin-only internal note on an order.
+ * Not visible to customer. Limited to 2000 chars.
+ */
+export async function updateInternalNote(
+  orderId: string,
+  text: string,
+): Promise<void> {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
+
+  const trimmed = text.trim().slice(0, 2000);
+
+  const db = await getDb();
+  await db.order.update({
+    where: { id: orderId },
+    data: { internalNote: trimmed || null },
+  });
+
+  revalidatePath(`/admin/orders/${orderId}`);
+}
+
+/**
+ * Mark multiple orders as shipped in a single action.
+ * Respects the same status-transition rules as single-order update.
+ * Returns summary of succeeded/failed IDs with per-order error messages.
+ */
+export async function bulkMarkAsShipped(
+  orderIds: string[],
+): Promise<{ succeeded: string[]; failed: { id: string; error: string }[] }> {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
+
+  if (!Array.isArray(orderIds) || orderIds.length === 0) {
+    return { succeeded: [], failed: [] };
+  }
+  // Hard cap to prevent abuse
+  const ids = orderIds.slice(0, 200);
+
+  const succeeded: string[] = [];
+  const failed: { id: string; error: string }[] = [];
+
+  for (const id of ids) {
+    try {
+      await updateOrderStatus(id, "shipped");
+      succeeded.push(id);
+    } catch (err) {
+      failed.push({
+        id,
+        error: err instanceof Error ? err.message : "Neznámá chyba",
+      });
+    }
+  }
+
+  return { succeeded, failed };
+}
+
+/**
+ * Download a merged Packeta label PDF for multiple orders.
+ * Only orders with existing packetId are included. Orders without a packet
+ * are returned in `skipped` for admin feedback. Single SOAP call produces
+ * one merged PDF (A6 on A4).
+ */
+export async function bulkDownloadPacketaLabels(
+  orderIds: string[],
+): Promise<{
+  pdfBase64: string;
+  packetIds: string[];
+  skipped: { id: string; orderNumber: string; reason: string }[];
+}> {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
+
+  if (!Array.isArray(orderIds) || orderIds.length === 0) {
+    throw new Error("Žádné objednávky k tisku");
+  }
+  const ids = orderIds.slice(0, 200);
+
+  const db = await getDb();
+
+  const orders = await db.order.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, orderNumber: true, packetId: true, shippingMethod: true },
+  });
+
+  const skipped: { id: string; orderNumber: string; reason: string }[] = [];
+  const packetIds: string[] = [];
+
+  for (const o of orders) {
+    if (!o.packetId) {
+      skipped.push({
+        id: o.id,
+        orderNumber: o.orderNumber,
+        reason: o.shippingMethod?.startsWith("packeta")
+          ? "Nevytvořená zásilka v Packetě"
+          : "Bez Packeta dopravy",
+      });
+    } else {
+      packetIds.push(o.packetId);
+    }
+  }
+
+  if (packetIds.length === 0) {
+    throw new Error(
+      "Žádná z vybraných objednávek nemá vytvořenou Packeta zásilku",
+    );
+  }
+
+  const pdfBase64 = await getPacketLabelsBatch(packetIds);
+
+  return { pdfBase64, packetIds, skipped };
+}
+
 export async function downloadPacketaLabel(
   orderId: string,
 ): Promise<{ pdfBase64: string; packetId: string }> {
