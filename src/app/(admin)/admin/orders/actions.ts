@@ -192,6 +192,152 @@ function csvField(value: string | number | null | undefined): string {
   return safe;
 }
 
+/**
+ * Accounting CSV export for a given calendar month.
+ * Includes paid orders + credit notes (refunds as negative rows).
+ * Columns: order_number, paid_at, customer_name, IČO, DIČ, base, VAT_rate, VAT, total,
+ *          payment_method, invoice_number.
+ * VAT is derived from shop DIČ: if DIČ present → 21%, else 0% (not VAT registered).
+ */
+export async function exportAccountingCsv(
+  year: number,
+  month: number, // 1-12
+): Promise<string> {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
+
+  if (
+    !Number.isInteger(year) ||
+    year < 2020 ||
+    year > 2100 ||
+    !Number.isInteger(month) ||
+    month < 1 ||
+    month > 12
+  ) {
+    throw new Error("Neplatné období");
+  }
+
+  const from = new Date(year, month - 1, 1);
+  const to = new Date(year, month, 1); // exclusive upper bound
+
+  const db = await getDb();
+
+  const settings = await db.shopSettings.findUnique({ where: { id: "singleton" } });
+  const isVatRegistered = Boolean(settings?.dic && settings.dic.trim().length > 0);
+  const vatRate = isVatRegistered ? 21 : 0;
+
+  const PAID_STATUSES = ["paid", "shipped", "delivered"];
+
+  const invoices = await db.invoice.findMany({
+    where: {
+      issuedAt: { gte: from, lt: to },
+      order: { status: { in: PAID_STATUSES } },
+    },
+    orderBy: { issuedAt: "asc" },
+    include: {
+      order: {
+        select: {
+          orderNumber: true,
+          paymentMethod: true,
+          total: true,
+          customer: { select: { firstName: true, lastName: true } },
+        },
+      },
+    },
+  });
+
+  const creditNotes = await db.creditNote.findMany({
+    where: { issuedAt: { gte: from, lt: to } },
+    orderBy: { issuedAt: "asc" },
+    include: {
+      return: {
+        include: {
+          order: {
+            select: {
+              orderNumber: true,
+              paymentMethod: true,
+              customer: { select: { firstName: true, lastName: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const fmtDate = (d: Date) =>
+    new Intl.DateTimeFormat("cs-CZ", {
+      day: "numeric",
+      month: "numeric",
+      year: "numeric",
+    }).format(d);
+
+  const calcVat = (total: number) => {
+    if (vatRate === 0) return { base: total, vat: 0 };
+    const base = total / (1 + vatRate / 100);
+    return { base: Math.round(base * 100) / 100, vat: Math.round((total - base) * 100) / 100 };
+  };
+
+  const header = [
+    "Číslo objednávky",
+    "Datum zaplacení",
+    "Zákazník",
+    "IČO prodejce",
+    "DIČ prodejce",
+    "Základ",
+    "Sazba DPH (%)",
+    "DPH",
+    "Celkem",
+    "Způsob platby",
+    "Číslo faktury",
+  ];
+
+  const rows: (string | number)[][] = [];
+
+  for (const inv of invoices) {
+    const total = inv.totalAmount;
+    const { base, vat } = calcVat(total);
+    rows.push([
+      inv.order.orderNumber,
+      fmtDate(inv.issuedAt),
+      `${inv.order.customer.firstName} ${inv.order.customer.lastName}`,
+      settings?.ico ?? "",
+      settings?.dic ?? "",
+      base,
+      vatRate,
+      vat,
+      total,
+      PAYMENT_METHOD_LABELS[inv.order.paymentMethod ?? ""] ?? inv.order.paymentMethod ?? "",
+      inv.number,
+    ]);
+  }
+
+  for (const cn of creditNotes) {
+    const total = cn.totalAmount; // already negative
+    const { base, vat } = calcVat(total);
+    rows.push([
+      cn.return.order.orderNumber,
+      fmtDate(cn.issuedAt),
+      `${cn.return.order.customer.firstName} ${cn.return.order.customer.lastName}`,
+      settings?.ico ?? "",
+      settings?.dic ?? "",
+      base,
+      vatRate,
+      vat,
+      total,
+      PAYMENT_METHOD_LABELS[cn.return.order.paymentMethod ?? ""] ?? cn.return.order.paymentMethod ?? "",
+      cn.number,
+    ]);
+  }
+
+  const csv =
+    header.map(csvField).join(",") +
+    "\n" +
+    rows.map((row) => row.map(csvField).join(",")).join("\n");
+
+  return "\uFEFF" + csv;
+}
+
 export async function exportOrdersCsv(statusFilter?: string): Promise<string> {
   await requireAdmin();
   const rl = await rateLimitAdmin();
@@ -836,3 +982,4 @@ export async function downloadPacketaLabel(
 
   return { pdfBase64, packetId: order.packetId };
 }
+

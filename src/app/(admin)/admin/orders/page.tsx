@@ -5,6 +5,7 @@ import { connection } from "next/server";
 
 import { OrderSearch } from "@/components/admin/order-search";
 import { OrderExportButton } from "@/components/admin/order-export-button";
+import { AccountingExportButton } from "@/components/admin/accounting-export-button";
 import { OrdersTable, type OrderRow } from "./orders-table";
 import type { Metadata } from "next";
 import type { Prisma } from "@prisma/client";
@@ -125,9 +126,12 @@ export default async function AdminOrdersPage({
             {isFiltered && " (filtrováno)"}
           </p>
         </div>
-        <Suspense fallback={null}>
-          <OrderExportButton />
-        </Suspense>
+        <div className="flex gap-2">
+          <AccountingExportButton />
+          <Suspense fallback={null}>
+            <OrderExportButton />
+          </Suspense>
+        </div>
       </div>
 
       {/* Search */}

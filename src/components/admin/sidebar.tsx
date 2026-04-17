@@ -19,6 +19,7 @@ import {
   Gift,
   ShoppingBag,
   Eye,
+  PenLine,
 } from "lucide-react";
 
 const navItems = [
@@ -34,6 +35,7 @@ const navItems = [
   { href: "/admin/abandoned-carts", label: "Opuštěné košíky", icon: ShoppingBag },
   { href: "/admin/browse-abandonment", label: "Prohlížení", icon: Eye },
   { href: "/admin/subscribers", label: "Newsletter", icon: Mail },
+  { href: "/admin/email-templates", label: "E-mail editor", icon: PenLine },
   { href: "/admin/settings", label: "Nastavení", icon: Settings },
 ];
 

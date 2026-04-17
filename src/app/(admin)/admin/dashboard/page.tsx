@@ -1,6 +1,13 @@
 import { getDb } from "@/lib/db";
 import { formatPrice, formatDate } from "@/lib/format";
 import { connection } from "next/server";
+import {
+  getTopProducts,
+  getCategorySales,
+  getStaleProducts,
+  getMonthlyRevenue,
+} from "./analytics-data";
+import { AnalyticsSection } from "@/components/admin/analytics-section";
 
 import {
   ORDER_STATUS_LABELS,
@@ -58,7 +65,7 @@ const PERIOD_LABELS: Record<Period, string> = {
 export default async function AdminDashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ period?: string }>;
+  searchParams: Promise<{ period?: string; aw?: string }>;
 }) {
   await connection();
   const db = await getDb();
@@ -67,12 +74,17 @@ export default async function AdminDashboardPage({
     ? params.period
     : "all") as Period;
   const sinceDate = getPeriodDate(period);
+  const analyticsWindow = params.aw === "90" ? 90 : 30;
   const periodLabel = PERIOD_LABELS[period];
 
   // Date filter for orders/products (null = no filter = all time)
   const dateFilter = sinceDate ? { gte: sinceDate } : undefined;
 
   const [
+    topProducts,
+    categorySales,
+    staleProducts,
+    monthlyRevenue,
     totalProducts,
     activeProducts,
     soldProducts,
@@ -84,6 +96,10 @@ export default async function AdminDashboardPage({
     statusGroups,
     coverageProducts,
   ] = await Promise.all([
+    getTopProducts(analyticsWindow as 30 | 90),
+    getCategorySales(analyticsWindow as 30 | 90),
+    getStaleProducts(),
+    getMonthlyRevenue(),
     db.product.count(dateFilter ? { where: { createdAt: dateFilter } } : undefined),
     db.product.count({ where: { active: true, sold: false, ...(dateFilter ? { createdAt: dateFilter } : {}) } }),
     db.product.count({ where: { sold: true, ...(dateFilter ? { updatedAt: dateFilter } : {}) } }),
@@ -587,6 +603,14 @@ export default async function AdminDashboardPage({
           </div>
         </section>
       </div>
+
+      <AnalyticsSection
+        topProducts={topProducts}
+        categorySales={categorySales}
+        staleProducts={staleProducts}
+        monthlyRevenue={monthlyRevenue}
+        analyticsWindow={analyticsWindow as 30 | 90}
+      />
     </>
   );
 }

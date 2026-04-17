@@ -2095,6 +2095,13 @@ export async function sendCampaignEmail(
   }
 }
 
+export function renderCampaignEmailPreview(
+  data: CampaignEmailData,
+  recipientEmail: string,
+): string {
+  return buildCampaignHtml(data, recipientEmail);
+}
+
 // ---------------------------------------------------------------------------
 // Vinted T&C campaign — April 28, 2026 (C2788 brief)
 // ---------------------------------------------------------------------------

@@ -5,6 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CONDITION_LABELS } from "@/lib/constants";
 import { ImageUpload } from "@/components/admin/image-upload";
 import { DefectsEditor } from "@/components/admin/defects-editor";
@@ -55,6 +62,7 @@ interface ProductFormProps {
 export function ProductForm({ categories, product, action }: ProductFormProps) {
   // Category + sizes state (sizes depend on selected category)
   const [categoryId, setCategoryId] = useState<string>(product?.categoryId ?? "");
+  const [condition, setCondition] = useState<string>(product?.condition ?? "excellent");
   const [selectedSizes, setSelectedSizes] = useState<string[]>(() => {
     if (!product?.sizes) return [];
     return product.sizes
@@ -353,21 +361,19 @@ export function ProductForm({ categories, product, action }: ProductFormProps) {
         {/* Category */}
         <div className="space-y-2">
           <Label htmlFor="categoryId">Kategorie</Label>
-          <select
-            id="categoryId"
-            name="categoryId"
-            value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
-            required
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <option value="">Vyberte kategorii</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
+          <input type="hidden" name="categoryId" value={categoryId} />
+          <Select value={categoryId} onValueChange={(v) => setCategoryId(v ?? "")}>
+            <SelectTrigger id="categoryId" className="h-10 w-full">
+              <SelectValue placeholder="Vyberte kategorii" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((cat) => (
+                <SelectItem key={cat.id} value={cat.id}>
+                  {cat.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Brand */}
@@ -384,19 +390,19 @@ export function ProductForm({ categories, product, action }: ProductFormProps) {
         {/* Condition */}
         <div className="space-y-2">
           <Label htmlFor="condition">Stav zboží</Label>
-          <select
-            id="condition"
-            name="condition"
-            defaultValue={product?.condition ?? "excellent"}
-            required
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            {Object.entries(CONDITION_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
+          <input type="hidden" name="condition" value={condition} />
+          <Select value={condition} onValueChange={(v) => setCondition(v ?? "")}>
+            <SelectTrigger id="condition" className="h-10 w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(CONDITION_LABELS).map(([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Sizes — category-aware chip grid (no free text) */}

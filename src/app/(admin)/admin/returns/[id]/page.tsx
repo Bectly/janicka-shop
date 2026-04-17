@@ -12,6 +12,7 @@ import {
 import { ArrowLeft } from "lucide-react";
 import { ReturnStatusSelect } from "./return-status-select";
 import { CreditNoteSection } from "./credit-note-section";
+import { RefundButton } from "./refund-button";
 import type { Metadata } from "next";
 
 
@@ -231,6 +232,16 @@ export default async function AdminReturnDetailPage({ params }: Props) {
               </div>
             </div>
           </div>
+
+          {/* Refund */}
+          <RefundButton
+            returnId={ret.id}
+            returnStatus={ret.status}
+            refundAmount={ret.refundAmount}
+            paymentMethod={ret.order.paymentMethod}
+            refundedAt={ret.refundedAt}
+            refundProcessedAmount={ret.refundProcessedAmount}
+          />
 
           {/* Credit note */}
           <CreditNoteSection

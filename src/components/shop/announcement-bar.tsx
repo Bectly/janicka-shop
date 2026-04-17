@@ -90,15 +90,18 @@ export function AnnouncementBar() {
       </svg>
 
       <div className="flex min-h-10 items-center sm:min-h-11">
-        {/* Marquee track — two copies for seamless loop */}
+        {/* Left spacer — mirrors dismiss button width so marquee area is symmetric */}
+        <div className="size-11 shrink-0 lg:hidden" aria-hidden="true" />
+
+        {/* Marquee track — two copies for seamless loop; static centered on lg+ */}
         <div
-          className="announcement-marquee flex shrink-0 items-center whitespace-nowrap"
+          className="announcement-marquee flex min-w-0 flex-1 shrink-0 items-center overflow-hidden whitespace-nowrap lg:justify-center lg:[animation:none]"
           aria-live="polite"
         >
           <span className="inline-flex items-center px-8 text-xs font-medium tracking-wide sm:text-sm">
             <MarqueeTrack />
           </span>
-          <span className="inline-flex items-center px-8 text-xs font-medium tracking-wide sm:text-sm" aria-hidden="true">
+          <span className="inline-flex items-center px-8 text-xs font-medium tracking-wide sm:text-sm lg:hidden" aria-hidden="true">
             <MarqueeTrack />
           </span>
         </div>
