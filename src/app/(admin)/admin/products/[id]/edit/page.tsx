@@ -62,6 +62,9 @@ export default async function EditProductPage({ params }: Props) {
     defectImages: product.defectImages ?? undefined,
     fitNote: product.fitNote,
     videoUrl: product.videoUrl,
+    metaTitle: product.metaTitle,
+    metaDescription: product.metaDescription,
+    internalNote: product.internalNote,
   };
 
   async function action(formData: FormData) {

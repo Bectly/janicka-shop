@@ -13,7 +13,7 @@ import { parseDefectImages } from "@/lib/defects";
 import type { ProductImage, ProductMeasurements } from "@/lib/images";
 import { uploadFiles } from "@/lib/uploadthing";
 import { getSizeGroupsForCategory } from "@/lib/sizes";
-import { Save, Ruler, Video, X, Loader2 } from "lucide-react";
+import { Save, Ruler, Video, X, Loader2, Search } from "lucide-react";
 
 interface Category {
   id: string;
@@ -41,6 +41,9 @@ interface ProductData {
   defectImages?: string;
   fitNote?: string | null;
   videoUrl?: string | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  internalNote?: string | null;
 }
 
 interface ProductFormProps {
@@ -86,6 +89,15 @@ export function ProductForm({ categories, product, action }: ProductFormProps) {
     if (!product?.measurements) return {};
     return parseMeasurements(product.measurements);
   });
+
+  // SEO + interní poznámky (live char counters)
+  const [metaTitle, setMetaTitle] = useState<string>(product?.metaTitle ?? "");
+  const [metaDescription, setMetaDescription] = useState<string>(
+    product?.metaDescription ?? ""
+  );
+  const [internalNote, setInternalNote] = useState<string>(
+    product?.internalNote ?? ""
+  );
 
   // Derived URL array for ImageUpload component
   const imageUrls = structuredImages.map((img) => img.url);
@@ -493,6 +505,68 @@ export function ProductForm({ categories, product, action }: ProductFormProps) {
         initialNote={product?.defectsNote ?? ""}
         initialImages={parseDefectImages(product?.defectImages)}
       />
+
+      {/* SEO + interní poznámky — collapsible */}
+      <details className="rounded-xl border bg-muted/20">
+        <summary className="flex cursor-pointer select-none items-center gap-2 px-4 py-3 text-sm font-medium hover:bg-muted/40 rounded-xl transition-colors">
+          <Search className="size-4 text-muted-foreground" />
+          SEO a interní poznámky
+          <span className="ml-auto text-xs font-normal text-muted-foreground">
+            nepovinné
+          </span>
+        </summary>
+        <div className="space-y-4 border-t border-border/60 p-4">
+          {/* Meta title */}
+          <div className="space-y-1.5">
+            <Label htmlFor="metaTitle">SEO název (title)</Label>
+            <Input
+              id="metaTitle"
+              name="metaTitle"
+              value={metaTitle}
+              onChange={(e) => setMetaTitle(e.target.value.slice(0, 70))}
+              maxLength={70}
+              placeholder="Pokud nevyplníš, použije se název produktu"
+            />
+            <p className={`text-xs ${metaTitle.length > 60 ? "text-amber-600" : "text-muted-foreground"}`}>
+              {metaTitle.length} / 70 znaků
+            </p>
+          </div>
+
+          {/* Meta description */}
+          <div className="space-y-1.5">
+            <Label htmlFor="metaDescription">SEO popis (meta description)</Label>
+            <Textarea
+              id="metaDescription"
+              name="metaDescription"
+              value={metaDescription}
+              onChange={(e) => setMetaDescription(e.target.value.slice(0, 160))}
+              maxLength={160}
+              rows={2}
+              placeholder="Text pod titulkem ve vyhledávačích. Pokud nevyplníš, použije se popis produktu."
+            />
+            <p className={`text-xs ${metaDescription.length > 150 ? "text-amber-600" : "text-muted-foreground"}`}>
+              {metaDescription.length} / 160 znaků
+            </p>
+          </div>
+
+          {/* Internal note */}
+          <div className="space-y-1.5">
+            <Label htmlFor="internalNote">Interní poznámka (neveřejná)</Label>
+            <Textarea
+              id="internalNote"
+              name="internalNote"
+              value={internalNote}
+              onChange={(e) => setInternalNote(e.target.value.slice(0, 2000))}
+              maxLength={2000}
+              rows={3}
+              placeholder="Poznámka jen pro tebe — zákaznice ji neuvidí (např. kde je kousek uložený, proč je v úpravě)"
+            />
+            <p className="text-xs text-muted-foreground">
+              {internalNote.length} / 2000 znaků · zobrazuje se jen v adminu
+            </p>
+          </div>
+        </div>
+      </details>
 
       {/* Toggles */}
       <div className="flex flex-wrap gap-6">

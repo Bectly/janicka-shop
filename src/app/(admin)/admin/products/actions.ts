@@ -56,6 +56,21 @@ const productSchema = z.object({
   { message: "Původní cena musí být vyšší než aktuální cena", path: ["compareAt"] },
 );
 
+function parseSeoAndNote(formData: FormData): {
+  metaTitle: string | null;
+  metaDescription: string | null;
+  internalNote: string | null;
+} {
+  const rawTitle = ((formData.get("metaTitle") as string) || "").trim();
+  const rawDesc = ((formData.get("metaDescription") as string) || "").trim();
+  const rawNote = ((formData.get("internalNote") as string) || "").trim();
+  return {
+    metaTitle: rawTitle ? rawTitle.slice(0, 70) : null,
+    metaDescription: rawDesc ? rawDesc.slice(0, 160) : null,
+    internalNote: rawNote ? rawNote.slice(0, 2000) : null,
+  };
+}
+
 const productImageSchema = z.object({
   url: z.string().url().refine(
     (u) => u.startsWith("https://") || u.startsWith("http://"),
@@ -157,6 +172,7 @@ export async function createProduct(formData: FormData) {
   const fitNote = ((formData.get("fitNote") as string) || "").trim().slice(0, 120) || null;
   const rawVideoUrl = ((formData.get("videoUrl") as string) || "").trim();
   const videoUrl = rawVideoUrl && rawVideoUrl.length <= 2048 && /^https?:\/\//.test(rawVideoUrl) ? rawVideoUrl : null;
+  const seo = parseSeoAndNote(formData);
 
   const product = await db.product.create({
     data: {
@@ -179,6 +195,9 @@ export async function createProduct(formData: FormData) {
       defectImages,
       fitNote,
       videoUrl,
+      metaTitle: seo.metaTitle,
+      metaDescription: seo.metaDescription,
+      internalNote: seo.internalNote,
       stock: 1,
       featured: parsed.featured,
       active: parsed.active,
@@ -237,6 +256,7 @@ export async function updateProduct(id: string, formData: FormData) {
   const fitNote = ((formData.get("fitNote") as string) || "").trim().slice(0, 120) || null;
   const rawVideoUrl = ((formData.get("videoUrl") as string) || "").trim();
   const videoUrl = rawVideoUrl && rawVideoUrl.length <= 2048 && /^https?:\/\//.test(rawVideoUrl) ? rawVideoUrl : null;
+  const seo = parseSeoAndNote(formData);
 
   // Check if price changed — log old price for 30-day price history (Czech fake discount law)
   const current = await db.product.findUnique({
@@ -271,6 +291,9 @@ export async function updateProduct(id: string, formData: FormData) {
       defectImages,
       fitNote,
       videoUrl,
+      metaTitle: seo.metaTitle,
+      metaDescription: seo.metaDescription,
+      internalNote: seo.internalNote,
       featured: parsed.featured,
       active: parsed.active,
     },

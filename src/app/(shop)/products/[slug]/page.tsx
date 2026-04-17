@@ -100,7 +100,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const priceText = `${product.price} Kč`;
   const brandText = product.brand ? ` | ${product.brand}` : "";
   const condLabel = CONDITION_LABELS[product.condition] ?? "";
-  const ogDescription = `${priceText}${brandText} | ${condLabel}. ${product.description}`.slice(0, 200);
+  const autoDescription = `${priceText}${brandText} | ${condLabel}. ${product.description}`.slice(0, 200);
+
+  // Custom SEO overrides (set in admin) take priority; otherwise fall back to derived values
+  const metaTitle = product.metaTitle?.trim() || product.name;
+  const metaDescription = product.metaDescription?.trim() || product.description;
+  const ogDescription = product.metaDescription?.trim() || autoDescription;
 
   // Multiple OG images for carousel previews (up to 4)
   const ogImages = structuredImages.slice(0, 4).map((img) => ({
@@ -111,13 +116,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }));
 
   return {
-    title: product.name,
-    description: product.description,
+    title: metaTitle,
+    description: metaDescription,
     alternates: {
       canonical: `${BASE_URL}/products/${product.slug}`,
     },
     openGraph: {
-      title: `${product.name} — ${priceText}`,
+      title: `${metaTitle} — ${priceText}`,
       description: ogDescription,
       url: `${BASE_URL}/products/${product.slug}`,
       type: "website",
@@ -127,7 +132,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     twitter: {
       card: "summary_large_image",
-      title: `${product.name} — ${priceText}`,
+      title: `${metaTitle} — ${priceText}`,
       description: ogDescription,
       ...(imageUrls.length > 0 && { images: [imageUrls[0]] }),
     },

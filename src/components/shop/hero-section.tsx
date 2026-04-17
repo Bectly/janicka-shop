@@ -50,10 +50,9 @@ export function HeroSection() {
         {petals.map((p) => (
           <svg
             key={p.id}
-            className="hero-petal absolute"
+            className="hero-petal absolute top-[-20px]"
             style={{
               left: `${p.left}%`,
-              top: "-20px",
               width: p.size,
               height: p.size,
               animationDelay: `${p.delay}s`,
