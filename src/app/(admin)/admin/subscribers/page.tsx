@@ -12,6 +12,7 @@ import { ExportCsvButton } from "./export-csv-button";
 import { CampaignSender } from "./campaign-sender";
 import { MothersDayCampaignButton } from "./mothers-day-campaign-button";
 import { CustomsCampaignButton } from "./customs-campaign-button";
+import { VintedCampaignButton } from "./vinted-campaign-button";
 
 export const metadata: Metadata = {
   title: "Newsletter odběratelé",
@@ -99,6 +100,7 @@ export default async function AdminSubscribersPage({
       </div>
 
       <div className="mt-6 space-y-4">
+        <VintedCampaignButton activeSubscriberCount={activeCount} />
         <MothersDayCampaignButton activeSubscriberCount={activeCount} />
         <CustomsCampaignButton activeSubscriberCount={activeCount} />
       </div>

@@ -2205,6 +2205,182 @@ export function renderCampaignEmailPreview(
   return buildCampaignHtml(data, recipientEmail);
 }
 
+// ---------------------------------------------------------------------------
+// Vinted T&C campaign — April 28, 2026 (C2788 brief)
+// ---------------------------------------------------------------------------
+
+export type VintedCampaignSegment = "warm" | "cold";
+
+const VINTED_SUBJECTS: Record<VintedCampaignSegment, string> = {
+  warm: "Tvoje fotky patří tobě. Vždy.",
+  cold: "Zatímco Vinted školí AI na tvých fotkách...",
+};
+
+const VINTED_PREVIEW_TEXT = "U nás je to jinak. A vždy bylo.";
+
+function buildVintedCampaignHtml(
+  segment: VintedCampaignSegment,
+  recipientEmail: string,
+): string {
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const unsubscribeUrl = `${baseUrl}/odhlasit-novinky?token=${encodeURIComponent(signUnsubscribeToken(recipientEmail))}`;
+  const shopUrl = `${baseUrl}/products?sort=newest`;
+
+  const isWarm = segment === "warm";
+
+  const headingHtml = isWarm
+    ? `Tvoje fotky jsou tvoje.<br/>A vždy budou.`
+    : `Víš, co se děje s&nbsp;tvými fotkami na Vintedu?`;
+
+  const bodyHtml = isWarm
+    ? `
+      <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.7; color: #444;">
+        Ahoj,
+      </p>
+      <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.7; color: #444;">
+        možná jsi zaznamenala, co se děje kolem nás. Vinted od <strong style="color: #1a1a1a;">30.&nbsp;dubna</strong> automaticky
+        získává právo používat fotky a&nbsp;inzeráty svých uživatelek k&nbsp;trénování AI&nbsp;modelů.
+        Bez možnosti odhlášení. Celosvětově. Trvale.
+      </p>
+      <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.7; color: #444;">
+        U&nbsp;nás je to jinak. <strong style="color: #1a1a1a;">A vždy bylo.</strong>
+      </p>
+      <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.7; color: #444;">
+        Tvoje fotky nikdy nepoužijeme k&nbsp;trénování AI. Žádné skryté klauzule,
+        žádné drobné písmo, žádné překvapení. Každý kousek u&nbsp;nás osobně vybíráme,
+        fotíme a&nbsp;popisujeme&nbsp;— a&nbsp;tvoje data zůstávají tvoje.
+      </p>
+    `
+    : `
+      <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.7; color: #444;">
+        Ahoj,
+      </p>
+      <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.7; color: #444;">
+        od <strong style="color: #1a1a1a;">30.&nbsp;dubna 2026</strong> Vinted automaticky získává
+        <em>„celosvětovou, bezúplatnou, trvalou licenci"</em> na fotky a&nbsp;inzeráty
+        svých uživatelek&nbsp;— k&nbsp;trénování AI modelů. Opt-out v&nbsp;nastavení pokrývá
+        jen marketing. <strong style="color: #1a1a1a;">Trénování AI nelze odmítnout.</strong>
+      </p>
+      <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.7; color: #444;">
+        U&nbsp;Janičky je to jinak. A&nbsp;vždy bylo.
+      </p>
+      <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.7; color: #444;">
+        Tvoje fotky nikdy nepoužijeme k&nbsp;trénování AI. Žádné skryté klauzule,
+        žádné drobné písmo. Každý kousek osobně kontrolujeme&nbsp;— a&nbsp;tvoje soukromí
+        je pro nás svaté.
+      </p>
+    `;
+
+  return `<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body style="margin: 0; padding: 0; background-color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333;">
+  <span style="display: none; max-height: 0; overflow: hidden; mso-hide: all;">${escapeHtml(VINTED_PREVIEW_TEXT)}</span>
+  <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
+
+    <div style="text-align: center; padding: 24px 0;">
+      <a href="${baseUrl}" style="display: inline-block;"><img src="${baseUrl}/logo/logo-email.png" alt="Janička Shop" style="height: 40px; width: auto; border: 0;" /></a>
+      <p style="margin: 4px 0 0; font-size: 13px; color: #999;">Second hand móda pro tebe</p>
+    </div>
+
+    <div style="background: #fff; border-radius: 12px; padding: 32px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+
+      <div style="text-align: center; margin-bottom: 24px;">
+        <div style="display: inline-block; background: #fdf4ff; border-radius: 50%; width: 56px; height: 56px; line-height: 56px; font-size: 28px;">🛡️</div>
+      </div>
+
+      <h2 style="margin: 0 0 20px; font-size: 24px; color: #1a1a1a; text-align: center; line-height: 1.3;">
+        ${headingHtml}
+      </h2>
+
+      ${bodyHtml}
+
+      <table style="width: 100%; border-collapse: collapse; margin: 24px 0; border-radius: 8px; overflow: hidden;">
+        <tr>
+          <td style="width: 50%; padding: 16px; background: #fef2f2; vertical-align: top;">
+            <p style="margin: 0 0 6px; font-size: 12px; font-weight: 700; color: #991b1b; text-transform: uppercase; letter-spacing: 0.5px;">Vinted</p>
+            <p style="margin: 0; font-size: 13px; color: #7f1d1d; line-height: 1.5;">
+              Tvoje fotky trénují AI.<br/>Bez možnosti odmítnutí.<br/>Trvale. Celosvětově.
+            </p>
+          </td>
+          <td style="width: 50%; padding: 16px; background: #f0fdf4; vertical-align: top;">
+            <p style="margin: 0 0 6px; font-size: 12px; font-weight: 700; color: #166534; text-transform: uppercase; letter-spacing: 0.5px;">Janička</p>
+            <p style="margin: 0; font-size: 13px; color: #14532d; line-height: 1.5;">
+              Tvoje fotky jsou tvoje.<br/>Žádné AI trénování.<br/>Nikdy. Tečka.
+            </p>
+          </td>
+        </tr>
+      </table>
+
+      <p style="margin: 0 0 24px; font-size: 14px; line-height: 1.6; color: #666; text-align: center;">
+        Podívej se na nové kousky&nbsp;— každý osobně vybraný, vyfocený a&nbsp;popsaný.
+      </p>
+
+      <div style="text-align: center;">
+        <a href="${shopUrl}" style="display: inline-block; background: #1a1a1a; color: #fff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 15px; font-weight: 600;">
+          Prohlédnout nové kousky
+        </a>
+      </div>
+
+    </div>
+
+    <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
+      <p style="margin: 0;">Janička Shop — Second hand móda</p>
+      <p style="margin: 8px 0 0;">
+        <a href="${unsubscribeUrl}" style="color: #999; text-decoration: underline;">Odhlásit se z odběru</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+/**
+ * Render the Vinted T&C campaign email (subject + HTML) without sending.
+ * Used by admin dry-run / preview UI before committing a full send.
+ */
+export function renderVintedCampaignPreview(
+  segment: VintedCampaignSegment,
+  recipientEmail: string,
+): { subject: string; html: string; previewText: string } {
+  return {
+    subject: VINTED_SUBJECTS[segment],
+    html: buildVintedCampaignHtml(segment, recipientEmail),
+    previewText: VINTED_PREVIEW_TEXT,
+  };
+}
+
+/**
+ * Send the Vinted T&C campaign email to one recipient.
+ * Returns true on success, false on failure (non-throwing for batch use).
+ */
+export async function sendVintedCampaignEmail(
+  segment: VintedCampaignSegment,
+  recipientEmail: string,
+): Promise<boolean> {
+  const resend = getResendClient();
+  if (!resend) {
+    console.warn("[Email] RESEND_API_KEY not set — skipping Vinted campaign");
+    return false;
+  }
+
+  try {
+    await resend.emails.send({
+      from: NEWSLETTER_FROM_EMAIL,
+      to: recipientEmail,
+      subject: VINTED_SUBJECTS[segment],
+      html: buildVintedCampaignHtml(segment, recipientEmail),
+    });
+    return true;
+  } catch (error) {
+    console.error(`[Email] Failed to send Vinted campaign to ${recipientEmail}:`, error);
+    return false;
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Den matek 2026 — 3-email Resend campaign (Task #103)
