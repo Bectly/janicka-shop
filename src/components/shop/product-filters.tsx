@@ -475,9 +475,9 @@ export function ProductFilters({
 
   return (
     <>
-      {/* ===== DESKTOP: accordion filters (hidden on mobile) ===== */}
-      <div className="hidden lg:block space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      {/* ===== DESKTOP: sidebar accordion (hidden on mobile) ===== */}
+      <aside className="hidden lg:block lg:sticky lg:top-24 lg:self-start space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <SlidersHorizontal className="size-4 text-muted-foreground" />
             <span className="text-sm font-medium text-foreground">Filtry</span>
@@ -487,13 +487,21 @@ export function ProductFilters({
               </span>
             )}
           </div>
-          {sortDropdown}
+          {activeFilterCount > 0 && (
+            <Button
+              variant="link"
+              onClick={clearAll}
+              className="h-auto p-0 text-xs text-destructive"
+            >
+              Smazat vše
+            </Button>
+          )}
         </div>
-        {categoryPills}
+        {sortDropdown}
         {activeFilterChips}
         <Accordion
           multiple
-          defaultValue={["sizes", "conditions"]}
+          defaultValue={["sizes", "colors"]}
           className="border-t border-border/50"
         >
           {visibleSizes.length > 0 && (
@@ -709,7 +717,7 @@ export function ProductFilters({
             </AccordionContent>
           </AccordionItem>
         </Accordion>
-      </div>
+      </aside>
 
       {/* ===== MOBILE: compact bar + drawer (hidden on desktop) ===== */}
       <div className="lg:hidden space-y-4">

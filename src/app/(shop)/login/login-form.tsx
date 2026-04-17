@@ -107,7 +107,7 @@ export function LoginForm() {
           className={cn(
             "rounded-md py-2 font-medium transition-colors",
             tab === "login"
-              ? "bg-background text-foreground shadow-sm"
+              ? "bg-background text-primary shadow-sm"
               : "text-muted-foreground hover:text-foreground"
           )}
         >
@@ -124,7 +124,7 @@ export function LoginForm() {
           className={cn(
             "rounded-md py-2 font-medium transition-colors",
             tab === "register"
-              ? "bg-background text-foreground shadow-sm"
+              ? "bg-background text-primary shadow-sm"
               : "text-muted-foreground hover:text-foreground"
           )}
         >

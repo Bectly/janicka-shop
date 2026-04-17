@@ -411,8 +411,8 @@ export function ProductsClient({
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="mt-4">
+      {/* Filters + Grid — sidebar layout on desktop, stacked on mobile */}
+      <div className="mt-4 lg:grid lg:grid-cols-[16rem_1fr] lg:gap-8 lg:items-start">
         <ProductFilters
           brands={scopedBrands}
           sizes={scopedSizes}
@@ -440,11 +440,10 @@ export function ProductsClient({
           onChange={(patch) => update(patch)}
           onClearAll={clearAll}
         />
-      </div>
 
-      {/* Grid */}
-      <div className="mt-8">
-        {pageProducts.length === 0 ? (
+        {/* Grid */}
+        <div className="mt-8 lg:mt-0 lg:min-w-0">
+          {pageProducts.length === 0 ? (
           <div className="py-16 text-center">
             <div className="mx-auto mb-5 inline-flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-brand/10 via-champagne-light/30 to-blush-light/40">
               <Search className="size-7 text-brand/50" aria-hidden="true" />
@@ -531,15 +530,16 @@ export function ProductsClient({
               })}
             </div>
           </>
-        )}
-      </div>
+          )}
 
-      <Pagination
-        totalItems={state.totalFiltered}
-        perPage={PRODUCTS_PER_PAGE}
-        currentPage={safePage}
-        onPageChange={(p) => update({ page: p })}
-      />
+          <Pagination
+            totalItems={state.totalFiltered}
+            perPage={PRODUCTS_PER_PAGE}
+            currentPage={safePage}
+            onPageChange={(p) => update({ page: p })}
+          />
+        </div>
+      </div>
     </>
   );
 }

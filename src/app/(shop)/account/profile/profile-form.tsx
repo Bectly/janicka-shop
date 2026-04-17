@@ -24,86 +24,106 @@ export function ProfileForm({ initial }: Props) {
   const [state, action, pending] = useActionState(updateProfile, INITIAL_STATE);
 
   return (
-    <form action={action} className="space-y-5 rounded-xl border bg-card p-6 shadow-sm">
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          defaultValue={initial.email}
-          disabled
-          autoComplete="email"
-        />
-        <p className="text-xs text-muted-foreground">
-          Email slouží jako přihlašovací jméno a nelze jej změnit.
-        </p>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
+    <form action={action} className="space-y-6 rounded-xl border bg-card p-6 shadow-sm">
+      {/* Přihlašovací údaje */}
+      <fieldset className="space-y-4">
+        <legend className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Přihlašovací údaje
+        </legend>
         <div className="space-y-2">
-          <Label htmlFor="firstName">Jméno</Label>
+          <Label htmlFor="email">Email</Label>
           <Input
-            id="firstName"
-            name="firstName"
-            defaultValue={initial.firstName}
-            required
-            autoComplete="given-name"
+            id="email"
+            type="email"
+            defaultValue={initial.email}
+            disabled
+            autoComplete="email"
           />
+          <p className="text-xs text-muted-foreground">
+            Email slouží jako přihlašovací jméno a nelze jej změnit.
+          </p>
+        </div>
+      </fieldset>
+
+      <hr className="border-border" />
+
+      {/* Kontaktní údaje */}
+      <fieldset className="space-y-4">
+        <legend className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Kontaktní údaje
+        </legend>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="firstName">Jméno</Label>
+            <Input
+              id="firstName"
+              name="firstName"
+              defaultValue={initial.firstName}
+              required
+              autoComplete="given-name"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="lastName">Příjmení</Label>
+            <Input
+              id="lastName"
+              name="lastName"
+              defaultValue={initial.lastName}
+              required
+              autoComplete="family-name"
+            />
+          </div>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="lastName">Příjmení</Label>
+          <Label htmlFor="phone">Telefon</Label>
           <Input
-            id="lastName"
-            name="lastName"
-            defaultValue={initial.lastName}
-            required
-            autoComplete="family-name"
+            id="phone"
+            name="phone"
+            type="tel"
+            defaultValue={initial.phone}
+            autoComplete="tel"
+            placeholder="+420 ..."
           />
         </div>
-      </div>
+      </fieldset>
 
-      <div className="space-y-2">
-        <Label htmlFor="phone">Telefon</Label>
-        <Input
-          id="phone"
-          name="phone"
-          type="tel"
-          defaultValue={initial.phone}
-          autoComplete="tel"
-          placeholder="+420 ..."
-        />
-      </div>
+      <hr className="border-border" />
 
-      <div className="space-y-2">
-        <Label htmlFor="street">Ulice a číslo</Label>
-        <Input
-          id="street"
-          name="street"
-          defaultValue={initial.street}
-          autoComplete="street-address"
-        />
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-[1fr_140px]">
+      {/* Doručovací adresa */}
+      <fieldset className="space-y-4">
+        <legend className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Doručovací adresa
+        </legend>
         <div className="space-y-2">
-          <Label htmlFor="city">Město</Label>
+          <Label htmlFor="street">Ulice a číslo</Label>
           <Input
-            id="city"
-            name="city"
-            defaultValue={initial.city}
-            autoComplete="address-level2"
+            id="street"
+            name="street"
+            defaultValue={initial.street}
+            autoComplete="street-address"
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="zip">PSČ</Label>
-          <Input
-            id="zip"
-            name="zip"
-            defaultValue={initial.zip}
-            autoComplete="postal-code"
-          />
+        <div className="grid gap-4 sm:grid-cols-[1fr_140px]">
+          <div className="space-y-2">
+            <Label htmlFor="city">Město</Label>
+            <Input
+              id="city"
+              name="city"
+              defaultValue={initial.city}
+              autoComplete="address-level2"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="zip">PSČ</Label>
+            <Input
+              id="zip"
+              name="zip"
+              defaultValue={initial.zip}
+              autoComplete="postal-code"
+            />
+          </div>
         </div>
-      </div>
+      </fieldset>
 
       {state.error && (
         <p role="alert" className="text-sm text-destructive">

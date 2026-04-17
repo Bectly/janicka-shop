@@ -9,11 +9,11 @@ const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   },
   processing: {
     label: "Připravuje se",
-    className: "border-blue-300 bg-blue-50 text-blue-800",
+    className: "border-primary/30 bg-blush text-primary",
   },
   shipped: {
     label: "Odesláno",
-    className: "border-blue-300 bg-blue-50 text-blue-800",
+    className: "border-primary/30 bg-blush text-primary",
   },
   delivered: {
     label: "Doručeno",
