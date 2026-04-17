@@ -13,10 +13,11 @@ interface RateLimitEntry {
 const store = new Map<string, RateLimitEntry>();
 
 // Periodic cleanup to prevent memory leaks.
-// Uses the largest configured window (login = 15 min) so cleanup never
-// prunes timestamps that are still valid for longer-window endpoints.
+// MAX_WINDOW_MS must be >= the longest window used by any rate limiter in this
+// file — currently the 60-min campaign full-send guard. If cleanup uses a
+// shorter value, it prunes guard timestamps early and silently re-arms the guard.
 const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
-const MAX_WINDOW_MS = 15 * 60 * 1000;
+const MAX_WINDOW_MS = 60 * 60 * 1000; // 60 min — matches campaign full-send guard
 let lastCleanup = Date.now();
 
 function cleanup() {
