@@ -50,10 +50,10 @@ const comparisonItems = [
 
 export default function SoukromiPage() {
   return (
-    <div className="bg-white">
+    <div className="bg-background">
       {/* Hero */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-white" />
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-background" />
         <div className="relative mx-auto max-w-4xl px-4 pb-16 pt-20 text-center sm:px-6 sm:pb-20 sm:pt-28 lg:px-8">
           {/* Editorial pill-badge */}
           <div className="mb-6 flex justify-center">
@@ -82,7 +82,7 @@ export default function SoukromiPage() {
           {comparisonItems.map((item) => (
             <div
               key={item.topic}
-              className="rounded-2xl border border-border/50 bg-white p-6 shadow-sm sm:p-8"
+              className="rounded-2xl border border-border/50 bg-card p-6 shadow-sm sm:p-8"
             >
               <div className="mb-5 flex items-center gap-3">
                 <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
@@ -93,8 +93,8 @@ export default function SoukromiPage() {
                 </h3>
               </div>
 
-              {/* Vinted */}
-              <div className="mb-5">
+              {/* Jinde */}
+              <div className="mb-4 rounded-xl bg-red-50/60 p-4 dark:bg-red-950/20">
                 <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-red-500">
                   Jinde
                 </p>
@@ -104,7 +104,7 @@ export default function SoukromiPage() {
               </div>
 
               {/* Janička */}
-              <div className="rounded-xl bg-sage-light p-4">
+              <div className="rounded-xl bg-sage-light p-4 dark:bg-sage-dark/20">
                 <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-sage-dark">
                   U nás
                 </p>
