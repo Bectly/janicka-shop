@@ -9,6 +9,7 @@ import { CategoryHero, CatalogHero } from "@/components/shop/category-hero";
 import { GridViewSwitcher } from "@/components/shop/grid-view-switcher";
 import { StickyCategoryNav } from "@/components/shop/sticky-category-nav";
 import { buildBreadcrumbSchema, jsonLdString } from "@/lib/structured-data";
+import { ALL_SIZES } from "@/lib/sizes";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Metadata } from "next";
 
@@ -303,6 +304,11 @@ export default async function ProductsPage({
     a.localeCompare(b, "cs"),
   );
   const sizes = Array.from(sizeSet).sort((a, b) => {
+    const ia = ALL_SIZES.indexOf(a as (typeof ALL_SIZES)[number]);
+    const ib = ALL_SIZES.indexOf(b as (typeof ALL_SIZES)[number]);
+    if (ia !== -1 && ib !== -1) return ia - ib;
+    if (ia !== -1) return -1;
+    if (ib !== -1) return 1;
     const numA = parseInt(a);
     const numB = parseInt(b);
     if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
