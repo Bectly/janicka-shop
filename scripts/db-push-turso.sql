@@ -40,7 +40,13 @@
 -- If adding fresh: ALTER TABLE "Order" ADD COLUMN "crossSellEmailSentAt" DATETIME;
 --                  ALTER TABLE "NewsletterSubscriber" ADD COLUMN "preferenceFilter" TEXT;
 --                  ALTER TABLE "NewsletterSubscriber" ADD COLUMN "pausedUntil" DATETIME;
--- Cycle #2534: expectedDeliveryDate on Order (Czech law delivery deadline tracking)
-ALTER TABLE "Order" ADD COLUMN "expectedDeliveryDate" DATETIME;
+-- ✓ Cycle #2534: expectedDeliveryDate on Order (Czech law delivery deadline tracking) — applied
+-- ALTER TABLE "Order" ADD COLUMN "expectedDeliveryDate" DATETIME;
+-- ✓ Cycle #3532: defects + Vinted original data on Product — applied 2026-04-17 via HTTP API
+-- ALTER TABLE "Product" ADD COLUMN "defectsNote" TEXT;
+-- ALTER TABLE "Product" ADD COLUMN "defectImages" TEXT NOT NULL DEFAULT '[]';
+-- ALTER TABLE "Product" ADD COLUMN "vintedId" TEXT;
+-- ALTER TABLE "Product" ADD COLUMN "originalDescription" TEXT;
+-- ALTER TABLE "Product" ADD COLUMN "originalVintedData" TEXT;
 
 SELECT 1; -- no-op so the file is never empty

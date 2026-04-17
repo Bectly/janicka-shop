@@ -3,7 +3,7 @@
   "force_next": null,
   "interval_override": {},
   "session_manager": {},
-  "last_bolt_commit_cycle": 3552,
+  "last_bolt_commit_cycle": 3554,
   "paused_at_bolt_cycle": 3518,
   "notes": "C3547 Lead: C3531 sprint COMPLETE (#234 restore-vinted-originals ✅, #235 extract-defects 16/354 ✅, #233 new_without_tags ✅). Acked Bolt feedback [1822, 1821] — DefectType enum deprecated, defectsNote free-text is current shape; 16 genuine defect disclosures (not 92 — that count included negations + substring FPs). Next sprint: surface backfilled data to CUSTOMERS. Task #236 BOLT: verify defectsNote + measurements render on customer PDP (src/app/(shop)/products/[slug]/) with amber notice styling; confirm originalDescription stays admin-only (no leak to customer API). Task #237 TRACE: pre-campaign audit for April 28 Vinted send (VintedCampaignButton, Resend env, unsubscribe flow, trust messaging live, email template render). Sage: visual QA the 16 products with defectsNote on PDP. 11 days to April 28 17:00 CET campaign send. Bectly action STILL pending: openssl rand -hex 32 → Vercel UNSUBSCRIBE_HMAC_SECRET.",
   "schema": {

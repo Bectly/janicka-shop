@@ -553,14 +553,20 @@ export default async function ProductDetailPage({ params }: Props) {
           )}
 
           {/* Measurements table */}
-          {hasMeasurements(measurements) && (
+          {hasMeasurements(measurements) && (() => {
+            const measurementCount = [measurements.chest, measurements.waist, measurements.hips, measurements.length].filter(Boolean).length;
+            const gridCols =
+              measurementCount <= 2 ? "grid-cols-2" :
+              measurementCount === 3 ? "grid-cols-3" :
+              "grid-cols-2 sm:grid-cols-4";
+            return (
             <div className="mt-4 overflow-hidden rounded-xl border border-border">
               <div className="flex items-center gap-2 border-b border-border bg-muted/40 px-4 py-2.5">
                 <Ruler className="size-3.5 shrink-0 text-foreground/60" />
                 <span className="text-xs font-semibold tracking-wide text-foreground">Rozměry kusu</span>
                 <span className="ml-auto text-[10px] text-muted-foreground">v cm · ploché položení</span>
               </div>
-              <div className="grid grid-cols-2 gap-px bg-border sm:grid-cols-4">
+              <div className={`grid gap-px bg-border ${gridCols}`}>
                 {measurements.chest && (
                   <div className="flex flex-col gap-1 bg-background px-4 py-3">
                     <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Prsa</span>
@@ -595,7 +601,8 @@ export default async function ProductDetailPage({ params }: Props) {
                 )}
               </div>
             </div>
-          )}
+            );
+          })()}
 
           {/* Social sharing + wishlist */}
           <div className="mt-4 flex items-center gap-3">

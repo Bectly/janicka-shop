@@ -39,7 +39,7 @@ export function ProductDefects({ note, images, condition }: ProductDefectsProps)
   return (
     <section
       aria-label="Vady a nedokonalosti produktu"
-      className="my-10 rounded-2xl border border-border bg-background p-6"
+      className="my-10 rounded-2xl border border-amber-200/70 bg-amber-50/30 p-6 dark:border-amber-900/40 dark:bg-amber-950/20"
     >
       <div className="mb-4">
         <div className="flex items-center gap-2">
@@ -61,7 +61,7 @@ export function ProductDefects({ note, images, condition }: ProductDefectsProps)
       )}
 
       {images.length > 0 && (
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {images.map((url, i) => (
             <a
               key={url}
