@@ -569,11 +569,11 @@ export default async function ProductDetailPage({ params }: Props) {
               </>
             )}
           </div>
-          <h1 className="mt-1 max-w-[28ch] text-balance font-heading text-xl font-semibold leading-tight tracking-tight text-foreground sm:text-2xl lg:text-[1.75rem]">
+          <h1 className="mt-1 max-w-[28ch] text-balance font-heading text-xl font-bold leading-tight tracking-tight text-foreground sm:text-2xl lg:text-[1.75rem]">
             {titleBase}
           </h1>
           {titleVariant && (
-            <p className="mt-1 text-sm text-muted-foreground">{titleVariant}</p>
+            <p className="mt-2 text-sm text-muted-foreground">{titleVariant}</p>
           )}
 
           {/* Condition + Price */}

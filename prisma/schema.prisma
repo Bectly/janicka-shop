@@ -56,6 +56,7 @@ model Product {
   updatedAt     DateTime       @updatedAt
   orderItems    OrderItem[]
   priceHistory  PriceHistory[]
+  wishlistedBy  CustomerWishlist[]
 
   @@index([categoryId])
   @@index([featured])
@@ -71,23 +72,61 @@ model Product {
 }
 
 model Customer {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  password      String?
-  firstName     String
-  lastName      String
-  phone         String?
-  street        String?
-  city          String?
-  zip           String?
-  country       String    @default("CZ")
-  winBackSentAt DateTime? // Last win-back email sent (prevents spam)
-  internalNote  String? // Admin-only private note (not visible to customer)
-  tags          String    @default("[]") // JSON string array of admin-managed tags (e.g. "VIP", "reklamace")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  orders        Order[]
-  returns       Return[]
+  id                  String             @id @default(cuid())
+  email               String             @unique
+  password            String?
+  firstName           String
+  lastName            String
+  phone               String?
+  street              String?
+  city                String?
+  zip                 String?
+  country             String             @default("CZ")
+  winBackSentAt       DateTime?
+  internalNote        String?
+  tags                String             @default("[]")
+  notifyMarketing     Boolean            @default(true)
+  deletedAt           DateTime?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  orders              Order[]
+  returns             Return[]
+  addresses           CustomerAddress[]
+  wishlist            CustomerWishlist[]
+
+  @@index([deletedAt])
+}
+
+model CustomerAddress {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  label      String   @default("Adresa")
+  firstName  String
+  lastName   String
+  street     String
+  city       String
+  zip        String
+  country    String   @default("CZ")
+  phone      String?
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([customerId])
+}
+
+model CustomerWishlist {
+  id         String   @id @default(cuid())
+  customerId String
+  productId  String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([customerId, productId])
+  @@index([customerId])
+  @@index([productId])
 }
 
 model Order {
