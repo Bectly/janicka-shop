@@ -5,7 +5,7 @@ import { parseJsonStringArray } from "@/lib/images";
 import { connection } from "next/server";
 
 import { Mail } from "lucide-react";
-import { Pagination } from "@/components/shop/pagination";
+import { Pagination, PaginationSkeleton } from "@/components/shop/pagination";
 import type { Metadata } from "next";
 import { SubscriberToggle } from "./subscriber-toggle";
 import { ExportCsvButton } from "./export-csv-button";
@@ -226,7 +226,7 @@ export default async function AdminSubscribersPage({
         </div>
       )}
 
-      <Suspense fallback={null}>
+      <Suspense fallback={<PaginationSkeleton />}>
         <Pagination
           totalItems={totalCount}
           perPage={ADMIN_SUBSCRIBERS_PER_PAGE}

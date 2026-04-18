@@ -4,7 +4,7 @@ import { getDb } from "@/lib/db";
 import { connection } from "next/server";
 import { formatPrice, formatDate } from "@/lib/format";
 import { Gift, Ticket, Wallet, TrendingUp, Users } from "lucide-react";
-import { Pagination } from "@/components/shop/pagination";
+import { Pagination, PaginationSkeleton } from "@/components/shop/pagination";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -232,11 +232,12 @@ export default async function AdminReferralsPage({
                 <tbody>
                   {referralCodes.length === 0 ? (
                     <tr>
-                      <td
-                        colSpan={9}
-                        className="px-4 py-12 text-center text-muted-foreground"
-                      >
-                        Žádné referral kódy
+                      <td colSpan={9} className="px-4 py-16 text-center">
+                        <div className="flex flex-col items-center gap-2">
+                          <Gift className="h-8 w-8 text-muted-foreground/40" />
+                          <p className="font-medium text-muted-foreground">Žádné referral kódy</p>
+                          <p className="text-sm text-muted-foreground/60">Referral kódy se generují automaticky po prvním nákupu zákazníka.</p>
+                        </div>
                       </td>
                     </tr>
                   ) : (
@@ -300,7 +301,7 @@ export default async function AdminReferralsPage({
             </div>
           </div>
 
-          <Suspense fallback={null}>
+          <Suspense fallback={<PaginationSkeleton />}>
             <Pagination
               totalItems={referralCount}
               perPage={ADMIN_REFERRALS_PER_PAGE}
@@ -345,11 +346,12 @@ export default async function AdminReferralsPage({
                 <tbody>
                   {storeCredits.length === 0 ? (
                     <tr>
-                      <td
-                        colSpan={8}
-                        className="px-4 py-12 text-center text-muted-foreground"
-                      >
-                        Žádné kredity
+                      <td colSpan={8} className="px-4 py-16 text-center">
+                        <div className="flex flex-col items-center gap-2">
+                          <Ticket className="h-8 w-8 text-muted-foreground/40" />
+                          <p className="font-medium text-muted-foreground">Žádné store kredity</p>
+                          <p className="text-sm text-muted-foreground/60">Store kredity jsou vydávány zákazníkům jako kompenzace nebo odměna.</p>
+                        </div>
                       </td>
                     </tr>
                   ) : (

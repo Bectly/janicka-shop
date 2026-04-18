@@ -3,7 +3,7 @@ import { formatPrice, formatDate } from "@/lib/format";
 import { connection } from "next/server";
 import { Eye, Mail, Check, Clock } from "lucide-react";
 import { Suspense } from "react";
-import { Pagination } from "@/components/shop/pagination";
+import { Pagination, PaginationSkeleton } from "@/components/shop/pagination";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -171,7 +171,7 @@ export default async function AdminBrowseAbandonmentPage({
         </div>
       )}
 
-      <Suspense fallback={null}>
+      <Suspense fallback={<PaginationSkeleton />}>
         <Pagination
           totalItems={totalCount}
           perPage={ADMIN_BROWSE_PER_PAGE}

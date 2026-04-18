@@ -8,6 +8,7 @@ import {
   RETURN_REASON_LABELS,
 } from "@/lib/constants";
 import type { Metadata } from "next";
+import { PackageX } from "lucide-react";
 
 
 export const metadata: Metadata = {
@@ -136,11 +137,12 @@ export default async function AdminReturnsPage({
             <tbody>
               {returns.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={7}
-                    className="px-4 py-12 text-center text-muted-foreground"
-                  >
-                    Žádné vratky
+                  <td colSpan={7} className="px-4 py-16 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <PackageX className="h-8 w-8 text-muted-foreground/40" />
+                      <p className="font-medium text-muted-foreground">Žádné vratky</p>
+                      <p className="text-sm text-muted-foreground/60">Zatím nebyly evidovány žádné požadavky na vrácení zboží.</p>
+                    </div>
                   </td>
                 </tr>
               ) : (
