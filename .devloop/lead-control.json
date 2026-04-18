@@ -1,7 +1,7 @@
 {
   "last_bolt_commit_cycle": 4383,
-  "cycle": 4382,
-  "directive": "C4382 Lead: Bolt backlog was empty (Bolt blocker C4379 ack'd). Added 3 fresh Bolt-lane tasks: #372 cart shipping cost + free shipping progress bar (CLAUDE.md flags as MUST FIX — #1 abandonment driver 48%, +15-20% AOV), #373 triage Sage 610 failures/24h (diagnostic — tail worker logs, identify retry churn), #374 Czech legacy URL redirects audit (unblocked slice of #65 — env-var-independent). Bolt force_next flipped to #372 (highest ROI, ship-blocker-class). #341/#343 remain in_progress but LB execution gated on #334 smoke-test + CF paid add-on — docs reconciled in f94de7b. Trace/Guard/Sage lanes unchanged. External blockers unchanged: #329/#1/#14(Apr30)/#216/#330.",
+  "cycle": 4383,
+  "directive": "C4383 Lead: ack'd Bolt blockers #4379 (backlog empty — resolved by #372/#373/#374) + #4380 (#65 env-var-gated — #374 is unblocked slice). C4383 shipped Sage duration-150 standardization (17 elements, 13 files) + Bolt p6.3-traffic-shift.md reconcile to jvsatnik.cz/hetzner-primary/ip_cookie (cb4a7b1+610a5bc). Directive stable: Bolt force_next #372 (cart shipping transparency + free shipping progress bar — #1 abandonment driver 48%, +15-20% AOV per CLAUDE.md), then #373 Sage failure triage (610 fails/24h), then #374 Czech redirect audit. #341/#343 remain in_progress, externally gated on #334 smoke-test + CF paid add-on. Trace force_next #358 (RC.7 /admin/jarvis iframe E2E), Guard force_next #366 (SEC-1 iframe audit), Sage continues PDP/cart/checkout micro-polish. External blockers unchanged: #329 DNS, #1 R2, #14 GMC (Apr 30), #216 GA4, #330 nginx.",
   "lanes": {
     "BOLT": {
       "status": "active",
@@ -60,6 +60,6 @@
     "Bolt owns all Hetzner migration code paths (nginx/pm2/env/redis/bullmq/systemd); other agents do not touch them.",
     "Tasks #352, #353, #364, #365, #369, #370, #344, #371 are DONE — do not re-raise as blockers."
   ],
-  "last_updated": "2026-04-18T11:45",
+  "last_updated": "2026-04-18T12:00",
   "pause": {}
 }
