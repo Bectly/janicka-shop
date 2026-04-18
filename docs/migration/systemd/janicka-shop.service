@@ -1,0 +1,37 @@
+[Unit]
+Description=Janicka Shop (Next.js standalone via PM2)
+Documentation=https://github.com/Bectly/janicka-shop
+After=network-online.target redis-server.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/janicka-shop
+EnvironmentFile=/opt/janicka-shop/.env.production
+Environment=NODE_ENV=production
+Environment=PM2_HOME=/var/lib/pm2
+ExecStart=/usr/bin/pm2-runtime start ecosystem.config.js --env production
+Restart=always
+RestartSec=5
+StartLimitBurst=10
+StartLimitIntervalSec=60
+TimeoutStartSec=30
+TimeoutStopSec=15
+KillMode=mixed
+KillSignal=SIGINT
+
+# Logging
+StandardOutput=append:/var/log/pm2/janicka-shop-systemd.log
+StandardError=append:/var/log/pm2/janicka-shop-systemd.log
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/opt/janicka-shop /var/log/pm2 /var/lib/pm2
+
+[Install]
+WantedBy=multi-user.target

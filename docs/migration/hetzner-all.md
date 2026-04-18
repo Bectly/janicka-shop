@@ -49,12 +49,12 @@
 - [ ] Cloudflare DNS + proxy zapnout
 
 ### Fáze 3: Next.js daemon (Day 2)
-- [ ] Build Next.js standalone mode
-- [ ] PM2 setup (ecosystem.config.js, auto-restart, logs)
-- [ ] systemd unit co drží PM2 + restartuje při pádu
-- [ ] Health check endpoint /api/health
-- [ ] Environment variables z JARVIS DB
-- [ ] Smoke test na preview doméně před switch
+- [x] Build Next.js standalone mode (`output: 'standalone'` v `next.config.ts`)
+- [x] PM2 setup (`ecosystem.config.js` v project root, auto-restart, logs `/var/log/pm2/janicka-shop-*.log`)
+- [x] systemd unit co drží PM2 + restartuje při pádu (`docs/migration/systemd/janicka-shop.service`)
+- [x] Health check endpoint `/api/health` (returns status+version+node+uptime, no-store)
+- [x] Environment variables z JARVIS DB (`scripts/sync-env-to-hetzner.sh` — `--dry-run` / `--confirm`)
+- [ ] Smoke test na preview doméně před switch (task #334, Trace)
 
 ### Fáze 4: Background workers (Day 2-3)
 - [ ] BullMQ queues (email, invoice, packeta-label)
@@ -121,3 +121,15 @@
 ## Status: 🟡 Plánování
 
 Přidej update do tohoto souboru při každé dokončené fázi.
+
+## Progress Log
+
+- **Cycle #4344** — Fáze 1 hotová. Redis cache vrstva (`src/lib/redis.ts` + `products-cache.ts`): ioredis singleton s graceful fallback, cache-aside helpers (5m/1h/10m TTL), invalidace napojená na všechny admin mutace i checkout. Site běží bez Redis, degraduje tiše.
+- **Cycle #4345** — Fáze 2 částečně (P2.1). Nginx vhost pro `janicka-shop.cz` nasazen na kryxon (46.224.219.3), proxy na 127.0.0.1:3000, WebSocket upgrade, gzip, long-cache pro `/_next/static/`. Config verzovaný v `docs/migration/nginx/janicka-shop.conf`. Certbot (P2.2 #329) pozastaven — doména není zatím koupena.
+- **Cycle #4346** — Fáze 3 P3.1/P3.2/P3.3 hotové:
+  - `next.config.ts` → `output: 'standalone'`; `npm run build` passing, `.next/standalone/server.js` ~50MB deploy artifact.
+  - `ecosystem.config.js` v project root, `pm2-runtime start` s `env_production`, log paths `/var/log/pm2/janicka-shop-{out,error}.log`, max_memory_restart 1G.
+  - systemd unit `docs/migration/systemd/janicka-shop.service` (hardened: `ProtectSystem=strict`, `NoNewPrivileges`, `ReadWritePaths` whitelist; `EnvironmentFile=/opt/janicka-shop/.env.production`; `After=redis-server.service`).
+  - `/api/health` route (`src/app/api/health/route.ts`) — returns `{status, version, commit, node, env, uptimeSeconds, now}`, `Cache-Control: no-store`, `force-dynamic`.
+  - `scripts/sync-env-to-hetzner.sh` — idempotent bash script, vyžaduje `--dry-run` nebo `--confirm`. Zdroj: JARVIS DB `api_keys` (turso/resend/packeta/r2/devchat/redis-hetzner) + `.env.local` fallback pro secrets bez DB záznamu (NEXTAUTH_SECRET, admin creds, Comgate, analytics, feed/cron/unsubscribe secrets). Atomic write na `kryxon:/opt/janicka-shop/.env.production` (temp file + `chmod 640` + `chown www-data:www-data` + `mv`). `--dry-run` redactuje hodnoty (první/poslední 4 znaky + délka) pro audit bez leaknutí secrets. WARN na prázdné required keys (R2/Comgate — PENDING_DASHBOARD).
+- **Next up** — Fáze 3 P3.4 (#334 Trace smoke test, blocked by env+deploy), Fáze 4 P4.1 (#335 BullMQ queues).
