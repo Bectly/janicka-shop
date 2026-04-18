@@ -10,7 +10,8 @@ import { sendOrderConfirmationEmail, sendAdminNewOrderEmail } from "@/lib/email"
 import { sendSimilarItemNotifications } from "@/lib/email/similar-item";
 import { sendWishlistSoldNotifications } from "@/lib/email/wishlist-sold";
 import { logOrderToHeureka } from "@/lib/heureka";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { invalidateProductCaches } from "@/lib/redis";
 import {
   PAYMENT_METHODS,
   SHIPPING_METHODS,
@@ -493,6 +494,11 @@ export async function createOrder(
   }
   revalidatePath("/products");
   revalidatePath("/");
+  revalidateTag("products", "max");
+  // Drop Redis copies so the next request doesn't serve a sold item as available.
+  await Promise.all(
+    order.productSlugs.map((slug) => invalidateProductCaches({ slug })),
+  );
 
   // Generate a referral code for this order (fire-and-forget)
   createReferralCode(order.orderNumber, order.customerEmail).catch((e) =>

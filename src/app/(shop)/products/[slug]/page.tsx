@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { cacheLife, cacheTag } from "next/cache";
+import { getProductBySlug } from "@/lib/products-cache";
 import { formatPrice } from "@/lib/format";
 import { CONDITION_LABELS, CONDITION_COLORS } from "@/lib/constants";
 import { ProductCard } from "@/components/shop/product-card";
@@ -67,11 +68,7 @@ async function getProduct(slug: string) {
   "use cache";
   cacheLife("hours");
   cacheTag(`product-${slug}`, "products");
-  const db = await getDb();
-  const product = await db.product.findUnique({
-    where: { slug, active: true },
-    include: { category: true },
-  });
+  const product = await getProductBySlug(slug);
   if (!product) return null;
   const lowestPricesMap = await getLowestPrices30d([product.id]);
   return { ...product, lowestPrice30d: lowestPricesMap.get(product.id) ?? null };
@@ -483,7 +480,8 @@ export default async function ProductDetailPage({ params }: Props) {
 
   // Reservation status is computed client-side (in AddToCartButton) to avoid
   // cookies() call which would force this page to be fully dynamic (no ISR cache).
-  const reservedUntilIso = product.reservedUntil?.toISOString() ?? null;
+  // products-cache pre-serializes Dates to ISO strings for JSON round-trip via Redis.
+  const reservedUntilIso = product.reservedUntil ?? null;
 
   let sizes: string[] = [];
   let colors: string[] = [];

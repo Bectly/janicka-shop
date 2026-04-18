@@ -3,6 +3,7 @@
 import { getDb } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath, revalidateTag } from "next/cache";
+import { invalidateProductCaches } from "@/lib/redis";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { rateLimitAdmin } from "@/lib/rate-limit";
@@ -211,6 +212,7 @@ export async function createProduct(formData: FormData) {
   });
 
   revalidateTag("products", "max");
+  await invalidateProductCaches({ slug: product.slug, id: product.id });
   revalidatePath("/admin/products");
   revalidatePath("/products");
   revalidatePath("/");
@@ -301,6 +303,7 @@ export async function updateProduct(id: string, formData: FormData) {
   });
 
   revalidateTag("products", "max");
+  await invalidateProductCaches({ slug, id });
   revalidatePath("/admin/products");
   revalidatePath(`/products/${slug}`);
   revalidatePath("/products");
@@ -409,6 +412,7 @@ export async function quickCreateProduct(formData: FormData) {
   });
 
   revalidateTag("products", "max");
+  await invalidateProductCaches({ slug: product.slug, id: product.id });
   revalidatePath("/admin/products");
   revalidatePath("/products");
   revalidatePath("/");
@@ -465,6 +469,7 @@ export async function duplicateProduct(id: string) {
   });
 
   revalidateTag("products", "max");
+  await invalidateProductCaches({ slug: copy.slug, id: copy.id });
   revalidatePath("/admin/products");
   redirect(`/admin/products/${copy.id}/edit`);
 }
@@ -551,6 +556,7 @@ export async function bulkUpdateProducts(ids: string[], action: string) {
   }
 
   revalidateTag("products", "max");
+  await invalidateProductCaches();
   revalidatePath("/admin/products");
   revalidatePath("/products");
   revalidatePath("/");
@@ -608,6 +614,7 @@ export async function bulkUpdatePrice(
   }
 
   revalidateTag("products", "max");
+  await Promise.all(products.map((p) => invalidateProductCaches({ slug: p.slug, id: p.id })));
   revalidatePath("/admin/products");
   revalidatePath("/products");
   revalidatePath("/");
@@ -664,6 +671,7 @@ export async function updateProductQuick(
 
   revalidateTag("products", "max");
   revalidateTag(`product-${current.slug}`, "max");
+  await invalidateProductCaches({ slug: current.slug, id });
   revalidatePath("/admin/products");
   revalidatePath("/products");
   revalidatePath("/");
@@ -755,6 +763,7 @@ export async function updateProductMeasurementsQuick(
 
   revalidateTag("products", "max");
   revalidateTag(`product-${current.slug}`, "max");
+  await invalidateProductCaches({ slug: current.slug, id });
   revalidatePath("/admin/products");
   revalidatePath("/admin/products/coverage");
   revalidatePath("/products");
@@ -769,6 +778,12 @@ export async function deleteProduct(id: string) {
   if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
 
   const db = await getDb();
+
+  // Capture slug before we delete so we can invalidate the Redis product-by-slug key.
+  const existing = await db.product.findUnique({
+    where: { id },
+    select: { slug: true },
+  });
 
   // Check if product has order items — if so, soft-delete to preserve order history
   const orderItemCount = await db.orderItem.count({
@@ -785,6 +800,7 @@ export async function deleteProduct(id: string) {
   }
 
   revalidateTag("products", "max");
+  await invalidateProductCaches({ slug: existing?.slug, id });
   revalidatePath("/admin/products");
   revalidatePath("/products");
   revalidatePath("/");
