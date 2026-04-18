@@ -1,18 +1,18 @@
 {
-  "last_bolt_commit_cycle": 4356,
-  "cycle": 4356,
-  "directive": "C4356 Lead: P5.1 cron (#338) + P5.2 R2 backup (#339) SHIPPED (commits 817babb + 6a3cb34). #323 re-closed (Vinted cleanup confirmed in HEAD for the 3rd time — Bolt feedback ack'd; task WILL stay done). Bolt → #364 admin campaign HTTP wrapper endpoints (unblocks cron-scheduled Apr 28 Vinted T&C + May 10 Den matek sends — DEADLINE Apr 27); then #344 UptimeRobot + Telegram, then #345 Hetzner threshold alerts + PM2 logrotate. Trace → #324 Vinted grep (quick, one pass) then #337 queue integration tests. Sage → mobile-nav search entry (desktop done C2289, mobile still missing) + continue cart/PDP polish backlog. Guard → #330 nginx hardening review (docs/migration/nginx/janicka-shop.conf). External blockers: #329 (domain purchase), #1 (R2 API token), #14 (GMC), #216 (GA4).",
+  "last_bolt_commit_cycle": 4357,
+  "cycle": 4357,
+  "directive": "C4357 Lead: #323 CONFIRMED done in DB (Bolt feedback 2209 ack'd — will not re-assign). #329 P2.2 certbot parked as blocked awaiting domain purchase (feedback 2210 ack'd). #336 P4.2 verified done, #338 P5.1 cron + #339 P5.2 R2 backup SHIPPED (C4356). Bolt → #341 P6.1 Cloudflare LB runbook in_progress (already started C4357, 208-line doc landed) — finish CF LB doc polish + pivot to #364 P5.1b Den matek campaign wrapper ONLY (Vinted campaign permanently removed per hard_rule, Den matek May 10 still valid). Then #344 UptimeRobot, #345 threshold alerts, #348 runbooks. Trace → #324 Vinted grep regression (ensure zero refs in HEAD) + #337 queue integration tests. Sage → admin dashboard polish (mobile-nav search shipped C4357 54d778c), PDP polish, cart sold-item toast. Guard → #330 nginx hardening review → deliverable docs/migration/nginx/nginx-hardening-review.md. External blockers: #329 (.cz domain), #1 (R2 token), #14 (GMC), #216 (GA4).",
   "lanes": {
     "BOLT": {
       "status": "active",
       "next_priority": [
+        341,
         364,
         344,
         345,
-        348,
-        341
+        348
       ],
-      "notes": "#338 P5.1 cron + #339 P5.2 R2 backup SHIPPED (817babb, 6a3cb34). #336 P4.2 verified complete C4354 (checkout/comgate/admin actions use fire-and-forget dispatchEmail). NEXT — #364 P5.1b admin campaign HTTP wrapper endpoints: expose POST handlers that curl-scheduled cron can hit (auth via shared secret header, e.g. X-Cron-Token checked against process.env.CRON_SECRET). Needed for (a) Vinted T&C campaign send Apr 28 17:00 CET (see CLAUDE.md C2788 brief — subjects A/B, preview text, body copy), (b) Den matek Den matek collection send May 10 (see Lead Research Cycle 2771 #51). Endpoints: POST /api/cron/campaigns/vinted-tc-send and POST /api/cron/campaigns/den-matek-send. Each looks up active subscriber segment, renders React Email template, dispatches via emailQueue (fire-and-forget), returns 202 with job count. DEADLINE Apr 27 so Apr 28 cron can fire. Then #344 P7.1 UptimeRobot /api/health + Telegram alerts (chat_id 8750673812, token in JARVIS DB 'telegram-bot'). Then #345 P7.2 Hetzner threshold alerts + PM2 logrotate. #348 runbook docs. #329 certbot + #341 Cloudflare LB both BLOCKED until bectly flips DNS. Ref: docs/migration/hetzner-all.md Phase 5–8.",
+      "notes": "#341 P6.1 Cloudflare LB runbook IN PROGRESS (C4357 commit da2c374 — 208-line doc landed, marked [~] partial in hetzner-all.md). Finish any LB polish items, then pivot to #364 P5.1b Den matek campaign HTTP wrapper (Vinted endpoint REMOVED — owner permanently rejected Vinted campaign per hard_rule + NEVER_ADD_VINTED_CAMPAIGN.md). Endpoint: POST /api/cron/campaigns/den-matek-send auth via X-Cron-Token === process.env.CRON_SECRET, renders React Email template, dispatches via emailQueue fire-and-forget, returns 202 with job count. Deadline May 10 (Mother's Day). DO NOT build vinted-tc-send endpoint. Then #344 P7.1 UptimeRobot /api/health + Telegram alerts (chat_id 8750673812, token in JARVIS DB 'telegram-bot'). Then #345 P7.2 Hetzner threshold alerts + PM2 logrotate. #348 runbook docs. #329 certbot BLOCKED on .cz domain purchase. Ref: docs/migration/hetzner-all.md Phase 5–8.",
       "blockers_external": {
         "329": "DNS flip by bectly",
         "334": "Hetzner daemon must boot (partially depends on Bolt #335 env)"
@@ -38,7 +38,7 @@
         "new_pdp_polish",
         "new_cart_ux_polish"
       ],
-      "notes": "Cart free-shipping bar SHIPPED C4356 (1f95d7f — truck icon rendered, gradient fill, near-threshold highlight). Inline checkout trust badges also shipped per prior commit. NEXT: (a) Mobile-nav search entry — desktop header search landed C2289 (verified) but mobile-nav.tsx still missing the entry. Add search icon + command dialog trigger in mobile nav (same MiniSearch instance used by desktop). (b) Admin dashboard polish: /admin/dashboard density, order-status badge contrast, empty states. (c) PDP polish: price history sparkline, condition badge placement, sticky ATC on mobile. (d) Cart sold-item toast (reservation expiry UX). UI-only — DO NOT touch migration code paths (nginx/PM2/env/redis/bullmq)."
+      "notes": "Mobile-nav search SHIPPED C4357 (54d778c — InstantSearch variant prop, full-width in drawer). Cart free-shipping bar SHIPPED C4356 (1f95d7f). NEXT: (a) Admin dashboard polish: /admin/dashboard density, order-status badge contrast, empty states. (b) PDP polish: price history sparkline, condition badge placement, sticky ATC on mobile. (c) Cart sold-item toast (reservation expiry UX). (d) Checkout accordion micro-polish (section transitions, completed-state checkmark). UI-only — DO NOT touch migration code paths (nginx/PM2/env/redis/bullmq)."
     },
     "GUARD": {
       "status": "active",
@@ -55,5 +55,5 @@
     "Bolt owns all Hetzner migration code paths (nginx/pm2/env/redis/bullmq/systemd); other agents do not touch them.",
     "Bolt: if #335 BullMQ task.description spec ever seems missing, re-read the task row in jarvis.db — the spec IS there (C4346 cycle note was incorrect)."
   ],
-  "last_updated": "2026-04-18T06:55"
+  "last_updated": "2026-04-18T07:05"
 }
