@@ -1,20 +1,18 @@
 {
   "last_bolt_commit_cycle": 4388,
-  "cycle": 4388,
-  "directive": "C4388 Lead: #376 DONE (2ec2def — catalog payload trim shipped: images→2, description→160ch, build green) + Sage C4387 scale-95 polish 21 elements shipped (a70ebdd). Bolt force_next pivots to #373 Sage failure triage CLOSE-OUT with concrete fix (currently only diagnostic in_progress — needs tail/categorize/patch cycle) → #374 Czech legacy redirect audit close-out → #377 PDP image quality (q=85-90 main/hero, thumbs q=75) → #341/#343 Hetzner behind #329 DNS. Trace #358 iframe E2E + #367 codebase sweep still force_next. Guard #366 SEC-1 iframe audit still force_next. External blockers unchanged: #329 DNS, #1 R2, #14 GMC (Apr 30 Doppl VTO — 12 days), #216 GA4, #330 nginx, #65 SITE_URL env var (non-blocking).",
+  "cycle": 4389,
+  "directive": "C4389 Lead: #373 closed (00986e6 — diagnosis doc, root cause = dispatcher over-scheduling outside shop repo, Sage failures self-resolved 0/3h) + #374 + #377 already shipped (52566f8, 33f93e2). All three prior Bolt priorities DONE. New Bolt focus: #378 real garment measurements (cm) — Baymard #1 fix for second-hand, reduces returns more than generic size charts. Spec: Prisma JSON field on Product + category-aware admin form + PDP Rozměry accordion section + JSON-LD additionalProperty. Single commit. Trace #358 iframe E2E + #367 codebase sweep still force_next. Guard #366 SEC-1 iframe audit still force_next. Sage micro-polish lanes unchanged. External blockers unchanged: #329 DNS, #1 R2, #14 GMC (Apr 30 Doppl VTO — 12 days), #216 GA4, #330 nginx.",
   "lanes": {
     "BOLT": {
       "status": "active",
-      "force_next_task": 373,
+      "force_next_task": 378,
       "next_priority": [
-        373,
-        374,
-        377,
+        378,
         341,
         343,
         65
       ],
-      "notes": "PIVOT: #376 shipped (2ec2def). NOW #373 Sage failure triage CLOSE-OUT — currently in_progress but only diagnostic. Sage logged 610 failures/24h (last: 2026-04-18 09:06:10) vs 62 OK. Concrete steps: (1) tail -n 500 /home/bectly/.claude/jarvis-gym/worker-logs/sage-janicka-shop*.log OR .devloop/worker-logs/sage-*.log — whichever exists; (2) categorize top 3 error signatures with counts (grep+sort+uniq -c); (3) diagnose — likely candidates: playwright chromium launch EBUSY/ENOENT, screenshot timeout, OOM on parallel page loads, missing DEV_URL env; (4) implement concrete fix — add retry with backoff OR serialize screenshot jobs OR fix worker spawn config in .devloop/agents/sage*.{sh,py} OR adjust resource limits; (5) commit with 'Cycle #4388: Bolt — Task #373 close-out' + concrete before/after failure rate rationale. THEN #374 Czech redirect audit close-out (in_progress) — audit src/lib/redirects.ts + proxy.ts/middleware.ts for legacy slug coverage, grep DB for orphan slugs users may hit, extend redirect map, commit. THEN #377 PDP image quality (in_progress) — src/components/shop/product-gallery.tsx or product-detail.tsx: main + hero next/image quality={90} (default 75), thumbnails keep quality={75}. Single commit. Hetzner work (#341/#343/#65) parked behind #329 DNS + env vars.",
+      "notes": "NEW PRIORITY: #378 real garment measurements (cm) — Baymard research: flat-lay measurements are the #1 fix for second-hand returns, significantly outperform generic size charts. Concrete scope: (1) Prisma: add `measurements Json?` to Product in prisma/schema.prisma; run `npx prisma migrate dev --name add_product_measurements`. Shape: category-aware keys — dresses {chestCm, waistCm, hipsCm, lengthCm}; tops {chestCm, lengthCm, sleeveCm}; pants {waistCm, hipsCm, inseamCm, lengthCm}; skirts {waistCm, hipsCm, lengthCm}; jackets {chestCm, lengthCm, sleeveCm, shouldersCm}. (2) Admin form (src/app/(admin)/admin/products/[id]/ or product-form component): collapsible 'Rozměry (cm)' section with category-aware numeric inputs, validate >=0, optional. Persist via existing Server Action. (3) PDP (src/components/shop/product-info-accordion.tsx): new collapsed-by-default section 'Rozměry (cm) — přesné míry oblečení naležato', render populated keys as 2-column table with Czech labels (Šířka hrudník, Délka, Rukáv, etc.). Hide section entirely if object is null/empty — DO NOT show zeros. (4) JSON-LD: add measurements to Product schema as additionalProperty array in src/app/(shop)/products/[slug]/page.tsx or wherever Product JSON-LD is emitted. Single commit. npm run build green. THEN resume Hetzner (#341/#343) once #329 DNS unblocks.",
       "blockers_external": {
         "329": "DNS flip by bectly",
         "334": "Hetzner daemon must boot",
@@ -59,9 +57,9 @@
     "NEVER push to remote without bectly's explicit request.",
     "Sage, Trace, Guard MUST NOT wait on Hetzner DNS/certbot (#329) or daemon boot (#334) — they have independent lanes.",
     "Bolt owns all Hetzner migration code paths (nginx/pm2/env/redis/bullmq/systemd); other agents do not touch them.",
-    "Tasks #352, #353, #364, #365, #369, #370, #344, #371, #375 are DONE — do not re-raise as blockers.",
+    "Tasks #352, #353, #364, #365, #369, #370, #344, #371, #373, #374, #375, #376, #377 are DONE — do not re-raise as blockers.",
     "Task #375 was rejected (C4386 f8cf472) — do not reopen without fresh production repro."
   ],
-  "last_updated": "2026-04-18T09:10",
+  "last_updated": "2026-04-18T09:14",
   "pause": {}
 }

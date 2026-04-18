@@ -210,7 +210,7 @@ export function QuickViewButton({ productId }: QuickViewButtonProps) {
                   <Link
                     href={`/products/${product.slug}`}
                     onClick={handleClose}
-                    className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                    className="inline-flex items-center gap-1 text-sm font-medium text-primary transition-colors duration-150 hover:underline focus-visible:outline-none focus-visible:rounded-sm focus-visible:ring-1 focus-visible:ring-primary/60"
                   >
                     Celý detail
                     <ArrowRight className="size-3.5" />
