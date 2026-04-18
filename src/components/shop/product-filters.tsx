@@ -284,16 +284,20 @@ export function ProductFilters({
         onClick={() => !isDisabled && toggleMulti("brand", brand, activeBrands)}
         aria-pressed={isActive}
         aria-disabled={isDisabled}
-        className={`min-h-11 inline-flex items-center rounded-lg px-3 ${size === "base" ? "py-1.5 text-sm" : "py-1 text-xs"} font-medium transition-colors ${
+        className={`inline-flex items-center rounded-full px-3 transition-all ${
+          size === "base"
+            ? "min-h-11 py-1.5 text-sm"
+            : "min-h-8 py-1 text-xs"
+        } font-medium ${
           isActive
-            ? "bg-primary text-primary-foreground"
+            ? "bg-primary text-primary-foreground shadow-sm"
             : isDisabled
-              ? "bg-muted/50 text-muted-foreground/40 cursor-not-allowed"
-              : "bg-muted text-muted-foreground hover:bg-muted/80"
+              ? "bg-muted/40 text-muted-foreground/40 cursor-not-allowed"
+              : "bg-muted/60 text-foreground/80 hover:bg-muted hover:text-foreground"
         }`}
       >
         {brand}
-        <span className="ml-1 opacity-60">({count})</span>
+        <span className="ml-1.5 text-[11px] tabular-nums opacity-50">{count}</span>
       </button>
     );
   }
@@ -320,16 +324,20 @@ export function ProductFilters({
         onClick={() => !isDisabled && toggleMulti("size", size, activeSizes)}
         aria-pressed={isActive}
         aria-disabled={isDisabled}
-        className={`min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg ${density === "base" ? "px-2.5 py-1.5 text-sm" : "px-2.5 py-1 text-xs"} font-medium transition-colors ${
+        className={`inline-flex items-center justify-center rounded-full transition-all ${
+          density === "base"
+            ? "min-h-11 min-w-11 px-3 py-1.5 text-sm"
+            : "min-h-9 min-w-10 px-2.5 py-1 text-xs"
+        } font-medium ${
           isActive
-            ? "bg-primary text-primary-foreground"
+            ? "bg-primary text-primary-foreground shadow-sm ring-1 ring-primary/30"
             : isDisabled
-              ? "bg-muted/50 text-muted-foreground/40 cursor-not-allowed"
-              : "bg-muted text-muted-foreground hover:bg-muted/80"
+              ? "bg-muted/40 text-muted-foreground/40 cursor-not-allowed"
+              : "bg-muted/60 text-foreground/80 hover:bg-muted hover:text-foreground"
         }`}
       >
-        {size}
-        <span className="ml-0.5 opacity-60">({count})</span>
+        <span className="tabular-nums">{size}</span>
+        <span className="ml-1 text-[10px] tabular-nums opacity-50">{count}</span>
       </button>
     );
   }
@@ -381,20 +389,22 @@ export function ProductFilters({
 
   const sortDropdown = (
     <div className="flex items-center gap-2">
-      <label htmlFor="sort-select" className="text-xs text-muted-foreground">Řazení:</label>
-      <div className="relative">
+      <label htmlFor="sort-select" className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+        Řadit
+      </label>
+      <div className="relative flex-1">
         <select
           id="sort-select"
           value={activeSort}
           onChange={(e) => updateParams({ sort: e.target.value })}
-          className="appearance-none rounded-lg border bg-background py-1.5 pl-3 pr-8 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+          className="w-full appearance-none rounded-full border border-border/60 bg-background py-1.5 pl-3.5 pr-8 text-sm text-foreground transition-colors hover:border-border focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50"
         >
           <option value="newest">Nejnovější</option>
           <option value="price-asc">Cena: od nejnižší</option>
           <option value="price-desc">Cena: od nejvyšší</option>
           <option value="discount">Největší sleva</option>
         </select>
-        <ChevronDown className="pointer-events-none absolute right-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
       </div>
     </div>
   );
@@ -476,11 +486,13 @@ export function ProductFilters({
   return (
     <>
       {/* ===== DESKTOP: sidebar accordion (hidden on mobile) ===== */}
-      <aside className="hidden lg:block lg:sticky lg:top-24 lg:self-start space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-3">
+      <aside className="hidden lg:block lg:sticky lg:top-24 lg:self-start space-y-3">
+        <div className="flex items-center justify-between gap-2 pb-3">
           <div className="flex items-center gap-2">
-            <SlidersHorizontal className="size-[1.05rem] text-foreground/80" />
-            <span className="text-base font-semibold tracking-tight text-foreground">Filtry</span>
+            <SlidersHorizontal className="size-4 text-foreground/70" />
+            <span className="text-sm font-semibold uppercase tracking-[0.08em] text-foreground/80">
+              Filtry
+            </span>
             {activeFilterCount > 0 && (
               <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold leading-5 text-primary-foreground">
                 {activeFilterCount}
@@ -491,7 +503,7 @@ export function ProductFilters({
             <button
               type="button"
               onClick={clearAll}
-              className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+              className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
             >
               <X className="size-3" aria-hidden="true" />
               Smazat vše
@@ -499,15 +511,17 @@ export function ProductFilters({
           )}
         </div>
         {sortDropdown}
-        {activeFilterChips}
+        {activeFilterChips && (
+          <div className="rounded-xl bg-muted/40 p-2.5">{activeFilterChips}</div>
+        )}
         <Accordion
           multiple
           defaultValue={["sizes", "colors", "conditions"]}
-          className="divide-y divide-border/50 border-y border-border/50"
+          className="divide-y divide-border/40 border-y border-border/40"
         >
           {visibleSizes.length > 0 && (
             <AccordionItem value="sizes">
-              <AccordionTrigger className="py-3 text-[0.9rem] font-semibold text-foreground hover:text-foreground/80">
+              <AccordionTrigger className="py-3 text-xs font-semibold uppercase tracking-[0.08em] text-foreground hover:no-underline hover:text-foreground/70">
                 Velikost
                 {activeSizes.length > 0 && (
                   <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-primary/15 px-1.5 text-[11px] font-semibold leading-5 text-primary">
@@ -516,17 +530,18 @@ export function ProductFilters({
                 )}
               </AccordionTrigger>
               <AccordionContent>
-                <div className="space-y-2 pb-1">
+                <div className="space-y-3 pb-1">
                   {sizeGroups.map((group) => {
                     const sizesWithStock = group.sizes.filter(
                       (s) => (counts.sizes[s] ?? 0) > 0 || activeSizes.includes(s),
                     );
                     if (sizesWithStock.length === 0) return null;
+                    const shortLabel = group.label.replace(/^Velikost\s*/i, "").trim() || group.label;
                     return (
                       <div key={group.label}>
                         {sizeGroups.length > 1 && (
-                          <div className="mb-1.5 text-xs font-medium text-muted-foreground/80">
-                            {group.label}
+                          <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">
+                            {shortLabel}
                           </div>
                         )}
                         <div className="flex flex-wrap gap-1.5" role="group" aria-label={`Filtr podle velikosti — ${group.label}`}>
@@ -541,7 +556,7 @@ export function ProductFilters({
           )}
           {colors.filter((c) => (counts.colors[c] ?? 0) > 0 || activeColors.includes(c)).length > 0 && (
             <AccordionItem value="colors">
-              <AccordionTrigger className="py-3 text-[0.9rem] font-semibold text-foreground hover:text-foreground/80">
+              <AccordionTrigger className="py-3 text-xs font-semibold uppercase tracking-[0.08em] text-foreground hover:no-underline hover:text-foreground/70">
                 Barva
                 {activeColors.length > 0 && (
                   <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-primary/15 px-1.5 text-[11px] font-semibold leading-5 text-primary">
@@ -550,7 +565,7 @@ export function ProductFilters({
                 )}
               </AccordionTrigger>
               <AccordionContent>
-                <div className="flex flex-wrap gap-2 pb-1" role="group" aria-label="Filtr podle barvy">
+                <div className="flex flex-wrap gap-1.5 pb-1" role="group" aria-label="Filtr podle barvy">
                   {colors
                     .filter((c) => (counts.colors[c] ?? 0) > 0 || activeColors.includes(c))
                     .map((color) => {
@@ -565,23 +580,23 @@ export function ProductFilters({
                           aria-pressed={isActive}
                           aria-label={`${color} (${count})`}
                           title={`${color} (${count})`}
-                          className={`group relative flex min-h-11 items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium transition-colors ${
+                          className={`group relative flex min-h-9 items-center gap-1.5 rounded-full pl-1 pr-2.5 py-1 text-xs font-medium transition-all ${
                             isActive
-                              ? "bg-primary/10 ring-2 ring-primary"
-                              : "hover:bg-muted/80"
+                              ? "bg-primary/10 ring-1 ring-primary shadow-sm"
+                              : "bg-muted/40 hover:bg-muted"
                           }`}
                         >
                           <span
-                            className={`inline-block size-5 shrink-0 rounded-full border ${isLight ? "border-gray-300" : "border-transparent"}`}
+                            className={`inline-flex size-5 shrink-0 items-center justify-center rounded-full border ${isLight ? "border-gray-300" : "border-black/5"} shadow-inner`}
                             style={{ backgroundColor: hex }}
                           >
                             {isActive && (
-                              <Check className={`size-5 p-0.5 ${isLight ? "text-gray-700" : "text-white"}`} />
+                              <Check className={`size-3.5 ${isLight ? "text-gray-700" : "text-white"}`} strokeWidth={3} />
                             )}
                           </span>
-                          <span className="text-muted-foreground">
+                          <span className="text-foreground/80">
                             {color}
-                            <span className="ml-0.5 opacity-60">({count})</span>
+                            <span className="ml-1 text-[10px] tabular-nums opacity-50">{count}</span>
                           </span>
                         </button>
                       );
@@ -592,7 +607,7 @@ export function ProductFilters({
           )}
           {brands.filter((b) => (counts.brands[b] ?? 0) > 0 || activeBrands.includes(b)).length > 0 && (
             <AccordionItem value="brands">
-              <AccordionTrigger className="py-3 text-[0.9rem] font-semibold text-foreground hover:text-foreground/80">
+              <AccordionTrigger className="py-3 text-xs font-semibold uppercase tracking-[0.08em] text-foreground hover:no-underline hover:text-foreground/70">
                 Značka
                 {activeBrands.length > 0 && (
                   <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-primary/15 px-1.5 text-[11px] font-semibold leading-5 text-primary">
@@ -619,7 +634,7 @@ export function ProductFilters({
             </AccordionItem>
           )}
           <AccordionItem value="conditions">
-            <AccordionTrigger className="py-3 text-[0.9rem] font-semibold text-foreground hover:text-foreground/80">
+            <AccordionTrigger className="py-3 text-xs font-semibold uppercase tracking-[0.08em] text-foreground hover:no-underline hover:text-foreground/70">
               Stav
               {activeConditions.length > 0 && (
                 <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-primary/15 px-1.5 text-[11px] font-semibold leading-5 text-primary">
@@ -639,10 +654,10 @@ export function ProductFilters({
                         key={key}
                         onClick={() => toggleMulti("condition", key, activeConditions)}
                         aria-pressed={isActive}
-                        className={`min-h-11 inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-colors ${
+                        className={`min-h-9 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all ${
                           isActive
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "bg-muted/60 text-foreground/80 hover:bg-muted hover:text-foreground"
                         }`}
                       >
                         <span
@@ -650,7 +665,7 @@ export function ProductFilters({
                           aria-hidden="true"
                         />
                         {label}
-                        <span className="opacity-60">({count})</span>
+                        <span className="text-[10px] tabular-nums opacity-60">{count}</span>
                       </button>
                     );
                   })}
@@ -658,7 +673,7 @@ export function ProductFilters({
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="price">
-            <AccordionTrigger className="py-3 text-[0.9rem] font-semibold text-foreground hover:text-foreground/80">
+            <AccordionTrigger className="py-3 text-xs font-semibold uppercase tracking-[0.08em] text-foreground hover:no-underline hover:text-foreground/70">
               Cena (Kč)
               {(minPrice || maxPrice) && (
                 <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-primary/15 px-1.5 text-[11px] font-semibold leading-5 text-primary">1</span>
@@ -705,7 +720,7 @@ export function ProductFilters({
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="sale">
-            <AccordionTrigger className="py-3 text-[0.9rem] font-semibold text-foreground hover:text-foreground/80">
+            <AccordionTrigger className="py-3 text-xs font-semibold uppercase tracking-[0.08em] text-foreground hover:no-underline hover:text-foreground/70">
               Sleva
               {saleOnly && (
                 <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-destructive/15 px-1.5 text-[11px] font-semibold leading-5 text-destructive">1</span>
