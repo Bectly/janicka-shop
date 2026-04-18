@@ -183,6 +183,8 @@ model Order {
   shippingPointId          String?
   trackingNumber           String?
   packetId                 String? // Packeta/Zásilkovna packet ID (from SOAP createPacket)
+  packetaStatus            String? // Last observed Packeta codeText (e.g. "received data", "delivered") — set by order-status-sync cron
+  packetaStatusCheckedAt   DateTime? // When order-status-sync last polled Packeta for this packet
   shippedAt                DateTime? // Set when admin changes status to "shipped"
   reviewEmailSentAt        DateTime? // Set when review request email is sent (prevents duplicates)
   deliveryCheckEmailSentAt DateTime? // Set when delivery check-in email is sent (ship+4d)

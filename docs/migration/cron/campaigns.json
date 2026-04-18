@@ -1,0 +1,5 @@
+{
+  "_description": "Scheduled one-off campaigns dispatched by scripts/cron/newsletter-dispatch.ts. Each entry runs once when scheduledAt has passed; CampaignSendLock keeps it idempotent forever. Add new entries here and commit.",
+  "_endpointRequirement": "endpoint must be an HTTP route on the local Next.js daemon that accepts Bearer CRON_SECRET and triggers the campaign send. Mother's Day + Vinted T&C are currently admin-only Server Actions (src/app/(admin)/admin/subscribers/actions.ts) — a small /api/admin/campaigns/* wrapper that authenticates via CRON_SECRET is needed before those can be scheduled here. Follow-up task for Bolt.",
+  "campaigns": []
+}

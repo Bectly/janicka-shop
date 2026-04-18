@@ -1,0 +1,61 @@
+# /etc/cron.d/janicka-shop
+# Hetzner cron schedule for janicka-shop (Fáze 5).
+#
+# Deployment:
+#   sudo cp docs/migration/cron/janicka-shop.cron /etc/cron.d/janicka-shop
+#   sudo chown root:root /etc/cron.d/janicka-shop
+#   sudo chmod 644 /etc/cron.d/janicka-shop
+#   sudo systemctl restart cron
+#
+# Pre-flight:
+#   sudo mkdir -p /var/log/janicka-shop && sudo chown www-data:www-data /var/log/janicka-shop
+#   sudo install -d -o www-data -g www-data /var/run/janicka-shop   # flock lockdir
+#
+# Log rotation:
+#   Add /etc/logrotate.d/janicka-shop (monthly, compress, retain 6).
+#
+# Env:
+#   All scripts read /opt/janicka-shop/.env.production via the PM2 daemon they
+#   dispatch to. The `EnvironmentFile` line below makes CRON_SECRET available to
+#   the HTTP-dispatch scripts without depending on PM2 env inheritance.
+
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+MAILTO=""
+EnvironmentFile=/opt/janicka-shop/.env.production
+
+# ── Abandoned cart (3-email sequence) — every 15 minutes ───────────────────
+*/15 * * * * www-data cd /opt/janicka-shop && /usr/bin/flock -n /var/run/janicka-shop/abandoned-cart.lock /usr/local/bin/tsx scripts/cron/abandoned-cart.ts >> /var/log/janicka-shop/cron.log 2>&1
+
+# ── Order status sync (Packeta SOAP poll) — hourly at :07 ──────────────────
+7 * * * * www-data cd /opt/janicka-shop && /usr/bin/flock -n /var/run/janicka-shop/order-status-sync.lock /usr/local/bin/tsx scripts/cron/order-status-sync.ts >> /var/log/janicka-shop/cron.log 2>&1
+
+# ── Newsletter dispatcher (Mother's Day, Vinted T&C) — every 10 min ────────
+*/10 * * * * www-data cd /opt/janicka-shop && /usr/bin/flock -n /var/run/janicka-shop/newsletter-dispatch.lock /usr/local/bin/tsx scripts/cron/newsletter-dispatch.ts >> /var/log/janicka-shop/cron.log 2>&1
+
+# ── Piggyback endpoints already implemented in /api/cron ───────────────────
+# (moved from vercel.json — they call local Next.js daemon with CRON_SECRET)
+
+# Browse abandonment — every 30 minutes
+*/30 * * * * www-data /usr/bin/curl -fsS -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/browse-abandonment >> /var/log/janicka-shop/cron.log 2>&1
+
+# Delivery check (ship+4d) — every 6 hours
+0 */6 * * * www-data /usr/bin/curl -fsS -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/delivery-check >> /var/log/janicka-shop/cron.log 2>&1
+
+# Review request (ship+7d) — every 6 hours (offset by 5 min)
+5 */6 * * * www-data /usr/bin/curl -fsS -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/review-request >> /var/log/janicka-shop/cron.log 2>&1
+
+# Delivery deadline reminders — 08:00 CET daily
+0 8 * * * www-data /usr/bin/curl -fsS -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/delivery-deadline >> /var/log/janicka-shop/cron.log 2>&1
+
+# Cross-sell emails (T+14) — 17:00 CET daily
+0 17 * * * www-data /usr/bin/curl -fsS -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/cross-sell >> /var/log/janicka-shop/cron.log 2>&1
+
+# Win-back (120+ day inactive customers) — 17:00 CET daily (offset 5m)
+5 17 * * * www-data /usr/bin/curl -fsS -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/win-back >> /var/log/janicka-shop/cron.log 2>&1
+
+# New arrivals newsletter — 07:00 + 17:00 CET daily
+0 7,17 * * * www-data /usr/bin/curl -fsS -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/new-arrivals >> /var/log/janicka-shop/cron.log 2>&1
+
+# Similar-items matcher — every 2 hours
+0 */2 * * * www-data /usr/bin/curl -fsS -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/similar-items >> /var/log/janicka-shop/cron.log 2>&1

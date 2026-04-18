@@ -62,9 +62,9 @@
 - [ ] Přesun Server Actions které jsou slow na queue
 
 ### Fáze 5: Cron jobs (Day 3)
-- [ ] Newsletter scheduler (Mother's Day, Customs)
-- [ ] Abandoned cart recovery (3-email sequence)
-- [ ] Order status checks
+- [x] Newsletter scheduler (infrastruktura — `scripts/cron/newsletter-dispatch.ts` + `campaigns.json`, follow-up: admin campaign HTTP wrapper endpointy pro Mother's Day / Vinted T&C)
+- [x] Abandoned cart recovery (3-email sequence — `scripts/cron/abandoned-cart.ts` + /etc/cron.d entry)
+- [x] Order status checks (Packeta SOAP poll — `scripts/cron/order-status-sync.ts`, `Order.packetaStatus` + `packetaStatusCheckedAt` fields)
 - [ ] R2 backup cron (nightly)
 
 ### Fáze 6: DNS switch (Day 3)
@@ -134,3 +134,10 @@ Přidej update do tohoto souboru při každé dokončené fázi.
   - `scripts/sync-env-to-hetzner.sh` — idempotent bash script, vyžaduje `--dry-run` nebo `--confirm`. Zdroj: JARVIS DB `api_keys` (turso/resend/packeta/r2/devchat/redis-hetzner) + `.env.local` fallback pro secrets bez DB záznamu (NEXTAUTH_SECRET, admin creds, Comgate, analytics, feed/cron/unsubscribe secrets). Atomic write na `kryxon:/opt/janicka-shop/.env.production` (temp file + `chmod 640` + `chown www-data:www-data` + `mv`). `--dry-run` redactuje hodnoty (první/poslední 4 znaky + délka) pro audit bez leaknutí secrets. WARN na prázdné required keys (R2/Comgate — PENDING_DASHBOARD).
 - **Next up** — Fáze 3 P3.4 (#334 Trace smoke test, blocked by env+deploy), Fáze 4 P4.1 (#335 BullMQ queues).
 - **Cycle #4347 (Bolt, task #329 P2.2)** — Certbot HTTPS nelze provést: doména `janicka-shop.cz` stále není koupena (tracked C4345). Místo realizace vytvořen runbook `docs/migration/runbooks/p2.2-certbot-https.md` — krok-za-krokem s pre-flight checklistem (DNS grey-cloud pro HTTP-01), non-interactive certbot příkazem (`--redirect --hsts --uir`), verifikačními curl/systemctl příkazy pro všechny acceptance kritéria (HTTPS valid cert, 301 redirect, auto-renew timer, >80d expiry, dry-run green), Cloudflare Full(strict) toggle post-install, rollback procedurou, a post-cert vhost sync workflow. **Blocker**: task #329 zůstává OPEN dokud bectly nekoupí doménu — pak je runbook ready-to-execute a mohu #329 dokončit v jednom cyklu.
+- **Cycle #4354 (Bolt, task #338 P5.1)** — Fáze 5 cron infrastruktura hotová. Tři skripty v `scripts/cron/` (všechny s `--dry` flagem):
+  - `abandoned-cart.ts` — thin HTTP wrapper kolem `/api/cron/abandoned-carts` (logika 45m/18h/60h + 7d expiry už existuje). DRY ověřen: tiskne plánovaný GET + bearer.
+  - `order-status-sync.ts` — přímý Prisma + Packeta SOAP `getPacketStatus`, dotáhne stav pro orders s `packetId` a status v {paid, shipped, in_transit, delivered}, re-poll interval 45m, batch 100. Přidá pole `Order.packetaStatus` + `Order.packetaStatusCheckedAt` do schématu (migrace `prisma db push` prošla lokálně — Turso sync potřebný na deployi přes `npm run db:sync-turso`). DRY ověřen: tiskne eligible orders bez HTTP/DB write.
+  - `newsletter-dispatch.ts` — generická infrastruktura pro one-off kampaně. Čte `docs/migration/cron/campaigns.json` ({key, scheduledAt, endpoint, method, body}), idempotence přes `CampaignSendLock` (365d TTL, unique constraint zabrání double-send). Claim lock PŘED HTTP callem: missed send je vždy bezpečnější než double-send. DRY ověřen.
+  - `docs/migration/cron/janicka-shop.cron` — kompletní `/etc/cron.d/` soubor: 3 nové skripty + migrace všech 9 vercel.json endpointů na local curl s `CRON_SECRET`. Každý tsx script zabalený v `flock -n` (žádný overlap); všechno loguje do `/var/log/janicka-shop/cron.log`.
+  - **Follow-up (Bolt nebo Lead)**: Mother's Day / Vinted T&C kampaně jsou aktuálně admin-only Server Actions (`src/app/(admin)/admin/subscribers/actions.ts`). Pro jejich cron-scheduling potřeba vytvořit `/api/admin/campaigns/mothers-day` + `/api/admin/campaigns/vinted-tc` endpointy s CRON_SECRET auth (wrapper nad existující logikou). Bez nich je `campaigns.json` prázdný — infrastruktura ready, konkrétní kampaně doplní následný task.
+  - **Acceptance**: ✅ `crontab` soubor existuje a je dokumentovaný; ✅ všechny 3 skripty tisknou plánovanou akci s `--dry`; ✅ dry-run test cyklus proběhl pro všechny tři (abandoned-cart OK, newsletter „no campaigns due", order-status-sync „no eligible orders"); ✅ `npm run build` green.
