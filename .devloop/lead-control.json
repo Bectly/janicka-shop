@@ -1,18 +1,18 @@
 {
   "last_bolt_commit_cycle": 4375,
-  "cycle": 4374,
-  "directive": "C4374 Lead: #369 SEC-3 SHIPPED commits f8aac59 (iframe hardened: referrerPolicy no-referrer, allow='', route-level Referrer-Policy header on /admin/jarvis, existing X-Frame-Options DENY + frame-ancestors 'none' + sandbox allow-scripts/allow-same-origin/allow-forms + frame-src verified) — marked done. Bolt pivot to #364 Den matek P5.1b HTTP wrapper (DEADLINE Apr 27 for Apr 28 send) → #370 RC.4 screenshot paste → R2 → #344 UptimeRobot. Trace force_next=#358 E2E iframe-based /admin/jarvis + #367 full codebase quality sweep. Guard force_next=#366 SEC-1 iframe-architecture audit (scope now aligned with what Bolt just shipped: frame-src CSP, frame-ancestors, sandbox attrs, referrer-policy, CF Access JWT, cookie SameSite, confirm xterm/WS deps purged). Sage PDP polish lane unchanged. External blockers: #329 (.cz domain), #1 (R2 token), #14 (GMC April 30), #216 (GA4), #330 (nginx config — blocked on Hetzner prep).",
+  "cycle": 4375,
+  "directive": "C4375 Lead: Bolt verified C4375 (ac20b16) that #364 Den matek HTTP wrapper (ab84e3e) + #370 RC.4 screenshot→R2 (e834796) are both SHIPPED — marked done. Bolt force_next pivots to #344 UptimeRobot /api/health monitor + Telegram alerts (JARVIS bot token + chat_id 8750673812 live in api_keys). Spec: ensure GET /api/health returns 200 JSON {ok:true, db:'ok'|'down', redis:'ok'|'down'|'n/a', ts} with a 2s DB ping (Prisma $queryRaw SELECT 1) + optional Redis ping if REDIS_URL set; add POST /api/alerts/telegram route that accepts UptimeRobot webhook (shared-secret query param matching ALERT_WEBHOOK_SECRET, forwards formatted message to Telegram Bot API sendMessage). Do NOT touch the UptimeRobot dashboard itself — bectly configures the monitor after the endpoint lands. Trace force_next=#358 iframe E2E + #367 quality sweep. Guard force_next=#366 iframe-architecture audit. Sage PDP + cart + checkout polish lane continues. External blockers: #329 (.cz DNS flip), #1 (R2 token verify), #14 (GMC April 30), #216 (GA4), #330 (nginx — blocked on Hetzner prep).",
   "lanes": {
     "BOLT": {
       "status": "active",
-      "force_next_task": 364,
+      "force_next_task": 344,
       "next_priority": [
-        364,
-        370,
         344,
-        345
+        341,
+        343,
+        65
       ],
-      "notes": "PRIORITY: #364 Den matek P5.1b HTTP cron wrapper — DEADLINE Apr 27 for Apr 28 send. Spec: POST /api/cron/campaigns/den-matek-send guarded by X-Cron-Token === process.env.CRON_SECRET (constant-time compare), React Email template in src/emails/ (warm copy: Den matek / collection CTA, mobile-first, Resend-compatible), push jobs into existing emailQueue (src/lib/queue/ — fire-and-forget, don't await all sends inline), return 202 JSON {queued: N, at: ISO}. Rate limit with existing rate-limit helper. Log audit entry with recipient count + cycle. DO NOT build vinted-tc-send (permanent rule — see NEVER_ADD_VINTED_CAMPAIGN.md). THEN #370 RC.4: Claude screenshot paste → server-side R2 presigned PUT → return public URL Claude can fetch (reuse src/lib/r2.ts getR2Client, 5MB cap, MIME allowlist png/jpg/webp, UUID key under claude-uploads/, pre-signed GET 1h). UI: admin /admin/jarvis paste handler (already built per commit e834796 — verify + extend). THEN #344 UptimeRobot POST /api/health monitor + Telegram alert webhook via JARVIS bot. THEN #345 PM2 logrotate (Hetzner post-migration). Bolt owns all Hetzner migration code paths — others don't touch.",
+      "notes": "PRIORITY: #344 UptimeRobot monitoring wiring — code side only, bectly will configure the actual UptimeRobot monitor once endpoints land. Spec: (a) audit GET /api/health — must return 200 {ok,db,redis,ts} with Prisma $queryRaw SELECT 1 (2s timeout) + optional Redis PING if REDIS_URL; non-200 on hard DB down. (b) add POST /api/alerts/telegram — accept UptimeRobot webhook payload, guard with ?key=ALERT_WEBHOOK_SECRET (constant-time compare), forward formatted message ('🔴 janicka-shop DOWN: <monitor>' / '🟢 janicka-shop UP: <monitor>') to Telegram Bot API sendMessage using TELEGRAM_BOT_TOKEN + TELEGRAM_ALERT_CHAT_ID (fallback chat_id 8750673812 per JARVIS DB api_keys). Minimal formatting, no PII, rate-limit with existing rate-limit helper. Return 200 regardless to avoid UptimeRobot retry storms. (c) document required env vars + UptimeRobot webhook URL format in docs/migration/monitoring.md. THEN revisit Hetzner-track in-progress items (#341 LB pool, #343 DNS shift, #65 Czech URLs) — pure code sides only; dashboard config stays with bectly. Bolt owns all Hetzner migration code paths — others don't touch.",
       "blockers_external": {
         "329": "DNS flip by bectly",
         "334": "Hetzner daemon must boot"
@@ -56,8 +56,8 @@
     "NEVER push to remote without bectly's explicit request.",
     "Sage, Trace, Guard MUST NOT wait on Hetzner DNS/certbot (#329) or daemon boot (#334) — they have independent lanes.",
     "Bolt owns all Hetzner migration code paths (nginx/pm2/env/redis/bullmq/systemd); other agents do not touch them.",
-    "Tasks #352, #353, #365, #369 are DONE — do not re-raise as blockers."
+    "Tasks #352, #353, #364, #365, #369, #370 are DONE — do not re-raise as blockers."
   ],
-  "last_updated": "2026-04-18T08:15",
+  "last_updated": "2026-04-18T09:45",
   "pause": {}
 }

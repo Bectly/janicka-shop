@@ -22,7 +22,7 @@ export function StickyCategoryNav({
       <button
         onClick={() => onChange(null)}
         aria-current={!activeCategory ? "page" : undefined}
-        className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+        className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors duration-150 ${
           !activeCategory
             ? "bg-primary text-primary-foreground"
             : "bg-muted/60 text-muted-foreground hover:bg-muted"
@@ -37,7 +37,7 @@ export function StickyCategoryNav({
             key={cat.slug}
             onClick={() => onChange(cat.slug)}
             aria-current={activeCategory === cat.slug ? "page" : undefined}
-            className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+            className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors duration-150 ${
               activeCategory === cat.slug
                 ? "bg-primary text-primary-foreground"
                 : "bg-muted/60 text-muted-foreground hover:bg-muted"

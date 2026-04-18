@@ -64,7 +64,7 @@ function SizeTable({
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={i} className="border-b last:border-0 transition-colors hover:bg-muted/30">
+            <tr key={i} className="border-b last:border-0 transition-colors duration-150 hover:bg-muted/30">
               {row.map((cell, j) => (
                 <td
                   key={j}

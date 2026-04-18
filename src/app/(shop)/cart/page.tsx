@@ -200,7 +200,7 @@ export default function CartPage() {
       <div className="mt-4 text-center">
         <Link
           href="/products"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors duration-150 hover:text-foreground"
         >
           <ArrowLeft className="size-3.5" />
           Pokračovat v nákupu
@@ -281,7 +281,7 @@ function CartItemRow({
           <div>
             <Link
               href={`/products/${item.slug}`}
-              className="text-sm font-medium hover:text-primary"
+              className="text-sm font-medium transition-colors duration-150 hover:text-primary"
             >
               {item.name}
             </Link>
