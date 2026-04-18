@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
@@ -24,7 +25,11 @@ import {
   Terminal,
 } from "lucide-react";
 
-const navItems = [
+type NavItem =
+  | { href: string; label: string; icon: React.ElementType; divider?: false }
+  | { divider: true };
+
+const navItems: NavItem[] = [
   { href: "/admin/dashboard", label: "Přehled", icon: LayoutDashboard },
   { href: "/admin/products/quick-add", label: "Rychlé přidání", icon: Zap },
   { href: "/admin/products", label: "Produkty", icon: Package },
@@ -39,6 +44,7 @@ const navItems = [
   { href: "/admin/browse-abandonment", label: "Prohlížení", icon: Eye },
   { href: "/admin/subscribers", label: "Newsletter", icon: Mail },
   { href: "/admin/email-templates", label: "E-mail editor", icon: PenLine },
+  { divider: true },
   { href: "/admin/settings", label: "Nastavení", icon: Settings },
   { href: "/admin/jarvis", label: "JARVIS", icon: Terminal },
 ];
@@ -65,7 +71,10 @@ export function AdminSidebar({
 
       {/* Navigation */}
       <nav aria-label="Hlavní menu" className="flex-1 space-y-1 px-3 py-4">
-        {navItems.map((item) => {
+        {navItems.map((item, i) => {
+          if ("divider" in item && item.divider) {
+            return <hr key={`divider-${i}`} className="my-1 border-border/50" />;
+          }
           const isActive = pathname.startsWith(item.href);
           const Icon = item.icon;
           const showBadge = item.href === "/admin/orders" && ordersLast24h > 0;

@@ -18,6 +18,7 @@ const SEGMENT_LABELS: Record<string, string> = {
   "browse-abandonment": "Prohlížení",
   subscribers: "Newsletter",
   settings: "Nastavení",
+  jarvis: "JARVIS",
   new: "Nový",
   edit: "Upravit",
   "quick-add": "Rychlé přidání",
