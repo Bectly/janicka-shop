@@ -6,14 +6,12 @@ import { rateLimitAdmin } from "@/lib/rate-limit";
 import { claimCampaignSendLock, releaseCampaignSendLock } from "@/lib/campaign-lock";
 import {
   sendCampaignEmail,
-  sendVintedCampaignEmail,
   sendMothersDayEmail,
   sendCustomsCampaignEmail,
-  renderVintedCampaignPreview,
   renderMothersDayPreview,
   renderCustomsCampaignPreview,
 } from "@/lib/email";
-import type { CampaignEmailData, CampaignProduct, VintedCampaignSegment, MothersDayEmailNumber, MothersDaySegment, CustomsEmailNumber } from "@/lib/email";
+import type { CampaignEmailData, CampaignProduct, MothersDayEmailNumber, MothersDaySegment, CustomsEmailNumber } from "@/lib/email";
 import { getImageUrls } from "@/lib/images";
 import { parseJsonStringArray } from "@/lib/images";
 
@@ -268,120 +266,6 @@ export async function getCampaignHistory() {
     orderBy: { createdAt: "desc" },
     take: 10,
   });
-}
-
-// ---------------------------------------------------------------------------
-// Vinted T&C campaign (C2788 brief — April 28, 2026)
-// ---------------------------------------------------------------------------
-
-interface VintedCampaignResult {
-  success: boolean;
-  sentCount: number;
-  failedCount: number;
-  error?: string;
-}
-
-/**
- * Send the pre-built Vinted T&C campaign to active subscribers.
- * Segment determines subject line:
- *  - "warm": subscribers who signed up within last 90 days → Subject A
- *  - "cold": subscribers older than 90 days → Subject B
- *  - "all": auto-segments based on subscriber recency
- */
-export async function sendVintedTcCampaign(
-  segment: "warm" | "cold" | "all",
-  confirmation?: string,
-): Promise<VintedCampaignResult> {
-  await requireAdmin();
-  if (confirmation !== "ODESLAT VINTED") {
-    return { success: false, sentCount: 0, failedCount: 0, error: "Potvrzení 'ODESLAT VINTED' chybí nebo není správně." };
-  }
-  const rl = await rateLimitAdmin();
-  if (!rl.success) {
-    return { success: false, sentCount: 0, failedCount: 0, error: "Příliš mnoho požadavků. Zkuste to za chvíli." };
-  }
-  const lockKey = `vinted:${segment}`;
-  const lock = await claimCampaignSendLock(lockKey, FULL_SEND_WINDOW_MS);
-  if (!lock.success) {
-    return { success: false, sentCount: 0, failedCount: 0, error: lock.error };
-  }
-
-  const db = await getDb();
-  const now = new Date();
-  const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-
-  const subscribers = await db.newsletterSubscriber.findMany({
-    where: {
-      active: true,
-      OR: [
-        { pausedUntil: null },
-        { pausedUntil: { lt: now } },
-      ],
-    },
-    select: { email: true, createdAt: true },
-  });
-
-  if (subscribers.length === 0) {
-    await releaseCampaignSendLock(lockKey);
-    return { success: true, sentCount: 0, failedCount: 0 };
-  }
-
-  const tagged: { email: string; segment: VintedCampaignSegment }[] = subscribers
-    .filter((s) => {
-      if (segment === "all") return true;
-      if (segment === "warm") return s.createdAt >= ninetyDaysAgo;
-      return s.createdAt < ninetyDaysAgo;
-    })
-    .map((s) => ({
-      email: s.email,
-      segment: segment === "all"
-        ? (s.createdAt >= ninetyDaysAgo ? "warm" : "cold")
-        : segment,
-    }));
-
-  if (tagged.length === 0) {
-    await releaseCampaignSendLock(lockKey);
-    return { success: true, sentCount: 0, failedCount: 0 };
-  }
-
-  const subjectDesc = segment === "all"
-    ? "Vinted T&C kampaň (auto-segment)"
-    : segment === "warm"
-      ? "Vinted T&C kampaň — Tvoje fotky patří tobě. Vždy."
-      : "Vinted T&C kampaň — Zatímco Vinted školí AI...";
-
-  const campaign = await db.campaignLog.create({
-    data: {
-      subject: subjectDesc,
-      previewText: "U nás je to jinak. A vždy bylo.",
-      status: "sending",
-    },
-  });
-
-  let sentCount = 0;
-  let failedCount = 0;
-
-  for (let i = 0; i < tagged.length; i += BATCH_SIZE) {
-    const batch = tagged.slice(i, i + BATCH_SIZE);
-    const results = await Promise.all(
-      batch.map((sub) => sendVintedCampaignEmail(sub.segment, sub.email)),
-    );
-    for (const ok of results) {
-      if (ok) sentCount++;
-      else failedCount++;
-    }
-
-    if (i + BATCH_SIZE < tagged.length) {
-      await new Promise((resolve) => setTimeout(resolve, BATCH_DELAY_MS));
-    }
-  }
-
-  await db.campaignLog.update({
-    where: { id: campaign.id },
-    data: { status: "completed", sentCount, failedCount },
-  });
-
-  return { success: true, sentCount, failedCount };
 }
 
 // ---------------------------------------------------------------------------
@@ -650,7 +534,6 @@ interface CampaignPreview {
   htmlExcerpt?: string;
   /** Active CampaignSendLock rows that would block an immediate send. */
   lockStatus?: { campaignKey: string; expiresAt: string }[];
-  /** Present when a campaign splits recipients by segment (e.g. Vinted A/B). */
   segmentCounts?: { warm: number; cold: number };
   /** Subject line actually used for each segment (only set on auto-segment preview). */
   segmentSubjects?: { warm: string; cold: string };
@@ -717,89 +600,6 @@ async function getAdminTestRecipient(): Promise<string | null> {
   const email = session?.user?.email;
   if (email) return email;
   return process.env.ADMIN_NOTIFICATION_EMAIL ?? null;
-}
-
-/** Preview the Vinted T&C campaign (subject + HTML) without sending. */
-export async function previewVintedCampaign(
-  segment: "warm" | "cold" | "all",
-): Promise<CampaignPreview> {
-  await requireAdmin();
-  const db = await getDb();
-  const now = new Date();
-  const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-
-  const subscribers = await db.newsletterSubscriber.findMany({
-    where: {
-      active: true,
-      OR: [{ pausedUntil: null }, { pausedUntil: { lt: now } }],
-    },
-    select: { createdAt: true },
-  });
-
-  const warmCount = subscribers.filter((s) => s.createdAt >= ninetyDaysAgo).length;
-  const coldCount = subscribers.length - warmCount;
-
-  const subscriberCount =
-    segment === "warm" ? warmCount : segment === "cold" ? coldCount : subscribers.length;
-
-  const previewSegment: VintedCampaignSegment = segment === "cold" ? "cold" : "warm";
-  const sampleEmail = (await getAdminTestRecipient()) ?? "preview@janicka-shop.cz";
-  const { subject, html, previewText } = renderVintedCampaignPreview(previewSegment, sampleEmail);
-
-  const warmPreview = renderVintedCampaignPreview("warm", sampleEmail);
-  const coldPreview = renderVintedCampaignPreview("cold", sampleEmail);
-
-  const activeLocks = await db.campaignSendLock.findMany({
-    where: {
-      campaignKey: { in: ["vinted:all", "vinted:warm", "vinted:cold"] },
-      expiresAt: { gt: now },
-    },
-    select: { campaignKey: true, expiresAt: true },
-  });
-
-  const bodyText = html
-    .replace(/<style[\s\S]*?<\/style>/gi, " ")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  const htmlExcerpt = bodyText.slice(0, 300);
-
-  return {
-    subject,
-    html,
-    subscriberCount,
-    sampleEmail,
-    previewText,
-    htmlExcerpt,
-    lockStatus: activeLocks.map((l) => ({
-      campaignKey: l.campaignKey,
-      expiresAt: l.expiresAt.toISOString(),
-    })),
-    ...(segment === "all" ? {
-      segmentCounts: { warm: warmCount, cold: coldCount },
-      segmentSubjects: { warm: warmPreview.subject, cold: coldPreview.subject },
-    } : {}),
-  };
-}
-
-/** Send a single Vinted T&C test email to the current admin only. */
-export async function sendVintedTestEmail(
-  segment: "warm" | "cold" | "all",
-): Promise<TestSendResult> {
-  await requireAdmin();
-  const rl = await rateLimitAdmin();
-  if (!rl.success) {
-    return { success: false, error: "Příliš mnoho požadavků. Zkuste to za chvíli." };
-  }
-  const recipient = await getAdminTestRecipient();
-  if (!recipient) {
-    return { success: false, error: "Není nastavený admin e-mail pro test." };
-  }
-  const testSegment: VintedCampaignSegment = segment === "cold" ? "cold" : "warm";
-  const ok = await sendVintedCampaignEmail(testSegment, recipient);
-  return ok
-    ? { success: true, recipient }
-    : { success: false, error: "Test-email se nepodařilo odeslat. Zkontroluj Resend." };
 }
 
 /** Preview a Mother's Day campaign email. */
