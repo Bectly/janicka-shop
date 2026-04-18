@@ -216,6 +216,11 @@ export default function CartPage() {
   );
 }
 
+function countdownSeconds(countdown: string): number {
+  const [m, s] = countdown.split(":").map(Number);
+  return (m || 0) * 60 + (s || 0);
+}
+
 /** Countdown timer hook — returns "MM:SS" string, empty when expired */
 function useCountdown(expiresAt: string | undefined): string {
   const [remaining, setRemaining] = useState("");
@@ -249,6 +254,7 @@ function CartItemRow({
 }) {
   const countdown = useCountdown(item.reservedUntil);
   const isExpired = countdown === "0:00";
+  const isUrgent = countdown !== "" && !isExpired && countdownSeconds(countdown) < 120;
   const [isRemoving, startTransition] = useTransition();
 
   return (

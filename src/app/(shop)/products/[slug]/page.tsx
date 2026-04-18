@@ -26,6 +26,7 @@ import { NotifyMeForm } from "@/components/shop/notify-me-form";
 import { BrowseAbandonmentTracker } from "@/components/shop/browse-abandonment-tracker";
 import { Truck, Leaf, Ruler, Sparkles, Heart } from "lucide-react";
 import { parseProductImages, parseMeasurements, hasMeasurements } from "@/lib/images";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { Metadata } from "next";
 
 /**
@@ -72,6 +73,29 @@ async function getProduct(slug: string) {
   if (!product) return null;
   const lowestPricesMap = await getLowestPrices30d([product.id]);
   return { ...product, lowestPrice30d: lowestPricesMap.get(product.id) ?? null };
+}
+
+function RelatedProductsSkeleton() {
+  return (
+    <section className="mt-16">
+      <div className="mb-6">
+        <Skeleton className="h-6 w-24 rounded-full" />
+        <Skeleton className="mt-3 h-7 w-48" />
+      </div>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i}>
+            <Skeleton className="aspect-[3/4] w-full rounded-xl" />
+            <div className="mt-3 space-y-2">
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 async function RelatedProductsSection({
@@ -761,7 +785,7 @@ export default async function ProductDetailPage({ params }: Props) {
       </div>
 
       {/* Related products — streams independently */}
-      <Suspense fallback={null}>
+      <Suspense fallback={<RelatedProductsSkeleton />}>
         <RelatedProductsSection
           productId={product.id}
           categoryId={product.categoryId}
