@@ -106,7 +106,7 @@ export default async function AccountDashboardPage() {
             {recentOrders.map((o) => (
               <li
                 key={o.id}
-                className="rounded-xl border bg-card shadow-sm transition-colors hover:border-primary/30 hover:bg-muted/30"
+                className="rounded-xl border bg-card shadow-sm transition-colors duration-150 hover:border-primary/30 hover:bg-muted/30"
               >
                 <Link
                   href={`/account/orders/${o.orderNumber}`}
@@ -157,7 +157,7 @@ function DashCard({
   return (
     <Link
       href={href}
-      className="group rounded-xl border bg-card p-5 shadow-sm transition-colors hover:border-primary/40"
+      className="group rounded-xl border bg-card p-5 shadow-sm transition-colors duration-150 hover:border-primary/40"
     >
       <div className="flex items-start gap-3">
         <div className={cn("rounded-lg p-2", iconClass ?? "bg-muted text-foreground")}>

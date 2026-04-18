@@ -102,7 +102,7 @@ export default async function CollectionsPage() {
           </p>
           <Link
             href="/products"
-            className="mt-4 inline-flex min-h-[44px] items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-4 py-1.5 text-sm font-semibold text-primary transition-colors hover:bg-primary/[0.10]"
+            className="mt-4 inline-flex min-h-[44px] items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-4 py-1.5 text-sm font-semibold text-primary transition-colors duration-150 hover:bg-primary/[0.10]"
           >
             <Layers className="size-3.5" />
             Prohlédnout celý katalog

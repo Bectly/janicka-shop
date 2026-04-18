@@ -81,7 +81,7 @@ export function CategoryCard({
         <Icon className="size-6 text-foreground/60" strokeWidth={1.5} />
       </span>
       <div>
-        <h3 className="font-heading font-medium text-foreground transition-colors group-hover:text-primary">
+        <h3 className="font-heading font-medium text-foreground transition-colors duration-150 group-hover:text-primary">
           {name}
         </h3>
         {description && (

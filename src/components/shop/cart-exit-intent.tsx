@@ -55,7 +55,7 @@ export function CartExitIntent() {
       <div className="relative w-full max-w-sm animate-in fade-in zoom-in-95 rounded-2xl border bg-card p-6 shadow-xl">
         <button
           onClick={handleClose}
-          className="absolute right-3 top-3 rounded-full p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="absolute right-3 top-3 rounded-full p-1 text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
           aria-label="Zavřít"
         >
           <X className="size-5" />
@@ -112,7 +112,7 @@ export function CartExitIntent() {
           </Button>
           <button
             onClick={handleClose}
-            className="w-full py-2 text-center text-sm text-muted-foreground transition-colors hover:text-foreground"
+            className="w-full py-2 text-center text-sm text-muted-foreground transition-colors duration-150 hover:text-foreground"
           >
             Ještě si to rozmyslím
           </button>

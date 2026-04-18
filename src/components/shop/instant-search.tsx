@@ -270,7 +270,7 @@ export function InstantSearch({ variant = "icon" }: InstantSearchProps) {
       {variant === "bar" ? (
         <button
           onClick={openSearch}
-          className="flex w-full items-center gap-2 rounded-lg border bg-muted/40 px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="flex w-full items-center gap-2 rounded-lg border bg-muted/40 px-3 py-2.5 text-sm text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
           aria-label="Hledat produkty"
         >
           <Search className="size-4 shrink-0" />
@@ -282,7 +282,7 @@ export function InstantSearch({ variant = "icon" }: InstantSearchProps) {
       ) : (
         <button
           onClick={openSearch}
-          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-foreground/80 transition-colors hover:bg-muted hover:text-foreground"
+          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-foreground/80 transition-colors duration-150 hover:bg-muted hover:text-foreground"
           aria-label="Hledat (Ctrl+K)"
         >
           <Search className="size-5" />

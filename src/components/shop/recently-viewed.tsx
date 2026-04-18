@@ -130,7 +130,7 @@ export function RecentlyViewedSection({
                     </>
                   )}
                 </div>
-                <h3 className="text-sm font-medium leading-snug text-foreground transition-colors group-hover:text-primary">
+                <h3 className="text-sm font-medium leading-snug text-foreground transition-colors duration-150 group-hover:text-primary">
                   {item.name}
                 </h3>
                 <div className="flex items-center gap-2">

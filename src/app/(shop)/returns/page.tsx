@@ -37,7 +37,7 @@ export default function ReturnsPage() {
           </p>
           <Link
             href="/returns/withdrawal-form"
-            className="mt-3 inline-flex items-center gap-2 rounded-lg border bg-card px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted/50"
+            className="mt-3 inline-flex items-center gap-2 rounded-lg border bg-card px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors duration-150 hover:bg-muted/50"
           >
             <FileText className="size-4 text-primary" />
             Stáhnout formulář pro odstoupení od smlouvy

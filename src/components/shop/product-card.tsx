@@ -238,7 +238,7 @@ export function ProductCard({
           {brand && <span className="text-[10px] text-muted-foreground/30">&middot;</span>}
           <p className="text-[11px] text-muted-foreground/60">{categoryName}</p>
         </div>
-        <h3 className="text-sm font-medium leading-snug text-foreground/90 transition-colors line-clamp-1 group-hover:text-primary">
+        <h3 className="text-sm font-medium leading-snug text-foreground/90 transition-colors duration-150 line-clamp-1 group-hover:text-primary">
           {name}
         </h3>
         <div className="flex items-baseline gap-2 pt-0.5">

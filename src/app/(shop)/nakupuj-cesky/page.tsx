@@ -328,7 +328,7 @@ export default function NakupujCeskyPage() {
         </p>
         <Link
           href="/products"
-          className="mt-8 inline-flex items-center gap-2 rounded-full bg-primary px-8 py-3.5 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+          className="mt-8 inline-flex items-center gap-2 rounded-full bg-primary px-8 py-3.5 text-sm font-semibold text-primary-foreground shadow-sm transition-colors duration-150 hover:bg-primary/90"
         >
           Prohlédnout nabídku
           <ArrowRight className="size-4" />

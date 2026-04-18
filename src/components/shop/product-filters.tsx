@@ -397,7 +397,7 @@ export function ProductFilters({
           id="sort-select"
           value={activeSort}
           onChange={(e) => updateParams({ sort: e.target.value })}
-          className="w-full appearance-none rounded-full border border-border/60 bg-background py-1.5 pl-3.5 pr-8 text-sm text-foreground transition-colors hover:border-border focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50"
+          className="w-full appearance-none rounded-full border border-border/60 bg-background py-1.5 pl-3.5 pr-8 text-sm text-foreground transition-colors duration-150 hover:border-border focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50"
         >
           <option value="newest">Nejnovější</option>
           <option value="price-asc">Cena: od nejnižší</option>

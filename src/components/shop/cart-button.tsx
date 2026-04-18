@@ -36,7 +36,7 @@ export function CartButton() {
     <Link
       href="/cart"
       data-cart-button
-      className="relative inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-foreground/80 transition-colors hover:bg-muted hover:text-foreground haptic-press"
+      className="relative inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-foreground/80 transition-colors duration-150 hover:bg-muted hover:text-foreground haptic-press"
       aria-label={`Košík${count > 0 ? ` (${count})` : ""}`}
     >
       <ShoppingBag className={`size-5 ${bouncing ? "animate-cart-bounce" : ""}`} />

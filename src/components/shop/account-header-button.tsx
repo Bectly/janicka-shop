@@ -12,7 +12,7 @@ export async function AccountHeaderButton() {
       <Link
         href="/login"
         aria-label="Přihlásit se"
-        className="inline-flex size-11 items-center justify-center rounded-lg text-foreground/80 transition-colors hover:bg-muted hover:text-foreground"
+        className="inline-flex size-11 items-center justify-center rounded-lg text-foreground/80 transition-colors duration-150 hover:bg-muted hover:text-foreground"
       >
         <User className="size-5" />
       </Link>

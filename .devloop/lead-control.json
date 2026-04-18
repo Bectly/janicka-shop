@@ -1,5 +1,5 @@
 {
-  "last_bolt_commit_cycle": 4382,
+  "last_bolt_commit_cycle": 4383,
   "cycle": 4382,
   "directive": "C4382 Lead: Bolt backlog was empty (Bolt blocker C4379 ack'd). Added 3 fresh Bolt-lane tasks: #372 cart shipping cost + free shipping progress bar (CLAUDE.md flags as MUST FIX — #1 abandonment driver 48%, +15-20% AOV), #373 triage Sage 610 failures/24h (diagnostic — tail worker logs, identify retry churn), #374 Czech legacy URL redirects audit (unblocked slice of #65 — env-var-independent). Bolt force_next flipped to #372 (highest ROI, ship-blocker-class). #341/#343 remain in_progress but LB execution gated on #334 smoke-test + CF paid add-on — docs reconciled in f94de7b. Trace/Guard/Sage lanes unchanged. External blockers unchanged: #329/#1/#14(Apr30)/#216/#330.",
   "lanes": {
