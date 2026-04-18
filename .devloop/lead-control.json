@@ -1,17 +1,23 @@
 {
-  "last_bolt_commit_cycle": 4345,
-  "cycle": 4346,
-  "directive": "Hetzner migration in-flight. P1.2 Redis + P2.1 Nginx vhost SHIPPED (C4345). Unblock parallel lanes: Guard → nginx audit, Trace → non-migration e2e coverage, Sage → UI polish. Do NOT block QA/Security/UI on Hetzner DNS cutover (#329/P7.3).",
+  "last_bolt_commit_cycle": 4346,
+  "cycle": 4347,
+  "directive": "Hetzner migration: P1-P3 shipped (Redis + Nginx + Next.js daemon scaffolding). Bolt advance to P4 (BullMQ queues #335 — spec IS provided in task.description, prior cycle note was wrong) → P4.2 refactor (#336) → P7.1 UptimeRobot+Telegram (#344). Trace/Sage/Guard run INDEPENDENTLY — do NOT wait on DNS cutover (#329) or daemon boot (#334). Backlog >20 items, no new tasks needed this cycle.",
   "lanes": {
     "BOLT": {
       "status": "active",
       "next_priority": [
-        331,
-        332,
-        333,
+        335,
+        336,
+        344,
+        345,
+        348,
         329
       ],
-      "notes": "P2.1 Nginx vhost committed C4345 (f65d7a4). Next: P3.1 standalone+PM2 (#331) → P3.2 env sync to Hetzner (#332) → P3.3 systemd or PM2 ecosystem.config (#333). #329 certbot stays BLOCKED until janicka-shop.cz DNS points to 46.224.219.3 (bectly action). Do NOT retry certbot before DNS flip."
+      "notes": "P3.x DONE C4346. Next: #335 P4.1 BullMQ (spec IS in task.description — emailQueue/invoiceQueue/packetaQueue, per-worker systemd units Type=simple Restart=always EnvironmentFile=/etc/janicka-shop/env, SIGTERM graceful drain). Then #336 P4.2 refactor Resend sends + invoice PDF gen + Packeta SOAP createPacket from inline Server Actions into queue jobs (keep existing contracts, just swap await→enqueue + worker consumes). Then #344 P7.1 UptimeRobot on /api/health + Telegram via jarvis-bot (chat_id 8750673812, bot token in JARVIS DB 'telegram-bot'). Then #345 P7.2 Hetzner threshold alerts + PM2 log rotation. #348 runbook docs anytime build is red. #329 certbot STAYS BLOCKED until bectly flips DNS → 46.224.219.3. Ref: docs/migration/hetzner-all.md Phase 4/7.",
+      "blockers_external": {
+        "329": "DNS flip by bectly",
+        "334": "Hetzner daemon must boot (partially depends on Bolt #335 env)"
+      }
     },
     "TRACE": {
       "status": "active",
@@ -19,10 +25,11 @@
         324,
         327,
         351,
+        347,
         "new_category_switch_e2e",
         "new_customer_portal_e2e"
       ],
-      "notes": "#324 Vinted removal regression + #327 Redis cache-aside verification unblocked. #351 cold audit. NEW WORK (no task IDs yet — write directly): (a) Playwright e2e for category switching on /products — earlier bug: filter state leaked between categories (nuqs). Test /products?category=saty → click Topy → assert filter chips reset + URL updates. (b) E2E for customer portal from Cycle C3709 work (login, order history, profile edit, wishlist, returns request, GDPR export button). Check src/app/(shop)/ucet/ for routes. Guard/Bolt Hetzner tasks do NOT block QA."
+      "notes": "#324 Vinted removal regression + #327 Redis cache-aside verification + #351 cold-read audit — all unblocked. #334 P3.4 smoke test GATED on Hetzner daemon actually running; skip until Bolt confirms systemctl active. #347 P7.4 Lighthouse comparison: start Vercel baseline NOW (production URL), Hetzner side runs post-cutover. NEW e2e (write directly, no task IDs): (a) Playwright category switching on /products — prior bug: filter state leaked between categories via nuqs. Assert /products?category=saty → click Topy → filter chips reset + URL updates + no stale facets in API response. (b) E2E for customer portal C3709 (login, order history, profile edit, wishlist, returns request, GDPR export button). Routes in src/app/(shop)/ucet/. DO NOT touch migration code paths (nginx/pm2/env/redis/bullmq)."
     },
     "SAGE": {
       "status": "active",
@@ -31,23 +38,25 @@
         350,
         "new_admin_dashboard_polish",
         "new_pdp_polish",
-        "new_cart_ux_polish"
+        "new_cart_ux_polish",
+        "new_checkout_trust_badges_inline"
       ],
-      "notes": "#349 filter drawer polish (current focus) → #350 PDP gallery gestures (Baymard +108% views). AFTER those: (a) admin dashboard polish — check /admin/dashboard density, order-status badge contrast, empty states; (b) PDP visual polish — price history sparkline, condition badge placement, sticky ATC on mobile; (c) cart UX — free-shipping progress bar (threshold 1500 CZK, data from constants.ts), inline trust badges, sold-item toast. UI-only — DO NOT touch migration code (nginx/PM2/env/redis)."
+      "notes": "#349 filter drawer polish → #350 PDP gallery gestures (Baymard +108% views). Then: (a) admin dashboard polish: /admin/dashboard density, order-status badge contrast, empty states; (b) PDP visual polish: price history sparkline, condition badge placement, sticky ATC on mobile; (c) cart UX: free-shipping progress bar (threshold from constants.ts FREE_SHIPPING_THRESHOLD), inline trust badges, sold-item toast; (d) checkout: trust badges INLINE with payment form per C1496 (Comgate logo + lock icon + 'Zabezpečená platba' — 40-60% better than footer placement, max 3 badges). UI-only — DO NOT touch migration code paths (nginx/PM2/env/redis/bullmq)."
     },
     "GUARD": {
       "status": "active",
       "next_priority": [
         330
       ],
-      "notes": "UNBLOCKED C4345. Audit #330: review committed /etc/nginx/sites-available/janicka-shop.conf (also at docs/migration/nginx/janicka-shop.conf in repo). Check: (1) security headers (HSTS pending SSL, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, CSP with frame-src comgate.eu per Comgate inline gate spec), (2) no info disclosure (server_tokens off), (3) rate limiting on /api/auth and /api/dev-chat, (4) body size bounds sane (20M ok for image upload but scope to /api/uploadthing only if possible), (5) proxy header sanitization — no client X-Forwarded-* passthrough, (6) TLS config hardening checklist ready for when certbot runs. Deliverable: findings list + concrete diff suggestions in docs/migration/nginx/."
+      "notes": "UNBLOCKED C4345. Audit #330: review docs/migration/nginx/janicka-shop.conf (repo copy of /etc/nginx/sites-available/janicka-shop.conf on kryxon). Check: (1) security headers (HSTS pending SSL but scaffold ready, X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy strict-origin-when-cross-origin, CSP with frame-src comgate.eu per Comgate inline gate 504×679px spec, Permissions-Policy); (2) server_tokens off; (3) rate limiting on /api/auth + /api/dev-chat (limit_req_zone, e.g. 10r/s); (4) 20M body cap scoped to /api/uploadthing* only, default 1M elsewhere; (5) proxy header sanitization — strip incoming X-Forwarded-*, set trusted values server-side via real_ip_header; (6) TLS hardening checklist ready (TLS 1.2+ only, HSTS max-age=63072000 includeSubDomains preload, OCSP stapling, ssl_session_cache) for when certbot runs post-DNS-flip. Deliverable: findings list + concrete diff suggestions in docs/migration/nginx/nginx-hardening-review.md."
     }
   },
   "hard_rules": [
     "DO NOT re-add Vinted campaign (see NEVER_ADD_VINTED_CAMPAIGN.md).",
     "NEVER push to remote without bectly's explicit request.",
-    "Sage, Trace, Guard MUST NOT wait on Hetzner DNS/certbot (#329, P7.3) — they have independent lanes.",
-    "Bolt owns all Hetzner migration tasks; other agents do not touch nginx/pm2/env/redis code paths."
+    "Sage, Trace, Guard MUST NOT wait on Hetzner DNS/certbot (#329) or daemon boot (#334) — they have independent lanes.",
+    "Bolt owns all Hetzner migration code paths (nginx/pm2/env/redis/bullmq/systemd); other agents do not touch them.",
+    "Bolt: if #335 BullMQ task.description spec ever seems missing, re-read the task row in jarvis.db — the spec IS there (C4346 cycle note was incorrect)."
   ],
   "last_updated": "2026-04-18"
 }
