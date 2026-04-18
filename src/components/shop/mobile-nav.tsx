@@ -81,9 +81,9 @@ export function MobileNav({ categoryCounts, sessionRole }: MobileNavProps) {
             </Link>
           </SheetTitle>
         </SheetHeader>
-        {/* Search trigger in mobile nav */}
-        <div className="px-4 pb-2">
-          <InstantSearch />
+        {/* Search bar in mobile nav */}
+        <div className="px-4 pb-3">
+          <InstantSearch variant="bar" />
         </div>
 
         <nav aria-label="Hlavní navigace" className="flex flex-col gap-1 px-4">

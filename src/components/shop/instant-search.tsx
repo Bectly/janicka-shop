@@ -75,7 +75,13 @@ function saveRecentSearch(query: string) {
 // Component
 // ---------------------------------------------------------------------------
 
-export function InstantSearch() {
+interface InstantSearchProps {
+  /** "icon" = compact square icon button (header default).
+   *  "bar"  = full-width search-bar styled trigger (mobile nav). */
+  variant?: "icon" | "bar";
+}
+
+export function InstantSearch({ variant = "icon" }: InstantSearchProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -261,13 +267,27 @@ export function InstantSearch() {
   return (
     <>
       {/* Trigger button */}
-      <button
-        onClick={openSearch}
-        className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-foreground/80 transition-colors hover:bg-muted hover:text-foreground"
-        aria-label="Hledat (Ctrl+K)"
-      >
-        <Search className="size-5" />
-      </button>
+      {variant === "bar" ? (
+        <button
+          onClick={openSearch}
+          className="flex w-full items-center gap-2 rounded-lg border bg-muted/40 px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          aria-label="Hledat produkty"
+        >
+          <Search className="size-4 shrink-0" />
+          <span className="flex-1 text-left">Hledat produkty...</span>
+          <kbd className="hidden rounded border bg-background px-1.5 py-0.5 font-mono text-[10px] sm:inline-flex">
+            ⌘K
+          </kbd>
+        </button>
+      ) : (
+        <button
+          onClick={openSearch}
+          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-foreground/80 transition-colors hover:bg-muted hover:text-foreground"
+          aria-label="Hledat (Ctrl+K)"
+        >
+          <Search className="size-5" />
+        </button>
+      )}
 
       {/* Overlay */}
       {!open ? null : (
