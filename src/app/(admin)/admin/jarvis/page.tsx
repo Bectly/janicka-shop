@@ -1,25 +1,19 @@
-import { auth } from "@/lib/auth";
-import { JarvisTerminal } from "@/components/admin/jarvis-terminal";
+import { JarvisRemoteFrame } from "@/components/admin/jarvis-remote-frame";
 
 export const metadata = {
   title: "JARVIS — Admin",
 };
 
-export default async function JarvisPage() {
-  const session = await auth();
-  const userName = session?.user?.name ?? "admin";
-
+export default function JarvisPage() {
   return (
     <div className="space-y-4">
       <div>
         <h1 className="font-heading text-2xl font-bold text-foreground">JARVIS</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Terminál pro rychlé dotazy na obchod. Napiš{" "}
-          <code className="rounded bg-muted px-1 py-0.5 text-xs">help</code> pro
-          seznam příkazů.
+          Vzdálený Claude Code terminál s přístupem k eshopu. Chráněno Cloudflare Access + basic auth.
         </p>
       </div>
-      <JarvisTerminal userName={userName} />
+      <JarvisRemoteFrame />
     </div>
   );
 }

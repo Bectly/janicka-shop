@@ -26,8 +26,6 @@
     "@prisma/client": "^6.19.3",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
-    "@xterm/addon-fit": "^0.11.0",
-    "@xterm/xterm": "^6.0.0",
     "bcryptjs": "^3.0.3",
     "bullmq": "^5.74.1",
     "canvas-confetti": "^1.9.4",

@@ -90,7 +90,7 @@ const nextConfig: NextConfig = {
               "font-src 'self' data:",
               // connect-src: R2 uploads + GA4 data collection + Pinterest + Meta Pixel events
               "connect-src 'self' https://pub-88d95c0ca85d4cb999122434d83fb3c9.r2.dev https://payments.comgate.cz https://payments.comgate.eu https://widget.packeta.com https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net https://ct.pinterest.com https://www.facebook.com",
-              "frame-src 'self' https://payments.comgate.cz https://payments.comgate.eu https://widget.packeta.com",
+              "frame-src 'self' https://payments.comgate.cz https://payments.comgate.eu https://widget.packeta.com https://jarvis-janicka.jvsatnik.cz",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",

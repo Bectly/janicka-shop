@@ -1,7 +1,7 @@
 {
   "last_bolt_commit_cycle": 4371,
-  "cycle": 4369,
-  "directive": "C4369 Lead: #357 safe-mode toggle shipped (C4369 commit 8ea7bc7) and marked done. Bolt now force_next=#365 (replace fake JarvisTerminal with real Claude bridge iframe — owner flagged current impl as 'analytical chat, not real terminal'). After #365 ships, pivot to #364 Den matek P5.1b HTTP wrappers (deadline May 10, ~3 weeks runway). Trace still on #358 E2E /admin/jarvis (gate: wait for #365 commit, write spec skeleton now). Guard on #359 bridge security audit (deliverable: docs/security/jarvis-bridge-audit.md). Sage on PDP polish lane (price history sparkline + sticky mobile ATC + condition badge placement). Blockers 2218+2216 acknowledged — #354 already marked done, #353 runbook gap non-blocking (task itself closed). External blockers unchanged: #329 (.cz domain), #1 (R2 token), #14 (GMC), #216 (GA4).",
+  "cycle": 4371,
+  "directive": "C4371 Lead: Ack 2218 — #354 /admin/jarvis xterm.js terminal marked done (shipped C4367). Workers idle since 07:34 — re-issuing force_next stamps with fresh cycle to unblock dispatch. Bolt force_next=#365 (replace fake JarvisTerminal analytical-chat with real Claude WebSocket bridge — preserve safe-mode toggle + 20/min rate limit + jarvis_console_log audit across transport swap); after #365 → #364 Den matek P5.1b HTTP wrapper. Trace force_next=#358 E2E /admin/jarvis (Playwright skeleton NOW, full flow gated on #365 commit) + #367 full codebase quality sweep. Guard: #359 is cancelled in DB — pivot to #366 SEC-1 Remote Console full-stack audit (same scope: JWT/WS hardening/audit integrity/rate-limit correctness/CORS, deliver docs/security/jarvis-bridge-audit.md). Sage PDP polish: price history sparkline + sticky mobile ATC + condition badge placement. External blockers unchanged: #329 (.cz domain), #1 (R2 token), #14 (GMC April 30), #216 (GA4).",
   "lanes": {
     "BOLT": {
       "status": "active",
@@ -42,12 +42,12 @@
     },
     "GUARD": {
       "status": "active",
-      "force_next_task": 359,
+      "force_next_task": 366,
       "next_priority": [
-        359,
+        366,
         330
       ],
-      "notes": "PRIORITY: #359 RC.8 bridge security audit. Scope: (1) JWT extraction on WS upgrade — verify bridge re-validates signature + role=admin + expiry, not just presence; (2) WS frame hardening — max message size cap, command length cap, UTF-8 validation, reject binary; (3) audit log integrity — every command row in jarvis_console_log has userId/userEmail (no nulls), command field not truncated silently, no PII leak in stderr captured; (4) command sanitization — confirm NO server-side shell injection vector (bridge spawns commands via list args, not `sh -c`); (5) rate limit correctness — 20/min keyed on user.id not IP (IP-keyed would let one admin DOS themselves via shared IP); (6) CORS + Origin check on /api/admin/jarvis POST. Deliverable: docs/security/jarvis-bridge-audit.md with findings + severity + fix proposals. THEN #330 nginx hardening (docs/migration/nginx/janicka-shop.conf) — see prior notes (CSP frame-src comgate.eu, rate limits, 20M cap scoped to /api/uploadthing*, X-Forwarded-* sanitization, TLS 1.2+)."
+      "notes": "PRIORITY: #366 SEC-1 Remote Console full-stack audit (replaces cancelled #359, same scope updated for ttyd architecture). Scope: (1) JWT extraction on WS upgrade — verify bridge re-validates signature + role=admin + expiry, not just presence; (2) WS frame hardening — max message size cap, command length cap, UTF-8 validation, reject binary; (3) audit log integrity — every command row in jarvis_console_log has userId/userEmail (no nulls), command field not truncated silently, no PII leak in stderr captured; (4) command sanitization — confirm NO server-side shell injection vector (bridge spawns commands via list args, not `sh -c`); (5) rate limit correctness — 20/min keyed on user.id not IP (IP-keyed would let one admin DOS themselves via shared IP); (6) CORS + Origin check on /api/admin/jarvis POST; (7) safe-mode toggle + dangerous-command guard cannot be bypassed via direct WS frame. Deliverable: docs/security/jarvis-bridge-audit.md with findings + severity + fix proposals. THEN #330 nginx hardening (docs/migration/nginx/janicka-shop.conf) — CSP frame-src comgate.eu, rate limits, 20M cap scoped to /api/uploadthing*, X-Forwarded-* sanitization, TLS 1.2+."
     }
   },
   "hard_rules": [
@@ -57,6 +57,6 @@
     "Bolt owns all Hetzner migration code paths (nginx/pm2/env/redis/bullmq/systemd); other agents do not touch them.",
     "Tasks #352 and #353 are DONE — do not re-raise as blockers (blockers 2215/2216 acknowledged and closed)."
   ],
-  "last_updated": "2026-04-18T07:50",
+  "last_updated": "2026-04-18T08:00",
   "pause": {}
 }
