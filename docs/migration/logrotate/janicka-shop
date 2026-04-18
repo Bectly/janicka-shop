@@ -1,0 +1,42 @@
+# /etc/logrotate.d/janicka-shop
+# System logrotate for cron + nginx site logs (Fáze 7 P7.2).
+#
+# Deployment:
+#   sudo cp docs/migration/logrotate/janicka-shop /etc/logrotate.d/janicka-shop
+#   sudo chown root:root /etc/logrotate.d/janicka-shop
+#   sudo chmod 644 /etc/logrotate.d/janicka-shop
+#   sudo logrotate -d /etc/logrotate.d/janicka-shop   # debug, no writes
+#   sudo logrotate -f /etc/logrotate.d/janicka-shop   # force one rotate to validate
+#
+# Retention: 30 daily rotations + gzip compress — matches PM2 logrotate policy.
+# Note: PM2 logs under /var/log/pm2/ are rotated by the pm2-logrotate module
+#       (configured separately — see runbook p7.2). DO NOT list them here or
+#       both rotators will fight for the same file.
+
+/var/log/janicka-shop/*.log {
+    daily
+    rotate 30
+    size 10M
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+    create 0640 www-data www-data
+    sharedscripts
+}
+
+/var/log/nginx/janicka-shop.*.log {
+    daily
+    rotate 30
+    size 10M
+    missingok
+    notifempty
+    compress
+    delaycompress
+    create 0640 www-data adm
+    sharedscripts
+    postrotate
+        [ -f /run/nginx.pid ] && kill -USR1 "$(cat /run/nginx.pid)" 2>/dev/null || true
+    endscript
+}

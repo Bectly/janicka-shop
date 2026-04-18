@@ -7,6 +7,7 @@ import { OrderSearch } from "@/components/admin/order-search";
 import { OrderExportButton } from "@/components/admin/order-export-button";
 import { AccountingExportButton } from "@/components/admin/accounting-export-button";
 import { OrdersTable, type OrderRow } from "./orders-table";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { Metadata } from "next";
 import type { Prisma } from "@prisma/client";
 
@@ -128,7 +129,7 @@ export default async function AdminOrdersPage({
         </div>
         <div className="flex gap-2">
           <AccountingExportButton />
-          <Suspense fallback={null}>
+          <Suspense fallback={<Skeleton className="h-9 w-24 rounded-lg" />}>
             <OrderExportButton />
           </Suspense>
         </div>
@@ -136,7 +137,7 @@ export default async function AdminOrdersPage({
 
       {/* Search */}
       <div className="mt-4 max-w-md">
-        <Suspense fallback={null}>
+        <Suspense fallback={<Skeleton className="h-9 w-full rounded-lg" />}>
           <OrderSearch />
         </Suspense>
       </div>

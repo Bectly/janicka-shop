@@ -7,7 +7,8 @@ import { Plus, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductSearch } from "@/components/admin/product-search";
 import { BulkProductTable } from "@/components/admin/bulk-product-table";
-import { Pagination } from "@/components/shop/pagination";
+import { Pagination, PaginationSkeleton } from "@/components/shop/pagination";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { Metadata } from "next";
 import type { Prisma } from "@prisma/client";
 
@@ -230,7 +231,7 @@ export default async function AdminProductsPage({
 
       {/* Search & Filters */}
       <div className="mt-4 space-y-3">
-        <Suspense fallback={null}>
+        <Suspense fallback={<Skeleton className="h-9 w-full rounded-lg" />}>
           <ProductSearch />
         </Suspense>
 
@@ -303,7 +304,7 @@ export default async function AdminProductsPage({
       {/* Products table with bulk actions */}
       <BulkProductTable products={products} query={query || undefined} />
 
-      <Suspense fallback={null}>
+      <Suspense fallback={<PaginationSkeleton />}>
         <Pagination
           totalItems={totalCount}
           perPage={ADMIN_PRODUCTS_PER_PAGE}

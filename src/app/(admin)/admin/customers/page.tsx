@@ -15,7 +15,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
-import { Pagination } from "@/components/shop/pagination";
+import { Pagination, PaginationSkeleton } from "@/components/shop/pagination";
 import { CustomerSearchInput } from "./customer-search-input";
 import { CustomerTagFilter } from "./customer-tag-filter";
 import { ExportCustomersCsvButton } from "./export-customers-csv-button";
@@ -423,7 +423,7 @@ export default async function AdminCustomersPage({
         </div>
       )}
 
-      <Suspense fallback={null}>
+      <Suspense fallback={<PaginationSkeleton />}>
         <Pagination
           totalItems={totalCount}
           perPage={ADMIN_CUSTOMERS_PER_PAGE}

@@ -3,6 +3,20 @@
 import Link from "next/link";
 import { useSearchParams, usePathname } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+
+/** Placeholder that matches pagination height — prevents layout shift during Suspense. */
+export function PaginationSkeleton() {
+  return (
+    <div className="mt-12 flex items-center justify-center gap-1">
+      <Skeleton className="h-11 w-24 rounded-lg" />
+      <Skeleton className="h-11 w-11 rounded-lg" />
+      <Skeleton className="h-11 w-11 rounded-lg" />
+      <Skeleton className="h-11 w-11 rounded-lg" />
+      <Skeleton className="h-11 w-24 rounded-lg" />
+    </div>
+  );
+}
 
 interface PaginationProps {
   totalItems: number;

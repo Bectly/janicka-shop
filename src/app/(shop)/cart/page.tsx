@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Trash2, ShoppingBag, ArrowLeft, Clock, Lock, RotateCcw, ShieldCheck } from "lucide-react";
+import { Trash2, ShoppingBag, ArrowLeft, Clock, Lock, RotateCcw, ShieldCheck, CheckCircle, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCartStore, type CartItem } from "@/lib/cart-store";
 import { formatPrice } from "@/lib/format";
@@ -310,7 +310,8 @@ function CartItemRow({
               </span>
             )}
             {isExpired && (
-              <span className="text-xs font-medium text-destructive">
+              <span className="flex items-center gap-1 rounded-md bg-destructive/10 px-1.5 py-0.5 text-xs font-medium text-destructive">
+                <AlertCircle className="size-3" />
                 Rezervace vypršela
               </span>
             )}
@@ -340,7 +341,8 @@ function ShippingPreview({ total }: { total: number }) {
           <span className="text-muted-foreground">
             {SHIPPING_METHOD_LABELS[method] ?? method}
           </span>
-          <span className={isFree ? "font-medium text-sage-dark" : "text-foreground"}>
+          <span className={isFree ? "flex items-center gap-1 font-medium text-sage-dark" : "text-foreground"}>
+            {isFree && <CheckCircle className="size-3 shrink-0" />}
             {isFree ? "Zdarma" : formatPrice(price)}
           </span>
         </div>
