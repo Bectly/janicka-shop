@@ -47,7 +47,7 @@ export function CollectionCard({
   return (
     <Link
       href={`/collections/${slug}`}
-      className={`group relative overflow-hidden rounded-2xl shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg ${wide ? "sm:col-span-2" : ""}`}
+      className={`group relative overflow-hidden rounded-2xl shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 ${wide ? "sm:col-span-2" : ""}`}
     >
       {/* ── Image / empty state ────────────────────────────── */}
       <div className={`relative overflow-hidden ${wide ? "aspect-[4/3] sm:aspect-[16/9]" : "aspect-[4/3]"}`}>

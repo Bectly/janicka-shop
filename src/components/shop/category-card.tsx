@@ -72,7 +72,7 @@ export function CategoryCard({
   return (
     <Link
       href={`/products?category=${slug}`}
-      className={`group flex flex-col items-center gap-3 rounded-2xl border bg-card bg-gradient-to-br ${t.cardFrom} p-6 text-center transition-all duration-300 ${t.hoverBorder} ${t.hoverShadow} hover:-translate-y-0.5`}
+      className={`group flex flex-col items-center gap-3 rounded-2xl border bg-card bg-gradient-to-br ${t.cardFrom} p-6 text-center transition-all duration-300 ${t.hoverBorder} ${t.hoverShadow} hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2`}
     >
       <span
         className={`flex size-12 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3 sm:size-14 ${t.iconBg}`}

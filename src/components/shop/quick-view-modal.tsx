@@ -74,7 +74,7 @@ export function QuickViewButton({ productId }: QuickViewButtonProps) {
       <button
         type="button"
         onClick={handleOpen}
-        className="inline-flex size-11 items-center justify-center rounded-full bg-background/80 backdrop-blur-sm transition-all duration-150 hover:bg-background hover:shadow-md opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0"
+        className="inline-flex size-11 items-center justify-center rounded-full bg-background/80 backdrop-blur-sm transition-all duration-150 hover:bg-background hover:shadow-md active:scale-95 opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:opacity-100 focus-visible:translate-y-0"
         aria-label="Rychlý náhled"
       >
         <Eye className="size-4 text-foreground/70" />

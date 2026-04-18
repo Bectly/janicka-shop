@@ -63,7 +63,7 @@ export function WishlistButton({
     <button
       type="button"
       onClick={handleClick}
-      className={`inline-flex size-11 items-center justify-center rounded-full bg-background/80 backdrop-blur-sm transition-all duration-150 hover:bg-background hover:shadow-md ${className}`}
+      className={`inline-flex size-11 items-center justify-center rounded-full bg-background/80 backdrop-blur-sm transition-all duration-150 hover:bg-background hover:shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${className}`}
       aria-label={isWishlisted ? "Odebrat z oblíbených" : "Přidat do oblíbených"}
     >
       <Heart
