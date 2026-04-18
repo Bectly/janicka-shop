@@ -15,7 +15,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { ProductFilters } from "@/components/shop/product-filters";
 import { ProductCard } from "@/components/shop/product-card";
 import { ProductListItem } from "@/components/shop/product-list-item";
@@ -472,18 +472,18 @@ export function ProductsClient({
               <Search className="size-7 text-brand/50" aria-hidden="true" />
             </div>
             <h3 className="font-heading text-lg font-semibold text-foreground">
-              Nic nenalezeno
+              Žádné výsledky
             </h3>
             <p className="mx-auto mt-2 max-w-xs text-sm text-muted-foreground">
-              Žádné produkty neodpovídají zvoleným filtrům.
+              Žádné kousky neodpovídají zvoleným filtrům. Zkus je upravit — nové přibývají každý den.
             </p>
             <button
               type="button"
               onClick={clearAll}
-              className="mt-5 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/10"
+              className="mt-5 inline-flex min-h-11 items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-5 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/10"
             >
-              <span aria-hidden="true">↩</span>
-              Zobrazit vše
+              <X className="size-3.5" aria-hidden="true" />
+              Vymazat filtry
             </button>
           </div>
         ) : (

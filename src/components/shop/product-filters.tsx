@@ -381,7 +381,7 @@ export function ProductFilters({
       {minPrice && <FilterChip label={`od ${minPrice} Kč`} onRemove={() => updateParams({ minPrice: null })} />}
       {maxPrice && <FilterChip label={`do ${maxPrice} Kč`} onRemove={() => updateParams({ maxPrice: null })} />}
       {saleOnly && <FilterChip label="Ve slevě" onRemove={() => updateParams({ sale: null })} />}
-      <Button variant="link" onClick={clearAll} className="h-auto p-0 text-xs text-destructive">
+      <Button variant="link" onClick={clearAll} className="min-h-11 h-auto px-2 text-xs text-destructive">
         Smazat vše
       </Button>
     </div>
@@ -521,7 +521,7 @@ export function ProductFilters({
         >
           {visibleSizes.length > 0 && (
             <AccordionItem value="sizes">
-              <AccordionTrigger className="py-3 text-xs font-semibold uppercase tracking-[0.08em] text-foreground hover:no-underline hover:text-foreground/70">
+              <AccordionTrigger className="min-h-11 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-foreground hover:no-underline hover:text-foreground/70">
                 Velikost
                 {activeSizes.length > 0 && (
                   <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-primary/15 px-1.5 text-[11px] font-semibold leading-5 text-primary">
@@ -556,7 +556,7 @@ export function ProductFilters({
           )}
           {colors.filter((c) => (counts.colors[c] ?? 0) > 0 || activeColors.includes(c)).length > 0 && (
             <AccordionItem value="colors">
-              <AccordionTrigger className="py-3 text-xs font-semibold uppercase tracking-[0.08em] text-foreground hover:no-underline hover:text-foreground/70">
+              <AccordionTrigger className="min-h-11 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-foreground hover:no-underline hover:text-foreground/70">
                 Barva
                 {activeColors.length > 0 && (
                   <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-primary/15 px-1.5 text-[11px] font-semibold leading-5 text-primary">
@@ -607,7 +607,7 @@ export function ProductFilters({
           )}
           {brands.filter((b) => (counts.brands[b] ?? 0) > 0 || activeBrands.includes(b)).length > 0 && (
             <AccordionItem value="brands">
-              <AccordionTrigger className="py-3 text-xs font-semibold uppercase tracking-[0.08em] text-foreground hover:no-underline hover:text-foreground/70">
+              <AccordionTrigger className="min-h-11 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-foreground hover:no-underline hover:text-foreground/70">
                 Značka
                 {activeBrands.length > 0 && (
                   <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-primary/15 px-1.5 text-[11px] font-semibold leading-5 text-primary">
@@ -634,7 +634,7 @@ export function ProductFilters({
             </AccordionItem>
           )}
           <AccordionItem value="conditions">
-            <AccordionTrigger className="py-3 text-xs font-semibold uppercase tracking-[0.08em] text-foreground hover:no-underline hover:text-foreground/70">
+            <AccordionTrigger className="min-h-11 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-foreground hover:no-underline hover:text-foreground/70">
               Stav
               {activeConditions.length > 0 && (
                 <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-primary/15 px-1.5 text-[11px] font-semibold leading-5 text-primary">
@@ -673,7 +673,7 @@ export function ProductFilters({
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="price">
-            <AccordionTrigger className="py-3 text-xs font-semibold uppercase tracking-[0.08em] text-foreground hover:no-underline hover:text-foreground/70">
+            <AccordionTrigger className="min-h-11 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-foreground hover:no-underline hover:text-foreground/70">
               Cena (Kč)
               {(minPrice || maxPrice) && (
                 <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-primary/15 px-1.5 text-[11px] font-semibold leading-5 text-primary">1</span>
@@ -720,7 +720,7 @@ export function ProductFilters({
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="sale">
-            <AccordionTrigger className="py-3 text-xs font-semibold uppercase tracking-[0.08em] text-foreground hover:no-underline hover:text-foreground/70">
+            <AccordionTrigger className="min-h-11 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-foreground hover:no-underline hover:text-foreground/70">
               Sleva
               {saleOnly && (
                 <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-destructive/15 px-1.5 text-[11px] font-semibold leading-5 text-destructive">1</span>
@@ -1060,11 +1060,11 @@ function FilterChip({
   onRemove: () => void;
 }) {
   return (
-    <span className="inline-flex min-h-9 items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+    <span className="inline-flex min-h-11 items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
       {label}
       <button
         onClick={onRemove}
-        className="flex min-h-7 min-w-7 items-center justify-center rounded-full transition-colors hover:bg-primary/20"
+        className="flex min-h-9 min-w-9 items-center justify-center rounded-full transition-colors hover:bg-primary/20"
         aria-label={`Odebrat filtr ${label}`}
       >
         <X className="size-3" />

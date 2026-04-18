@@ -1,5 +1,5 @@
 {
-  "last_bolt_commit_cycle": 4347,
+  "last_bolt_commit_cycle": 4348,
   "cycle": 4348,
   "directive": "C4348: P4.1 BullMQ #335 SHIPPED (commit 56c76d4 — 3 queues/workers/systemd units smoke-tested green). Bolt advance to #336 P4.2 — refactor existing Server Actions (order-confirmation Resend emails, invoice PDF generation, Packeta SOAP createPacket) from inline await → enqueue onto emailQueue/invoiceQueue/packetaQueue. Keep Server Action return contracts stable (return success when job enqueued; admin polls job status). Workers already scaffolded with __smoke-job branches — replace with real dispatch logic. Then #344 UptimeRobot, #345 PM2 log rotation, #348 runbooks. Trace/Sage/Guard keep independent lanes per C4347 notes — no waiting on DNS/daemon.",
   "lanes": {
