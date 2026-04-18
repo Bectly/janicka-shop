@@ -65,7 +65,7 @@
 - [x] Newsletter scheduler (infrastruktura — `scripts/cron/newsletter-dispatch.ts` + `campaigns.json`, follow-up: admin campaign HTTP wrapper endpointy pro Mother's Day / Vinted T&C)
 - [x] Abandoned cart recovery (3-email sequence — `scripts/cron/abandoned-cart.ts` + /etc/cron.d entry)
 - [x] Order status checks (Packeta SOAP poll — `scripts/cron/order-status-sync.ts`, `Order.packetaStatus` + `packetaStatusCheckedAt` fields)
-- [ ] R2 backup cron (nightly)
+- [x] R2 backup cron (nightly) — `scripts/cron/backup-r2.sh` + /etc/cron.d entry at 03:00 UTC, 30d daily / 12mo monthly retention, Telegram failure alerts. Bootstrap runbook: `docs/migration/runbooks/p5.2-r2-backup.md` (blocked on R2 API token creation + rclone install on VPS).
 
 ### Fáze 6: DNS switch (Day 3)
 - [ ] Cloudflare Load Balancer setup (Hetzner primary, Vercel backup)

@@ -59,3 +59,9 @@ EnvironmentFile=/opt/janicka-shop/.env.production
 
 # Similar-items matcher — every 2 hours
 0 */2 * * * www-data /usr/bin/curl -fsS -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/similar-items >> /var/log/janicka-shop/cron.log 2>&1
+
+# ── Nightly R2 backup (Turso dump + uploads → r2:janicka-backup) ───────────
+# 30d daily retention, 12mo monthly (day-1 mirror). 03:00 UTC = 04:00/05:00 CE(S)T.
+# Runs as www-data — rclone.conf lives at ~www-data/.config/rclone/rclone.conf.
+# See docs/migration/runbooks/p5.2-r2-backup.md for bootstrap.
+0 3 * * * www-data cd /opt/janicka-shop && /usr/bin/flock -n /var/run/janicka-shop/backup-r2.lock /bin/bash scripts/cron/backup-r2.sh >> /var/log/janicka-shop/cron.log 2>&1
