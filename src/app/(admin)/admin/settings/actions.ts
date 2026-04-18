@@ -206,7 +206,7 @@ export async function backfillMeasurements(): Promise<MeasurementsBackfillResult
       totalScanned: 0,
       updated: 0,
       skipped: 0,
-      byField: { chest: 0, waist: 0, hips: 0, length: 0, sleeve: 0 },
+      byField: { chest: 0, waist: 0, hips: 0, length: 0, sleeve: 0, inseam: 0 },
     };
   }
   recordRateLimitHit(`backfill-measurements:${ip}`);
@@ -229,6 +229,7 @@ export async function backfillMeasurements(): Promise<MeasurementsBackfillResult
     hips: 0,
     length: 0,
     sleeve: 0,
+    inseam: 0,
   };
 
   for (const p of products) {

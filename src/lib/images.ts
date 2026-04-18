@@ -59,6 +59,7 @@ export interface ProductMeasurements {
   hips?: number;
   length?: number;
   sleeve?: number;
+  inseam?: number;
 }
 
 /** Parse measurements JSON from DB */
@@ -72,6 +73,7 @@ export function parseMeasurements(json: string): ProductMeasurements {
     if (typeof parsed.hips === "number" && parsed.hips > 0) result.hips = parsed.hips;
     if (typeof parsed.length === "number" && parsed.length > 0) result.length = parsed.length;
     if (typeof parsed.sleeve === "number" && parsed.sleeve > 0) result.sleeve = parsed.sleeve;
+    if (typeof parsed.inseam === "number" && parsed.inseam > 0) result.inseam = parsed.inseam;
     return result;
   } catch {
     return {};
@@ -80,5 +82,5 @@ export function parseMeasurements(json: string): ProductMeasurements {
 
 /** Check if measurements object has any actual values */
 export function hasMeasurements(m: ProductMeasurements): boolean {
-  return !!(m.chest || m.waist || m.hips || m.length || m.sleeve);
+  return !!(m.chest || m.waist || m.hips || m.length || m.sleeve || m.inseam);
 }

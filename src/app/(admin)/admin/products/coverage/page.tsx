@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   title: "Pokrytí měr",
 };
 
-type MeasurementKey = "chest" | "waist" | "hips" | "length" | "sleeve";
+type MeasurementKey = "chest" | "waist" | "hips" | "length" | "sleeve" | "inseam";
 type TrackedField = MeasurementKey | "fitNote";
 
 const MEASUREMENT_KEYS: MeasurementKey[] = [
@@ -21,6 +21,7 @@ const MEASUREMENT_KEYS: MeasurementKey[] = [
   "hips",
   "length",
   "sleeve",
+  "inseam",
 ];
 const TRACKED: TrackedField[] = [...MEASUREMENT_KEYS, "fitNote"];
 
@@ -30,6 +31,7 @@ const FIELD_LABELS: Record<TrackedField, string> = {
   hips: "Boky",
   length: "Délka",
   sleeve: "Rukáv",
+  inseam: "Vnitř. nohavice",
   fitNote: "Poznámka",
 };
 
@@ -105,6 +107,7 @@ export default async function CoveragePage({
       hips: parsed.hips != null,
       length: parsed.length != null,
       sleeve: parsed.sleeve != null,
+      inseam: parsed.inseam != null,
       fitNote: !!p.fitNote && p.fitNote.trim() !== "",
     };
     const filledCount = TRACKED.filter((k) => filled[k]).length;
@@ -119,6 +122,7 @@ export default async function CoveragePage({
     hips: 0,
     length: 0,
     sleeve: 0,
+    inseam: 0,
     fitNote: 0,
   };
   let fullCount = 0;

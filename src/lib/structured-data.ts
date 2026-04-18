@@ -141,6 +141,7 @@ const MEASUREMENT_LABELS: Record<string, string> = {
   hips: "Boky",
   length: "Délka",
   sleeve: "Délka rukávu",
+  inseam: "Vnitřní délka nohavice",
 };
 
 /** Build a single Product schema object (for use standalone or inside ItemList). */
@@ -188,7 +189,7 @@ export function buildProductSchema(product: ProductForSchema) {
   if (product.measurements) {
     try {
       const m = JSON.parse(product.measurements) as Record<string, unknown>;
-      for (const key of ["chest", "waist", "hips", "length", "sleeve"]) {
+      for (const key of ["chest", "waist", "hips", "length", "sleeve", "inseam"]) {
         const raw = m[key];
         const n = typeof raw === "number" ? raw : Number(raw);
         if (Number.isFinite(n) && n > 0) {

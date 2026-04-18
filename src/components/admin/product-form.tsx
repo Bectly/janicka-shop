@@ -476,13 +476,14 @@ export function ProductForm({ categories, product, action }: ProductFormProps) {
           <Ruler className="size-4 text-muted-foreground" />
           <Label>Rozměry (cm)</Label>
         </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-6">
           {([
             ["chest", "Prsa"],
             ["waist", "Pas"],
             ["hips", "Boky"],
             ["length", "Délka"],
             ["sleeve", "Rukáv"],
+            ["inseam", "Vnitř. nohavice"],
           ] as const).map(([key, label]) => (
             <div key={key} className="space-y-1">
               <Label htmlFor={`measurements_${key}`} className="text-xs text-muted-foreground">

@@ -21,6 +21,8 @@ const FIELD_LABELS: Record<string, string> = {
   waist: "Pas",
   hips: "Boky",
   length: "Délka",
+  sleeve: "Rukáv",
+  inseam: "Vnitř. nohavice",
 };
 
 export function MeasurementsBackfill() {

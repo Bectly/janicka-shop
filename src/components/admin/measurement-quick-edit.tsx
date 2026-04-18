@@ -6,7 +6,7 @@ import { updateProductMeasurementsQuick } from "@/app/(admin)/admin/products/act
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-type MeasurementKey = "chest" | "waist" | "hips" | "length" | "sleeve";
+type MeasurementKey = "chest" | "waist" | "hips" | "length" | "sleeve" | "inseam";
 
 const FIELDS: { key: MeasurementKey; label: string }[] = [
   { key: "chest", label: "Prsa" },
@@ -14,6 +14,7 @@ const FIELDS: { key: MeasurementKey; label: string }[] = [
   { key: "hips", label: "Boky" },
   { key: "length", label: "Délka" },
   { key: "sleeve", label: "Rukáv" },
+  { key: "inseam", label: "Vnitř. nohavice" },
 ];
 
 export type InitialMeasurements = Partial<Record<MeasurementKey, number>>;
@@ -33,6 +34,7 @@ export function MeasurementQuickEdit({
     hips: initial.hips != null ? String(initial.hips) : "",
     length: initial.length != null ? String(initial.length) : "",
     sleeve: initial.sleeve != null ? String(initial.sleeve) : "",
+    inseam: initial.inseam != null ? String(initial.inseam) : "",
   }));
   const [fitNote, setFitNote] = useState(initialFitNote ?? "");
   const [isPending, startTransition] = useTransition();

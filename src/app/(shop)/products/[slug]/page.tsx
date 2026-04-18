@@ -664,12 +664,13 @@ export default async function ProductDetailPage({ params }: Props) {
 
           {/* Measurements table */}
           {hasMeasurements(measurements) && (() => {
-            const measurementCount = [measurements.chest, measurements.waist, measurements.hips, measurements.length, measurements.sleeve].filter(Boolean).length;
+            const measurementCount = [measurements.chest, measurements.waist, measurements.hips, measurements.length, measurements.sleeve, measurements.inseam].filter(Boolean).length;
             const gridCols =
               measurementCount <= 2 ? "grid-cols-2" :
               measurementCount === 3 ? "grid-cols-3" :
               measurementCount === 4 ? "grid-cols-2 sm:grid-cols-4" :
-              "grid-cols-2 sm:grid-cols-5";
+              measurementCount === 5 ? "grid-cols-2 sm:grid-cols-5" :
+              "grid-cols-2 sm:grid-cols-6";
             return (
             <div className="mt-4 overflow-hidden rounded-xl border border-border">
               <div className="flex items-center gap-2 border-b border-border bg-muted/40 px-4 py-2.5">
@@ -715,6 +716,14 @@ export default async function ProductDetailPage({ params }: Props) {
                     <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Rukáv</span>
                     <span className="text-lg font-bold tabular-nums leading-none text-foreground">
                       {measurements.sleeve}<span className="ml-1 text-xs font-normal text-muted-foreground">cm</span>
+                    </span>
+                  </div>
+                )}
+                {measurements.inseam && (
+                  <div className="flex flex-col gap-1 bg-background px-4 py-3 transition-colors duration-150 hover:bg-muted/50">
+                    <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Vnitř. nohavice</span>
+                    <span className="text-lg font-bold tabular-nums leading-none text-foreground">
+                      {measurements.inseam}<span className="ml-1 text-xs font-normal text-muted-foreground">cm</span>
                     </span>
                   </div>
                 )}

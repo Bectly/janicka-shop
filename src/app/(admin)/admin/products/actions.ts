@@ -115,7 +115,7 @@ function parseDefectsInput(formData: FormData): {
 
 function parseMeasurementsInput(formData: FormData): string {
   const measurements: Record<string, number> = {};
-  for (const key of ["chest", "waist", "hips", "length", "sleeve"] as const) {
+  for (const key of ["chest", "waist", "hips", "length", "sleeve", "inseam"] as const) {
     const val = parseFloat(formData.get(`measurements_${key}`) as string);
     if (!isNaN(val) && val > 0) measurements[key] = val;
   }
@@ -697,10 +697,11 @@ const measurementsPatchSchema = z.object({
   hips: measurementFieldSchema,
   length: measurementFieldSchema,
   sleeve: measurementFieldSchema,
+  inseam: measurementFieldSchema,
   fitNote: z.string().max(120).nullable().optional(),
 });
 
-const MEASUREMENT_KEYS = ["chest", "waist", "hips", "length", "sleeve"] as const;
+const MEASUREMENT_KEYS = ["chest", "waist", "hips", "length", "sleeve", "inseam"] as const;
 
 export async function updateProductMeasurementsQuick(
   id: string,
