@@ -424,7 +424,7 @@ export function InstantSearch({ variant = "icon" }: InstantSearchProps) {
                     setQuery(s);
                     doSearch(s);
                   }}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-muted"
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-foreground transition-colors duration-150 hover:bg-muted"
                 >
                   <Clock className="size-3.5 text-muted-foreground" />
                   {s}
@@ -443,7 +443,7 @@ export function InstantSearch({ variant = "icon" }: InstantSearchProps) {
                 <button
                   key={cat.href}
                   onClick={() => navigateTo(cat.href)}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-muted"
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-foreground transition-colors duration-150 hover:bg-muted"
                 >
                   <ArrowRight className="size-3.5 text-muted-foreground" />
                   {cat.name}

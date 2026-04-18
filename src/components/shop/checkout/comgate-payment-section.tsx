@@ -334,7 +334,7 @@ export function ComgatePaymentSection({ orderNumber, accessToken, onSuccess }: P
         {" · "}
         <a
           href={orderUrl}
-          className="underline underline-offset-2 hover:text-foreground"
+          className="underline underline-offset-2 transition-colors duration-150 hover:text-foreground"
         >
           Zobrazit objednávku
         </a>

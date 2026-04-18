@@ -153,11 +153,11 @@ export default async function CollectionPage({ params }: Props) {
 
       {/* Breadcrumb */}
       <nav className="mb-6 text-sm text-muted-foreground" aria-label="Navigace">
-        <Link href="/" className="hover:text-foreground">
+        <Link href="/" className="transition-colors duration-150 hover:text-foreground">
           Domů
         </Link>
         <span className="mx-2">/</span>
-        <Link href="/collections" className="hover:text-foreground">
+        <Link href="/collections" className="transition-colors duration-150 hover:text-foreground">
           Kolekce
         </Link>
         <span className="mx-2">/</span>

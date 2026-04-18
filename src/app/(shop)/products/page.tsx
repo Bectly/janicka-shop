@@ -216,7 +216,7 @@ export default async function ProductsPage({
       <nav className="mb-4 text-sm text-muted-foreground" aria-label="Navigace">
         <Link
           href="/"
-          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center hover:text-foreground"
+          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center transition-colors duration-150 hover:text-foreground"
         >
           Domů
         </Link>
@@ -225,7 +225,7 @@ export default async function ProductsPage({
           <>
             <Link
               href="/products"
-              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center hover:text-foreground"
+              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center transition-colors duration-150 hover:text-foreground"
             >
               Katalog
             </Link>

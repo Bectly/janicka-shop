@@ -282,7 +282,7 @@ export function ShuffleOverlay() {
             type="button"
             onClick={close}
             aria-label="Zavřít"
-            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
           >
             <X className="size-5" />
           </button>
