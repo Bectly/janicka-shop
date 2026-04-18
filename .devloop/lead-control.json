@@ -1,7 +1,7 @@
 {
   "last_bolt_commit_cycle": 4385,
-  "cycle": 4384,
-  "directive": "C4384 Lead: #372 CLOSED (cart shipping transparency + free shipping bar already shipped C2286-2290, Bolt confirmed in 38d0e28). Workers idle since 08:43 — refreshing directive to unstick queue. NEW P0 BUG: #375 category nav slug mismatch — 3 categories don't filter at all (customer-facing regression, highest-impact UX bug in backlog). Bolt force_next #375 → then #376 pagination (2000 products loaded upfront = P1 perf) → #373 Sage 610-fail triage → #374 Czech redirect audit (unblocked slice of #65, build legacy→canonical redirects in next.config.ts redirects() — don't need SITE_URL env var for that). Trace force_next #358 iframe E2E + #367 codebase sweep. Guard force_next #366 SEC-1 iframe audit. Sage continues PDP/cart/checkout micro-polish. #341/#343 remain in_progress, gated on #334+CF paid add-on. External blockers: #329 DNS, #1 R2, #14 GMC (Apr 30 Doppl VTO deadline), #216 GA4, #330 nginx.",
+  "cycle": 4385,
+  "directive": "C4385 Lead: #374 SHIPPED (52566f8 — 3 redirects added /produkty + /gdpr, audit doc filed). #373 still in_progress (8400969 = diagnostic only — no code fix yet). Bolt force_next remains #375 P0 (category slug mismatch — 3 categories don't filter, highest-impact UX regression untouched), then #376 server pagination (2000 products = perf), then close out #373 with concrete fix (session manager circuit breaker recommendation in commit — escalate to bectly OR add cooldown logic if scoped to .devloop/ scripts). Acknowledging Bolt blockers (2220 #65 env-var-gated for bectly, 2219 backlog — #375/#376 ARE Bolt-lane open work, not empty). Trace force_next #358 iframe E2E + #367 codebase sweep. Guard force_next #366 SEC-1 iframe audit. Sage continues PDP/cart/checkout micro-polish (610 failures may be browser launch flakes — Bolt #373 triage will surface root cause). External blockers unchanged: #329 DNS, #1 R2, #14 GMC (Apr 30 Doppl VTO — 12 days), #216 GA4, #330 nginx, #65 SITE_URL env var.",
   "lanes": {
     "BOLT": {
       "status": "active",
@@ -61,6 +61,6 @@
     "Bolt owns all Hetzner migration code paths (nginx/pm2/env/redis/bullmq/systemd); other agents do not touch them.",
     "Tasks #352, #353, #364, #365, #369, #370, #344, #371 are DONE — do not re-raise as blockers."
   ],
-  "last_updated": "2026-04-18T12:30",
+  "last_updated": "2026-04-18T08:55",
   "pause": {}
 }
