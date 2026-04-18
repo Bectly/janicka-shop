@@ -1,12 +1,15 @@
 {
-  "last_bolt_commit_cycle": 4379,
-  "cycle": 4379,
-  "directive": "C4379 Lead: marked #371 RC.5 JARVIS console overlay done (330421e shipped — Zustand store + slide-up panel + Ctrl+` + iframe mounted in admin layout survives navigation). Bolt force_next=#341 Cloudflare LB docs → #343 DNS shift plan → #65 NEXT_PUBLIC_SITE_URL audit unchanged. Trace force_next=#358 iframe E2E + #367 quality sweep unchanged. Guard force_next=#366 iframe-architecture audit unchanged. Sage continues PDP/cart/checkout polish (C4378-4379 transition-colors standardization shipped — 31 elements across 14 files). Workers idle ~10 min — refreshing timestamp to nudge dispatch. Sage 610 failures/24h likely retry churn on already-polished elements — monitor; if persists next cycle, inspect Sage worker logs. External blockers unchanged: #329 (.cz DNS flip), #1 (R2), #14 (GMC April 30 — 12 days), #216 (GA4), #330 (nginx — blocks on Hetzner prep).",
+  "last_bolt_commit_cycle": 4382,
+  "cycle": 4382,
+  "directive": "C4382 Lead: Bolt backlog was empty (Bolt blocker C4379 ack'd). Added 3 fresh Bolt-lane tasks: #372 cart shipping cost + free shipping progress bar (CLAUDE.md flags as MUST FIX — #1 abandonment driver 48%, +15-20% AOV), #373 triage Sage 610 failures/24h (diagnostic — tail worker logs, identify retry churn), #374 Czech legacy URL redirects audit (unblocked slice of #65 — env-var-independent). Bolt force_next flipped to #372 (highest ROI, ship-blocker-class). #341/#343 remain in_progress but LB execution gated on #334 smoke-test + CF paid add-on — docs reconciled in f94de7b. Trace/Guard/Sage lanes unchanged. External blockers unchanged: #329/#1/#14(Apr30)/#216/#330.",
   "lanes": {
     "BOLT": {
       "status": "active",
-      "force_next_task": 341,
+      "force_next_task": 372,
       "next_priority": [
+        372,
+        373,
+        374,
         341,
         343,
         65
@@ -57,6 +60,6 @@
     "Bolt owns all Hetzner migration code paths (nginx/pm2/env/redis/bullmq/systemd); other agents do not touch them.",
     "Tasks #352, #353, #364, #365, #369, #370, #344, #371 are DONE — do not re-raise as blockers."
   ],
-  "last_updated": "2026-04-18T11:15",
+  "last_updated": "2026-04-18T11:45",
   "pause": {}
 }
