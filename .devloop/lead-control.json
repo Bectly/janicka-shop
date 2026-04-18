@@ -1,24 +1,25 @@
 {
   "last_bolt_commit_cycle": 4386,
-  "cycle": 4385,
-  "directive": "C4385 Lead: #374 SHIPPED (52566f8 — 3 redirects added /produkty + /gdpr, audit doc filed). #373 still in_progress (8400969 = diagnostic only — no code fix yet). Bolt force_next remains #375 P0 (category slug mismatch — 3 categories don't filter, highest-impact UX regression untouched), then #376 server pagination (2000 products = perf), then close out #373 with concrete fix (session manager circuit breaker recommendation in commit — escalate to bectly OR add cooldown logic if scoped to .devloop/ scripts). Acknowledging Bolt blockers (2220 #65 env-var-gated for bectly, 2219 backlog — #375/#376 ARE Bolt-lane open work, not empty). Trace force_next #358 iframe E2E + #367 codebase sweep. Guard force_next #366 SEC-1 iframe audit. Sage continues PDP/cart/checkout micro-polish (610 failures may be browser launch flakes — Bolt #373 triage will surface root cause). External blockers unchanged: #329 DNS, #1 R2, #14 GMC (Apr 30 Doppl VTO — 12 days), #216 GA4, #330 nginx, #65 SITE_URL env var.",
+  "cycle": 4387,
+  "directive": "C4387 Lead: #375 CLOSED (rejected C4386, f8cf472 — premise inverted: hyphenated slugs filter correctly, short slugs don't exist in DB; no fix required, task marked done with rejection rationale). Bolt force_next pivots to #376 server-side pagination (2000-product listing = real perf debt) → #373 close out Sage 610/24h failure triage with concrete fix (currently diagnostic only) → #374 (extend redirect coverage if remaining slugs surface) → #377 PDP image quality → #341/#343 Hetzner migration behind #329 DNS. Sage shipped C4386 scale-95 polish on 24 interactive elements (build green). Trace #358 iframe E2E + #367 codebase sweep still force_next. Guard #366 SEC-1 iframe audit still force_next. External blockers unchanged: #329 DNS, #1 R2, #14 GMC (Apr 30 Doppl VTO — 12 days), #216 GA4, #330 nginx, #65 SITE_URL env var (Bolt blocker 2220 acknowledged — backlog now has #376+#373+#377 as actionable work).",
   "lanes": {
     "BOLT": {
       "status": "active",
-      "force_next_task": 375,
+      "force_next_task": 376,
       "next_priority": [
-        375,
         376,
         373,
         374,
+        377,
         341,
         343,
         65
       ],
-      "notes": "P0 BUG FIRST: #375 category nav slug mismatch — 3 categories don't filter at all. Debug path: (1) grep category slugs in src/lib/constants.ts or src/config/categories.ts vs Product.category values in prisma schema + seed; (2) check src/app/(shop)/products/page.tsx searchParams.category → where/filter clause; (3) check src/components/shop/product-filters.tsx category click handler — it likely writes a label (e.g. 'Šaty') but query expects slug ('saty') or vice versa; (4) verify Header/CategoryNav link hrefs match URL contract. Expected fix: single source of truth for category slugs (constant map: slug ↔ label), all writers/readers go through it. Add unit test mapping all nav categories to products query and asserting non-zero rows (given seed data). THEN #376 pagination: src/app/(shop)/products/page.tsx — currently fetches all ~2000 products server-side. Implement cursor-based pagination (prisma `skip`/`take` with `searchParams.page`) + load-more button or numbered pager. Page size 24-36. Keep filter params in URL. Cache-friendly with 'use cache' per CLAUDE.md spec. THEN #373 Sage 610-fail triage — read .devloop/worker-logs/sage-janicka-shop.log tail, categorize error signatures, report + fix root cause (likely playwright flakes or missing fixtures). THEN #374 Czech redirect audit: enumerate legacy slugs (/kosik, /produkty, /kategorie/*, /objednavka, /obchodni-podminky, /ochrana-soukromi) → add next.config.ts redirects() entries mapping to canonical paths (permanent: true for SEO). No SITE_URL env var needed — redirects are path-based. THEN only if above all clear, resume #341/#343 Hetzner migration docs (gated on #334+CF paid add-on anyway). Bolt owns all Hetzner migration code paths — others don't touch.",
+      "notes": "PIVOT: #375 closed (rejected — production verification showed category nav works correctly for real DB slugs). NOW #376 server-side pagination. Path: src/app/(shop)/products/page.tsx currently fetches ALL products server-side (~2000 rows = heavy payload + slow TTFB). Implement cursor/offset pagination: (1) accept searchParams.page (default 1) + parse into skip/take for Prisma (`take: 36, skip: (page-1)*36`); (2) query total count once for pager; (3) render numbered pager component (src/components/shop/pagination.tsx if exists, else create minimal — use shadcn/ui Pagination); (4) preserve all existing filter params in page links (category, size, priceMin/Max, brand, condition, sort); (5) wrap the data-fetch helper in 'use cache' per CLAUDE.md spec (cacheLife('minutes'), cacheTag('products')) — params serializable; (6) add rel=prev/next link tags in <head> for SEO; (7) ensure mobile: sticky pager at bottom above footer. Page size 36 (aligns with 4-col desktop × 9 rows, 2-col mobile × 18 rows). THEN #373 Sage failure triage close-out: tail .devloop/worker-logs/sage-janicka-shop*.log (last 500 lines), categorize top 3 error signatures with counts, propose + implement concrete fix (likely playwright browser launch flake → add retry/cooldown OR missing $env vars → fix worker spawn config in .devloop/ scripts). Commit with specific diagnosis. THEN #374 redirect extension IF audit surfaces new legacy slugs. THEN #377 PDP image quality (q=85-90 main/hero, keep thumbnails q=75 — single next/image quality prop change). Hetzner work (#341/#343/#65) stays parked behind #329 DNS + env vars.",
       "blockers_external": {
         "329": "DNS flip by bectly",
-        "334": "Hetzner daemon must boot"
+        "334": "Hetzner daemon must boot",
+        "65": "NEXT_PUBLIC_SITE_URL env var needed for Bolt acknowledged #2220 — non-blocking for #376/#373/#377"
       }
     },
     "TRACE": {
@@ -32,7 +33,7 @@
         351,
         347
       ],
-      "notes": "PRIORITY: #358 RC.7 E2E /admin/jarvis — UPDATED for iframe architecture (#365 shipped C4372, no longer WS/xterm). Playwright spec: admin logs in → navigates /admin/jarvis → expects breadcrumb 'JARVIS' + login instructions card visible → expects iframe present with src matching NEXT_PUBLIC_JARVIS_REMOTE_URL (default jarvis-janicka.jvsatnik.cz) → no console errors (page.on('pageerror') / page.on('console')) → no CSP violations. Skip WS/xterm flow — that architecture was replaced. THEN #367 full codebase quality sweep: type errors (npx tsc --noEmit), unused exports (knip or ts-prune), dead routes, security smells (process.env leaks to client, console.log of PII, missing rate limits on POST routes). THEN #324 grep regression: zero 'vinted' campaign refs in HEAD (src/, prisma/, scripts/ — docs/ excepted). THEN #327 Redis cache-aside verify (src/lib/redis.ts + product list cache key hit/miss). THEN #351 cold-read audit + #347 Lighthouse baseline. NEW e2e standing: category switching leak (/products?category=saty → click Topy) + customer portal C3709 flows (src/app/(shop)/ucet/). DO NOT touch Hetzner migration code paths."
+      "notes": "PRIORITY: #358 RC.7 E2E /admin/jarvis — iframe architecture (not WS/xterm). Playwright spec: admin logs in → navigates /admin/jarvis → expects breadcrumb 'JARVIS' + login instructions card visible → expects iframe present with src matching NEXT_PUBLIC_JARVIS_REMOTE_URL (default jarvis-janicka.jvsatnik.cz) → no console errors (page.on('pageerror') / page.on('console')) → no CSP violations. Skip WS/xterm flow entirely. THEN #367 full codebase quality sweep: npx tsc --noEmit, knip or ts-prune dead exports, security smells (process.env leaks to client, console.log of PII, missing rate limits on POST routes). THEN #324 regression grep: zero 'vinted' campaign refs in HEAD (src/, prisma/, scripts/ — docs/ excepted). THEN #327 Redis cache-aside verify. THEN #351 cold-read audit + #347 Lighthouse baseline. Standing e2e: category switching (/products?category=saty → Topy) + customer portal C3709 flows. DO NOT touch Hetzner migration code paths."
     },
     "SAGE": {
       "status": "active",
@@ -42,7 +43,7 @@
         "checkout_accordion_polish",
         "admin_dashboard_polish"
       ],
-      "notes": "Continue PDP polish (C4370-C4372 shipped breadcrumb/discount badge/measurements/share/accordion/wishlist/sticky ATC/gallery zoom polish). NEXT micro-passes: (a) PDP — price history sparkline placement (if priceHistory rows exist), condition badge visual weight near title, related-products carousel arrow hover states, image-gallery thumbnail focus ring. (b) Cart sold-item toast when reservation expires (src/components/shop/cart/ — find reservation timer hook). (c) Checkout accordion micro-polish: section transition timings, completed-state checkmark color + animation entrance. (d) Admin dashboard density + order-status badge contrast. UI-only, no migration paths, no schema changes."
+      "notes": "C4386 shipped active:scale-95 standardization on 24 elements (build green). NEXT micro-passes: (a) PDP — price history sparkline placement (if priceHistory rows exist), condition badge visual weight near title, related-products carousel arrow hover states, image-gallery thumbnail focus ring. (b) Cart sold-item toast when reservation expires (src/components/shop/cart/ — find reservation timer hook). (c) Checkout accordion micro-polish: section transition timings, completed-state checkmark color + animation entrance. (d) Admin dashboard density + order-status badge contrast. UI-only, no migration paths, no schema changes. Note: Bolt #373 is closing out your 610-failure triage — if Sage failures persist across cycles, hold any large passes until worker logs stabilize."
     },
     "GUARD": {
       "status": "active",
@@ -51,7 +52,7 @@
         366,
         330
       ],
-      "notes": "PRIORITY: #366 SEC-1 Remote Console full-stack audit — UPDATED for iframe architecture (#365 shipped C4372 as iframe to jarvis-janicka.jvsatnik.cz, NOT WS bridge). Scope: (1) frame-src CSP correctness — only jarvis-janicka.jvsatnik.cz, no wildcards, verify in middleware/next.config CSP source; (2) frame-ancestors on /admin/jarvis parent so the page can't be re-framed; (3) iframe sandbox attrs minimum-privilege; (4) CF Access JWT propagation to the embedded Claude UI — admin must re-auth at the tunnel boundary, no implicit trust; (5) referrer-policy doesn't leak /admin/jarvis pathname to the iframe origin; (6) cookies SameSite on parent NextAuth session; (7) audit log integrity for /api/admin/jarvis if still active — userId/userEmail not null, no PII in stderr; (8) confirm jarvis-terminal.tsx + xterm deps fully purged (commit f91c6f2 says deleted — verify). Deliverable: docs/security/jarvis-bridge-audit.md with findings + severity + fix proposals. THEN #330 nginx hardening (docs/migration/nginx/janicka-shop.conf) — CSP frame-src comgate.eu, rate limits, 20M cap scoped to /api/uploadthing*, X-Forwarded-* sanitization, TLS 1.2+."
+      "notes": "PRIORITY: #366 SEC-1 Remote Console full-stack audit — iframe architecture (jarvis-janicka.jvsatnik.cz, NOT WS bridge). Scope: (1) frame-src CSP correctness — only jarvis-janicka.jvsatnik.cz, no wildcards, verify in middleware/next.config CSP source; (2) frame-ancestors on /admin/jarvis parent so the page can't be re-framed; (3) iframe sandbox attrs minimum-privilege; (4) CF Access JWT propagation to embedded Claude UI — admin must re-auth at tunnel boundary, no implicit trust; (5) referrer-policy doesn't leak /admin/jarvis pathname to iframe origin; (6) cookies SameSite on parent NextAuth session; (7) audit log integrity for /api/admin/jarvis if still active — userId/userEmail not null, no PII in stderr; (8) confirm jarvis-terminal.tsx + xterm deps fully purged. Deliverable: docs/security/jarvis-bridge-audit.md with findings + severity + fix proposals. THEN #330 nginx hardening — CSP frame-src comgate.eu, rate limits, 20M cap scoped to /api/uploadthing*, X-Forwarded-* sanitization, TLS 1.2+."
     }
   },
   "hard_rules": [
@@ -59,8 +60,9 @@
     "NEVER push to remote without bectly's explicit request.",
     "Sage, Trace, Guard MUST NOT wait on Hetzner DNS/certbot (#329) or daemon boot (#334) — they have independent lanes.",
     "Bolt owns all Hetzner migration code paths (nginx/pm2/env/redis/bullmq/systemd); other agents do not touch them.",
-    "Tasks #352, #353, #364, #365, #369, #370, #344, #371 are DONE — do not re-raise as blockers."
+    "Tasks #352, #353, #364, #365, #369, #370, #344, #371, #375 are DONE — do not re-raise as blockers.",
+    "Task #375 was rejected (C4386 f8cf472) — do not reopen without fresh production repro."
   ],
-  "last_updated": "2026-04-18T08:55",
+  "last_updated": "2026-04-18T09:05",
   "pause": {}
 }

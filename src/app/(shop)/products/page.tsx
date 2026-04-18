@@ -105,27 +105,40 @@ async function getCachedCatalog(): Promise<{
 
   const lowestPricesMap = await getLowestPrices30d(productsRaw.map((p) => p.id));
 
-  const products: CatalogProduct[] = productsRaw.map((p) => ({
-    id: p.id,
-    name: p.name,
-    slug: p.slug,
-    description: p.description,
-    sku: p.sku,
-    price: p.price,
-    compareAt: p.compareAt,
-    images: p.images,
-    sizes: p.sizes,
-    colors: p.colors,
-    brand: p.brand,
-    condition: p.condition,
-    stock: p.stock,
-    featured: p.featured,
-    sold: p.sold,
-    createdAt: p.createdAt.toISOString(),
-    categoryName: p.category.name,
-    categorySlug: p.category.slug,
-    lowestPrice30d: lowestPricesMap.get(p.id) ?? null,
-  }));
+  const products: CatalogProduct[] = productsRaw.map((p) => {
+    let trimmedImages = p.images;
+    try {
+      const arr = JSON.parse(p.images);
+      if (Array.isArray(arr) && arr.length > 2) {
+        trimmedImages = JSON.stringify(arr.slice(0, 2));
+      }
+    } catch {
+      // leave as-is on malformed JSON
+    }
+    const desc = p.description ?? "";
+    const descSnippet = desc.length > 160 ? `${desc.slice(0, 157)}...` : desc;
+    return {
+      id: p.id,
+      name: p.name,
+      slug: p.slug,
+      description: descSnippet,
+      sku: p.sku,
+      price: p.price,
+      compareAt: p.compareAt,
+      images: trimmedImages,
+      sizes: p.sizes,
+      colors: p.colors,
+      brand: p.brand,
+      condition: p.condition,
+      stock: p.stock,
+      featured: p.featured,
+      sold: p.sold,
+      createdAt: p.createdAt.toISOString(),
+      categoryName: p.category.name,
+      categorySlug: p.category.slug,
+      lowestPrice30d: lowestPricesMap.get(p.id) ?? null,
+    };
+  });
 
   const categories = categoriesRaw.map((c) => ({ slug: c.slug, name: c.name }));
 
