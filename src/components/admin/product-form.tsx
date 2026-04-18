@@ -214,7 +214,7 @@ export function ProductForm({ categories, product, action }: ProductFormProps) {
         ) : (
           <>
             <label
-              className={`flex cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-dashed p-6 transition-colors ${
+              className={`flex cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-dashed p-6 transition-colors duration-150 ${
                 isVideoUploading
                   ? "cursor-default border-primary/30 bg-muted/30"
                   : "border-muted-foreground/25 hover:border-primary/50"
@@ -432,7 +432,7 @@ export function ProductForm({ categories, product, action }: ProductFormProps) {
                           key={size}
                           type="button"
                           onClick={() => toggleSize(size)}
-                          className={`min-h-9 min-w-11 rounded-md border px-2.5 py-1 text-sm font-medium transition-colors ${
+                          className={`min-h-9 min-w-11 rounded-md border px-2.5 py-1 text-sm font-medium transition-colors duration-150 ${
                             selected
                               ? "border-primary bg-primary text-primary-foreground"
                               : "border-border bg-background text-foreground hover:border-primary/50"
@@ -515,7 +515,7 @@ export function ProductForm({ categories, product, action }: ProductFormProps) {
 
       {/* SEO + interní poznámky — collapsible */}
       <details className="rounded-xl border bg-muted/20">
-        <summary className="flex cursor-pointer select-none items-center gap-2 px-4 py-3 text-sm font-medium hover:bg-muted/40 rounded-xl transition-colors">
+        <summary className="flex cursor-pointer select-none items-center gap-2 px-4 py-3 text-sm font-medium hover:bg-muted/40 rounded-xl transition-colors duration-150">
           <Search className="size-4 text-muted-foreground" />
           SEO a interní poznámky
           <span className="ml-auto text-xs font-normal text-muted-foreground">

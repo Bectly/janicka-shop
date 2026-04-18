@@ -333,7 +333,7 @@ export function DevChatWidget() {
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="flex size-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:bg-muted"
+              className="flex size-10 items-center justify-center rounded-full text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground active:bg-muted"
               aria-label="Zavřít chat"
             >
               <X className="size-5" />
@@ -377,7 +377,7 @@ export function DevChatWidget() {
                   spellCheck={false}
                   enterKeyHint="go"
                   inputMode="text"
-                  className="h-12 w-full rounded-xl border bg-muted/40 px-4 text-base outline-none transition-colors focus:border-rose-300 focus:ring-2 focus:ring-rose-200"
+                  className="h-12 w-full rounded-xl border bg-muted/40 px-4 text-base outline-none transition-colors duration-150 focus:border-rose-300 focus:ring-2 focus:ring-rose-200"
                 />
                 {loginError && (
                   <p className="text-sm text-red-600" role="alert">
@@ -387,7 +387,7 @@ export function DevChatWidget() {
                 <button
                   type="submit"
                   disabled={loggingIn || !password}
-                  className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-rose-500 text-base font-medium text-white transition-colors hover:bg-rose-600 disabled:opacity-50"
+                  className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-rose-500 text-base font-medium text-white transition-colors duration-150 hover:bg-rose-600 disabled:opacity-50"
                 >
                   {loggingIn ? (
                     <Loader2 className="size-5 animate-spin" />
@@ -471,12 +471,12 @@ export function DevChatWidget() {
                     placeholder="Napiš zprávu..."
                     rows={2}
                     enterKeyHint="send"
-                    className="flex-1 resize-none rounded-xl border bg-muted/50 px-3 py-2 text-base outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-rose-300 focus:ring-1 focus:ring-rose-300 sm:text-sm"
+                    className="flex-1 resize-none rounded-xl border bg-muted/50 px-3 py-2 text-base outline-none transition-colors duration-150 placeholder:text-muted-foreground/60 focus:border-rose-300 focus:ring-1 focus:ring-rose-300 sm:text-sm"
                   />
                   <button
                     onClick={handleSend}
                     disabled={!input.trim() || sending}
-                    className="flex size-11 shrink-0 items-center justify-center self-end rounded-xl bg-rose-500 text-white transition-colors hover:bg-rose-600 disabled:opacity-50"
+                    className="flex size-11 shrink-0 items-center justify-center self-end rounded-xl bg-rose-500 text-white transition-colors duration-150 hover:bg-rose-600 disabled:opacity-50"
                     aria-label="Odeslat zprávu"
                   >
                     {sending ? (

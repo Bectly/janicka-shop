@@ -108,7 +108,7 @@ export function GlobalSearch() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 rounded-lg border bg-background px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted sm:min-w-[260px]"
+        className="flex items-center gap-2 rounded-lg border bg-background px-3 py-1.5 text-sm text-muted-foreground transition-colors duration-150 hover:bg-muted sm:min-w-[260px]"
         aria-label="Hledat"
       >
         <Search className="size-4" />

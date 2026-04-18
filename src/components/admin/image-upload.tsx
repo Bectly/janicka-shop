@@ -146,7 +146,7 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
             }}
             onDragLeave={() => setIsDragOver(false)}
             onDrop={handleDropzoneFilesDrop}
-            className={`flex cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-dashed p-6 transition-colors ${
+            className={`flex cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-dashed p-6 transition-colors duration-150 ${
               isUploading
                 ? "cursor-default border-primary/30 bg-muted/30"
                 : isDragOver

@@ -147,7 +147,7 @@ export function BulkProductTable({ products, query }: BulkProductTableProps) {
                   return (
                     <tr
                       key={product.id}
-                      className={`border-b last:border-0 transition-colors ${isSelected ? "bg-primary/5" : "hover:bg-muted/30"}`}
+                      className={`border-b last:border-0 transition-colors duration-150 ${isSelected ? "bg-primary/5" : "hover:bg-muted/30"}`}
                     >
                       <td className="w-10 px-3 py-3">
                         <input

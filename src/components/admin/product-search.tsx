@@ -35,7 +35,7 @@ export function ProductSearch() {
         placeholder="Hledat podle názvu, SKU nebo značky…"
         defaultValue={currentQuery}
         onChange={(e) => handleSearch(e.target.value)}
-        className={`h-9 w-full rounded-lg border bg-background pl-9 pr-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary ${isPending ? "opacity-60" : ""}`}
+        className={`h-9 w-full rounded-lg border bg-background pl-9 pr-3 text-sm outline-none transition-colors duration-150 placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary ${isPending ? "opacity-60" : ""}`}
       />
     </div>
   );

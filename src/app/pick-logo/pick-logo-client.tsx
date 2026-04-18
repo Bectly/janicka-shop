@@ -144,7 +144,7 @@ export function PickLogoClient() {
             setEliminated([]);
             setPicked(null);
           }}
-          className="mt-8 rounded-full bg-pink-100 px-6 py-2.5 text-sm font-medium text-pink-700 transition-colors hover:bg-pink-200"
+          className="mt-8 rounded-full bg-pink-100 px-6 py-2.5 text-sm font-medium text-pink-700 transition-colors duration-150 hover:bg-pink-200"
         >
           Zkusit znovu?
         </button>
@@ -171,7 +171,7 @@ export function PickLogoClient() {
           {Array.from({ length: totalInRound }).map((_, i) => (
             <div
               key={i}
-              className={`h-1 flex-1 rounded-full transition-colors ${
+              className={`h-1 flex-1 rounded-full transition-colors duration-150 ${
                 i < matchIndex
                   ? "bg-pink-400"
                   : i === matchIndex

@@ -158,7 +158,7 @@ export function AdminOrderNotifier({
             type="button"
             onClick={() => dismiss(order.id)}
             aria-label="Zavřít upozornění"
-            className="text-muted-foreground transition-colors hover:text-foreground"
+            className="text-muted-foreground transition-colors duration-150 hover:text-foreground"
           >
             <X className="size-4" />
           </button>

@@ -76,7 +76,7 @@ async function NotFoundContent() {
               <Link
                 key={cat.slug}
                 href={`/products?category=${cat.slug}`}
-                className="rounded-full border px-4 py-1.5 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                className="rounded-full border px-4 py-1.5 text-sm text-muted-foreground transition-colors duration-150 hover:border-primary hover:text-primary"
               >
                 {cat.name}
               </Link>

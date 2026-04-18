@@ -111,7 +111,7 @@ export default async function AdminBrowseAbandonmentPage({
                 {records.map((record) => (
                   <tr
                     key={record.id}
-                    className="border-b last:border-0 transition-colors hover:bg-muted/30"
+                    className="border-b last:border-0 transition-colors duration-150 hover:bg-muted/30"
                   >
                     <td className="px-4 py-3">
                       <p className="font-medium text-foreground">

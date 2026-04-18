@@ -256,7 +256,7 @@ function ChoiceSelector({
             )}
             <div className="flex items-start gap-3">
               <div
-                className={`mt-0.5 flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                className={`mt-0.5 flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors duration-150 ${
                   isSelected
                     ? "border-rose-500 bg-rose-500"
                     : "border-gray-300 group-hover:border-rose-400"

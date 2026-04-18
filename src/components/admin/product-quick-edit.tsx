@@ -160,7 +160,7 @@ export function ProductQuickToggles({ id, active, featured, sold }: TogglesProps
         onClick={() => toggle("active")}
         disabled={isPending || sold}
         title={sold ? "Prodáno" : state.active ? "Aktivní — klikni pro skrytí" : "Skryto — klikni pro aktivaci"}
-        className={`rounded p-1 transition-colors hover:bg-muted disabled:opacity-40 ${
+        className={`rounded p-1 transition-colors duration-150 hover:bg-muted disabled:opacity-40 ${
           state.active ? "text-emerald-600" : "text-muted-foreground"
         }`}
         aria-label={state.active ? "Skrýt" : "Aktivovat"}
@@ -172,7 +172,7 @@ export function ProductQuickToggles({ id, active, featured, sold }: TogglesProps
         onClick={() => toggle("featured")}
         disabled={isPending}
         title={state.featured ? "Featured — klikni pro odebrání" : "Přidat do featured"}
-        className={`rounded p-1 transition-colors hover:bg-muted disabled:opacity-50 ${
+        className={`rounded p-1 transition-colors duration-150 hover:bg-muted disabled:opacity-50 ${
           state.featured ? "text-amber-500" : "text-muted-foreground"
         }`}
         aria-label={state.featured ? "Odebrat z featured" : "Přidat do featured"}
