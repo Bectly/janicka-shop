@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Trash2, ShoppingBag, ArrowLeft, Clock } from "lucide-react";
+import { Trash2, ShoppingBag, ArrowLeft, Clock, Lock, RotateCcw, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCartStore, type CartItem } from "@/lib/cart-store";
 import { formatPrice } from "@/lib/format";
@@ -135,6 +135,22 @@ export default function CartPage() {
         <Button size="lg" className="mt-4 w-full" render={<Link href="/checkout" />}>
           Pokračovat k objednávce
         </Button>
+
+        {/* Inline trust signals — 40-60% better than footer (C1496) */}
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t pt-4">
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Lock className="size-3.5 text-sage-dark" />
+            Zabezpečená platba
+          </span>
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <RotateCcw className="size-3.5 text-sage-dark" />
+            14 dní na vrácení
+          </span>
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <ShieldCheck className="size-3.5 text-sage-dark" />
+            Ověřená kvalita
+          </span>
+        </div>
       </div>
 
       <div className="mt-4 text-center">

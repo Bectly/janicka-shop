@@ -28,6 +28,8 @@ import {
   ChevronRight,
   Gift,
   Tag,
+  ShieldCheck,
+  RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1112,14 +1114,20 @@ export default function CheckoutPage() {
                 })}
               </div>
 
-              {/* Inline trust badge */}
-              <div className="mt-4 flex items-center gap-2 rounded-lg border border-sage/30 bg-sage-light px-3 py-2.5 text-sm text-sage-dark">
-                <Lock className="size-4 shrink-0" />
-                <span>
-                  <span className="font-medium">Zabezpečená platba</span>
-                  {" — "}
-                  vaše údaje jsou šifrovány a v bezpečí
-                </span>
+              {/* Inline trust badges — 2-3 max, inline with form (C1496: 40-60% better than footer) */}
+              <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <div className="flex items-center gap-2 rounded-lg border border-sage/25 bg-sage-light/60 px-3 py-2.5 text-xs text-sage-dark">
+                  <Lock className="size-3.5 shrink-0" />
+                  <span className="font-medium">Šifrované spojení</span>
+                </div>
+                <div className="flex items-center gap-2 rounded-lg border border-sage/25 bg-sage-light/60 px-3 py-2.5 text-xs text-sage-dark">
+                  <ShieldCheck className="size-3.5 shrink-0" />
+                  <span className="font-medium">Comgate — platební brána</span>
+                </div>
+                <div className="flex items-center gap-2 rounded-lg border border-sage/25 bg-sage-light/60 px-3 py-2.5 text-xs text-sage-dark">
+                  <RotateCcw className="size-3.5 shrink-0" />
+                  <span className="font-medium">14 dní na vrácení</span>
+                </div>
               </div>
 
               <Button
