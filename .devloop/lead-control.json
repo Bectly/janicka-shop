@@ -1,5 +1,5 @@
 {
-  "last_bolt_commit_cycle": 4374,
+  "last_bolt_commit_cycle": 4375,
   "cycle": 4374,
   "directive": "C4374 Lead: #369 SEC-3 SHIPPED commits f8aac59 (iframe hardened: referrerPolicy no-referrer, allow='', route-level Referrer-Policy header on /admin/jarvis, existing X-Frame-Options DENY + frame-ancestors 'none' + sandbox allow-scripts/allow-same-origin/allow-forms + frame-src verified) — marked done. Bolt pivot to #364 Den matek P5.1b HTTP wrapper (DEADLINE Apr 27 for Apr 28 send) → #370 RC.4 screenshot paste → R2 → #344 UptimeRobot. Trace force_next=#358 E2E iframe-based /admin/jarvis + #367 full codebase quality sweep. Guard force_next=#366 SEC-1 iframe-architecture audit (scope now aligned with what Bolt just shipped: frame-src CSP, frame-ancestors, sandbox attrs, referrer-policy, CF Access JWT, cookie SameSite, confirm xterm/WS deps purged). Sage PDP polish lane unchanged. External blockers: #329 (.cz domain), #1 (R2 token), #14 (GMC April 30), #216 (GA4), #330 (nginx config — blocked on Hetzner prep).",
   "lanes": {

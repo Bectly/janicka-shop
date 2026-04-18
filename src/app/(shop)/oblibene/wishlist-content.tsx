@@ -164,7 +164,7 @@ export function WishlistContent() {
                   value={notifyEmail}
                   onChange={(e) => setNotifyEmail(e.target.value)}
                   autoComplete="email"
-                  className="w-full min-w-0 rounded-md border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none sm:w-52"
+                  className="w-full min-w-0 rounded-md border border-border bg-background px-3 py-2 text-sm transition-colors duration-200 focus:border-primary focus:outline-none sm:w-52"
                   aria-label="Email pro notifikace"
                 />
                 <Button
@@ -189,7 +189,7 @@ export function WishlistContent() {
         <button
           type="button"
           onClick={handleShare}
-          className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+          className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-all duration-200 hover:bg-muted active:scale-95"
         >
           {shareCopied ? (
             <>
@@ -280,7 +280,7 @@ export function WishlistContent() {
                   )}
                 </div>
                 <h3
-                  className={`text-sm font-medium leading-snug transition-colors ${
+                  className={`text-sm font-medium leading-snug transition-colors duration-200 ${
                     product.sold
                       ? "text-muted-foreground line-through"
                       : "text-foreground group-hover:text-primary"
@@ -311,7 +311,7 @@ export function WishlistContent() {
             <button
               type="button"
               onClick={() => toggle(product.id)}
-              className="absolute top-2 right-2 inline-flex size-9 items-center justify-center rounded-full bg-background/80 backdrop-blur-sm transition-all hover:bg-background hover:shadow-md"
+              className="absolute top-2 right-2 inline-flex size-9 items-center justify-center rounded-full bg-background/80 backdrop-blur-sm transition-all duration-200 hover:bg-background hover:shadow-md active:scale-90"
               aria-label="Odebrat z oblíbených"
             >
               <Heart className="size-4 fill-red-500 text-red-500" />

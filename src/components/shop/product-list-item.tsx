@@ -77,7 +77,7 @@ export function ProductListItem({
   return (
     <Link
       href={`/products/${slug}`}
-      className="group flex gap-4 rounded-2xl border bg-card p-3 transition-all hover:border-primary/20 hover:shadow-md sm:gap-5 sm:p-4"
+      className="group flex gap-4 rounded-2xl border bg-card p-3 transition-all duration-200 hover:border-primary/20 hover:shadow-md sm:gap-5 sm:p-4"
     >
       {/* Image */}
       <div className="relative aspect-[3/4] w-28 shrink-0 overflow-hidden rounded-xl bg-muted sm:w-36">
@@ -131,7 +131,7 @@ export function ProductListItem({
           </div>
 
           {/* Name */}
-          <h3 className="mt-1 text-sm font-medium leading-snug text-foreground group-hover:text-primary transition-colors line-clamp-2 sm:text-base">
+          <h3 className="mt-1 text-sm font-medium leading-snug text-foreground group-hover:text-primary transition-colors duration-200 line-clamp-2 sm:text-base">
             {name}
           </h3>
 
