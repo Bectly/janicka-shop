@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
-
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+import { connection } from "next/server";
 
 const startedAt = Date.now();
 
 export async function GET() {
+  // Opt into dynamic rendering under `cacheComponents: true` — the
+  // Next.js 16 replacement for `export const dynamic = "force-dynamic"`.
+  await connection();
+
   return NextResponse.json(
     {
       status: "ok",

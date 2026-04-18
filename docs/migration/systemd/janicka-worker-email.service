@@ -1,0 +1,38 @@
+[Unit]
+Description=Janicka Shop — Email worker (BullMQ)
+Documentation=https://github.com/Bectly/janicka-shop
+After=network-online.target redis-server.service
+Wants=network-online.target
+Requires=redis-server.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/janicka-shop
+EnvironmentFile=/opt/janicka-shop/.env.production
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/npx tsx scripts/workers/email.ts
+Restart=always
+RestartSec=5
+StartLimitBurst=10
+StartLimitIntervalSec=60
+
+# Allow graceful drain on stop (worker closes Redis + finishes in-flight jobs).
+TimeoutStopSec=60
+KillMode=mixed
+KillSignal=SIGTERM
+
+# Logging
+StandardOutput=append:/var/log/janicka-shop/worker-email.log
+StandardError=append:/var/log/janicka-shop/worker-email.log
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/opt/janicka-shop /var/log/janicka-shop
+
+[Install]
+WantedBy=multi-user.target
