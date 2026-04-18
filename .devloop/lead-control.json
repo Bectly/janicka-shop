@@ -1,5 +1,5 @@
 {
-  "last_bolt_commit_cycle": 4376,
+  "last_bolt_commit_cycle": 4377,
   "cycle": 4377,
   "directive": "C4377 Lead: #344 UptimeRobot shipped (d017594 — src/lib/telegram.ts + POST /api/alerts/uptime with constant-time secret auth, alertType→Czech labels, 503 when env unset). Marked done. Bolt force_next pivots to #341 Cloudflare Load Balancer — code side only: origin pool definitions + health check config + failover rules documented in docs/migration/cloudflare-lb.md (terraform-shaped JSON/YAML is fine, no secrets). After #341: #343 DNS/LB traffic shift plan (10%→50%→100% steps in docs/migration/dns-shift.md — NO actual DNS changes, bectly executes via CF dashboard). After #343: #65 NEXT_PUBLIC_SITE_URL + Czech slug redirects (proxy.ts or next.config redirects block, confirm absolute URLs in og:url/canonical/sitemap use env var). Trace force_next=#358 iframe E2E + #367 quality sweep unchanged. Guard force_next=#366 iframe-architecture audit unchanged. Sage PDP + cart + checkout polish lane continues. External blockers unchanged: #329 (.cz DNS flip), #1 (R2 token verify), #14 (GMC April 30), #216 (GA4), #330 (nginx — blocked on Hetzner prep).",
   "lanes": {
