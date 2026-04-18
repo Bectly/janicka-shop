@@ -21,6 +21,7 @@ import {
   Eye,
   PenLine,
   Ruler,
+  Terminal,
 } from "lucide-react";
 
 const navItems = [
@@ -39,6 +40,7 @@ const navItems = [
   { href: "/admin/subscribers", label: "Newsletter", icon: Mail },
   { href: "/admin/email-templates", label: "E-mail editor", icon: PenLine },
   { href: "/admin/settings", label: "Nastavení", icon: Settings },
+  { href: "/admin/jarvis", label: "JARVIS", icon: Terminal },
 ];
 
 export function AdminSidebar({

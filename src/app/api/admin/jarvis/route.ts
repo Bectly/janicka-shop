@@ -58,21 +58,21 @@ async function handleCommand(
 
     case "status": {
       const db = await getDb();
-      const [orders24h, pendingOrders, lowStock] = await Promise.all([
+      const [orders24h, pendingOrders, soldCount] = await Promise.all([
         db.order.count({
           where: {
             createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
           },
         }),
         db.order.count({ where: { status: "paid" } }),
-        db.product.count({ where: { isHidden: false, stock: { lte: 0 } } }),
+        db.product.count({ where: { sold: true } }),
       ]);
       return {
         kind: "ok",
         lines: [
           `Objednávky za 24h: ${orders24h}`,
           `Zaplacené čekající na expedici: ${pendingOrders}`,
-          `Produkty bez stavu: ${lowStock}`,
+          `Prodané kusy celkem: ${soldCount}`,
         ],
       };
     }
@@ -125,11 +125,11 @@ async function handleCommand(
 
     case "products": {
       const db = await getDb();
-      const [total, active, sold, hidden] = await Promise.all([
+      const [total, active, sold, inactive] = await Promise.all([
         db.product.count(),
-        db.product.count({ where: { isHidden: false, stock: { gt: 0 } } }),
-        db.product.count({ where: { stock: { lte: 0 } } }),
-        db.product.count({ where: { isHidden: true } }),
+        db.product.count({ where: { active: true, sold: false } }),
+        db.product.count({ where: { sold: true } }),
+        db.product.count({ where: { active: false } }),
       ]);
       return {
         kind: "ok",
@@ -137,7 +137,7 @@ async function handleCommand(
           `Celkem:    ${total}`,
           `Aktivní:   ${active}`,
           `Prodané:   ${sold}`,
-          `Skryté:    ${hidden}`,
+          `Neaktivní: ${inactive}`,
         ],
       };
     }
