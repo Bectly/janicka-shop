@@ -130,7 +130,7 @@ export function AddToCartButton({ product, hideSize = false }: AddToCartProps) {
                   key={color}
                   onClick={() => setSelectedColor(color)}
                   aria-pressed={selectedColor === color}
-                  className={`min-h-11 rounded-lg border px-3 py-2 text-sm font-medium transition-all duration-150 active:scale-90 ${
+                  className={`min-h-11 rounded-lg border px-3 py-2 text-sm font-medium transition-all duration-150 active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-1 ${
                     selectedColor === color
                       ? "border-primary bg-primary/10 text-primary animate-ring-expand"
                       : "border-border text-muted-foreground hover:border-foreground/40 hover:bg-muted/30"

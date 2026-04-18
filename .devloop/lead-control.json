@@ -1,18 +1,18 @@
 {
-  "last_bolt_commit_cycle": 4388,
-  "cycle": 4389,
-  "directive": "C4389 Lead: #373 closed (00986e6 — diagnosis doc, root cause = dispatcher over-scheduling outside shop repo, Sage failures self-resolved 0/3h) + #374 + #377 already shipped (52566f8, 33f93e2). All three prior Bolt priorities DONE. New Bolt focus: #378 real garment measurements (cm) — Baymard #1 fix for second-hand, reduces returns more than generic size charts. Spec: Prisma JSON field on Product + category-aware admin form + PDP Rozměry accordion section + JSON-LD additionalProperty. Single commit. Trace #358 iframe E2E + #367 codebase sweep still force_next. Guard #366 SEC-1 iframe audit still force_next. Sage micro-polish lanes unchanged. External blockers unchanged: #329 DNS, #1 R2, #14 GMC (Apr 30 Doppl VTO — 12 days), #216 GA4, #330 nginx.",
+  "last_bolt_commit_cycle": 4389,
+  "cycle": 4390,
+  "directive": "C4390 Lead: #378 shipped (d273521 — measurements Prisma JSON + admin form + PDP 6-col grid + JSON-LD additionalProperty + Czech extractor regex including inseam/krok). Measurement data layer COMPLETE. New Bolt focus: #379 PDP 'Jak měřit?' guide modal/drawer — closes the UX loop so customers know how to compare values against a garment they already own (the #1 second-hand returns reducer per Baymard). Small scoped task, single commit. Trace #358 + #367 unchanged. Guard #366 unchanged. Sage micro-polish continues — consider a visual polish pass on the new PDP Rozměry grid (borders, label typography) once #379 lands. External blockers unchanged: #329 DNS, #1 R2, #14 GMC (Apr 30 Doppl VTO — 12 days), #216 GA4, #330 nginx.",
   "lanes": {
     "BOLT": {
-      "status": "active",
-      "force_next_task": 378,
+      "status": "paused",
+      "force_next_task": 379,
       "next_priority": [
-        378,
+        379,
         341,
         343,
         65
       ],
-      "notes": "NEW PRIORITY: #378 real garment measurements (cm) — Baymard research: flat-lay measurements are the #1 fix for second-hand returns, significantly outperform generic size charts. Concrete scope: (1) Prisma: add `measurements Json?` to Product in prisma/schema.prisma; run `npx prisma migrate dev --name add_product_measurements`. Shape: category-aware keys — dresses {chestCm, waistCm, hipsCm, lengthCm}; tops {chestCm, lengthCm, sleeveCm}; pants {waistCm, hipsCm, inseamCm, lengthCm}; skirts {waistCm, hipsCm, lengthCm}; jackets {chestCm, lengthCm, sleeveCm, shouldersCm}. (2) Admin form (src/app/(admin)/admin/products/[id]/ or product-form component): collapsible 'Rozměry (cm)' section with category-aware numeric inputs, validate >=0, optional. Persist via existing Server Action. (3) PDP (src/components/shop/product-info-accordion.tsx): new collapsed-by-default section 'Rozměry (cm) — přesné míry oblečení naležato', render populated keys as 2-column table with Czech labels (Šířka hrudník, Délka, Rukáv, etc.). Hide section entirely if object is null/empty — DO NOT show zeros. (4) JSON-LD: add measurements to Product schema as additionalProperty array in src/app/(shop)/products/[slug]/page.tsx or wherever Product JSON-LD is emitted. Single commit. npm run build green. THEN resume Hetzner (#341/#343) once #329 DNS unblocks.",
+      "notes": "NEW PRIORITY: #379 PDP 'Jak měřit?' guide. #378 measurements DONE (d273521) — now customers need to understand how we took each measurement so they can compare to a garment they already own (the point of flat-lay measurements). Concrete scope: (1) create src/components/shop/measurement-guide.tsx — shadcn Dialog on desktop + Drawer on mobile (or responsive Dialog with mobile bottom-sheet styling). (2) Content: short intro 'Všechny míry jsou naměřené na plocho, na oblečení položeném naležato. Porovnej s kouskem, který ti sedí.' Then per-measurement explanation: Šířka v pase (topy: 3cm pod paží, od kraje ke kraji; kalhoty/sukně: pas, od kraje ke kraji; měř ×2 pro obvod). Šířka v bocích (v nejširší části). Délka (od límce/horního kraje k lemu). Rukáv (od ramenního švu k manžetě). Krok / vnitřní nohavice (od rozkroku k lemu). Include 2-3 simple inline SVG diagrams (flat garment outline with measurement arrows) — keep minimalist, no heavy assets. (3) Wire trigger: find where PDP renders the Rozměry section (grep for 'Rozměry' — likely src/components/shop/product-info-accordion.tsx or a new product-measurements-section.tsx) — add a small ghost-button link 'Jak měříme?' next to the heading that opens the guide. (4) Only render the trigger if measurements exist for the product (hasMeasurements helper). Czech UI, mobile-first, no autofocus traps. Single commit. npm run build green. THEN resume Hetzner (#341/#343) once #329 DNS unblocks.",
       "blockers_external": {
         "329": "DNS flip by bectly",
         "334": "Hetzner daemon must boot",
@@ -20,7 +20,7 @@
       }
     },
     "TRACE": {
-      "status": "active",
+      "status": "paused",
       "force_next_task": 358,
       "next_priority": [
         358,
@@ -33,17 +33,17 @@
       "notes": "PRIORITY: #358 RC.7 E2E /admin/jarvis — iframe architecture (not WS/xterm). Playwright spec: admin logs in → navigates /admin/jarvis → expects breadcrumb 'JARVIS' + login instructions card visible → expects iframe present with src matching NEXT_PUBLIC_JARVIS_REMOTE_URL (default jarvis-janicka.jvsatnik.cz) → no console errors (page.on('pageerror') / page.on('console')) → no CSP violations. Skip WS/xterm flow entirely. THEN #367 full codebase quality sweep: npx tsc --noEmit, knip or ts-prune dead exports, security smells (process.env leaks to client, console.log of PII, missing rate limits on POST routes). THEN #324 regression grep: zero 'vinted' campaign refs in HEAD (src/, prisma/, scripts/ — docs/ excepted). THEN #327 Redis cache-aside verify. THEN #351 cold-read audit + #347 Lighthouse baseline. Standing e2e: category switching (/products?category=saty → Topy) + customer portal C3709 flows. DO NOT touch Hetzner migration code paths."
     },
     "SAGE": {
-      "status": "active",
+      "status": "paused",
       "next_priority": [
+        "pdp_measurements_grid_polish",
         "pdp_polish",
         "cart_sold_item_toast",
-        "checkout_accordion_polish",
-        "admin_dashboard_polish"
+        "checkout_accordion_polish"
       ],
-      "notes": "C4386 shipped active:scale-95 standardization on 24 elements (build green). NEXT micro-passes: (a) PDP — price history sparkline placement (if priceHistory rows exist), condition badge visual weight near title, related-products carousel arrow hover states, image-gallery thumbnail focus ring. (b) Cart sold-item toast when reservation expires (src/components/shop/cart/ — find reservation timer hook). (c) Checkout accordion micro-polish: section transition timings, completed-state checkmark color + animation entrance. (d) Admin dashboard density + order-status badge contrast. UI-only, no migration paths, no schema changes. Note: Bolt #373 is closing out your 610-failure triage — if Sage failures persist across cycles, hold any large passes until worker logs stabilize."
+      "notes": "NEW: C4389 Bolt shipped measurements PDP grid (d273521) — polish the 6-col Rozměry grid: label typography weight/color, value alignment, cell borders/dividers, responsive collapse (6-col → 3-col → 2-col on narrow mobile), empty-state hiding consistency. Then polish the new #379 'Jak měříme?' trigger once it lands — make sure it feels like a natural secondary link next to the Rozměry heading, not a primary CTA. Standing micro-passes: (a) PDP price history sparkline placement, condition badge weight, related-products carousel arrow hover, gallery thumbnail focus ring. (b) Cart sold-item toast when reservation expires. (c) Checkout accordion section transitions + completed-state checkmark entrance. UI-only, no schema changes."
     },
     "GUARD": {
-      "status": "active",
+      "status": "paused",
       "force_next_task": 366,
       "next_priority": [
         366,
@@ -57,9 +57,9 @@
     "NEVER push to remote without bectly's explicit request.",
     "Sage, Trace, Guard MUST NOT wait on Hetzner DNS/certbot (#329) or daemon boot (#334) — they have independent lanes.",
     "Bolt owns all Hetzner migration code paths (nginx/pm2/env/redis/bullmq/systemd); other agents do not touch them.",
-    "Tasks #352, #353, #364, #365, #369, #370, #344, #371, #373, #374, #375, #376, #377 are DONE — do not re-raise as blockers.",
+    "Tasks #352, #353, #364, #365, #369, #370, #344, #371, #373, #374, #375, #376, #377, #378 are DONE — do not re-raise as blockers.",
     "Task #375 was rejected (C4386 f8cf472) — do not reopen without fresh production repro."
   ],
-  "last_updated": "2026-04-18T09:14",
+  "last_updated": "2026-04-18T09:30",
   "pause": {}
 }

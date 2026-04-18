@@ -30,7 +30,7 @@ export function GridViewSwitcher({ currentView, onChange }: GridViewSwitcherProp
           aria-checked={currentView === value}
           aria-label={label}
           title={label}
-          className={`flex items-center justify-center rounded-md p-1.5 transition-colors duration-150 ${
+          className={`flex items-center justify-center rounded-md p-1.5 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
             currentView === value
               ? "bg-background text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground"

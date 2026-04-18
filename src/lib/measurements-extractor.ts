@@ -16,7 +16,7 @@
  * without terminal access.
  */
 
-export type MeasurementField = "chest" | "waist" | "hips" | "length" | "sleeve" | "inseam";
+export type MeasurementField = "chest" | "waist" | "hips" | "length" | "sleeve" | "inseam" | "shoulders";
 
 export type ExtractedMeasurements = Partial<Record<MeasurementField, number>>;
 
@@ -69,6 +69,13 @@ const RULES: FieldRule[] = [
       new RegExp(String.raw`\b(?:vnitrni\s+(?:delka\s+)?nohavic\w*|vnitrni\s+krok|krok)\b[^0-9\n]{0,30}${NUM}${CM}`, "u"),
     ],
   },
+  {
+    field: "shoulders",
+    patterns: [
+      // "šířka ramen 42 cm", "ramena 42 cm" — guarded against "od ramen" (length from shoulders)
+      new RegExp(String.raw`(?<!od\s)\b(?:sirka\s+ramen\w*|ramena|ramen\w*)\b[^0-9\n]{0,30}${NUM}${CM}`, "u"),
+    ],
+  },
 ];
 
 const RANGES: Record<MeasurementField, { min: number; max: number }> = {
@@ -78,6 +85,7 @@ const RANGES: Record<MeasurementField, { min: number; max: number }> = {
   length: { min: 20, max: 200 },
   sleeve: { min: 10, max: 90 },
   inseam: { min: 40, max: 100 },
+  shoulders: { min: 25, max: 70 },
 };
 
 function stripDiacritics(s: string): string {
