@@ -1,7 +1,7 @@
 {
   "last_bolt_commit_cycle": 4384,
-  "cycle": 4383,
-  "directive": "C4383 Lead: ack'd Bolt blockers #4379 (backlog empty — resolved by #372/#373/#374) + #4380 (#65 env-var-gated — #374 is unblocked slice). C4383 shipped Sage duration-150 standardization (17 elements, 13 files) + Bolt p6.3-traffic-shift.md reconcile to jvsatnik.cz/hetzner-primary/ip_cookie (cb4a7b1+610a5bc). Directive stable: Bolt force_next #372 (cart shipping transparency + free shipping progress bar — #1 abandonment driver 48%, +15-20% AOV per CLAUDE.md), then #373 Sage failure triage (610 fails/24h), then #374 Czech redirect audit. #341/#343 remain in_progress, externally gated on #334 smoke-test + CF paid add-on. Trace force_next #358 (RC.7 /admin/jarvis iframe E2E), Guard force_next #366 (SEC-1 iframe audit), Sage continues PDP/cart/checkout micro-polish. External blockers unchanged: #329 DNS, #1 R2, #14 GMC (Apr 30), #216 GA4, #330 nginx.",
+  "cycle": 4384,
+  "directive": "C4384 Lead: #372 CLOSED (cart shipping transparency + free shipping bar already shipped C2286-2290, Bolt confirmed in 38d0e28). Workers idle since 08:43 — refreshing directive to unstick queue. NEW P0 BUG: #375 category nav slug mismatch — 3 categories don't filter at all (customer-facing regression, highest-impact UX bug in backlog). Bolt force_next #375 → then #376 pagination (2000 products loaded upfront = P1 perf) → #373 Sage 610-fail triage → #374 Czech redirect audit (unblocked slice of #65, build legacy→canonical redirects in next.config.ts redirects() — don't need SITE_URL env var for that). Trace force_next #358 iframe E2E + #367 codebase sweep. Guard force_next #366 SEC-1 iframe audit. Sage continues PDP/cart/checkout micro-polish. #341/#343 remain in_progress, gated on #334+CF paid add-on. External blockers: #329 DNS, #1 R2, #14 GMC (Apr 30 Doppl VTO deadline), #216 GA4, #330 nginx.",
   "lanes": {
     "BOLT": {
       "status": "active",
