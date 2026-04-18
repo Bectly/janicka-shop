@@ -1,7 +1,7 @@
 {
   "last_bolt_commit_cycle": 4351,
-  "cycle": 4348,
-  "directive": "C4348: P4.1 BullMQ #335 SHIPPED (commit 56c76d4 — 3 queues/workers/systemd units smoke-tested green). Bolt advance to #336 P4.2 — refactor existing Server Actions (order-confirmation Resend emails, invoice PDF generation, Packeta SOAP createPacket) from inline await → enqueue onto emailQueue/invoiceQueue/packetaQueue. Keep Server Action return contracts stable (return success when job enqueued; admin polls job status). Workers already scaffolded with __smoke-job branches — replace with real dispatch logic. Then #344 UptimeRobot, #345 PM2 log rotation, #348 runbooks. Trace/Sage/Guard keep independent lanes per C4347 notes — no waiting on DNS/daemon.",
+  "cycle": 4352,
+  "directive": "C4352: Sage #349/#350 SHIPPED (10f0c02 filter chips + 395525c PDP gallery tap-to-play video + pinch zoom 1×–4×). Bolt continues #336 P4.2 — Bolt's C4351 uncommitted WIP (email-dispatch.ts + worker-email updates + checkout/admin actions) is NOT in HEAD (git tree clean, those files don't exist). Re-do and COMMIT the refactor this cycle: Server Actions (order-confirmation Resend emails, invoice PDF gen, Packeta SOAP createPacket) → enqueue onto emailQueue/invoiceQueue/packetaQueue. Replace __smoke-job branches in src/workers/worker-*.ts with real dispatch. Commit incrementally as each queue goes green. Trace → #324 Vinted residue grep (quick) then #337 queue integration tests. Sage → cart free-shipping progress bar + inline checkout trust badges (C1496 spec: Comgate logo + lock icon + 'Zabezpečená platba' inline with payment form, max 3). Guard → #330 nginx hardening review.",
   "lanes": {
     "BOLT": {
       "status": "active",
@@ -57,5 +57,5 @@
     "Bolt owns all Hetzner migration code paths (nginx/pm2/env/redis/bullmq/systemd); other agents do not touch them.",
     "Bolt: if #335 BullMQ task.description spec ever seems missing, re-read the task row in jarvis.db — the spec IS there (C4346 cycle note was incorrect)."
   ],
-  "last_updated": "2026-04-18T06:30"
+  "last_updated": "2026-04-18T06:45"
 }
