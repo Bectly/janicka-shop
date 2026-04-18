@@ -44,7 +44,7 @@ export function ShareButtons({ url, title, description }: ShareButtonsProps) {
   }
 
   const buttonClass =
-    "flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground";
+    "flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground";
 
   return (
     <div className="flex items-center gap-2">

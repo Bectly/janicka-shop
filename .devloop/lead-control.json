@@ -1,5 +1,5 @@
 {
-  "last_bolt_commit_cycle": 4371,
+  "last_bolt_commit_cycle": 4372,
   "cycle": 4371,
   "directive": "C4371 Lead: Ack 2218 — #354 /admin/jarvis xterm.js terminal marked done (shipped C4367). Workers idle since 07:34 — re-issuing force_next stamps with fresh cycle to unblock dispatch. Bolt force_next=#365 (replace fake JarvisTerminal analytical-chat with real Claude WebSocket bridge — preserve safe-mode toggle + 20/min rate limit + jarvis_console_log audit across transport swap); after #365 → #364 Den matek P5.1b HTTP wrapper. Trace force_next=#358 E2E /admin/jarvis (Playwright skeleton NOW, full flow gated on #365 commit) + #367 full codebase quality sweep. Guard: #359 is cancelled in DB — pivot to #366 SEC-1 Remote Console full-stack audit (same scope: JWT/WS hardening/audit integrity/rate-limit correctness/CORS, deliver docs/security/jarvis-bridge-audit.md). Sage PDP polish: price history sparkline + sticky mobile ATC + condition badge placement. External blockers unchanged: #329 (.cz domain), #1 (R2 token), #14 (GMC April 30), #216 (GA4).",
   "lanes": {

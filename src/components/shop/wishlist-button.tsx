@@ -41,7 +41,7 @@ export function WishlistButton({
       <button
         type="button"
         onClick={handleClick}
-        className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors active:scale-95 ${
+        className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150 active:scale-95 ${
           isWishlisted
             ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
             : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { parseDescription } from "@/lib/description-parser";
 
 const COLLAPSE_THRESHOLD = 500;
@@ -34,9 +35,10 @@ export function ProductDescription({ text }: { text: string | null | undefined }
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
-          className="mt-1 block rounded text-sm font-medium text-primary underline-offset-4 transition-colors duration-150 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          className="mt-1 inline-flex items-center gap-1 rounded text-sm font-medium text-primary underline-offset-4 transition-colors duration-150 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
         >
           {expanded ? "Zobrazit méně" : "Zobrazit více"}
+          <ChevronDown className={`size-3.5 transition-transform duration-200 ${expanded ? "rotate-180" : ""}`} />
         </button>
       )}
     </div>
