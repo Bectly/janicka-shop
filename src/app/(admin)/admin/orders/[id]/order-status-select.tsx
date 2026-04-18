@@ -45,7 +45,7 @@ export function OrderStatusSelect({
       value={currentStatus}
       onChange={handleChange}
       disabled={isPending}
-      className="rounded-lg border bg-background px-3 py-1.5 text-sm font-medium text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:opacity-50"
+      className="rounded-lg border bg-background px-3 py-1.5 text-sm font-medium text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-50"
     >
       <option value={currentStatus}>
         {ORDER_STATUS_LABELS[currentStatus] ?? currentStatus}

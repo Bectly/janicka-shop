@@ -354,7 +354,7 @@ export function CampaignDryRunDialog({
                   type="button"
                   onClick={handleSendTest}
                   disabled={testSending || !preview}
-                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {testSending ? (
                     <Loader2 className="size-4 animate-spin" />
@@ -411,7 +411,7 @@ export function CampaignDryRunDialog({
                 onChange={(e) => setConfirmation(e.target.value.toUpperCase())}
                 disabled={!testSent?.success || finalSending}
                 placeholder={CONFIRMATION_WORD}
-                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-mono tracking-widest text-foreground focus:border-foreground focus:outline-none disabled:opacity-50"
+                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-mono tracking-widest text-foreground focus:border-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                 autoComplete="off"
                 spellCheck={false}
               />
@@ -468,7 +468,7 @@ export function CampaignDryRunDialog({
                 type="button"
                 onClick={onClose}
                 disabled={finalSending}
-                className="rounded-lg border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted disabled:opacity-50"
+                className="rounded-lg border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {result?.type === "success" ? "Zavřít" : "Zrušit"}
               </button>

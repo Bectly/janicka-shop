@@ -123,7 +123,7 @@ export function AddressList({ addresses }: Props) {
                 type="button"
                 onClick={() => handleSetDefault(a.id)}
                 disabled={pending}
-                className="mt-3 text-xs text-primary hover:underline disabled:opacity-50"
+                className="mt-3 text-xs text-primary hover:underline disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Nastavit jako výchozí
               </button>

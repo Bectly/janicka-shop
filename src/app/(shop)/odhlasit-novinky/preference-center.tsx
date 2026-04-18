@@ -75,21 +75,21 @@ export function PreferenceCenter({ email }: Props) {
           <button
             onClick={() => handleAction("new_arrivals")}
             disabled={isPending}
-            className="w-full rounded-md border border-border px-4 py-2.5 text-left text-sm text-foreground transition-colors hover:bg-accent disabled:opacity-50"
+            className="w-full rounded-md border border-border px-4 py-2.5 text-left text-sm text-foreground transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
           >
             Jen nové kousky
           </button>
           <button
             onClick={() => handleAction("discounts")}
             disabled={isPending}
-            className="w-full rounded-md border border-border px-4 py-2.5 text-left text-sm text-foreground transition-colors hover:bg-accent disabled:opacity-50"
+            className="w-full rounded-md border border-border px-4 py-2.5 text-left text-sm text-foreground transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
           >
             Jen slevy
           </button>
           <button
             onClick={() => handleAction("pause_30")}
             disabled={isPending}
-            className="w-full rounded-md border border-border px-4 py-2.5 text-left text-sm text-foreground transition-colors hover:bg-accent disabled:opacity-50"
+            className="w-full rounded-md border border-border px-4 py-2.5 text-left text-sm text-foreground transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
           >
             Pauza na 30 dní
           </button>
@@ -102,7 +102,7 @@ export function PreferenceCenter({ email }: Props) {
         <button
           onClick={() => handleAction("resubscribe")}
           disabled={isPending}
-          className="text-foreground underline underline-offset-4 transition-opacity hover:opacity-70 disabled:opacity-50"
+          className="text-foreground underline underline-offset-4 transition-opacity hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Znovu se přihlásit
         </button>

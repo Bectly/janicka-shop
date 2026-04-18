@@ -203,7 +203,7 @@ export function OrdersTable({ orders }: { orders: OrderRow[] }) {
             <button
               onClick={handleBulkLabels}
               disabled={isPending || packetaSelected.length === 0}
-              className="inline-flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isPending ? (
                 <Loader2 className="size-3.5 animate-spin" />

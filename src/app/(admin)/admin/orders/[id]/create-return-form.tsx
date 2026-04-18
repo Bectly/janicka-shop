@@ -223,7 +223,7 @@ export function CreateReturnForm({
         <button
           onClick={handleSubmit}
           disabled={isPending || selectedItems.size === 0}
-          className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+          className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isPending ? "Vytvářím..." : "Vytvořit vratku"}
         </button>

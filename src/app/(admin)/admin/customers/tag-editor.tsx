@@ -132,7 +132,7 @@ export function CustomerTagEditor({
               type="button"
               onClick={() => addTag(s)}
               disabled={isPending || tags.length >= 20}
-              className="rounded-full border border-dashed border-border bg-background px-2.5 py-1 text-xs text-muted-foreground hover:border-primary hover:text-primary disabled:opacity-50"
+              className="rounded-full border border-dashed border-border bg-background px-2.5 py-1 text-xs text-muted-foreground hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
             >
               + {s}
             </button>

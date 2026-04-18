@@ -75,7 +75,7 @@ export function CategoryRow({ category }: CategoryRowProps) {
             <button
               onClick={handleDelete}
               disabled={isPending}
-              className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+              className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-50"
               title="Smazat"
             >
               <Trash2 className="size-4" />

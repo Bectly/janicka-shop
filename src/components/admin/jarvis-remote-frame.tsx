@@ -84,7 +84,7 @@ export function JarvisRemoteFrame() {
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={state.kind === "uploading"}
-          className="inline-flex items-center rounded-md border bg-background px-3 py-1.5 text-sm font-medium shadow-sm hover:bg-accent disabled:opacity-50"
+          className="inline-flex items-center rounded-md border bg-background px-3 py-1.5 text-sm font-medium shadow-sm hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
         >
           {state.kind === "uploading" ? "Nahrávám…" : "Upload screenshot"}
         </button>

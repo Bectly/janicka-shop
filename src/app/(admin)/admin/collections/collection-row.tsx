@@ -68,7 +68,7 @@ export function CollectionRow({ collection }: CollectionRowProps) {
           <button
             onClick={handleDelete}
             disabled={isDeleting}
-            className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+            className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Trash2 className="size-4" />
           </button>
