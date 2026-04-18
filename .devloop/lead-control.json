@@ -1,5 +1,5 @@
 {
-  "last_bolt_commit_cycle": 4373,
+  "last_bolt_commit_cycle": 4374,
   "cycle": 4373,
   "directive": "C4373 Lead: ack feedback 2218 (#354 already done — Bolt's request was stale, current force_next is #369 then #364 per C4372 directive). Lanes unchanged. ORIG C4372: #365 RC.3b SHIPPED in commit f91c6f2 (JarvisRemoteFrame iframe → jarvis-janicka.jvsatnik.cz, CSP updated, xterm deps removed) — marked done. Bolt pivot to #369 SEC-3 (already in_progress: harden the iframe integration NOW that it's live — sandbox attrs, CSP frame-ancestors/frame-src tightening, cookie SameSite, X-Frame-Options on parent, postMessage origin check if any), then #364 Den matek HTTP wrapper (Apr 27 deadline for Apr 28 send), then #370 RC.4 screenshot paste → R2. Trace force_next=#358 E2E /admin/jarvis (iframe-based now: assert iframe src matches NEXT_PUBLIC_JARVIS_REMOTE_URL, login instructions visible, no console errors, no CSP violations) + #367 codebase quality sweep. Guard stays on #366 SEC-1 — scope MUST cover the iframe-based architecture (jarvis-janicka.jvsatnik.cz tunnel, CF Access JWT propagation, frame-src CSP correctness, no token leak via referrer/postMessage). Deliverable docs/security/jarvis-bridge-audit.md. Sage PDP polish lane unchanged. External blockers unchanged: #329 (.cz domain), #1 (R2 token), #14 (GMC April 30), #216 (GA4).",
   "lanes": {

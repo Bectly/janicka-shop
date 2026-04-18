@@ -130,10 +130,10 @@ export function AddToCartButton({ product, hideSize = false }: AddToCartProps) {
                   key={color}
                   onClick={() => setSelectedColor(color)}
                   aria-pressed={selectedColor === color}
-                  className={`min-h-11 rounded-lg border px-3 py-2 text-sm font-medium transition-all duration-100 active:scale-90 ${
+                  className={`min-h-11 rounded-lg border px-3 py-2 text-sm font-medium transition-all duration-150 active:scale-90 ${
                     selectedColor === color
                       ? "border-primary bg-primary/10 text-primary animate-ring-expand"
-                      : "border-border text-muted-foreground hover:border-foreground/30"
+                      : "border-border text-muted-foreground hover:border-foreground/40 hover:bg-muted/30"
                   }`}
                 >
                   {color}
@@ -168,7 +168,7 @@ export function AddToCartButton({ product, hideSize = false }: AddToCartProps) {
             </>
           ) : added ? (
             <>
-              <Check data-icon="inline-start" className="size-4" />
+              <Check data-icon="inline-start" className="size-4 animate-scale-in" />
               Přidáno do košíku
             </>
           ) : isInCart ? (

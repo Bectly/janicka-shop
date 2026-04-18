@@ -49,7 +49,7 @@ export function WishlistButton({
         aria-label={isWishlisted ? "Odebrat z oblíbených" : "Přidat do oblíbených"}
       >
         <Heart
-          className={`size-4 transition-colors ${animating ? "animate-heart-burst" : ""} ${
+          className={`size-4 transition-colors duration-200 ${animating ? "animate-heart-burst" : ""} ${
             isWishlisted ? "fill-red-500 text-red-500" : ""
           }`}
         />

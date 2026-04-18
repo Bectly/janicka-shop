@@ -21,7 +21,7 @@ export function NotifyMeForm({ categoryId, sizes, brand, categoryName }: NotifyM
   if (state.success) {
     return (
       <div className="mt-6 rounded-xl border border-sage bg-sage-light p-4 text-center dark:border-sage-dark dark:bg-sage-dark/20">
-        <Check className="mx-auto size-6 text-sage-dark dark:text-sage" />
+        <Check className="mx-auto size-6 animate-scale-in text-sage-dark dark:text-sage" />
         <p className="mt-2 text-sm font-medium text-sage-dark dark:text-sage">
           Super! Dáme vám vědět.
         </p>

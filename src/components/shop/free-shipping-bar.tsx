@@ -45,7 +45,7 @@ export function FreeShippingBar({
           <div className="flex items-center justify-between gap-2">
             <p className="text-sm text-muted-foreground">
               {productPrice != null ? "S tímto kouskem ještě " : "Ještě "}
-              <span className={`font-semibold transition-colors duration-500 ${isNearFree ? "text-primary" : "text-foreground"}`}>
+              <span className={`font-semibold transition-colors duration-300 ${isNearFree ? "text-primary" : "text-foreground"}`}>
                 {formatPrice(remaining)}
               </span>{" "}
               do dopravy zdarma

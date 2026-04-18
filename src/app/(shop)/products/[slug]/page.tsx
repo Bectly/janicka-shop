@@ -562,13 +562,13 @@ export default async function ProductDetailPage({ params }: Props) {
       )}
       {/* Breadcrumb */}
       <nav className="mb-6 flex min-w-0 flex-wrap items-center gap-y-1 text-sm text-muted-foreground">
-        <Link href="/products" className="shrink-0 hover:text-foreground">
+        <Link href="/products" className="shrink-0 transition-colors duration-150 hover:text-foreground">
           Katalog
         </Link>
         <span className="mx-2 shrink-0">/</span>
         <Link
           href={`/products?category=${product.category.slug}`}
-          className="shrink-0 hover:text-foreground"
+          className="shrink-0 transition-colors duration-150 hover:text-foreground"
         >
           {product.category.name}
         </Link>
@@ -679,7 +679,7 @@ export default async function ProductDetailPage({ params }: Props) {
               </div>
               <div className={`grid gap-px bg-border ${gridCols}`}>
                 {measurements.chest && (
-                  <div className="flex flex-col gap-1 bg-background px-4 py-3 transition-colors hover:bg-muted/30">
+                  <div className="flex flex-col gap-1 bg-background px-4 py-3 transition-colors duration-150 hover:bg-muted/50">
                     <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Prsa</span>
                     <span className="text-lg font-bold tabular-nums leading-none text-foreground">
                       {measurements.chest}<span className="ml-1 text-xs font-normal text-muted-foreground">cm</span>
@@ -687,7 +687,7 @@ export default async function ProductDetailPage({ params }: Props) {
                   </div>
                 )}
                 {measurements.waist && (
-                  <div className="flex flex-col gap-1 bg-background px-4 py-3 transition-colors hover:bg-muted/30">
+                  <div className="flex flex-col gap-1 bg-background px-4 py-3 transition-colors duration-150 hover:bg-muted/50">
                     <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Pas</span>
                     <span className="text-lg font-bold tabular-nums leading-none text-foreground">
                       {measurements.waist}<span className="ml-1 text-xs font-normal text-muted-foreground">cm</span>
@@ -695,7 +695,7 @@ export default async function ProductDetailPage({ params }: Props) {
                   </div>
                 )}
                 {measurements.hips && (
-                  <div className="flex flex-col gap-1 bg-background px-4 py-3 transition-colors hover:bg-muted/30">
+                  <div className="flex flex-col gap-1 bg-background px-4 py-3 transition-colors duration-150 hover:bg-muted/50">
                     <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Boky</span>
                     <span className="text-lg font-bold tabular-nums leading-none text-foreground">
                       {measurements.hips}<span className="ml-1 text-xs font-normal text-muted-foreground">cm</span>
@@ -703,7 +703,7 @@ export default async function ProductDetailPage({ params }: Props) {
                   </div>
                 )}
                 {measurements.length && (
-                  <div className="flex flex-col gap-1 bg-background px-4 py-3 transition-colors hover:bg-muted/30">
+                  <div className="flex flex-col gap-1 bg-background px-4 py-3 transition-colors duration-150 hover:bg-muted/50">
                     <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Délka</span>
                     <span className="text-lg font-bold tabular-nums leading-none text-foreground">
                       {measurements.length}<span className="ml-1 text-xs font-normal text-muted-foreground">cm</span>
@@ -711,7 +711,7 @@ export default async function ProductDetailPage({ params }: Props) {
                   </div>
                 )}
                 {measurements.sleeve && (
-                  <div className="flex flex-col gap-1 bg-background px-4 py-3 transition-colors hover:bg-muted/30">
+                  <div className="flex flex-col gap-1 bg-background px-4 py-3 transition-colors duration-150 hover:bg-muted/50">
                     <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Rukáv</span>
                     <span className="text-lg font-bold tabular-nums leading-none text-foreground">
                       {measurements.sleeve}<span className="ml-1 text-xs font-normal text-muted-foreground">cm</span>
