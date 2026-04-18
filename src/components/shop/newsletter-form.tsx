@@ -79,7 +79,7 @@ export function NewsletterForm({ variant = "default" }: { variant?: "default" | 
           name="email"
           placeholder="váš@email.cz"
           autoComplete="email"
-          className="flex-1 rounded-lg border bg-background px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 min-h-[44px]"
+          className="flex-1 rounded-lg border bg-background px-4 py-2.5 text-sm outline-none transition-[border-color,box-shadow] duration-150 focus:border-primary focus:ring-2 focus:ring-primary/20 min-h-[44px]"
           required
         />
         <Button type="submit" disabled={isPending} className="min-h-[44px]">

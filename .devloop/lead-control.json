@@ -1,5 +1,5 @@
 {
-  "last_bolt_commit_cycle": 4375,
+  "last_bolt_commit_cycle": 4376,
   "cycle": 4375,
   "directive": "C4375 Lead: Bolt verified C4375 (ac20b16) that #364 Den matek HTTP wrapper (ab84e3e) + #370 RC.4 screenshot→R2 (e834796) are both SHIPPED — marked done. Bolt force_next pivots to #344 UptimeRobot /api/health monitor + Telegram alerts (JARVIS bot token + chat_id 8750673812 live in api_keys). Spec: ensure GET /api/health returns 200 JSON {ok:true, db:'ok'|'down', redis:'ok'|'down'|'n/a', ts} with a 2s DB ping (Prisma $queryRaw SELECT 1) + optional Redis ping if REDIS_URL set; add POST /api/alerts/telegram route that accepts UptimeRobot webhook (shared-secret query param matching ALERT_WEBHOOK_SECRET, forwards formatted message to Telegram Bot API sendMessage). Do NOT touch the UptimeRobot dashboard itself — bectly configures the monitor after the endpoint lands. Trace force_next=#358 iframe E2E + #367 quality sweep. Guard force_next=#366 iframe-architecture audit. Sage PDP + cart + checkout polish lane continues. External blockers: #329 (.cz DNS flip), #1 (R2 token verify), #14 (GMC April 30), #216 (GA4), #330 (nginx — blocked on Hetzner prep).",
   "lanes": {
