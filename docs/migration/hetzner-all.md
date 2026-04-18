@@ -68,9 +68,9 @@
 - [x] R2 backup cron (nightly) — `scripts/cron/backup-r2.sh` + /etc/cron.d entry at 03:00 UTC, 30d daily / 12mo monthly retention, Telegram failure alerts. Bootstrap runbook: `docs/migration/runbooks/p5.2-r2-backup.md` (blocked on R2 API token creation + rclone install on VPS).
 
 ### Fáze 6: DNS switch (Day 3)
-- [ ] Cloudflare Load Balancer setup (Hetzner primary, Vercel backup)
-- [ ] Health check každých 30s
-- [ ] Postupně přepnout traffic (10% → 50% → 100%)
+- [~] Cloudflare Load Balancer setup (Hetzner primary, Vercel backup) — runbook `docs/migration/runbooks/p6.1-cloudflare-load-balancer.md` ready-to-execute, blocked on domain `janicka-shop.cz` (#329) + LB paid add-on activation
+- [ ] Health check každých 30s (covered by runbook Step 1, monitor spec)
+- [ ] Postupně přepnout traffic (10% → 50% → 100%) — zvažuje se, LB failover policy je primary/backup ne weighted split
 
 ### Fáze 7: Monitoring (Day 4)
 - [ ] UptimeRobot free tier na /api/health
@@ -147,3 +147,4 @@ Přidej update do tohoto souboru při každé dokončené fázi.
   - `docs/migration/runbooks/p5.2-r2-backup.md` — bootstrap runbook: create R2 bucket + API token at Cloudflare dash, register in JARVIS DB, install rclone, plant config at `/var/www/.config/rclone/rclone.conf` (0600, www-data), smoke-test (`rclone lsd r2:` + probe round-trip), first manual live run, cron deploy, Telegram failure test with `TURSO_DB_NAME=does-not-exist`, 30d retention verification. Includes P5.3 restore rehearsal outline.
   - **Blocker**: `r2-janicka` entry in JARVIS DB says `MISSING: R2_ACCESS_KEY_ID + R2_SECRET_ACCESS_KEY`. Same token will work for both buckets if scoped account-wide, or new token scoped to `janicka-backup`. After creds land in JARVIS DB + VPS rclone.conf, runbook steps 4-6 are a 10-minute execution.
   - **Acceptance**: ✅ script syntax clean (`bash -n`); ✅ `--dry` run end-to-end without touching R2/Telegram/DB (printed intended turso dump, uploads skip, rclone copy, retention prune); ✅ cron entry in repo; ✅ Phase 5 P5.2 checklist item flipped to done (bootstrap still manual). P5.3 restore rehearsal remains open.
+- **Cycle #4356 (Bolt, task #341 P6.1)** — Fáze 6 Cloudflare Load Balancer nelze nasadit end-to-end: doména `janicka-shop.cz` stále není koupena (tracked #329) + LB je placený add-on ($5/hostname/mo) který vyžaduje aktivní CF zónu. Místo dashboard-klikání vytvořen runbook `docs/migration/runbooks/p6.1-cloudflare-load-balancer.md` — kompletní: pre-flight checklist (5 blokujících podmínek), krok-za-krokem dashboard wizard (monitor `janicka-health` na `/api/health` 30s interval 2 retries = 60s detekce, `pool-hetzner` s 46.224.219.3 + host-header override, `pool-vercel` s `janicka-shop.vercel.app` bez host-header, LB na apex s failover policy hetzner→vercel), 4 acceptance testy (oba healthy / Hetzner down failover / recovery / žádné 524s), rollback procedura (disable LB + re-add A record + emergency Vercel CNAME bypass), cost watch (~$10-12/mo za 2 hostnames + queries), 5 známých gotchas (CF edge cache race, Vercel cold-start, IPv6 dual-stack, Vercel auth protection, host-header mismatch). Runbook hotový — task #341 zůstává `open` do koupě domény, pak je to ~30 min dashboard execution. P6.1 checklist flipped to `[~]` partial.
