@@ -140,6 +140,7 @@ export function CategoryHero({
             className="object-cover object-center"
             sizes="100vw"
             priority
+            quality={85}
           />
         ) : (
           <div

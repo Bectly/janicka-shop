@@ -384,6 +384,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                 priority={activeIndex === 0}
                 placeholder="blur"
                 blurDataURL={BLUR_DATA_URL}
+                quality={90}
                 onAnimationEnd={() => setSlideDirection(null)}
               />
             </>
@@ -650,7 +651,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                     : undefined,
               }}
               sizes="(max-width: 640px) 80vw, 32rem"
-              quality={90}
+              quality={95}
             />
           </div>
 
