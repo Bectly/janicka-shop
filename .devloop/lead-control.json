@@ -1,19 +1,18 @@
 {
   "last_bolt_commit_cycle": 4347,
-  "cycle": 4347,
-  "directive": "Hetzner migration: P1-P3 shipped (Redis + Nginx + Next.js daemon scaffolding). Bolt advance to P4 (BullMQ queues #335 — spec IS provided in task.description, prior cycle note was wrong) → P4.2 refactor (#336) → P7.1 UptimeRobot+Telegram (#344). Trace/Sage/Guard run INDEPENDENTLY — do NOT wait on DNS cutover (#329) or daemon boot (#334). Backlog >20 items, no new tasks needed this cycle.",
+  "cycle": 4348,
+  "directive": "C4348: P4.1 BullMQ #335 SHIPPED (commit 56c76d4 — 3 queues/workers/systemd units smoke-tested green). Bolt advance to #336 P4.2 — refactor existing Server Actions (order-confirmation Resend emails, invoice PDF generation, Packeta SOAP createPacket) from inline await → enqueue onto emailQueue/invoiceQueue/packetaQueue. Keep Server Action return contracts stable (return success when job enqueued; admin polls job status). Workers already scaffolded with __smoke-job branches — replace with real dispatch logic. Then #344 UptimeRobot, #345 PM2 log rotation, #348 runbooks. Trace/Sage/Guard keep independent lanes per C4347 notes — no waiting on DNS/daemon.",
   "lanes": {
     "BOLT": {
       "status": "active",
       "next_priority": [
-        335,
         336,
         344,
         345,
         348,
         329
       ],
-      "notes": "P3.x DONE C4346. Next: #335 P4.1 BullMQ (spec IS in task.description — emailQueue/invoiceQueue/packetaQueue, per-worker systemd units Type=simple Restart=always EnvironmentFile=/etc/janicka-shop/env, SIGTERM graceful drain). Then #336 P4.2 refactor Resend sends + invoice PDF gen + Packeta SOAP createPacket from inline Server Actions into queue jobs (keep existing contracts, just swap await→enqueue + worker consumes). Then #344 P7.1 UptimeRobot on /api/health + Telegram via jarvis-bot (chat_id 8750673812, bot token in JARVIS DB 'telegram-bot'). Then #345 P7.2 Hetzner threshold alerts + PM2 log rotation. #348 runbook docs anytime build is red. #329 certbot STAYS BLOCKED until bectly flips DNS → 46.224.219.3. Ref: docs/migration/hetzner-all.md Phase 4/7.",
+      "notes": "P4.1 #335 SHIPPED C4347 (commit 56c76d4 — BullMQ infrastructure live: 3 queues, 3 workers with shared IORedis, hardened systemd units, SIGTERM drain). NEXT: #336 P4.2 refactor 3 Server Actions to enqueue real work: (a) order-confirmation email flow (currently inline Resend send from checkout submit Server Action) → emailQueue job: {to, template, data} — replace __smoke-job branch in workers/email.ts with switch on template type dispatching to the 11 Resend senders already wired; (b) invoice PDF generation (post-payment webhook creates + emails PDF) → invoiceQueue job: {orderId} — worker loads order, generates PDF via existing lib, uploads to R2 (once credentials live) OR stores tmp path, attaches to follow-up email via emailQueue; (c) Packeta SOAP createPacket (on order ship action) → packetaQueue job: {orderId} — worker invokes SOAP client, stores packetId on Order, enqueues label-ready email. Server Actions keep their return shapes (success=job enqueued); admin/user polls job status via a new lightweight /api/jobs/[id] route if needed. Then #344 P7.1 UptimeRobot /api/health + Telegram (jarvis-bot chat_id 8750673812, token in JARVIS DB 'telegram-bot'). Then #345 P7.2 Hetzner threshold alerts + PM2 log rotation. #348 runbook docs anytime build is red. #329 certbot STAYS BLOCKED until bectly flips DNS → 46.224.219.3. Ref: docs/migration/hetzner-all.md Phase 4/7.",
       "blockers_external": {
         "329": "DNS flip by bectly",
         "334": "Hetzner daemon must boot (partially depends on Bolt #335 env)"
@@ -58,5 +57,5 @@
     "Bolt owns all Hetzner migration code paths (nginx/pm2/env/redis/bullmq/systemd); other agents do not touch them.",
     "Bolt: if #335 BullMQ task.description spec ever seems missing, re-read the task row in jarvis.db — the spec IS there (C4346 cycle note was incorrect)."
   ],
-  "last_updated": "2026-04-18"
+  "last_updated": "2026-04-18T06:30"
 }
