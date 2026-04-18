@@ -2,7 +2,7 @@ import { getDb } from "@/lib/db";
 import Link from "next/link";
 import { connection } from "next/server";
 
-import { Plus } from "lucide-react";
+import { Layers, Plus } from "lucide-react";
 import type { Metadata } from "next";
 import { CategoryRow } from "./category-row";
 
@@ -48,8 +48,12 @@ export default async function AdminCategoriesPage() {
       <div className="mt-6 overflow-hidden rounded-xl border bg-card shadow-sm">
         {categories.length === 0 ? (
           <div className="p-12 text-center">
-            <p className="text-muted-foreground">
-              Zatím nemáte žádné kategorie.
+            <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-muted">
+              <Layers className="size-6 text-muted-foreground" />
+            </div>
+            <p className="font-medium text-foreground">Žádné kategorie</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Vytvořte kategorii pro třídění produktů.
             </p>
             <Link
               href="/admin/categories/new"

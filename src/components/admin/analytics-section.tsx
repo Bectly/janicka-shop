@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
+import { BarChart3 } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -131,9 +132,10 @@ export function AnalyticsSection({
           </h3>
           <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
             {topProducts.length === 0 ? (
-              <p className="p-6 text-center text-sm text-muted-foreground">
-                Žádná data pro toto období.
-              </p>
+              <div className="flex flex-col items-center gap-2 p-8 text-muted-foreground">
+                <BarChart3 className="size-8 opacity-40" />
+                <p className="text-sm">Žádná data pro toto období.</p>
+              </div>
             ) : (
               <table className="w-full text-sm">
                 <thead>
@@ -194,9 +196,10 @@ export function AnalyticsSection({
           </h3>
           <div className="flex min-h-[280px] items-center justify-center rounded-xl border bg-card p-4 shadow-sm">
             {categorySales.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Žádná data pro toto období.
-              </p>
+              <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                <BarChart3 className="size-8 opacity-40" />
+                <p className="text-sm">Žádná data pro toto období.</p>
+              </div>
             ) : (
               <ResponsiveContainer width="100%" height={260}>
                 <PieChart>

@@ -416,7 +416,7 @@ export default async function AdminReferralsPage({
             </div>
           </div>
 
-          <Suspense fallback={null}>
+          <Suspense fallback={<PaginationSkeleton />}>
             <Pagination
               totalItems={creditsCount}
               perPage={ADMIN_REFERRALS_PER_PAGE}

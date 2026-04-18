@@ -131,11 +131,13 @@ export function BulkProductTable({ products, query }: BulkProductTableProps) {
             <tbody>
               {products.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={9}
-                    className="px-4 py-12 text-center text-muted-foreground"
-                  >
-                    {query ? `Žádné produkty pro „${query}"` : "Žádné produkty"}
+                  <td colSpan={9} className="px-4 py-12 text-center">
+                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                      <ImageIcon className="size-8 opacity-40" />
+                      <span className="text-sm">
+                        {query ? `Žádné produkty pro „${query}"` : "Žádné produkty"}
+                      </span>
+                    </div>
                   </td>
                 </tr>
               ) : (

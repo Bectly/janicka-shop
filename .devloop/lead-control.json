@@ -55,5 +55,6 @@
     "Bolt owns all Hetzner migration code paths (nginx/pm2/env/redis/bullmq/systemd); other agents do not touch them.",
     "Bolt: if #335 BullMQ task.description spec ever seems missing, re-read the task row in jarvis.db — the spec IS there (C4346 cycle note was incorrect)."
   ],
-  "last_updated": "2026-04-18T07:05"
+  "last_updated": "2026-04-18T07:05",
+  "pause": {}
 }
