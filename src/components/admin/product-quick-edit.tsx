@@ -72,7 +72,7 @@ export function InlinePriceEdit({
           e.stopPropagation();
           setEditing(true);
         }}
-        className="group inline-flex items-center gap-1 rounded px-1 py-0.5 font-medium hover:bg-muted"
+        className="group inline-flex items-center gap-1 rounded px-1 py-0.5 font-medium transition-colors duration-150 hover:bg-muted"
         title="Kliknutím uprav cenu"
       >
         {formatPrice(price)}

@@ -110,7 +110,7 @@ export function AdminSidebar({
           <p className="font-medium text-foreground">{userName}</p>
           <Link
             href="/"
-            className="text-xs text-muted-foreground hover:text-primary"
+            className="text-xs text-muted-foreground transition-colors duration-150 hover:text-primary"
           >
             Zobrazit obchod &rarr;
           </Link>

@@ -1,7 +1,7 @@
 {
   "last_bolt_commit_cycle": 4379,
-  "cycle": 4377,
-  "directive": "C4377 Lead: #344 UptimeRobot shipped (d017594 — src/lib/telegram.ts + POST /api/alerts/uptime with constant-time secret auth, alertType→Czech labels, 503 when env unset). Marked done. Bolt force_next pivots to #341 Cloudflare Load Balancer — code side only: origin pool definitions + health check config + failover rules documented in docs/migration/cloudflare-lb.md (terraform-shaped JSON/YAML is fine, no secrets). After #341: #343 DNS/LB traffic shift plan (10%→50%→100% steps in docs/migration/dns-shift.md — NO actual DNS changes, bectly executes via CF dashboard). After #343: #65 NEXT_PUBLIC_SITE_URL + Czech slug redirects (proxy.ts or next.config redirects block, confirm absolute URLs in og:url/canonical/sitemap use env var). Trace force_next=#358 iframe E2E + #367 quality sweep unchanged. Guard force_next=#366 iframe-architecture audit unchanged. Sage PDP + cart + checkout polish lane continues. External blockers unchanged: #329 (.cz DNS flip), #1 (R2 token verify), #14 (GMC April 30), #216 (GA4), #330 (nginx — blocked on Hetzner prep).",
+  "cycle": 4379,
+  "directive": "C4379 Lead: marked #371 RC.5 JARVIS console overlay done (330421e shipped — Zustand store + slide-up panel + Ctrl+` + iframe mounted in admin layout survives navigation). Bolt force_next=#341 Cloudflare LB docs → #343 DNS shift plan → #65 NEXT_PUBLIC_SITE_URL audit unchanged. Trace force_next=#358 iframe E2E + #367 quality sweep unchanged. Guard force_next=#366 iframe-architecture audit unchanged. Sage continues PDP/cart/checkout polish (C4378-4379 transition-colors standardization shipped — 31 elements across 14 files). Workers idle ~10 min — refreshing timestamp to nudge dispatch. Sage 610 failures/24h likely retry churn on already-polished elements — monitor; if persists next cycle, inspect Sage worker logs. External blockers unchanged: #329 (.cz DNS flip), #1 (R2), #14 (GMC April 30 — 12 days), #216 (GA4), #330 (nginx — blocks on Hetzner prep).",
   "lanes": {
     "BOLT": {
       "status": "active",
@@ -55,8 +55,8 @@
     "NEVER push to remote without bectly's explicit request.",
     "Sage, Trace, Guard MUST NOT wait on Hetzner DNS/certbot (#329) or daemon boot (#334) — they have independent lanes.",
     "Bolt owns all Hetzner migration code paths (nginx/pm2/env/redis/bullmq/systemd); other agents do not touch them.",
-    "Tasks #352, #353, #364, #365, #369, #370, #344 are DONE — do not re-raise as blockers."
+    "Tasks #352, #353, #364, #365, #369, #370, #344, #371 are DONE — do not re-raise as blockers."
   ],
-  "last_updated": "2026-04-18T11:00",
+  "last_updated": "2026-04-18T11:15",
   "pause": {}
 }

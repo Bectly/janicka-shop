@@ -25,7 +25,7 @@ export function DuplicateProductButton({
     <button
       onClick={handleDuplicate}
       disabled={isPending}
-      className="text-muted-foreground hover:text-primary disabled:opacity-50"
+      className="text-muted-foreground transition-colors duration-150 hover:text-primary disabled:opacity-50"
       title={`Duplikovat ${productName}`}
     >
       <Copy className="size-4" />

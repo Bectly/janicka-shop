@@ -67,7 +67,7 @@ export function Breadcrumbs() {
             {i === 0 ? (
               <Link
                 href="/admin/dashboard"
-                className="flex items-center gap-1 hover:text-foreground"
+                className="flex items-center gap-1 transition-colors duration-150 hover:text-foreground"
               >
                 <Home className="size-3" />
                 <span className="sr-only sm:not-sr-only">{c.label}</span>
@@ -75,7 +75,7 @@ export function Breadcrumbs() {
             ) : c.isLast ? (
               <span className="font-medium text-foreground">{c.label}</span>
             ) : (
-              <Link href={c.href} className="hover:text-foreground">
+              <Link href={c.href} className="transition-colors duration-150 hover:text-foreground">
                 {c.label}
               </Link>
             )}

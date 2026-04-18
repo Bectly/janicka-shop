@@ -170,7 +170,7 @@ export function AnalyticsSection({
                           )}
                           <Link
                             href={`/admin/products/${p.productId}`}
-                            className="max-w-[140px] truncate font-medium text-foreground hover:text-primary hover:underline"
+                            className="max-w-[140px] truncate font-medium text-foreground transition-colors duration-150 hover:text-primary hover:underline"
                           >
                             {p.name}
                           </Link>
