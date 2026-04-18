@@ -34,7 +34,7 @@ export function ProductDescription({ text }: { text: string | null | undefined }
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
-          className="mt-1 block rounded text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          className="mt-1 block rounded text-sm font-medium text-primary underline-offset-4 transition-colors duration-150 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
         >
           {expanded ? "Zobrazit méně" : "Zobrazit více"}
         </button>

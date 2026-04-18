@@ -1,5 +1,30 @@
 {
   "_description": "Scheduled one-off campaigns dispatched by scripts/cron/newsletter-dispatch.ts. Each entry runs once when scheduledAt has passed; CampaignSendLock keeps it idempotent forever. Add new entries here and commit.",
-  "_endpointRequirement": "endpoint must be an HTTP route on the local Next.js daemon that accepts Bearer CRON_SECRET and triggers the campaign send. Mother's Day + Vinted T&C are currently admin-only Server Actions (src/app/(admin)/admin/subscribers/actions.ts) — a small /api/admin/campaigns/* wrapper that authenticates via CRON_SECRET is needed before those can be scheduled here. Follow-up task for Bolt.",
-  "campaigns": []
+  "_endpointRequirement": "endpoint must be an HTTP route on the local Next.js daemon that accepts Bearer CRON_SECRET and triggers the campaign send. Mother's Day wrapper lives at POST /api/admin/campaigns/mothers-day (body: {emailNumber: 1|2|3}). Vinted campaign permanently rejected by owner — see NEVER_ADD_VINTED_CAMPAIGN.md.",
+  "campaigns": [
+    {
+      "key": "mothers-day:1",
+      "label": "Den matek #1 Warmup",
+      "scheduledAt": "2026-05-01T07:00:00Z",
+      "endpoint": "/api/admin/campaigns/mothers-day",
+      "method": "POST",
+      "body": { "emailNumber": 1 }
+    },
+    {
+      "key": "mothers-day:2",
+      "label": "Den matek #2 Push",
+      "scheduledAt": "2026-05-07T07:00:00Z",
+      "endpoint": "/api/admin/campaigns/mothers-day",
+      "method": "POST",
+      "body": { "emailNumber": 2 }
+    },
+    {
+      "key": "mothers-day:3",
+      "label": "Den matek #3 Urgency",
+      "scheduledAt": "2026-05-09T07:00:00Z",
+      "endpoint": "/api/admin/campaigns/mothers-day",
+      "method": "POST",
+      "body": { "emailNumber": 3 }
+    }
+  ]
 }
