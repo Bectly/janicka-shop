@@ -5,7 +5,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { randomUUID } from "crypto";
 
-function getR2Client(): S3Client {
+export function getR2Client(): S3Client {
   return new S3Client({
     region: "auto",
     endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,

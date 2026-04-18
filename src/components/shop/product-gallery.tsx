@@ -436,10 +436,10 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                     className={`inline-flex shrink-0 items-center justify-center ${totalSlides > 8 ? "size-8" : "size-11"}`}
                     aria-label={i === videoSlideIndex ? "Video" : `Fotka ${i + 1}`}
                   >
-                    <span className={`size-2 rounded-full transition-all ${
+                    <span className={`size-2 rounded-full transition-all duration-150 ${
                       i === activeIndex
                         ? "scale-125 bg-white"
-                        : "bg-white/50 hover:bg-white/75"
+                        : "bg-white/50 hover:bg-white/75 hover:scale-110"
                     }`} />
                   </button>
                 ))}

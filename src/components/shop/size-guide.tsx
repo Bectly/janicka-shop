@@ -64,7 +64,7 @@ function SizeTable({
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={i} className="border-b last:border-0">
+            <tr key={i} className="border-b last:border-0 transition-colors hover:bg-muted/30">
               {row.map((cell, j) => (
                 <td
                   key={j}
@@ -84,7 +84,7 @@ function SizeTable({
 export function SizeGuide() {
   return (
     <Dialog>
-      <DialogTrigger className="inline-flex min-h-11 items-center gap-1.5 text-sm text-primary hover:underline">
+      <DialogTrigger className="inline-flex min-h-11 items-center gap-1.5 text-sm text-primary transition-colors duration-150 hover:text-primary/80 hover:underline">
         <Ruler className="size-4" />
         Průvodce velikostmi
       </DialogTrigger>

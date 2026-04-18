@@ -559,6 +559,15 @@
   animation: ptr-spin 600ms linear infinite;
 }
 
+@keyframes scale-in {
+  from { transform: scale(0.6); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@utility animate-scale-in {
+  animation: scale-in 120ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 /* ─── Bottom-nav-aware fixed positioning ─── */
 /* Lifts fixed elements above the mobile bottom nav (3.5rem) + device safe area.
    Resets to bottom-0 on desktop where there is no bottom nav. */
@@ -707,6 +716,7 @@
   .animate-lightbox-open,
   .animate-lightbox-close,
   .animate-ptr-spin,
+  .animate-scale-in,
   .hero-petal,
   .footer-blossom,
   .ann-blossom,

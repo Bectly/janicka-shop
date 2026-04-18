@@ -45,7 +45,7 @@ export function FreeShippingBar({
           <div className="flex items-center justify-between gap-2">
             <p className="text-sm text-muted-foreground">
               {productPrice != null ? "S tímto kouskem ještě " : "Ještě "}
-              <span className={`font-semibold ${isNearFree ? "text-primary" : "text-foreground"}`}>
+              <span className={`font-semibold transition-colors duration-500 ${isNearFree ? "text-primary" : "text-foreground"}`}>
                 {formatPrice(remaining)}
               </span>{" "}
               do dopravy zdarma
@@ -60,7 +60,7 @@ export function FreeShippingBar({
           {/* Progress bar with truck indicator at fill edge */}
           <div className="relative mt-2 h-2.5 overflow-hidden rounded-full bg-muted">
             <div
-              className="h-full rounded-full transition-all duration-500"
+              className="h-full rounded-full transition-all duration-500 ease-out"
               style={{
                 width: `${progress}%`,
                 background: isNearFree

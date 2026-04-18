@@ -1,18 +1,19 @@
 {
   "last_bolt_commit_cycle": 4372,
-  "cycle": 4371,
-  "directive": "C4371 Lead: Ack 2218 — #354 /admin/jarvis xterm.js terminal marked done (shipped C4367). Workers idle since 07:34 — re-issuing force_next stamps with fresh cycle to unblock dispatch. Bolt force_next=#365 (replace fake JarvisTerminal analytical-chat with real Claude WebSocket bridge — preserve safe-mode toggle + 20/min rate limit + jarvis_console_log audit across transport swap); after #365 → #364 Den matek P5.1b HTTP wrapper. Trace force_next=#358 E2E /admin/jarvis (Playwright skeleton NOW, full flow gated on #365 commit) + #367 full codebase quality sweep. Guard: #359 is cancelled in DB — pivot to #366 SEC-1 Remote Console full-stack audit (same scope: JWT/WS hardening/audit integrity/rate-limit correctness/CORS, deliver docs/security/jarvis-bridge-audit.md). Sage PDP polish: price history sparkline + sticky mobile ATC + condition badge placement. External blockers unchanged: #329 (.cz domain), #1 (R2 token), #14 (GMC April 30), #216 (GA4).",
+  "cycle": 4372,
+  "directive": "C4372 Lead: #365 RC.3b SHIPPED in commit f91c6f2 (JarvisRemoteFrame iframe → jarvis-janicka.jvsatnik.cz, CSP updated, xterm deps removed) — marked done. Bolt pivot to #369 SEC-3 (already in_progress: harden the iframe integration NOW that it's live — sandbox attrs, CSP frame-ancestors/frame-src tightening, cookie SameSite, X-Frame-Options on parent, postMessage origin check if any), then #364 Den matek HTTP wrapper (Apr 27 deadline for Apr 28 send), then #370 RC.4 screenshot paste → R2. Trace force_next=#358 E2E /admin/jarvis (iframe-based now: assert iframe src matches NEXT_PUBLIC_JARVIS_REMOTE_URL, login instructions visible, no console errors, no CSP violations) + #367 codebase quality sweep. Guard stays on #366 SEC-1 — scope MUST cover the iframe-based architecture (jarvis-janicka.jvsatnik.cz tunnel, CF Access JWT propagation, frame-src CSP correctness, no token leak via referrer/postMessage). Deliverable docs/security/jarvis-bridge-audit.md. Sage PDP polish lane unchanged. External blockers unchanged: #329 (.cz domain), #1 (R2 token), #14 (GMC April 30), #216 (GA4).",
   "lanes": {
     "BOLT": {
       "status": "active",
-      "force_next_task": 365,
+      "force_next_task": 369,
       "next_priority": [
-        365,
+        369,
         364,
+        370,
         344,
         345
       ],
-      "notes": "PRIORITY: #365 RC.3b — replace fake JarvisTerminal (src/components/admin/jarvis-terminal.tsx is currently analytical chat faking commands). Wire real Claude bridge: /admin/jarvis page should render an iframe/xterm.js client that WebSocket-connects to the bridge daemon via the tunnel hostname (env NEXT_PUBLIC_JARVIS_BRIDGE_WS_URL, default wss://tunnel.janicka.shop/ws). Auth: pass NextAuth session JWT as query param or first WS frame — bridge already validates role=admin (#355 done). Commands stream stdout/stderr as ANSI through xterm. Keep 20 cmd/min rate limit UX (#355) + audit log POST /api/admin/jarvis still fires per command (#356). Preserve safe-mode toggle + dangerous-command guard from #357 (C4369) across the transport swap — the Shield state + confirmation UX must still gate WS sends, not just the fake-terminal path. THEN #364 Den matek P5.1b: POST /api/cron/campaigns/den-matek-send with X-Cron-Token === process.env.CRON_SECRET, React Email template, emailQueue fire-and-forget, 202 + job count. DO NOT build vinted-tc-send (permanent rule). #344 UptimeRobot + #345 PM2 logrotate stay queued after.",
+      "notes": "PRIORITY: #369 SEC-3 harden iframe integration (already in_progress). C4372 shipped JarvisRemoteFrame at src/components/admin/jarvis-remote-frame.tsx loading jarvis-janicka.jvsatnik.cz. Now harden: (1) iframe sandbox attrs — minimum needed (typically 'allow-scripts allow-same-origin allow-forms' for embedded console; reject 'allow-top-navigation' / 'allow-popups-to-escape-sandbox'); (2) CSP frame-src jarvis-janicka.jvsatnik.cz already added — verify no wildcards leaked, no unsafe-inline; (3) parent CSP frame-ancestors 'self' on /admin/jarvis page so the embedded UI can't be re-framed elsewhere; (4) cookies on parent must be SameSite=Lax/Strict (NextAuth default — verify no override); (5) if any postMessage bridge, validate event.origin === expected exact string; (6) referrer-policy: no-referrer or strict-origin so the iframe URL doesn't leak admin pathnames; (7) confirm NO Authorization header / session cookie can leak across the tunnel boundary. THEN #364 Den matek P5.1b: POST /api/cron/campaigns/den-matek-send with X-Cron-Token === process.env.CRON_SECRET, React Email template, emailQueue fire-and-forget, 202 + job count. DEADLINE Apr 27 (Apr 28 send). DO NOT build vinted-tc-send (permanent rule — see NEVER_ADD_VINTED_CAMPAIGN.md). THEN #370 RC.4 screenshot paste → R2 upload → return URL Claude can fetch. THEN #344 UptimeRobot + #345 PM2 logrotate.",
       "blockers_external": {
         "329": "DNS flip by bectly",
         "334": "Hetzner daemon must boot"
@@ -23,12 +24,13 @@
       "force_next_task": 358,
       "next_priority": [
         358,
+        367,
         324,
         327,
         351,
         347
       ],
-      "notes": "PRIORITY: #358 RC.7 E2E /admin/jarvis — Playwright spec: admin logs in → navigates /admin/jarvis → terminal WS connects (wait for greeting frame) → types 'ls' + Enter → expects stdout in xterm buffer → types 'exit' or closes tab → WS closes cleanly + audit row exists in jarvis_console_log (hit /api/admin/jarvis?recent=1 to verify). Gate: wait for Bolt C4368 commit of #365 before running full terminal flow — until then, write the spec skeleton + assertions only. THEN #324 grep regression: ensure zero 'vinted' campaign refs in HEAD (src/, prisma/, scripts/, not just docs). THEN #327 Redis cache-aside verify (src/lib/redis.ts + product list cache key hit/miss). Always-on: cold-read audit #351, Lighthouse baseline #347 (Vercel URL now, Hetzner post-cutover). NEW e2e standing: category switching leak (/products?category=saty → click Topy) + customer portal C3709 flows (src/app/(shop)/ucet/). DO NOT touch migration code paths."
+      "notes": "PRIORITY: #358 RC.7 E2E /admin/jarvis — UPDATED for iframe architecture (#365 shipped C4372, no longer WS/xterm). Playwright spec: admin logs in → navigates /admin/jarvis → expects breadcrumb 'JARVIS' + login instructions card visible → expects iframe present with src matching NEXT_PUBLIC_JARVIS_REMOTE_URL (default jarvis-janicka.jvsatnik.cz) → no console errors (page.on('pageerror') / page.on('console')) → no CSP violations. Skip WS/xterm flow — that architecture was replaced. THEN #367 full codebase quality sweep: type errors (npx tsc --noEmit), unused exports (knip or ts-prune), dead routes, security smells (process.env leaks to client, console.log of PII, missing rate limits on POST routes). THEN #324 grep regression: zero 'vinted' campaign refs in HEAD (src/, prisma/, scripts/ — docs/ excepted). THEN #327 Redis cache-aside verify (src/lib/redis.ts + product list cache key hit/miss). THEN #351 cold-read audit + #347 Lighthouse baseline. NEW e2e standing: category switching leak (/products?category=saty → click Topy) + customer portal C3709 flows (src/app/(shop)/ucet/). DO NOT touch Hetzner migration code paths."
     },
     "SAGE": {
       "status": "active",
@@ -38,7 +40,7 @@
         "checkout_accordion_polish",
         "admin_dashboard_polish"
       ],
-      "notes": "DONE C4367: /admin/jarvis visual QA (breadcrumb JARVIS + sidebar divider). NEXT: (a) PDP polish — src/app/(shop)/products/[slug]/page.tsx + components/shop/product-detail/: price history sparkline (if priceHistory rows exist), condition badge placement near title (not buried in accordion), sticky mobile ATC bar with price + size selected state. (b) Cart sold-item toast when reservation expires (src/components/shop/cart/ — look for reservation timer). (c) Checkout accordion micro-polish: section transitions, completed-state checkmark color + animation. (d) Admin dashboard density + order-status badge contrast. UI-only, no migration paths."
+      "notes": "Continue PDP polish (C4370-C4372 shipped breadcrumb/discount badge/measurements/share/accordion/wishlist/sticky ATC/gallery zoom polish). NEXT micro-passes: (a) PDP — price history sparkline placement (if priceHistory rows exist), condition badge visual weight near title, related-products carousel arrow hover states, image-gallery thumbnail focus ring. (b) Cart sold-item toast when reservation expires (src/components/shop/cart/ — find reservation timer hook). (c) Checkout accordion micro-polish: section transition timings, completed-state checkmark color + animation entrance. (d) Admin dashboard density + order-status badge contrast. UI-only, no migration paths, no schema changes."
     },
     "GUARD": {
       "status": "active",
@@ -47,7 +49,7 @@
         366,
         330
       ],
-      "notes": "PRIORITY: #366 SEC-1 Remote Console full-stack audit (replaces cancelled #359, same scope updated for ttyd architecture). Scope: (1) JWT extraction on WS upgrade — verify bridge re-validates signature + role=admin + expiry, not just presence; (2) WS frame hardening — max message size cap, command length cap, UTF-8 validation, reject binary; (3) audit log integrity — every command row in jarvis_console_log has userId/userEmail (no nulls), command field not truncated silently, no PII leak in stderr captured; (4) command sanitization — confirm NO server-side shell injection vector (bridge spawns commands via list args, not `sh -c`); (5) rate limit correctness — 20/min keyed on user.id not IP (IP-keyed would let one admin DOS themselves via shared IP); (6) CORS + Origin check on /api/admin/jarvis POST; (7) safe-mode toggle + dangerous-command guard cannot be bypassed via direct WS frame. Deliverable: docs/security/jarvis-bridge-audit.md with findings + severity + fix proposals. THEN #330 nginx hardening (docs/migration/nginx/janicka-shop.conf) — CSP frame-src comgate.eu, rate limits, 20M cap scoped to /api/uploadthing*, X-Forwarded-* sanitization, TLS 1.2+."
+      "notes": "PRIORITY: #366 SEC-1 Remote Console full-stack audit — UPDATED for iframe architecture (#365 shipped C4372 as iframe to jarvis-janicka.jvsatnik.cz, NOT WS bridge). Scope: (1) frame-src CSP correctness — only jarvis-janicka.jvsatnik.cz, no wildcards, verify in middleware/next.config CSP source; (2) frame-ancestors on /admin/jarvis parent so the page can't be re-framed; (3) iframe sandbox attrs minimum-privilege; (4) CF Access JWT propagation to the embedded Claude UI — admin must re-auth at the tunnel boundary, no implicit trust; (5) referrer-policy doesn't leak /admin/jarvis pathname to the iframe origin; (6) cookies SameSite on parent NextAuth session; (7) audit log integrity for /api/admin/jarvis if still active — userId/userEmail not null, no PII in stderr; (8) confirm jarvis-terminal.tsx + xterm deps fully purged (commit f91c6f2 says deleted — verify). Deliverable: docs/security/jarvis-bridge-audit.md with findings + severity + fix proposals. THEN #330 nginx hardening (docs/migration/nginx/janicka-shop.conf) — CSP frame-src comgate.eu, rate limits, 20M cap scoped to /api/uploadthing*, X-Forwarded-* sanitization, TLS 1.2+."
     }
   },
   "hard_rules": [
@@ -55,8 +57,8 @@
     "NEVER push to remote without bectly's explicit request.",
     "Sage, Trace, Guard MUST NOT wait on Hetzner DNS/certbot (#329) or daemon boot (#334) — they have independent lanes.",
     "Bolt owns all Hetzner migration code paths (nginx/pm2/env/redis/bullmq/systemd); other agents do not touch them.",
-    "Tasks #352 and #353 are DONE — do not re-raise as blockers (blockers 2215/2216 acknowledged and closed)."
+    "Tasks #352, #353, #365 are DONE — do not re-raise as blockers."
   ],
-  "last_updated": "2026-04-18T08:00",
+  "last_updated": "2026-04-18T08:05",
   "pause": {}
 }
