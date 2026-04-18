@@ -13,7 +13,8 @@
  */
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
 import { ProductFilters } from "@/components/shop/product-filters";
 import { ProductCard } from "@/components/shop/product-card";
@@ -229,17 +230,39 @@ export function ProductsClient({
 }: ProductsClientProps) {
   const [filters, setFilters] = useState<Filters>(() => filtersFromParams(initialParams));
   const [, startTransition] = useTransition();
+  const searchParams = useSearchParams();
 
   // Keep URL in sync WITHOUT triggering a server fetch (history.replaceState
   // does not invoke the Next.js router).
+  const lastWrittenQs = useRef<string>(filtersToSearchString(filters));
   useEffect(() => {
     if (typeof window === "undefined") return;
     const qs = filtersToSearchString(filters);
+    lastWrittenQs.current = qs;
     const target = `/products${qs}`;
     if (window.location.pathname + window.location.search !== target) {
       window.history.replaceState(null, "", target);
     }
   }, [filters]);
+
+  // Sync filters FROM the URL when Next.js router navigates (e.g. header
+  // category link). `useState` initializer only runs once, so without this
+  // effect, clicking /products?category=saty from within /products would
+  // update the URL but leave the in-memory filter state stale → grid shows
+  // all products regardless of selected category.
+  // We intentionally only react to Next router changes (searchParams), not
+  // to our own history.replaceState writes (which don't update the hook).
+  const spString = searchParams.toString();
+  useEffect(() => {
+    const incomingQs = spString ? `?${spString}` : "";
+    if (incomingQs === lastWrittenQs.current) return;
+    const obj: Record<string, string | string[]> = {};
+    for (const key of searchParams.keys()) {
+      const all = searchParams.getAll(key);
+      obj[key] = all.length > 1 ? all : all[0];
+    }
+    setFilters(filtersFromParams(obj));
+  }, [spString, searchParams]);
 
   // Listen for back/forward: re-parse URL into state.
   useEffect(() => {

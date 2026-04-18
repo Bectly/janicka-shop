@@ -99,6 +99,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                   : {}),
               },
             });
+            try {
+              const { logEvent } = await import("@/lib/audit-log");
+              await logEvent({ customerId: customer.id, action: "login_failed" });
+            } catch {
+              // Audit logging must not block auth.
+            }
           }
           return null;
         }
