@@ -85,7 +85,7 @@ export function ReferralCard({ orderNumber, referralCode }: ReferralCardProps) {
           <button
             type="button"
             onClick={() => setDismissed(true)}
-            className="mt-3 text-xs text-muted-foreground hover:text-foreground"
+            className="mt-3 text-xs text-muted-foreground transition-colors duration-150 hover:text-foreground"
           >
             Zavřít
           </button>

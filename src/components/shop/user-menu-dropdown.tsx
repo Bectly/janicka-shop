@@ -22,7 +22,7 @@ export function UserMenuDropdown({
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label="Můj účet"
-        className="inline-flex size-11 items-center justify-center rounded-lg text-foreground/80 hover:bg-muted hover:text-foreground"
+        className="inline-flex size-11 items-center justify-center rounded-lg text-foreground/80 transition-colors duration-150 hover:bg-muted hover:text-foreground"
       >
         <User className="size-5" />
       </DropdownMenuTrigger>

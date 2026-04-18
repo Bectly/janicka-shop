@@ -57,6 +57,6 @@
     "Bolt owns all Hetzner migration code paths (nginx/pm2/env/redis/bullmq/systemd); other agents do not touch them.",
     "Tasks #352, #353, #364, #365, #369, #370, #344 are DONE — do not re-raise as blockers."
   ],
-  "last_updated": "2026-04-18T10:30",
+  "last_updated": "2026-04-18T10:45",
   "pause": {}
 }

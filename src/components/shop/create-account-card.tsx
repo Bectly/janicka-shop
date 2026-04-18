@@ -87,7 +87,7 @@ export function CreateAccountCard({ orderNumber, accessToken }: CreateAccountCar
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors duration-150 hover:text-foreground"
                   aria-label={showPassword ? "Skrýt heslo" : "Zobrazit heslo"}
                 >
                   {showPassword ? (
@@ -110,7 +110,7 @@ export function CreateAccountCard({ orderNumber, accessToken }: CreateAccountCar
               <button
                 type="button"
                 onClick={() => setDismissed(true)}
-                className="text-sm text-muted-foreground hover:text-foreground"
+                className="text-sm text-muted-foreground transition-colors duration-150 hover:text-foreground"
               >
                 Pokračovat bez účtu →
               </button>

@@ -319,7 +319,7 @@ export function InstantSearch({ variant = "icon" }: InstantSearchProps) {
           {loading && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
           <button
             onClick={closeSearch}
-            className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="rounded-md p-1 text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
             aria-label="Zavřít vyhledávání"
           >
             <X className="size-4" />
@@ -387,7 +387,7 @@ export function InstantSearch({ variant = "icon" }: InstantSearchProps) {
               onClick={() =>
                 navigateTo(`/search?q=${encodeURIComponent(query)}`, query)
               }
-              className="mt-1 flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm text-primary hover:bg-muted"
+              className="mt-1 flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm text-primary transition-colors duration-150 hover:bg-muted"
             >
               Zobrazit všechny výsledky
               <ArrowRight className="size-3.5" />
