@@ -46,7 +46,8 @@ export function DeleteProductButton({
   return (
     <button
       onClick={() => setConfirming(true)}
-      className="text-muted-foreground hover:text-destructive"
+      className="text-muted-foreground transition-all duration-150 hover:text-destructive active:scale-90"
+      aria-label={`Smazat ${productName}`}
       title={`Smazat ${productName}`}
     >
       <Trash2 className="size-4" />

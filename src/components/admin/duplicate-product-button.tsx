@@ -25,7 +25,8 @@ export function DuplicateProductButton({
     <button
       onClick={handleDuplicate}
       disabled={isPending}
-      className="text-muted-foreground transition-colors duration-150 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
+      className="text-muted-foreground transition-all duration-150 hover:text-primary active:scale-90 disabled:cursor-not-allowed disabled:opacity-50"
+      aria-label={`Duplikovat ${productName}`}
       title={`Duplikovat ${productName}`}
     >
       <Copy className="size-4" />

@@ -67,7 +67,7 @@ export function CategoryRow({ category }: CategoryRowProps) {
           <div className="flex items-center justify-end gap-2">
             <Link
               href={`/admin/categories/${category.id}/edit`}
-              className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="rounded-lg p-2 text-muted-foreground transition-all hover:bg-muted hover:text-foreground active:scale-95"
               title="Upravit"
             >
               <Pencil className="size-4" />
@@ -75,7 +75,7 @@ export function CategoryRow({ category }: CategoryRowProps) {
             <button
               onClick={handleDelete}
               disabled={isPending}
-              className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg p-2 text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
               title="Smazat"
             >
               <Trash2 className="size-4" />

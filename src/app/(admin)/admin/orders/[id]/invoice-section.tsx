@@ -98,7 +98,7 @@ export function InvoiceSection({
           <button
             onClick={handleDownload}
             disabled={isPending}
-            className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-lg border bg-background px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+            className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-lg border bg-background px-3 py-2 text-sm font-medium text-foreground transition-all hover:bg-muted active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isPending ? (
               <Loader2 className="size-4 animate-spin" />
@@ -116,7 +116,7 @@ export function InvoiceSection({
           <button
             onClick={handleGenerate}
             disabled={isPending}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-all hover:bg-primary/90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isPending ? (
               <Loader2 className="size-4 animate-spin" />

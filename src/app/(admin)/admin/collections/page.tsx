@@ -43,7 +43,7 @@ export default async function AdminCollectionsPage() {
           <EnsureSeasonalButton />
           <Link
             href="/admin/collections/new"
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-all hover:bg-primary/90 active:scale-95"
           >
             <Plus className="size-4" />
             Nová kolekce
@@ -63,7 +63,7 @@ export default async function AdminCollectionsPage() {
             </p>
             <Link
               href="/admin/collections/new"
-              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-all hover:bg-primary/90 active:scale-95"
             >
               <Plus className="size-4" />
               Vytvořit první kolekci

@@ -211,7 +211,7 @@ export function CampaignDryRunDialog({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-2 text-muted-foreground hover:bg-muted"
+            className="rounded-lg p-2 text-muted-foreground transition-all duration-150 hover:bg-muted active:scale-95"
             aria-label="Zavřít"
           >
             <X className="size-5" />
@@ -354,7 +354,7 @@ export function CampaignDryRunDialog({
                   type="button"
                   onClick={handleSendTest}
                   disabled={testSending || !preview}
-                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-all hover:bg-muted active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {testSending ? (
                     <Loader2 className="size-4 animate-spin" />
@@ -468,7 +468,7 @@ export function CampaignDryRunDialog({
                 type="button"
                 onClick={onClose}
                 disabled={finalSending}
-                className="rounded-lg border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-lg border px-4 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-muted active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {result?.type === "success" ? "Zavřít" : "Zrušit"}
               </button>

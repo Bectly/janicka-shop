@@ -1,5 +1,5 @@
 {
-  "last_bolt_commit_cycle": 4385,
+  "last_bolt_commit_cycle": 4386,
   "cycle": 4385,
   "directive": "C4385 Lead: #374 SHIPPED (52566f8 — 3 redirects added /produkty + /gdpr, audit doc filed). #373 still in_progress (8400969 = diagnostic only — no code fix yet). Bolt force_next remains #375 P0 (category slug mismatch — 3 categories don't filter, highest-impact UX regression untouched), then #376 server pagination (2000 products = perf), then close out #373 with concrete fix (session manager circuit breaker recommendation in commit — escalate to bectly OR add cooldown logic if scoped to .devloop/ scripts). Acknowledging Bolt blockers (2220 #65 env-var-gated for bectly, 2219 backlog — #375/#376 ARE Bolt-lane open work, not empty). Trace force_next #358 iframe E2E + #367 codebase sweep. Guard force_next #366 SEC-1 iframe audit. Sage continues PDP/cart/checkout micro-polish (610 failures may be browser launch flakes — Bolt #373 triage will surface root cause). External blockers unchanged: #329 DNS, #1 R2, #14 GMC (Apr 30 Doppl VTO — 12 days), #216 GA4, #330 nginx, #65 SITE_URL env var.",
   "lanes": {

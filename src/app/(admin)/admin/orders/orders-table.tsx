@@ -173,7 +173,7 @@ export function OrdersTable({ orders }: { orders: OrderRow[] }) {
           <div className="flex items-center gap-3 text-sm">
             <button
               onClick={clearSelection}
-              className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="rounded-lg p-1 text-muted-foreground transition-all duration-150 hover:bg-muted hover:text-foreground active:scale-95"
               aria-label="Zrušit výběr"
             >
               <X className="size-4" />
@@ -191,7 +191,7 @@ export function OrdersTable({ orders }: { orders: OrderRow[] }) {
             <button
               onClick={handleBulkShip}
               disabled={isPending || shippableSelected.length === 0}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-all hover:bg-primary/90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isPending ? (
                 <Loader2 className="size-3.5 animate-spin" />
@@ -203,7 +203,7 @@ export function OrdersTable({ orders }: { orders: OrderRow[] }) {
             <button
               onClick={handleBulkLabels}
               disabled={isPending || packetaSelected.length === 0}
-              className="inline-flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-sm font-medium text-foreground transition-all hover:bg-muted active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isPending ? (
                 <Loader2 className="size-3.5 animate-spin" />

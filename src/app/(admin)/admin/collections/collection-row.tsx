@@ -61,14 +61,14 @@ export function CollectionRow({ collection }: CollectionRowProps) {
         <div className="flex items-center justify-end gap-2">
           <Link
             href={`/admin/collections/${collection.id}/edit`}
-            className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="rounded-lg p-1.5 text-muted-foreground transition-all hover:bg-muted hover:text-foreground active:scale-95"
           >
             <Pencil className="size-4" />
           </Link>
           <button
             onClick={handleDelete}
             disabled={isDeleting}
-            className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg p-1.5 text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Trash2 className="size-4" />
           </button>
