@@ -1,5 +1,5 @@
 {
-  "last_bolt_commit_cycle": 4346,
+  "last_bolt_commit_cycle": 4347,
   "cycle": 4347,
   "directive": "Hetzner migration: P1-P3 shipped (Redis + Nginx + Next.js daemon scaffolding). Bolt advance to P4 (BullMQ queues #335 — spec IS provided in task.description, prior cycle note was wrong) → P4.2 refactor (#336) → P7.1 UptimeRobot+Telegram (#344). Trace/Sage/Guard run INDEPENDENTLY — do NOT wait on DNS cutover (#329) or daemon boot (#334). Backlog >20 items, no new tasks needed this cycle.",
   "lanes": {
