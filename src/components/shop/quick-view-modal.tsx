@@ -74,7 +74,7 @@ export function QuickViewButton({ productId }: QuickViewButtonProps) {
       <button
         type="button"
         onClick={handleOpen}
-        className="inline-flex size-11 items-center justify-center rounded-full bg-background/80 backdrop-blur-sm transition-all hover:bg-background hover:shadow-md opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 duration-200"
+        className="inline-flex size-11 items-center justify-center rounded-full bg-background/80 backdrop-blur-sm transition-all duration-150 hover:bg-background hover:shadow-md opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0"
         aria-label="Rychlý náhled"
       >
         <Eye className="size-4 text-foreground/70" />
@@ -97,7 +97,7 @@ export function QuickViewButton({ productId }: QuickViewButtonProps) {
               <Link
                 href={`/products/${product.slug}`}
                 onClick={handleClose}
-                className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary transition-colors duration-150 hover:underline"
               >
                 Zobrazit detail
                 <ArrowRight className="size-3.5" />
@@ -116,7 +116,7 @@ export function QuickViewButton({ productId }: QuickViewButtonProps) {
                     src={images[0]}
                     alt={product.name}
                     fill
-                    className="object-cover transition-transform duration-300 hover:scale-105"
+                    className="object-cover transition-transform duration-150 hover:scale-105"
                     sizes="(max-width: 640px) 90vw, 300px"
                   />
                 ) : (

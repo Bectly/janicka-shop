@@ -67,7 +67,7 @@ export function ExpressCheckoutButtons({ onSelect }: Props) {
         <button
           type="button"
           onClick={() => onSelect?.("apple_pay")}
-          className="flex min-h-12 w-full items-center justify-center gap-1 rounded-lg bg-black text-white transition-opacity hover:opacity-90"
+          className="flex min-h-12 w-full items-center justify-center gap-1 rounded-lg bg-black text-white transition-opacity duration-150 hover:opacity-90"
           aria-label="Zaplatit přes Apple Pay"
         >
           <AppleLogo className="h-5 w-auto" />
@@ -79,7 +79,7 @@ export function ExpressCheckoutButtons({ onSelect }: Props) {
         <button
           type="button"
           onClick={() => onSelect?.("google_pay")}
-          className="flex min-h-12 w-full items-center justify-center rounded-lg border-2 border-[#dadce0] bg-white transition-colors hover:bg-[#f8f9fa]"
+          className="flex min-h-12 w-full items-center justify-center rounded-lg border-2 border-[#dadce0] bg-white transition-colors duration-150 hover:bg-[#f8f9fa]"
           aria-label="Zaplatit přes Google Pay"
         >
           <GooglePayWordmark className="h-[22px] w-auto" />

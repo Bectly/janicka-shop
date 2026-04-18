@@ -360,7 +360,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                 className="absolute inset-0 z-10 cursor-zoom-in"
                 aria-label="Zvětšit obrázek"
               >
-                <span className="absolute right-3 bottom-3 flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-xs font-medium text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                <span className="absolute right-3 bottom-3 flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-xs font-medium text-white opacity-0 transition-opacity duration-150 group-hover:opacity-100">
                   <ZoomIn className="size-3.5" />
                   Zvětšit
                 </span>
@@ -400,7 +400,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                     prev === 0 ? totalSlides - 1 : prev - 1,
                   );
                 }}
-                className="absolute top-1/2 left-2 z-20 -translate-y-1/2 scale-90 rounded-full bg-white/80 p-2.5 opacity-0 shadow transition-all duration-200 hover:bg-white group-hover:scale-100 group-hover:opacity-100"
+                className="absolute top-1/2 left-2 z-20 -translate-y-1/2 scale-90 rounded-full bg-white/80 p-2.5 opacity-0 shadow transition-all duration-150 hover:bg-white group-hover:scale-100 group-hover:opacity-100"
                 aria-label="Předchozí fotka"
               >
                 <ChevronLeft className="size-5" />
@@ -414,7 +414,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                     prev === totalSlides - 1 ? 0 : prev + 1,
                   );
                 }}
-                className="absolute top-1/2 right-2 z-20 -translate-y-1/2 scale-90 rounded-full bg-white/80 p-2.5 opacity-0 shadow transition-all duration-200 hover:bg-white group-hover:scale-100 group-hover:opacity-100"
+                className="absolute top-1/2 right-2 z-20 -translate-y-1/2 scale-90 rounded-full bg-white/80 p-2.5 opacity-0 shadow transition-all duration-150 hover:bg-white group-hover:scale-100 group-hover:opacity-100"
                 aria-label="Další fotka"
               >
                 <ChevronRight className="size-5" />
@@ -458,7 +458,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                     key="video-thumb"
                     type="button"
                     onClick={() => { setSlideDirection(slideIdx > activeIndex ? "left" : "right"); setActiveIndex(slideIdx); }}
-                    className={`relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border-2 bg-muted transition-all duration-200 sm:size-20 ${
+                    className={`relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border-2 bg-muted transition-all duration-150 sm:size-20 ${
                       activeIndex === videoSlideIndex
                         ? "border-primary ring-1 ring-primary scale-[1.03]"
                         : "border-transparent opacity-70 hover:opacity-100 hover:scale-[1.03]"
@@ -476,7 +476,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                   key={`${getUrl(img)}-${imgIdx}`}
                   type="button"
                   onClick={() => { setSlideDirection(slideIdx > activeIndex ? "left" : "right"); setActiveIndex(slideIdx); }}
-                  className={`relative size-16 shrink-0 overflow-hidden rounded-lg border-2 transition-all duration-200 sm:size-20 ${
+                  className={`relative size-16 shrink-0 overflow-hidden rounded-lg border-2 transition-all duration-150 sm:size-20 ${
                     slideIdx === activeIndex
                       ? "border-primary ring-1 ring-primary scale-[1.03]"
                       : "border-transparent opacity-70 hover:opacity-100 hover:scale-[1.03]"
@@ -512,7 +512,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
           <button
             type="button"
             onClick={closeLightbox}
-            className="absolute top-4 right-4 z-10 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
+            className="absolute top-4 right-4 z-10 rounded-full bg-white/10 p-2 text-white transition-colors duration-150 hover:bg-white/20"
             aria-label="Zavřít galerii"
           >
             <X className="size-6" />
@@ -538,7 +538,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                   setLbZoom(1);
                   setPanOffset({ x: 0, y: 0 });
                 }}
-                className="absolute top-1/2 left-2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-2.5 text-white transition-colors hover:bg-white/20 sm:left-4 sm:p-3"
+                className="absolute top-1/2 left-2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-2.5 text-white transition-colors duration-150 hover:bg-white/20 sm:left-4 sm:p-3"
                 aria-label="Předchozí fotka"
               >
                 <ChevronLeft className="size-6 sm:size-8" />
@@ -553,7 +553,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                   setLbZoom(1);
                   setPanOffset({ x: 0, y: 0 });
                 }}
-                className="absolute top-1/2 right-2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-2.5 text-white transition-colors hover:bg-white/20 sm:right-4 sm:p-3"
+                className="absolute top-1/2 right-2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-2.5 text-white transition-colors duration-150 hover:bg-white/20 sm:right-4 sm:p-3"
                 aria-label="Další fotka"
               >
                 <ChevronRight className="size-6 sm:size-8" />
