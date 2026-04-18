@@ -12,8 +12,8 @@ export default async function JarvisPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="font-heading text-2xl font-bold">JARVIS</h1>
-        <p className="text-sm text-muted-foreground">
+        <h1 className="font-heading text-2xl font-bold text-foreground">JARVIS</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Terminál pro rychlé dotazy na obchod. Napiš{" "}
           <code className="rounded bg-muted px-1 py-0.5 text-xs">help</code> pro
           seznam příkazů.

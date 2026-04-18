@@ -6,24 +6,40 @@ import { z } from "zod";
 
 const commandSchema = z.object({
   command: z.string().min(1).max(500),
+  confirm: z.boolean().optional(),
+  safeMode: z.boolean().optional(),
 });
 
 type JarvisReply = {
   lines: string[];
   kind?: "info" | "ok" | "warn" | "err";
+  requiresConfirm?: boolean;
+  blocked?: boolean;
 };
+
+const DANGEROUS_VERBS = new Set([
+  "cancel",
+  "refund",
+  "hide",
+  "delete",
+  "reset",
+  "drop",
+]);
 
 const HELP: string[] = [
   "Dostupné příkazy:",
-  "  help          — tento výpis",
-  "  about         — kdo je JARVIS",
-  "  status        — aktuální stav obchodu",
-  "  stats         — čísla z posledních 24h",
-  "  orders        — posledních 5 objednávek",
-  "  products      — počet produktů podle stavu",
-  "  whoami        — tvoje session",
-  "  clear         — vyčistit terminál",
-  "  exit          — zpátky na dashboard",
+  "  help                  — tento výpis",
+  "  about                 — kdo je JARVIS",
+  "  status                — aktuální stav obchodu",
+  "  stats                 — čísla z posledních 24h",
+  "  orders                — posledních 5 objednávek",
+  "  products              — počet produktů podle stavu",
+  "  whoami                — tvoje session",
+  "  clear                 — vyčistit terminál",
+  "  exit                  — zpátky na dashboard",
+  "",
+  "Nebezpečné příkazy (mění data — vyžadují potvrzení):",
+  "  cancel <číslo>        — zruší objednávku",
 ];
 
 async function handleCommand(
@@ -143,6 +159,41 @@ async function handleCommand(
       };
     }
 
+    case "cancel": {
+      const [, orderNumber] = trimmed.split(/\s+/);
+      if (!orderNumber) {
+        return {
+          kind: "err",
+          lines: ["Použij: cancel <číslo objednávky>"],
+        };
+      }
+      const db = await getDb();
+      const order = await db.order.findUnique({
+        where: { orderNumber },
+        select: { id: true, orderNumber: true, status: true },
+      });
+      if (!order) {
+        return {
+          kind: "err",
+          lines: [`Objednávka #${orderNumber} neexistuje.`],
+        };
+      }
+      if (order.status === "cancelled") {
+        return {
+          kind: "warn",
+          lines: [`Objednávka #${orderNumber} už je zrušená.`],
+        };
+      }
+      await db.order.update({
+        where: { id: order.id },
+        data: { status: "cancelled" },
+      });
+      return {
+        kind: "ok",
+        lines: [`Objednávka #${order.orderNumber} zrušena.`],
+      };
+    }
+
     case "clear":
     case "cls":
       return { kind: "ok", lines: ["__CLEAR__"] };
@@ -198,6 +249,45 @@ export async function POST(request: Request) {
     );
   }
 
+  const [verb] = parsed.data.command.trim().toLowerCase().split(/\s+/);
+  const isDangerous = DANGEROUS_VERBS.has(verb);
+
+  if (isDangerous && parsed.data.safeMode) {
+    const reply: JarvisReply = {
+      kind: "warn",
+      blocked: true,
+      lines: [
+        "🛡 Safe mode je zapnutý — nebezpečné příkazy jsou blokovány.",
+        "Přepni safe mode tlačítkem nad terminálem a zkus znovu.",
+      ],
+    };
+    try {
+      const db = await getDb();
+      await db.jarvisConsoleLog.create({
+        data: {
+          userId: session.user.id ?? null,
+          userEmail: session.user.email ?? "admin@janicka",
+          command: `[blocked-safe-mode] ${parsed.data.command}`,
+          kind: "warn",
+        },
+      });
+    } catch (err) {
+      console.error("[jarvis] failed to write audit log", err);
+    }
+    return NextResponse.json(reply);
+  }
+
+  if (isDangerous && !parsed.data.confirm) {
+    return NextResponse.json({
+      kind: "warn",
+      requiresConfirm: true,
+      lines: [
+        `⚠ Nebezpečný příkaz: ${verb}`,
+        "Tato akce změní data v DB. Vyžaduje se potvrzení.",
+      ],
+    } satisfies JarvisReply);
+  }
+
   const reply = await handleCommand(
     parsed.data.command,
     session.user.name ?? "Admin",
@@ -210,7 +300,9 @@ export async function POST(request: Request) {
       data: {
         userId: session.user.id ?? null,
         userEmail: session.user.email ?? "admin@janicka",
-        command: parsed.data.command,
+        command: isDangerous
+          ? `[confirmed] ${parsed.data.command}`
+          : parsed.data.command,
         kind: reply.kind ?? null,
       },
     });

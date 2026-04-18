@@ -240,7 +240,7 @@ export function JarvisTerminal({ userName }: { userName: string }) {
   return (
     <div
       ref={hostRef}
-      className="h-[calc(100vh-10rem)] min-h-[420px] w-full overflow-hidden rounded-xl border bg-[#0f0a12] p-3 shadow-sm"
+      className="h-[calc(100vh-10rem)] min-h-[420px] w-full overflow-hidden rounded-xl border border-rose-900/30 bg-[#0f0a12] p-3 shadow-sm"
       aria-label="JARVIS terminál"
     />
   );

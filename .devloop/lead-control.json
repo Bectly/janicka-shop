@@ -1,51 +1,54 @@
 {
   "last_bolt_commit_cycle": 4367,
-  "cycle": 4357,
-  "directive": "C4357 Lead: #323 CONFIRMED done in DB (Bolt feedback 2209 ack'd — will not re-assign). #329 P2.2 certbot parked as blocked awaiting domain purchase (feedback 2210 ack'd). #336 P4.2 verified done, #338 P5.1 cron + #339 P5.2 R2 backup SHIPPED (C4356). Bolt → #341 P6.1 Cloudflare LB runbook in_progress (already started C4357, 208-line doc landed) — finish CF LB doc polish + pivot to #364 P5.1b Den matek campaign wrapper ONLY (Vinted campaign permanently removed per hard_rule, Den matek May 10 still valid). Then #344 UptimeRobot, #345 threshold alerts, #348 runbooks. Trace → #324 Vinted grep regression (ensure zero refs in HEAD) + #337 queue integration tests. Sage → admin dashboard polish (mobile-nav search shipped C4357 54d778c), PDP polish, cart sold-item toast. Guard → #330 nginx hardening review → deliverable docs/migration/nginx/nginx-hardening-review.md. External blockers: #329 (.cz domain), #1 (R2 token), #14 (GMC), #216 (GA4).",
+  "cycle": 4368,
+  "directive": "C4368 Lead: Remote Console stack landing — #354 xterm.js page + #355 JWT/rate-limit + #356 audit log ALL shipped and marked done. Next Bolt push: #365 swap fake JarvisTerminal for real Claude bridge iframe (owner explicitly flagged current impl as 'analytical chat, not real terminal' — see #354 block note), then #357 safe-mode toggle, then #364 Den matek HTTP wrappers (May 10 deadline — ~3 weeks runway). Trace → #358 E2E /admin/jarvis (after #365 lands), fallback to #324 Vinted grep regression + #327 Redis cache verification. Sage → /admin/jarvis QA done C4367; pivot to PDP polish (price history sparkline + sticky mobile ATC + condition badge placement). Guard → #359 bridge security audit (scope: WS auth, JWT extraction, audit log integrity, command sanitization). Acknowledged blockers 2215 & 2216 (tasks #352/#353 both completed, concerns moot). External blockers unchanged: #329 (.cz domain), #1 (R2 token), #14 (GMC), #216 (GA4).",
   "lanes": {
     "BOLT": {
       "status": "active",
+      "force_next_task": 365,
       "next_priority": [
-        341,
+        365,
+        357,
         364,
         344,
-        345,
-        348
+        345
       ],
-      "notes": "#341 P6.1 Cloudflare LB runbook IN PROGRESS (C4357 commit da2c374 — 208-line doc landed, marked [~] partial in hetzner-all.md). Finish any LB polish items, then pivot to #364 P5.1b Den matek campaign HTTP wrapper (Vinted endpoint REMOVED — owner permanently rejected Vinted campaign per hard_rule + NEVER_ADD_VINTED_CAMPAIGN.md). Endpoint: POST /api/cron/campaigns/den-matek-send auth via X-Cron-Token === process.env.CRON_SECRET, renders React Email template, dispatches via emailQueue fire-and-forget, returns 202 with job count. Deadline May 10 (Mother's Day). DO NOT build vinted-tc-send endpoint. Then #344 P7.1 UptimeRobot /api/health + Telegram alerts (chat_id 8750673812, token in JARVIS DB 'telegram-bot'). Then #345 P7.2 Hetzner threshold alerts + PM2 logrotate. #348 runbook docs. #329 certbot BLOCKED on .cz domain purchase. Ref: docs/migration/hetzner-all.md Phase 5–8.",
+      "notes": "PRIORITY: #365 RC.3b — replace fake JarvisTerminal (src/components/admin/jarvis-terminal.tsx is currently analytical chat faking commands). Wire real Claude bridge: /admin/jarvis page should render an iframe/xterm.js client that WebSocket-connects to the bridge daemon via the tunnel hostname (env NEXT_PUBLIC_JARVIS_BRIDGE_WS_URL, default wss://tunnel.janicka.shop/ws). Auth: pass NextAuth session JWT as query param or first WS frame — bridge already validates role=admin (#355 done). Commands stream stdout/stderr as ANSI through xterm. Keep 20 cmd/min rate limit UX (#355) + audit log POST /api/admin/jarvis still fires per command (#356). THEN #357 safe-mode toggle: dangerous commands (rm -rf, DROP, DELETE FROM, curl|sh, etc.) require confirm dialog before transmit — toggle persists in localStorage, default ON. THEN #364 Den matek P5.1b: POST /api/cron/campaigns/den-matek-send with X-Cron-Token === process.env.CRON_SECRET, React Email template, emailQueue fire-and-forget, 202 + job count. DO NOT build vinted-tc-send (permanent rule). #344 UptimeRobot + #345 PM2 logrotate stay queued after.",
       "blockers_external": {
         "329": "DNS flip by bectly",
-        "334": "Hetzner daemon must boot (partially depends on Bolt #335 env)"
+        "334": "Hetzner daemon must boot"
       }
     },
     "TRACE": {
       "status": "active",
+      "force_next_task": 358,
       "next_priority": [
+        358,
         324,
         327,
         351,
-        347,
-        "new_category_switch_e2e",
-        "new_customer_portal_e2e"
+        347
       ],
-      "notes": "#324 Vinted removal regression + #327 Redis cache-aside verification + #351 cold-read audit — all unblocked. #334 P3.4 smoke test GATED on Hetzner daemon actually running; skip until Bolt confirms systemctl active. #347 P7.4 Lighthouse comparison: start Vercel baseline NOW (production URL), Hetzner side runs post-cutover. NEW e2e (write directly, no task IDs): (a) Playwright category switching on /products — prior bug: filter state leaked between categories via nuqs. Assert /products?category=saty → click Topy → filter chips reset + URL updates + no stale facets in API response. (b) E2E for customer portal C3709 (login, order history, profile edit, wishlist, returns request, GDPR export button). Routes in src/app/(shop)/ucet/. DO NOT touch migration code paths (nginx/pm2/env/redis/bullmq)."
+      "notes": "PRIORITY: #358 RC.7 E2E /admin/jarvis — Playwright spec: admin logs in → navigates /admin/jarvis → terminal WS connects (wait for greeting frame) → types 'ls' + Enter → expects stdout in xterm buffer → types 'exit' or closes tab → WS closes cleanly + audit row exists in jarvis_console_log (hit /api/admin/jarvis?recent=1 to verify). Gate: wait for Bolt C4368 commit of #365 before running full terminal flow — until then, write the spec skeleton + assertions only. THEN #324 grep regression: ensure zero 'vinted' campaign refs in HEAD (src/, prisma/, scripts/, not just docs). THEN #327 Redis cache-aside verify (src/lib/redis.ts + product list cache key hit/miss). Always-on: cold-read audit #351, Lighthouse baseline #347 (Vercel URL now, Hetzner post-cutover). NEW e2e standing: category switching leak (/products?category=saty → click Topy) + customer portal C3709 flows (src/app/(shop)/ucet/). DO NOT touch migration code paths."
     },
     "SAGE": {
       "status": "active",
       "next_priority": [
-        "new_mobile_nav_search",
-        "new_admin_dashboard_polish",
-        "new_pdp_polish",
-        "new_cart_ux_polish"
+        "pdp_polish",
+        "cart_sold_item_toast",
+        "checkout_accordion_polish",
+        "admin_dashboard_polish"
       ],
-      "notes": "Mobile-nav search SHIPPED C4357 (54d778c — InstantSearch variant prop, full-width in drawer). Cart free-shipping bar SHIPPED C4356 (1f95d7f). NEXT: (a) Admin dashboard polish: /admin/dashboard density, order-status badge contrast, empty states. (b) PDP polish: price history sparkline, condition badge placement, sticky ATC on mobile. (c) Cart sold-item toast (reservation expiry UX). (d) Checkout accordion micro-polish (section transitions, completed-state checkmark). UI-only — DO NOT touch migration code paths (nginx/PM2/env/redis/bullmq)."
+      "notes": "DONE C4367: /admin/jarvis visual QA (breadcrumb JARVIS + sidebar divider). NEXT: (a) PDP polish — src/app/(shop)/products/[slug]/page.tsx + components/shop/product-detail/: price history sparkline (if priceHistory rows exist), condition badge placement near title (not buried in accordion), sticky mobile ATC bar with price + size selected state. (b) Cart sold-item toast when reservation expires (src/components/shop/cart/ — look for reservation timer). (c) Checkout accordion micro-polish: section transitions, completed-state checkmark color + animation. (d) Admin dashboard density + order-status badge contrast. UI-only, no migration paths."
     },
     "GUARD": {
       "status": "active",
+      "force_next_task": 359,
       "next_priority": [
+        359,
         330
       ],
-      "notes": "UNBLOCKED C4345. Audit #330: review docs/migration/nginx/janicka-shop.conf (repo copy of /etc/nginx/sites-available/janicka-shop.conf on kryxon). Check: (1) security headers (HSTS pending SSL but scaffold ready, X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy strict-origin-when-cross-origin, CSP with frame-src comgate.eu per Comgate inline gate 504×679px spec, Permissions-Policy); (2) server_tokens off; (3) rate limiting on /api/auth + /api/dev-chat (limit_req_zone, e.g. 10r/s); (4) 20M body cap scoped to /api/uploadthing* only, default 1M elsewhere; (5) proxy header sanitization — strip incoming X-Forwarded-*, set trusted values server-side via real_ip_header; (6) TLS hardening checklist ready (TLS 1.2+ only, HSTS max-age=63072000 includeSubDomains preload, OCSP stapling, ssl_session_cache) for when certbot runs post-DNS-flip. Deliverable: findings list + concrete diff suggestions in docs/migration/nginx/nginx-hardening-review.md."
+      "notes": "PRIORITY: #359 RC.8 bridge security audit. Scope: (1) JWT extraction on WS upgrade — verify bridge re-validates signature + role=admin + expiry, not just presence; (2) WS frame hardening — max message size cap, command length cap, UTF-8 validation, reject binary; (3) audit log integrity — every command row in jarvis_console_log has userId/userEmail (no nulls), command field not truncated silently, no PII leak in stderr captured; (4) command sanitization — confirm NO server-side shell injection vector (bridge spawns commands via list args, not `sh -c`); (5) rate limit correctness — 20/min keyed on user.id not IP (IP-keyed would let one admin DOS themselves via shared IP); (6) CORS + Origin check on /api/admin/jarvis POST. Deliverable: docs/security/jarvis-bridge-audit.md with findings + severity + fix proposals. THEN #330 nginx hardening (docs/migration/nginx/janicka-shop.conf) — see prior notes (CSP frame-src comgate.eu, rate limits, 20M cap scoped to /api/uploadthing*, X-Forwarded-* sanitization, TLS 1.2+)."
     }
   },
   "hard_rules": [
@@ -53,8 +56,8 @@
     "NEVER push to remote without bectly's explicit request.",
     "Sage, Trace, Guard MUST NOT wait on Hetzner DNS/certbot (#329) or daemon boot (#334) — they have independent lanes.",
     "Bolt owns all Hetzner migration code paths (nginx/pm2/env/redis/bullmq/systemd); other agents do not touch them.",
-    "Bolt: if #335 BullMQ task.description spec ever seems missing, re-read the task row in jarvis.db — the spec IS there (C4346 cycle note was incorrect)."
+    "Tasks #352 and #353 are DONE — do not re-raise as blockers (blockers 2215/2216 acknowledged and closed)."
   ],
-  "last_updated": "2026-04-18T07:05",
+  "last_updated": "2026-04-18T07:42",
   "pause": {}
 }
