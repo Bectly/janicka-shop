@@ -100,6 +100,15 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        // SEC-3: admin JARVIS console embeds a cross-origin iframe —
+        // suppress the Referer entirely so the tunnel can't learn admin pathnames.
+        // Must come AFTER the catch-all so this value wins on header merge.
+        source: "/admin/jarvis",
+        headers: [
+          { key: "Referrer-Policy", value: "no-referrer" },
+        ],
+      },
     ];
   },
 };
