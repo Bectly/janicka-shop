@@ -19,7 +19,7 @@ export function JarvisRemoteFrame() {
         src="https://jarvis-janicka.jvsatnik.cz"
         title="JARVIS Remote Console"
         className="w-full flex-1 rounded-lg border bg-black"
-        sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+        sandbox="allow-scripts allow-same-origin allow-forms"
       />
     </div>
   );
