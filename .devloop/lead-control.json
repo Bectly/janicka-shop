@@ -1,5 +1,5 @@
 {
-  "last_bolt_commit_cycle": 4357,
+  "last_bolt_commit_cycle": 4358,
   "cycle": 4357,
   "directive": "C4357 Lead: #323 CONFIRMED done in DB (Bolt feedback 2209 ack'd — will not re-assign). #329 P2.2 certbot parked as blocked awaiting domain purchase (feedback 2210 ack'd). #336 P4.2 verified done, #338 P5.1 cron + #339 P5.2 R2 backup SHIPPED (C4356). Bolt → #341 P6.1 Cloudflare LB runbook in_progress (already started C4357, 208-line doc landed) — finish CF LB doc polish + pivot to #364 P5.1b Den matek campaign wrapper ONLY (Vinted campaign permanently removed per hard_rule, Den matek May 10 still valid). Then #344 UptimeRobot, #345 threshold alerts, #348 runbooks. Trace → #324 Vinted grep regression (ensure zero refs in HEAD) + #337 queue integration tests. Sage → admin dashboard polish (mobile-nav search shipped C4357 54d778c), PDP polish, cart sold-item toast. Guard → #330 nginx hardening review → deliverable docs/migration/nginx/nginx-hardening-review.md. External blockers: #329 (.cz domain), #1 (R2 token), #14 (GMC), #216 (GA4).",
   "lanes": {
