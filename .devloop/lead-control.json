@@ -1,33 +1,53 @@
 {
-  "last_bolt_commit_cycle": 4344,
-  "cycle": 4345,
-  "directive": "Hetzner migration in-flight. Keep all four lanes busy — no idle workers.",
+  "last_bolt_commit_cycle": 4345,
+  "cycle": 4346,
+  "directive": "Hetzner migration in-flight. P1.2 Redis + P2.1 Nginx vhost SHIPPED (C4345). Unblock parallel lanes: Guard → nginx audit, Trace → non-migration e2e coverage, Sage → UI polish. Do NOT block QA/Security/UI on Hetzner DNS cutover (#329/P7.3).",
   "lanes": {
     "BOLT": {
       "status": "active",
-      "next_priority": [326, 328, 329, 331, 332, 333],
-      "notes": "P1.2 Redis committed C4344. Mark #326 done, then start P2.1 Nginx (#328). After P2.1 → P2.2 Certbot (#329) → P3.1 standalone+PM2 (#331)."
+      "next_priority": [
+        331,
+        332,
+        333,
+        329
+      ],
+      "notes": "P2.1 Nginx vhost committed C4345 (f65d7a4). Next: P3.1 standalone+PM2 (#331) → P3.2 env sync to Hetzner (#332) → P3.3 systemd or PM2 ecosystem.config (#333). #329 certbot stays BLOCKED until janicka-shop.cz DNS points to 46.224.219.3 (bectly action). Do NOT retry certbot before DNS flip."
     },
     "TRACE": {
       "status": "active",
-      "next_priority": [324, 327, 351],
-      "notes": "#324 + #327 unblocked NOW (Vinted removal + Redis landed). #351 is new cold audit — perfect filler when Bolt migration tasks aren't yet verifiable. Do NOT touch #334/#337/#340/#342/#347 until their Bolt prerequisites commit."
+      "next_priority": [
+        324,
+        327,
+        351,
+        "new_category_switch_e2e",
+        "new_customer_portal_e2e"
+      ],
+      "notes": "#324 Vinted removal regression + #327 Redis cache-aside verification unblocked. #351 cold audit. NEW WORK (no task IDs yet — write directly): (a) Playwright e2e for category switching on /products — earlier bug: filter state leaked between categories (nuqs). Test /products?category=saty → click Topy → assert filter chips reset + URL updates. (b) E2E for customer portal from Cycle C3709 work (login, order history, profile edit, wishlist, returns request, GDPR export button). Check src/app/(shop)/ucet/ for routes. Guard/Bolt Hetzner tasks do NOT block QA."
     },
     "SAGE": {
       "status": "active",
-      "next_priority": [349, 350],
-      "notes": "#346 blocked on P7.3 Hetzner deploy. Use #349 (filter drawer polish — builds on uncommitted product-filters.tsx work) then #350 (PDP gallery gestures, Baymard +108% views). UI polish work only — do NOT touch migration code paths."
+      "next_priority": [
+        349,
+        350,
+        "new_admin_dashboard_polish",
+        "new_pdp_polish",
+        "new_cart_ux_polish"
+      ],
+      "notes": "#349 filter drawer polish (current focus) → #350 PDP gallery gestures (Baymard +108% views). AFTER those: (a) admin dashboard polish — check /admin/dashboard density, order-status badge contrast, empty states; (b) PDP visual polish — price history sparkline, condition badge placement, sticky ATC on mobile; (c) cart UX — free-shipping progress bar (threshold 1500 CZK, data from constants.ts), inline trust badges, sold-item toast. UI-only — DO NOT touch migration code (nginx/PM2/env/redis)."
     },
     "GUARD": {
-      "status": "waiting",
-      "next_priority": [330],
-      "notes": "#330 nginx security review blocked until Bolt ships P2.1 Nginx vhost (#328). Guard idle is acceptable here — security audit on non-existent config is waste."
+      "status": "active",
+      "next_priority": [
+        330
+      ],
+      "notes": "UNBLOCKED C4345. Audit #330: review committed /etc/nginx/sites-available/janicka-shop.conf (also at docs/migration/nginx/janicka-shop.conf in repo). Check: (1) security headers (HSTS pending SSL, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, CSP with frame-src comgate.eu per Comgate inline gate spec), (2) no info disclosure (server_tokens off), (3) rate limiting on /api/auth and /api/dev-chat, (4) body size bounds sane (20M ok for image upload but scope to /api/uploadthing only if possible), (5) proxy header sanitization — no client X-Forwarded-* passthrough, (6) TLS config hardening checklist ready for when certbot runs. Deliverable: findings list + concrete diff suggestions in docs/migration/nginx/."
     }
   },
   "hard_rules": [
     "DO NOT re-add Vinted campaign (see NEVER_ADD_VINTED_CAMPAIGN.md).",
     "NEVER push to remote without bectly's explicit request.",
-    "Commit uncommitted src/components/shop/product-filters.tsx before Sage touches it (Bolt owns the commit)."
+    "Sage, Trace, Guard MUST NOT wait on Hetzner DNS/certbot (#329, P7.3) — they have independent lanes.",
+    "Bolt owns all Hetzner migration tasks; other agents do not touch nginx/pm2/env/redis code paths."
   ],
   "last_updated": "2026-04-18"
 }
