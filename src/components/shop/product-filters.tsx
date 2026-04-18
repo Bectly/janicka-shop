@@ -477,39 +477,40 @@ export function ProductFilters({
     <>
       {/* ===== DESKTOP: sidebar accordion (hidden on mobile) ===== */}
       <aside className="hidden lg:block lg:sticky lg:top-24 lg:self-start space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-3">
           <div className="flex items-center gap-2">
-            <SlidersHorizontal className="size-4 text-muted-foreground" />
-            <span className="text-sm font-medium text-foreground">Filtry</span>
+            <SlidersHorizontal className="size-[1.05rem] text-foreground/80" />
+            <span className="text-base font-semibold tracking-tight text-foreground">Filtry</span>
             {activeFilterCount > 0 && (
-              <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground">
+              <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold leading-5 text-primary-foreground">
                 {activeFilterCount}
               </span>
             )}
           </div>
           {activeFilterCount > 0 && (
-            <Button
-              variant="link"
+            <button
+              type="button"
               onClick={clearAll}
-              className="h-auto p-0 text-xs text-destructive"
+              className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
             >
+              <X className="size-3" aria-hidden="true" />
               Smazat vše
-            </Button>
+            </button>
           )}
         </div>
         {sortDropdown}
         {activeFilterChips}
         <Accordion
           multiple
-          defaultValue={["sizes", "colors"]}
-          className="border-t border-border/50"
+          defaultValue={["sizes", "colors", "conditions"]}
+          className="divide-y divide-border/50 border-y border-border/50"
         >
           {visibleSizes.length > 0 && (
             <AccordionItem value="sizes">
-              <AccordionTrigger className="py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <AccordionTrigger className="py-3 text-[0.9rem] font-semibold text-foreground hover:text-foreground/80">
                 Velikost
                 {activeSizes.length > 0 && (
-                  <span className="ml-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-medium text-primary-foreground">
+                  <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-primary/15 px-1.5 text-[11px] font-semibold leading-5 text-primary">
                     {activeSizes.length}
                   </span>
                 )}
@@ -524,7 +525,7 @@ export function ProductFilters({
                     return (
                       <div key={group.label}>
                         {sizeGroups.length > 1 && (
-                          <div className="mb-1 text-[0.65rem] font-medium uppercase tracking-wider text-muted-foreground/70">
+                          <div className="mb-1.5 text-xs font-medium text-muted-foreground/80">
                             {group.label}
                           </div>
                         )}
@@ -540,10 +541,10 @@ export function ProductFilters({
           )}
           {colors.filter((c) => (counts.colors[c] ?? 0) > 0 || activeColors.includes(c)).length > 0 && (
             <AccordionItem value="colors">
-              <AccordionTrigger className="py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <AccordionTrigger className="py-3 text-[0.9rem] font-semibold text-foreground hover:text-foreground/80">
                 Barva
                 {activeColors.length > 0 && (
-                  <span className="ml-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-medium text-primary-foreground">
+                  <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-primary/15 px-1.5 text-[11px] font-semibold leading-5 text-primary">
                     {activeColors.length}
                   </span>
                 )}
@@ -591,10 +592,10 @@ export function ProductFilters({
           )}
           {brands.filter((b) => (counts.brands[b] ?? 0) > 0 || activeBrands.includes(b)).length > 0 && (
             <AccordionItem value="brands">
-              <AccordionTrigger className="py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <AccordionTrigger className="py-3 text-[0.9rem] font-semibold text-foreground hover:text-foreground/80">
                 Značka
                 {activeBrands.length > 0 && (
-                  <span className="ml-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-medium text-primary-foreground">
+                  <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-primary/15 px-1.5 text-[11px] font-semibold leading-5 text-primary">
                     {activeBrands.length}
                   </span>
                 )}
@@ -618,10 +619,10 @@ export function ProductFilters({
             </AccordionItem>
           )}
           <AccordionItem value="conditions">
-            <AccordionTrigger className="py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <AccordionTrigger className="py-3 text-[0.9rem] font-semibold text-foreground hover:text-foreground/80">
               Stav
               {activeConditions.length > 0 && (
-                <span className="ml-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-medium text-primary-foreground">
+                <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-primary/15 px-1.5 text-[11px] font-semibold leading-5 text-primary">
                   {activeConditions.length}
                 </span>
               )}
@@ -657,10 +658,10 @@ export function ProductFilters({
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="price">
-            <AccordionTrigger className="py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <AccordionTrigger className="py-3 text-[0.9rem] font-semibold text-foreground hover:text-foreground/80">
               Cena (Kč)
               {(minPrice || maxPrice) && (
-                <span className="ml-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-medium text-primary-foreground">1</span>
+                <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-primary/15 px-1.5 text-[11px] font-semibold leading-5 text-primary">1</span>
               )}
             </AccordionTrigger>
             <AccordionContent>
@@ -704,10 +705,10 @@ export function ProductFilters({
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="sale">
-            <AccordionTrigger className="py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <AccordionTrigger className="py-3 text-[0.9rem] font-semibold text-foreground hover:text-foreground/80">
               Sleva
               {saleOnly && (
-                <span className="ml-1 rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-medium text-destructive">1</span>
+                <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-destructive/15 px-1.5 text-[11px] font-semibold leading-5 text-destructive">1</span>
               )}
             </AccordionTrigger>
             <AccordionContent>
@@ -775,7 +776,7 @@ export function ProductFilters({
                         {sizeGroups.map((group) => (
                           <div key={group.label}>
                             {sizeGroups.length > 1 && (
-                              <div className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground/70">
+                              <div className="mb-1.5 text-xs font-medium text-muted-foreground/80">
                                 {group.label}
                               </div>
                             )}
