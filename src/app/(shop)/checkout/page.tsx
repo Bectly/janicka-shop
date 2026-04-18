@@ -143,7 +143,7 @@ function CheckoutStep({
         type="button"
         onClick={isCompleted && !isActive ? onEdit : undefined}
         disabled={!isCompleted || isActive}
-        className={`flex w-full items-center gap-3 p-4 sm:p-6 text-left transition-colors ${
+        className={`flex w-full items-center gap-3 p-4 sm:p-6 text-left transition-colors duration-150 ${
           isCompleted && !isActive
             ? "cursor-pointer hover:bg-muted/50"
             : "cursor-default"
@@ -151,7 +151,7 @@ function CheckoutStep({
       >
         {/* Step indicator */}
         <div
-          className={`flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-bold transition-colors ${
+          className={`flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-bold transition-colors duration-150 ${
             isCompleted
               ? "bg-sage-light text-sage-dark"
               : isActive
@@ -591,7 +591,7 @@ export default function CheckoutPage() {
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
       <Link
         href="/cart"
-        className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors duration-150 hover:text-foreground"
       >
         <ArrowLeft className="size-4" />
         Zpět do košíku
@@ -848,7 +848,7 @@ export default function CheckoutPage() {
                   return (
                     <div key={option.id}>
                       <label
-                        className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition-colors ${
+                        className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition-colors duration-150 ${
                           isSelected
                             ? "border-primary bg-primary/5"
                             : "border-border hover:border-muted-foreground/30"
@@ -1071,7 +1071,7 @@ export default function CheckoutPage() {
                   return (
                     <label
                       key={option.id}
-                      className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition-colors ${
+                      className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition-colors duration-150 ${
                         isSelected
                           ? "border-primary bg-primary/5"
                           : "border-border hover:border-muted-foreground/30"

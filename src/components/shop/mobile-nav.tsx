@@ -95,7 +95,7 @@ export function MobileNav({ categoryCounts, sessionRole }: MobileNavProps) {
                 href={link.href}
                 onClick={() => setOpen(false)}
                 aria-current={isActive ? "page" : undefined}
-                className={`rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                className={`rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-150 ${
                   isActive ? "bg-muted text-foreground" : "hover:bg-muted"
                 }`}
               >
@@ -109,7 +109,7 @@ export function MobileNav({ categoryCounts, sessionRole }: MobileNavProps) {
               setOpen(false);
               openShuffle();
             }}
-            className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-foreground/80 transition-colors hover:bg-muted hover:text-foreground"
+            className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-foreground/80 transition-colors duration-150 hover:bg-muted hover:text-foreground"
           >
             <Shuffle className="size-4 text-primary" />
             Objevuj
@@ -128,7 +128,7 @@ export function MobileNav({ categoryCounts, sessionRole }: MobileNavProps) {
                 href={cat.href}
                 onClick={() => setOpen(false)}
                 aria-current={isActive ? "page" : undefined}
-                className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm transition-colors ${
+                className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm transition-colors duration-150 ${
                   isActive
                     ? "bg-muted font-medium text-foreground"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"

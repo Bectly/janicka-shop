@@ -37,7 +37,7 @@ export function DesktopNavLinks({ categoryCounts }: DesktopNavLinksProps) {
           <Link
             key={link.href}
             href={link.href}
-            className={`rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors ${
+            className={`rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors duration-150 ${
               isActive
                 ? "bg-muted text-foreground"
                 : "text-foreground/70 hover:bg-muted hover:text-foreground"
@@ -60,7 +60,7 @@ export function DesktopNavLinks({ categoryCounts }: DesktopNavLinksProps) {
                 key="objevuj"
                 type="button"
                 onClick={openShuffle}
-                className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
+                className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-foreground/70 transition-colors duration-150 hover:bg-muted hover:text-foreground"
               >
                 Objevuj
               </button>

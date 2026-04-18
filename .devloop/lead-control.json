@@ -1,18 +1,17 @@
 {
   "last_bolt_commit_cycle": 4376,
-  "cycle": 4375,
-  "directive": "C4375 Lead: Bolt verified C4375 (ac20b16) that #364 Den matek HTTP wrapper (ab84e3e) + #370 RC.4 screenshot→R2 (e834796) are both SHIPPED — marked done. Bolt force_next pivots to #344 UptimeRobot /api/health monitor + Telegram alerts (JARVIS bot token + chat_id 8750673812 live in api_keys). Spec: ensure GET /api/health returns 200 JSON {ok:true, db:'ok'|'down', redis:'ok'|'down'|'n/a', ts} with a 2s DB ping (Prisma $queryRaw SELECT 1) + optional Redis ping if REDIS_URL set; add POST /api/alerts/telegram route that accepts UptimeRobot webhook (shared-secret query param matching ALERT_WEBHOOK_SECRET, forwards formatted message to Telegram Bot API sendMessage). Do NOT touch the UptimeRobot dashboard itself — bectly configures the monitor after the endpoint lands. Trace force_next=#358 iframe E2E + #367 quality sweep. Guard force_next=#366 iframe-architecture audit. Sage PDP + cart + checkout polish lane continues. External blockers: #329 (.cz DNS flip), #1 (R2 token verify), #14 (GMC April 30), #216 (GA4), #330 (nginx — blocked on Hetzner prep).",
+  "cycle": 4377,
+  "directive": "C4377 Lead: #344 UptimeRobot shipped (d017594 — src/lib/telegram.ts + POST /api/alerts/uptime with constant-time secret auth, alertType→Czech labels, 503 when env unset). Marked done. Bolt force_next pivots to #341 Cloudflare Load Balancer — code side only: origin pool definitions + health check config + failover rules documented in docs/migration/cloudflare-lb.md (terraform-shaped JSON/YAML is fine, no secrets). After #341: #343 DNS/LB traffic shift plan (10%→50%→100% steps in docs/migration/dns-shift.md — NO actual DNS changes, bectly executes via CF dashboard). After #343: #65 NEXT_PUBLIC_SITE_URL + Czech slug redirects (proxy.ts or next.config redirects block, confirm absolute URLs in og:url/canonical/sitemap use env var). Trace force_next=#358 iframe E2E + #367 quality sweep unchanged. Guard force_next=#366 iframe-architecture audit unchanged. Sage PDP + cart + checkout polish lane continues. External blockers unchanged: #329 (.cz DNS flip), #1 (R2 token verify), #14 (GMC April 30), #216 (GA4), #330 (nginx — blocked on Hetzner prep).",
   "lanes": {
     "BOLT": {
       "status": "active",
-      "force_next_task": 344,
+      "force_next_task": 341,
       "next_priority": [
-        344,
         341,
         343,
         65
       ],
-      "notes": "PRIORITY: #344 UptimeRobot monitoring wiring — code side only, bectly will configure the actual UptimeRobot monitor once endpoints land. Spec: (a) audit GET /api/health — must return 200 {ok,db,redis,ts} with Prisma $queryRaw SELECT 1 (2s timeout) + optional Redis PING if REDIS_URL; non-200 on hard DB down. (b) add POST /api/alerts/telegram — accept UptimeRobot webhook payload, guard with ?key=ALERT_WEBHOOK_SECRET (constant-time compare), forward formatted message ('🔴 janicka-shop DOWN: <monitor>' / '🟢 janicka-shop UP: <monitor>') to Telegram Bot API sendMessage using TELEGRAM_BOT_TOKEN + TELEGRAM_ALERT_CHAT_ID (fallback chat_id 8750673812 per JARVIS DB api_keys). Minimal formatting, no PII, rate-limit with existing rate-limit helper. Return 200 regardless to avoid UptimeRobot retry storms. (c) document required env vars + UptimeRobot webhook URL format in docs/migration/monitoring.md. THEN revisit Hetzner-track in-progress items (#341 LB pool, #343 DNS shift, #65 Czech URLs) — pure code sides only; dashboard config stays with bectly. Bolt owns all Hetzner migration code paths — others don't touch.",
+      "notes": "PRIORITY: #341 Cloudflare Load Balancer — code/config side only. Deliverable: docs/migration/cloudflare-lb.md with (1) origin pool 'hetzner-primary' (origin: jvsatnik.cz via tunnel, weight 1, health check: GET /api/health expects 200 + body contains '\"ok\":true', interval 30s, consecutive failures 2); (2) origin pool 'vercel-standby' (origin: janicka-shop.vercel.app, weight 1, enabled=false initially); (3) LB 'jvsatnik.cz-lb' fallback_pool=vercel-standby, default_pools=[hetzner-primary], session affinity 'ip_cookie'; (4) notification: Telegram via existing /api/alerts/uptime. Include exact cf-terraforming-style JSON/YAML blocks bectly can paste into CF dashboard. NO secrets committed. THEN #343 DNS/LB traffic shift plan — docs/migration/dns-shift.md with pre-flight checks, rollback steps, metric thresholds (p95 <800ms, 5xx <0.5%), 10%/50%/100% weights with observation windows. NO actual DNS edits. THEN #65 NEXT_PUBLIC_SITE_URL — audit all absolute-URL emitters (og:url, canonical, sitemap.ts, robots.ts, email templates, /api/feed/*) and ensure they derive from env.NEXT_PUBLIC_SITE_URL; add Czech slug→canonical redirects in next.config redirects (e.g., /kosik→/cart not needed if Czech already canonical; invert only if legacy paths exist — audit first, don't speculate). Bolt owns all Hetzner migration code paths — others don't touch.",
       "blockers_external": {
         "329": "DNS flip by bectly",
         "334": "Hetzner daemon must boot"
@@ -56,8 +55,8 @@
     "NEVER push to remote without bectly's explicit request.",
     "Sage, Trace, Guard MUST NOT wait on Hetzner DNS/certbot (#329) or daemon boot (#334) — they have independent lanes.",
     "Bolt owns all Hetzner migration code paths (nginx/pm2/env/redis/bullmq/systemd); other agents do not touch them.",
-    "Tasks #352, #353, #364, #365, #369, #370 are DONE — do not re-raise as blockers."
+    "Tasks #352, #353, #364, #365, #369, #370, #344 are DONE — do not re-raise as blockers."
   ],
-  "last_updated": "2026-04-18T09:45",
+  "last_updated": "2026-04-18T10:30",
   "pause": {}
 }

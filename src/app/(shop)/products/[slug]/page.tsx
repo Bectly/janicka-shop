@@ -460,7 +460,7 @@ export default async function ProductDetailPage({ params }: Props) {
               </p>
               <Link
                 href={`/products?category=${product.category.slug}`}
-                className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-brand-dark"
+                className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-white transition-all duration-150 hover:bg-brand-dark"
               >
                 Prohlédnout {product.category.name.toLowerCase()} →
               </Link>
