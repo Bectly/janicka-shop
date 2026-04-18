@@ -300,7 +300,11 @@ function CartItemRow({
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">Unikátní kus</span>
             {countdown && !isExpired && (
-              <span className="flex items-center gap-1 rounded-md bg-champagne-light px-1.5 py-0.5 text-xs font-medium text-charcoal-light">
+              <span className={`flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium transition-colors ${
+                isUrgent
+                  ? "animate-pulse bg-destructive/10 text-destructive"
+                  : "bg-champagne-light text-charcoal-light"
+              }`}>
                 <Clock className="size-3" />
                 {countdown}
               </span>

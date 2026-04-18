@@ -475,7 +475,7 @@ export default async function ProductDetailPage({ params }: Props) {
         </div>
 
         {/* Smart similar products — scored by size/price/brand match — streams independently */}
-        <Suspense fallback={null}>
+        <Suspense fallback={<RelatedProductsSkeleton />}>
           <RelatedProductsSection
             productId={product.id}
             categoryId={product.categoryId}
