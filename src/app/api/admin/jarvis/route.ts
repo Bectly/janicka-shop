@@ -204,5 +204,19 @@ export async function POST(request: Request) {
     session.user.email ?? "admin@janicka",
   );
 
+  try {
+    const db = await getDb();
+    await db.jarvisConsoleLog.create({
+      data: {
+        userId: session.user.id ?? null,
+        userEmail: session.user.email ?? "admin@janicka",
+        command: parsed.data.command,
+        kind: reply.kind ?? null,
+      },
+    });
+  } catch (err) {
+    console.error("[jarvis] failed to write audit log", err);
+  }
+
   return NextResponse.json(reply);
 }

@@ -512,6 +512,18 @@ model CampaignSendLock {
   @@index([expiresAt])
 }
 
+model JarvisConsoleLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  userEmail String
+  command   String
+  kind      String? // info | ok | warn | err
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([userId])
+}
+
 model ShopSettings {
   id                    String   @id @default("singleton")
   shopName              String   @default("Janička")
