@@ -153,7 +153,7 @@ export function WishlistGrid({ items }: Props) {
               type="button"
               onClick={() => handleRemove(p.id)}
               disabled={pending}
-              className="absolute top-2 right-2 inline-flex size-9 items-center justify-center rounded-full bg-background/80 backdrop-blur-sm transition-all hover:bg-background hover:shadow-md disabled:opacity-50"
+              className="absolute top-2 right-2 inline-flex size-9 items-center justify-center rounded-full bg-background/80 backdrop-blur-sm transition-all hover:bg-background hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
               aria-label="Odebrat z oblíbených"
             >
               <Heart className="size-4 fill-red-500 text-red-500" />

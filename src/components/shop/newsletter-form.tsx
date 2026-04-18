@@ -50,7 +50,7 @@ export function NewsletterForm({ variant = "default" }: { variant?: "default" | 
                 type="submit"
                 disabled={isPending}
                 size="icon"
-                className="absolute right-2 size-11 rounded-full bg-brand text-white shadow-lg transition-all hover:bg-brand-light hover:shadow-brand/30 disabled:opacity-50"
+                className="absolute right-2 size-11 rounded-full bg-brand text-white shadow-lg transition-all hover:bg-brand-light hover:shadow-brand/30 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isPending ? (
                   <span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />

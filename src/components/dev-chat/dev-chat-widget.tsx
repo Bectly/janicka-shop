@@ -387,7 +387,7 @@ export function DevChatWidget() {
                 <button
                   type="submit"
                   disabled={loggingIn || !password}
-                  className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-rose-500 text-base font-medium text-white transition-colors duration-150 hover:bg-rose-600 disabled:opacity-50"
+                  className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-rose-500 text-base font-medium text-white transition-colors duration-150 hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {loggingIn ? (
                     <Loader2 className="size-5 animate-spin" />
@@ -476,7 +476,7 @@ export function DevChatWidget() {
                   <button
                     onClick={handleSend}
                     disabled={!input.trim() || sending}
-                    className="flex size-11 shrink-0 items-center justify-center self-end rounded-xl bg-rose-500 text-white transition-colors duration-150 hover:bg-rose-600 disabled:opacity-50"
+                    className="flex size-11 shrink-0 items-center justify-center self-end rounded-xl bg-rose-500 text-white transition-colors duration-150 hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-50"
                     aria-label="Odeslat zprávu"
                   >
                     {sending ? (

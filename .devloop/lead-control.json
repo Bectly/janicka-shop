@@ -5,16 +5,17 @@
   "lanes": {
     "BOLT": {
       "status": "active",
-      "force_next_task": 372,
+      "force_next_task": 375,
       "next_priority": [
-        372,
+        375,
+        376,
         373,
         374,
         341,
         343,
         65
       ],
-      "notes": "PRIORITY: #341 Cloudflare Load Balancer — code/config side only. Deliverable: docs/migration/cloudflare-lb.md with (1) origin pool 'hetzner-primary' (origin: jvsatnik.cz via tunnel, weight 1, health check: GET /api/health expects 200 + body contains '\"ok\":true', interval 30s, consecutive failures 2); (2) origin pool 'vercel-standby' (origin: janicka-shop.vercel.app, weight 1, enabled=false initially); (3) LB 'jvsatnik.cz-lb' fallback_pool=vercel-standby, default_pools=[hetzner-primary], session affinity 'ip_cookie'; (4) notification: Telegram via existing /api/alerts/uptime. Include exact cf-terraforming-style JSON/YAML blocks bectly can paste into CF dashboard. NO secrets committed. THEN #343 DNS/LB traffic shift plan — docs/migration/dns-shift.md with pre-flight checks, rollback steps, metric thresholds (p95 <800ms, 5xx <0.5%), 10%/50%/100% weights with observation windows. NO actual DNS edits. THEN #65 NEXT_PUBLIC_SITE_URL — audit all absolute-URL emitters (og:url, canonical, sitemap.ts, robots.ts, email templates, /api/feed/*) and ensure they derive from env.NEXT_PUBLIC_SITE_URL; add Czech slug→canonical redirects in next.config redirects (e.g., /kosik→/cart not needed if Czech already canonical; invert only if legacy paths exist — audit first, don't speculate). Bolt owns all Hetzner migration code paths — others don't touch.",
+      "notes": "P0 BUG FIRST: #375 category nav slug mismatch — 3 categories don't filter at all. Debug path: (1) grep category slugs in src/lib/constants.ts or src/config/categories.ts vs Product.category values in prisma schema + seed; (2) check src/app/(shop)/products/page.tsx searchParams.category → where/filter clause; (3) check src/components/shop/product-filters.tsx category click handler — it likely writes a label (e.g. 'Šaty') but query expects slug ('saty') or vice versa; (4) verify Header/CategoryNav link hrefs match URL contract. Expected fix: single source of truth for category slugs (constant map: slug ↔ label), all writers/readers go through it. Add unit test mapping all nav categories to products query and asserting non-zero rows (given seed data). THEN #376 pagination: src/app/(shop)/products/page.tsx — currently fetches all ~2000 products server-side. Implement cursor-based pagination (prisma `skip`/`take` with `searchParams.page`) + load-more button or numbered pager. Page size 24-36. Keep filter params in URL. Cache-friendly with 'use cache' per CLAUDE.md spec. THEN #373 Sage 610-fail triage — read .devloop/worker-logs/sage-janicka-shop.log tail, categorize error signatures, report + fix root cause (likely playwright flakes or missing fixtures). THEN #374 Czech redirect audit: enumerate legacy slugs (/kosik, /produkty, /kategorie/*, /objednavka, /obchodni-podminky, /ochrana-soukromi) → add next.config.ts redirects() entries mapping to canonical paths (permanent: true for SEO). No SITE_URL env var needed — redirects are path-based. THEN only if above all clear, resume #341/#343 Hetzner migration docs (gated on #334+CF paid add-on anyway). Bolt owns all Hetzner migration code paths — others don't touch.",
       "blockers_external": {
         "329": "DNS flip by bectly",
         "334": "Hetzner daemon must boot"
@@ -60,6 +61,6 @@
     "Bolt owns all Hetzner migration code paths (nginx/pm2/env/redis/bullmq/systemd); other agents do not touch them.",
     "Tasks #352, #353, #364, #365, #369, #370, #344, #371 are DONE — do not re-raise as blockers."
   ],
-  "last_updated": "2026-04-18T12:00",
+  "last_updated": "2026-04-18T12:30",
   "pause": {}
 }

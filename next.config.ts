@@ -66,6 +66,21 @@ const nextConfig: NextConfig = {
         destination: "/cart",
         permanent: true,
       },
+      {
+        source: "/produkty",
+        destination: "/products",
+        permanent: true,
+      },
+      {
+        source: "/produkty/:slug*",
+        destination: "/products/:slug*",
+        permanent: true,
+      },
+      {
+        source: "/gdpr",
+        destination: "/privacy",
+        permanent: true,
+      },
     ];
   },
   async headers() {

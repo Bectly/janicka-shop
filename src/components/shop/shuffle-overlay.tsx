@@ -579,7 +579,7 @@ function ActionButton({
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
-      className={`inline-flex ${sizeCls} items-center justify-center rounded-full transition-transform duration-150 active:scale-90 disabled:opacity-50 ${toneCls} ${
+      className={`inline-flex ${sizeCls} items-center justify-center rounded-full transition-transform duration-150 active:scale-90 disabled:cursor-not-allowed disabled:opacity-50 ${toneCls} ${
         pulse ? "hover:scale-105" : ""
       }`}
     >
