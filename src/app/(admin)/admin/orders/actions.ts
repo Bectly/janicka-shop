@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { ORDER_STATUS_LABELS, PAYMENT_METHOD_LABELS, SHIPPING_METHOD_LABELS } from "@/lib/constants";
 import { sendOrderStatusEmail, sendShippingNotificationEmail } from "@/lib/email";
+import { dispatchEmail } from "@/lib/email-dispatch";
 import { rateLimitAdmin } from "@/lib/rate-limit";
 import { generateInvoicePdf, type InvoiceData } from "@/lib/invoice/generate-invoice";
 import { createPacket, getPacketLabel, getPacketLabelsBatch } from "@/lib/shipping/packeta";
@@ -144,15 +145,22 @@ export async function updateOrderStatus(orderId: string, status: string) {
       })
       .then((o) => {
         if (!o || !o.customer.email) return;
-        sendOrderStatusEmail(status, {
-          orderNumber: o.orderNumber,
-          customerName: `${o.customer.firstName} ${o.customer.lastName}`,
-          customerEmail: o.customer.email,
-          total: o.total,
-          accessToken: o.accessToken ?? "",
-          trackingNumber: o.trackingNumber,
-        }).catch((err: unknown) => {
-          console.error(`[Email] Failed to send order status email:`, err);
+        // P4.2: Enqueue status email — worker handles Resend latency off the
+        // admin action's response path.
+        dispatchEmail(
+          "order-status",
+          {
+            status,
+            orderNumber: o.orderNumber,
+            customerName: `${o.customer.firstName} ${o.customer.lastName}`,
+            customerEmail: o.customer.email,
+            total: o.total,
+            accessToken: o.accessToken ?? "",
+            trackingNumber: o.trackingNumber,
+          },
+          (p) => sendOrderStatusEmail(p.status as string, p as never),
+        ).catch((err: unknown) => {
+          console.error(`[Email] Order status dispatch failed:`, err);
         });
       })
       .catch((err) => {
@@ -504,21 +512,27 @@ async function sendShippingEmailWithCrossSell(
     };
   });
 
-  await sendShippingNotificationEmail({
-    orderNumber: order.orderNumber,
-    customerName: `${order.customer.firstName} ${order.customer.lastName}`,
-    customerEmail: order.customer.email,
-    total: order.total,
-    accessToken: order.accessToken ?? "",
-    trackingNumber: order.trackingNumber,
-    items: order.items.map((i) => ({
-      name: i.name,
-      price: i.price,
-      size: i.size,
-      color: i.color,
-    })),
-    crossSellProducts,
-  });
+  // P4.2: Enqueue the Resend send so the admin action's fire-and-forget path
+  // hands off to BullMQ once the DB cross-sell lookup finishes.
+  await dispatchEmail(
+    "shipping-notification",
+    {
+      orderNumber: order.orderNumber,
+      customerName: `${order.customer.firstName} ${order.customer.lastName}`,
+      customerEmail: order.customer.email,
+      total: order.total,
+      accessToken: order.accessToken ?? "",
+      trackingNumber: order.trackingNumber,
+      items: order.items.map((i) => ({
+        name: i.name,
+        price: i.price,
+        size: i.size,
+        color: i.color,
+      })),
+      crossSellProducts,
+    },
+    sendShippingNotificationEmail,
+  );
 }
 
 export async function updateTrackingNumber(orderId: string, trackingNumber: string) {

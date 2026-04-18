@@ -7,6 +7,7 @@ import { getOrCreateVisitorId } from "@/lib/visitor";
 import { createComgatePayment } from "@/lib/payments/comgate";
 import { rateLimitCheckout } from "@/lib/rate-limit";
 import { sendOrderConfirmationEmail, sendAdminNewOrderEmail } from "@/lib/email";
+import { dispatchEmail } from "@/lib/email-dispatch";
 import { sendSimilarItemNotifications } from "@/lib/email/similar-item";
 import { sendWishlistSoldNotifications } from "@/lib/email/wishlist-sold";
 import { logOrderToHeureka } from "@/lib/heureka";
@@ -515,56 +516,66 @@ export async function createOrder(
     console.error("[Checkout] Wishlist sold notify:", e),
   );
 
-  // Send order confirmation email (fire-and-forget — never blocks checkout)
-  sendOrderConfirmationEmail({
-    orderNumber: order.orderNumber,
-    customerName: `${data.firstName} ${data.lastName}`,
-    customerEmail: order.customerEmail,
-    items: data.items.map((item) => {
-      const dbPrice = order.dbPrices.get(item.productId);
-      const dbName = order.dbNames.get(item.productId);
-      if (dbPrice === undefined || dbName === undefined) {
-        console.error(`[Checkout] Missing DB data for product ${item.productId} in email`);
-      }
-      return { name: dbName ?? item.name, price: dbPrice ?? item.price, size: item.size, color: item.color };
-    }),
-    subtotal: order.subtotal,
-    shipping: order.shipping,
-    total: order.total,
-    paymentMethod: isCod ? "cod" : (data.paymentMethod as string),
-    shippingMethod: data.shippingMethod,
-    shippingName: `${data.firstName} ${data.lastName}`,
-    shippingStreet: isPacketaPickup ? (data.packetaPointName ?? null) : (data.street ?? null),
-    shippingCity: isPacketaPickup ? null : (data.city ?? null),
-    shippingZip: isPacketaPickup ? null : (data.zip ?? null),
-    shippingPointId: data.packetaPointId ?? null,
-    note: data.note ?? null,
-    accessToken: order.accessToken ?? "",
-    isCod,
-    expectedDeliveryDate: order.expectedDeliveryDate ?? null,
-  }).catch((err: unknown) => {
-    console.error(`[Checkout] Order confirmation email failed for ${order.orderNumber}:`, err);
+  // P4.2: Enqueue order confirmation email on BullMQ (fire-and-forget).
+  // Enqueue returns in ~5ms regardless of queue depth; worker sends via Resend.
+  // Falls back to inline send if REDIS_URL is unset (dev / preview).
+  dispatchEmail(
+    "order-confirmation",
+    {
+      orderNumber: order.orderNumber,
+      customerName: `${data.firstName} ${data.lastName}`,
+      customerEmail: order.customerEmail,
+      items: data.items.map((item) => {
+        const dbPrice = order.dbPrices.get(item.productId);
+        const dbName = order.dbNames.get(item.productId);
+        if (dbPrice === undefined || dbName === undefined) {
+          console.error(`[Checkout] Missing DB data for product ${item.productId} in email`);
+        }
+        return { name: dbName ?? item.name, price: dbPrice ?? item.price, size: item.size, color: item.color };
+      }),
+      subtotal: order.subtotal,
+      shipping: order.shipping,
+      total: order.total,
+      paymentMethod: isCod ? "cod" : (data.paymentMethod as string),
+      shippingMethod: data.shippingMethod,
+      shippingName: `${data.firstName} ${data.lastName}`,
+      shippingStreet: isPacketaPickup ? (data.packetaPointName ?? null) : (data.street ?? null),
+      shippingCity: isPacketaPickup ? null : (data.city ?? null),
+      shippingZip: isPacketaPickup ? null : (data.zip ?? null),
+      shippingPointId: data.packetaPointId ?? null,
+      note: data.note ?? null,
+      accessToken: order.accessToken ?? "",
+      isCod,
+      expectedDeliveryDate: order.expectedDeliveryDate ?? null,
+    },
+    sendOrderConfirmationEmail,
+  ).catch((err: unknown) => {
+    console.error(`[Checkout] Order confirmation dispatch failed for ${order.orderNumber}:`, err);
   });
 
   // Notify admin about new order — COD only fires here (confirmed money).
   // Online payments (Comgate) notify admin from the webhook once status=PAID,
   // so unpaid pending orders don't spam admin inbox.
   if (isCod) {
-    sendAdminNewOrderEmail({
-      orderNumber: order.orderNumber,
-      orderId: order.id,
-      customerName: `${data.firstName} ${data.lastName}`,
-      customerEmail: order.customerEmail,
-      items: data.items.map((item) => {
-        const dbPrice = order.dbPrices.get(item.productId);
-        const dbName = order.dbNames.get(item.productId);
-        return { name: dbName ?? item.name, price: dbPrice ?? item.price, size: item.size, color: item.color };
-      }),
-      total: order.total,
-      paymentMethod: data.paymentMethod,
-      shippingMethod: data.shippingMethod,
-    }).catch((err: unknown) => {
-      console.error(`[Checkout] Admin notification email failed for ${order.orderNumber}:`, err);
+    dispatchEmail(
+      "admin-new-order",
+      {
+        orderNumber: order.orderNumber,
+        orderId: order.id,
+        customerName: `${data.firstName} ${data.lastName}`,
+        customerEmail: order.customerEmail,
+        items: data.items.map((item) => {
+          const dbPrice = order.dbPrices.get(item.productId);
+          const dbName = order.dbNames.get(item.productId);
+          return { name: dbName ?? item.name, price: dbPrice ?? item.price, size: item.size, color: item.color };
+        }),
+        total: order.total,
+        paymentMethod: data.paymentMethod,
+        shippingMethod: data.shippingMethod,
+      },
+      sendAdminNewOrderEmail,
+    ).catch((err: unknown) => {
+      console.error(`[Checkout] Admin notification dispatch failed for ${order.orderNumber}:`, err);
     });
   }
 

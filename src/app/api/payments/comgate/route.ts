@@ -5,6 +5,7 @@ import { getComgatePaymentStatus } from "@/lib/payments/comgate";
 import { ComgateError } from "@/lib/payments/types";
 import { revalidatePath } from "next/cache";
 import { sendPaymentConfirmedEmail, sendAdminNewOrderEmail } from "@/lib/email";
+import { dispatchEmail } from "@/lib/email-dispatch";
 import { logOrderToHeureka } from "@/lib/heureka";
 
 /**
@@ -144,34 +145,44 @@ async function processPaymentStatus(
             include: { customer: true, items: { include: { product: { select: { sku: true } } } } },
           });
           if (order) {
-            sendPaymentConfirmedEmail({
-              orderNumber: order.orderNumber,
-              customerName: `${order.customer.firstName} ${order.customer.lastName}`,
-              customerEmail: order.customer.email,
-              total: order.total,
-              accessToken: order.accessToken ?? "",
-            }).catch((err) => {
-              console.error(`[Webhook] Failed to send payment confirmation email for ${order.orderNumber}:`, err);
+            // P4.2: Enqueue customer + admin emails so the webhook returns fast
+            // regardless of Resend latency or queue depth.
+            dispatchEmail(
+              "payment-confirmed",
+              {
+                orderNumber: order.orderNumber,
+                customerName: `${order.customer.firstName} ${order.customer.lastName}`,
+                customerEmail: order.customer.email,
+                total: order.total,
+                accessToken: order.accessToken ?? "",
+              },
+              sendPaymentConfirmedEmail,
+            ).catch((err) => {
+              console.error(`[Webhook] Payment confirmation dispatch failed for ${order.orderNumber}:`, err);
             });
 
             // Notify admin that a paid online order arrived (task #244)
-            sendAdminNewOrderEmail({
-              orderNumber: order.orderNumber,
-              orderId: order.id,
-              customerName: `${order.customer.firstName} ${order.customer.lastName}`,
-              customerEmail: order.customer.email,
-              items: order.items.map((i) => ({
-                name: i.name,
-                price: i.price,
-                size: i.size,
-                color: i.color,
-              })),
-              total: order.total,
-              paymentMethod: order.paymentMethod ?? "comgate",
-              shippingMethod: order.shippingMethod ?? "",
-              paid: true,
-            }).catch((err) => {
-              console.error(`[Webhook] Failed to send admin notification for ${order.orderNumber}:`, err);
+            dispatchEmail(
+              "admin-new-order",
+              {
+                orderNumber: order.orderNumber,
+                orderId: order.id,
+                customerName: `${order.customer.firstName} ${order.customer.lastName}`,
+                customerEmail: order.customer.email,
+                items: order.items.map((i) => ({
+                  name: i.name,
+                  price: i.price,
+                  size: i.size,
+                  color: i.color,
+                })),
+                total: order.total,
+                paymentMethod: order.paymentMethod ?? "comgate",
+                shippingMethod: order.shippingMethod ?? "",
+                paid: true,
+              },
+              sendAdminNewOrderEmail,
+            ).catch((err) => {
+              console.error(`[Webhook] Admin notification dispatch failed for ${order.orderNumber}:`, err);
             });
 
             // Log to Heureka for "Ověřeno zákazníky" review questionnaire

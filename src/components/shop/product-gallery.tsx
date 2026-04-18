@@ -29,10 +29,17 @@ function getAlt(img: string | ProductImage, productName: string, index: number):
   return `${productName} — fotka ${index + 1}`;
 }
 
+function getPinchDist(e: React.TouchEvent): number {
+  const t0 = e.touches[0];
+  const t1 = e.touches[1];
+  return Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+}
+
 export function ProductGallery({ images, productName, videoUrl }: ProductGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [videoPlaying, setVideoPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   // Video is slide 1 (after first image) for early engagement
@@ -49,8 +56,11 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
   const imageSlideIndices = hasVideo
     ? Array.from({ length: images.length }, (_, i) => (i < videoSlideIndex ? i : i + 1))
     : Array.from({ length: images.length }, (_, i) => i);
+
   const [lightboxClosing, setLightboxClosing] = useState(false);
-  const [zoomed, setZoomed] = useState(false);
+  // Numeric zoom (1 = normal, 2+ = zoomed) for pinch-to-zoom support
+  const [lbZoom, setLbZoom] = useState(1);
+  const isZoomed = lbZoom > 1;
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [lightboxDismissY, setLightboxDismissY] = useState(0);
@@ -74,12 +84,17 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
     startY: number;
     dismissing: boolean;
   }>({ startY: 0, dismissing: false });
+  const pinchRef = useRef<{
+    active: boolean;
+    startDist: number;
+    startZoom: number;
+  }>({ active: false, startDist: 0, startZoom: 1 });
 
   const openLightbox = useCallback(
     (index: number) => {
       setActiveIndex(index);
       setLightboxOpen(true);
-      setZoomed(false);
+      setLbZoom(1);
       setPanOffset({ x: 0, y: 0 });
     },
     [],
@@ -90,7 +105,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
     setTimeout(() => {
       setLightboxOpen(false);
       setLightboxClosing(false);
-      setZoomed(false);
+      setLbZoom(1);
       setPanOffset({ x: 0, y: 0 });
       setLightboxDismissY(0);
     }, 150);
@@ -99,21 +114,22 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
   const goNext = useCallback(() => {
     setSlideDirection("left");
     setActiveIndex((prev) => (prev === totalSlides - 1 ? 0 : prev + 1));
-    setZoomed(false);
+    setLbZoom(1);
     setPanOffset({ x: 0, y: 0 });
   }, [totalSlides]);
 
   const goPrev = useCallback(() => {
     setSlideDirection("right");
     setActiveIndex((prev) => (prev === 0 ? totalSlides - 1 : prev - 1));
-    setZoomed(false);
+    setLbZoom(1);
     setPanOffset({ x: 0, y: 0 });
   }, [totalSlides]);
 
   const toggleZoom = useCallback(() => {
-    setZoomed((z) => {
-      if (!z) setPanOffset({ x: 0, y: 0 });
-      return !z;
+    setLbZoom((z) => {
+      if (z <= 1) return 2;
+      setPanOffset({ x: 0, y: 0 });
+      return 1;
     });
   }, []);
 
@@ -181,14 +197,14 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
           const pos = imageSlideIndices.indexOf(prev);
           return imageSlideIndices[(pos + 1) % imageSlideIndices.length];
         });
-        setZoomed(false);
+        setLbZoom(1);
         setPanOffset({ x: 0, y: 0 });
       } else if (e.key === "ArrowLeft") {
         setActiveIndex((prev) => {
           const pos = imageSlideIndices.indexOf(prev);
           return imageSlideIndices[(pos - 1 + imageSlideIndices.length) % imageSlideIndices.length];
         });
-        setZoomed(false);
+        setLbZoom(1);
         setPanOffset({ x: 0, y: 0 });
       }
     };
@@ -210,30 +226,30 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
     };
   }, [lightboxOpen, closeLightbox, imageSlideIndices]);
 
-  // Autoplay video when its slide becomes active, pause when leaving
+  // Pause video and reset when leaving video slide (tap-to-play = no autoplay)
   useEffect(() => {
     if (!hasVideo || !videoRef.current) return;
-    if (isVideoActive) {
-      videoRef.current.play().catch(() => {});
-    } else {
+    if (!isVideoActive) {
       videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+      setVideoPlaying(false);
     }
   }, [isVideoActive, hasVideo]);
 
   // Lightbox vertical swipe-to-dismiss handlers
   const handleLbDismissStart = useCallback((e: React.TouchEvent) => {
-    if (zoomed) return;
+    if (isZoomed) return;
     lbDismissRef.current = { startY: e.touches[0].clientY, dismissing: false };
-  }, [zoomed]);
+  }, [isZoomed]);
 
   const handleLbDismissMove = useCallback((e: React.TouchEvent) => {
-    if (zoomed) return;
+    if (isZoomed) return;
     const dy = e.touches[0].clientY - lbDismissRef.current.startY;
     if (Math.abs(dy) > 15) {
       lbDismissRef.current.dismissing = true;
       setLightboxDismissY(dy * 0.6);
     }
-  }, [zoomed]);
+  }, [isZoomed]);
 
   const handleLbDismissEnd = useCallback(() => {
     if (!lbDismissRef.current.dismissing) return;
@@ -248,7 +264,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
   // Mouse drag for panning when zoomed
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
-      if (!zoomed) return;
+      if (!isZoomed) return;
       e.preventDefault();
       dragRef.current = {
         dragging: true,
@@ -260,7 +276,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
       };
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
     },
-    [zoomed, panOffset],
+    [isZoomed, panOffset],
   );
 
   const handlePointerMove = useCallback(
@@ -307,18 +323,33 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
           onTouchEnd={handleTouchEnd}
         >
           {isVideoActive ? (
-            /* Video slide — muted autoplay, loops continuously */
+            /* Video slide — tap-to-play per Shopify CRO 2026 (no autoplay) */
             <div className="absolute inset-0 flex items-center justify-center bg-black">
               <video
                 ref={videoRef}
                 src={videoUrl!}
                 muted
-                autoPlay
                 loop
                 playsInline
-                preload="none"
+                preload="metadata"
                 className="size-full object-contain"
               />
+              {!videoPlaying && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setVideoPlaying(true);
+                    videoRef.current?.play().catch(() => {});
+                  }}
+                  className="absolute inset-0 z-10 flex items-center justify-center"
+                  aria-label="Přehrát video produktu"
+                >
+                  <div className="flex size-20 items-center justify-center rounded-full bg-white/90 shadow-xl transition-transform duration-150 hover:scale-110 active:scale-95">
+                    <Play className="size-8 translate-x-0.5 text-black" fill="currentColor" />
+                  </div>
+                </button>
+              )}
             </div>
           ) : (
             /* Image slide */
@@ -368,7 +399,6 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                   setActiveIndex((prev) =>
                     prev === 0 ? totalSlides - 1 : prev - 1,
                   );
-
                 }}
                 className="absolute top-1/2 left-2 z-20 -translate-y-1/2 scale-75 rounded-full bg-white/80 p-2.5 opacity-0 shadow transition-all duration-200 hover:bg-white group-hover:scale-100 group-hover:opacity-100"
                 aria-label="Předchozí fotka"
@@ -383,7 +413,6 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                   setActiveIndex((prev) =>
                     prev === totalSlides - 1 ? 0 : prev + 1,
                   );
-
                 }}
                 className="absolute top-1/2 right-2 z-20 -translate-y-1/2 scale-75 rounded-full bg-white/80 p-2.5 opacity-0 shadow transition-all duration-200 hover:bg-white group-hover:scale-100 group-hover:opacity-100"
                 aria-label="Další fotka"
@@ -403,7 +432,6 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                       e.stopPropagation();
                       setSlideDirection(i > activeIndex ? "left" : "right");
                       setActiveIndex(i);
-
                     }}
                     className={`inline-flex shrink-0 items-center justify-center ${totalSlides > 8 ? "size-8" : "size-11"}`}
                     aria-label={i === videoSlideIndex ? "Video" : `Fotka ${i + 1}`}
@@ -453,11 +481,13 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                       ? "border-primary ring-1 ring-primary scale-[1.03]"
                       : "border-transparent opacity-70 hover:opacity-100 hover:scale-[1.03]"
                   }`}
+                  aria-label={`${productName} — náhled ${imgIdx + 1}`}
                 >
                   <Image
                     src={getUrl(img)}
-                    alt={`${productName} — náhled ${imgIdx + 1}`}
+                    alt={getAlt(img, productName, imgIdx)}
                     fill
+                    loading="lazy"
                     className="object-cover"
                     sizes="80px"
                   />
@@ -505,7 +535,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                     const pos = imageSlideIndices.indexOf(prev);
                     return imageSlideIndices[(pos - 1 + imageSlideIndices.length) % imageSlideIndices.length];
                   });
-                  setZoomed(false);
+                  setLbZoom(1);
                   setPanOffset({ x: 0, y: 0 });
                 }}
                 className="absolute top-1/2 left-2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-2.5 text-white transition-colors hover:bg-white/20 sm:left-4 sm:p-3"
@@ -520,7 +550,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                     const pos = imageSlideIndices.indexOf(prev);
                     return imageSlideIndices[(pos + 1) % imageSlideIndices.length];
                   });
-                  setZoomed(false);
+                  setLbZoom(1);
                   setPanOffset({ x: 0, y: 0 });
                 }}
                 className="absolute top-1/2 right-2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-2.5 text-white transition-colors hover:bg-white/20 sm:right-4 sm:p-3"
@@ -531,11 +561,11 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
             </>
           )}
 
-          {/* Main lightbox image — swipeable with vertical dismiss */}
+          {/* Main lightbox image — swipeable + pinch-to-zoom + vertical dismiss */}
           <div
             ref={imgContainerRef}
             className={`relative flex items-center justify-center select-none overflow-hidden w-[92vw] h-[85vh] max-w-[40rem] ${
-              zoomed ? "cursor-grab active:cursor-grabbing" : "cursor-zoom-in"
+              isZoomed ? "cursor-grab active:cursor-grabbing" : "cursor-zoom-in"
             }`}
             style={{
               transform: lightboxDismissY !== 0
@@ -557,19 +587,50 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onTouchStart={(e) => {
-              if (!zoomed) {
+              if (e.touches.length === 2) {
+                // Pinch start — capture initial distance and zoom level
+                pinchRef.current = {
+                  active: true,
+                  startDist: getPinchDist(e),
+                  startZoom: lbZoom,
+                };
+                return;
+              }
+              if (!isZoomed) {
                 handleTouchStart(e);
                 handleLbDismissStart(e);
               }
             }}
             onTouchMove={(e) => {
-              if (!zoomed) {
+              if (pinchRef.current.active && e.touches.length === 2) {
+                e.preventDefault();
+                const dist = getPinchDist(e);
+                const newZoom = Math.max(
+                  1,
+                  Math.min(4, pinchRef.current.startZoom * (dist / pinchRef.current.startDist)),
+                );
+                setLbZoom(newZoom);
+                return;
+              }
+              if (!isZoomed) {
                 handleTouchMove(e);
                 handleLbDismissMove(e);
               }
             }}
             onTouchEnd={() => {
-              if (!zoomed) {
+              if (pinchRef.current.active) {
+                pinchRef.current.active = false;
+                // Snap back to 1.0 if barely zoomed
+                setLbZoom((z) => {
+                  if (z < 1.2) {
+                    setPanOffset({ x: 0, y: 0 });
+                    return 1;
+                  }
+                  return z;
+                });
+                return;
+              }
+              if (!isZoomed) {
                 handleTouchEnd();
                 handleLbDismissEnd();
               }
@@ -582,8 +643,8 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
               priority
               className="object-contain transition-transform duration-200"
               style={{
-                transform: zoomed
-                  ? `scale(2) translate(${panOffset.x / 2}px, ${panOffset.y / 2}px)`
+                transform: isZoomed
+                  ? `scale(${lbZoom}) translate(${panOffset.x / lbZoom}px, ${panOffset.y / lbZoom}px)`
                   : swipeOffset !== 0
                     ? `translateX(${swipeOffset}px)`
                     : undefined,
@@ -606,7 +667,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                     onClick={(e) => {
                       e.stopPropagation();
                       setActiveIndex(slideIdx);
-                      setZoomed(false);
+                      setLbZoom(1);
                       setPanOffset({ x: 0, y: 0 });
                     }}
                     className={`relative size-12 shrink-0 overflow-hidden rounded-lg border-2 transition-all sm:size-14 ${
@@ -614,11 +675,13 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                         ? "border-white ring-1 ring-white/50"
                         : "border-transparent opacity-50 hover:opacity-80"
                     }`}
+                    aria-label={`${productName} — fotka ${imgIdx + 1}`}
                   >
                     <Image
                       src={getUrl(img)}
-                      alt={`${productName} — náhled ${imgIdx + 1}`}
+                      alt={getAlt(img, productName, imgIdx)}
                       fill
+                      loading="lazy"
                       className="object-cover"
                       sizes="56px"
                     />

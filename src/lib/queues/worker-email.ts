@@ -4,6 +4,7 @@ import {
   sendOrderConfirmationEmail,
   sendPaymentConfirmedEmail,
   sendShippingNotificationEmail,
+  sendOrderStatusEmail,
   sendReviewRequestEmail,
   sendDeliveryCheckEmail,
   sendNewArrivalEmail,
@@ -37,6 +38,12 @@ export async function processEmailJob(job: Job<EmailJobData>): Promise<void> {
     case "shipping-notification":
       await sendShippingNotificationEmail(p);
       return;
+    case "order-status": {
+      // Payload shape: { status, ...StatusEmailData }
+      const { status, ...rest } = payload as { status: string } & Record<string, unknown>;
+      await sendOrderStatusEmail(status, rest as never);
+      return;
+    }
     case "review-request":
       await sendReviewRequestEmail(p);
       return;
