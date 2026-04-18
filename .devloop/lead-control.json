@@ -8,12 +8,11 @@
       "force_next_task": 365,
       "next_priority": [
         365,
-        357,
         364,
         344,
         345
       ],
-      "notes": "PRIORITY: #365 RC.3b — replace fake JarvisTerminal (src/components/admin/jarvis-terminal.tsx is currently analytical chat faking commands). Wire real Claude bridge: /admin/jarvis page should render an iframe/xterm.js client that WebSocket-connects to the bridge daemon via the tunnel hostname (env NEXT_PUBLIC_JARVIS_BRIDGE_WS_URL, default wss://tunnel.janicka.shop/ws). Auth: pass NextAuth session JWT as query param or first WS frame — bridge already validates role=admin (#355 done). Commands stream stdout/stderr as ANSI through xterm. Keep 20 cmd/min rate limit UX (#355) + audit log POST /api/admin/jarvis still fires per command (#356). THEN #357 safe-mode toggle: dangerous commands (rm -rf, DROP, DELETE FROM, curl|sh, etc.) require confirm dialog before transmit — toggle persists in localStorage, default ON. THEN #364 Den matek P5.1b: POST /api/cron/campaigns/den-matek-send with X-Cron-Token === process.env.CRON_SECRET, React Email template, emailQueue fire-and-forget, 202 + job count. DO NOT build vinted-tc-send (permanent rule). #344 UptimeRobot + #345 PM2 logrotate stay queued after.",
+      "notes": "PRIORITY: #365 RC.3b — replace fake JarvisTerminal (src/components/admin/jarvis-terminal.tsx is currently analytical chat faking commands). Wire real Claude bridge: /admin/jarvis page should render an iframe/xterm.js client that WebSocket-connects to the bridge daemon via the tunnel hostname (env NEXT_PUBLIC_JARVIS_BRIDGE_WS_URL, default wss://tunnel.janicka.shop/ws). Auth: pass NextAuth session JWT as query param or first WS frame — bridge already validates role=admin (#355 done). Commands stream stdout/stderr as ANSI through xterm. Keep 20 cmd/min rate limit UX (#355) + audit log POST /api/admin/jarvis still fires per command (#356). Preserve safe-mode toggle + dangerous-command guard from #357 (C4369) across the transport swap — the Shield state + confirmation UX must still gate WS sends, not just the fake-terminal path. THEN #364 Den matek P5.1b: POST /api/cron/campaigns/den-matek-send with X-Cron-Token === process.env.CRON_SECRET, React Email template, emailQueue fire-and-forget, 202 + job count. DO NOT build vinted-tc-send (permanent rule). #344 UptimeRobot + #345 PM2 logrotate stay queued after.",
       "blockers_external": {
         "329": "DNS flip by bectly",
         "334": "Hetzner daemon must boot"
@@ -58,6 +57,6 @@
     "Bolt owns all Hetzner migration code paths (nginx/pm2/env/redis/bullmq/systemd); other agents do not touch them.",
     "Tasks #352 and #353 are DONE — do not re-raise as blockers (blockers 2215/2216 acknowledged and closed)."
   ],
-  "last_updated": "2026-04-18T07:42",
+  "last_updated": "2026-04-18T07:50",
   "pause": {}
 }
