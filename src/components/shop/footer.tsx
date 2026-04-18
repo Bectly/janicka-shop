@@ -194,7 +194,7 @@ export async function Footer() {
               alt=""
               width={160}
               height={64}
-              className="h-10 w-auto brightness-0 invert transition-opacity group-hover:opacity-80 sm:h-12"
+              className="h-10 w-auto brightness-0 invert transition-opacity duration-150 group-hover:opacity-80 sm:h-12"
             />
           </Link>
           <p className="mt-5 max-w-xs text-center text-sm leading-relaxed text-white/40">
@@ -232,7 +232,7 @@ export async function Footer() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="footer-link block py-3 text-sm text-white/55 transition-colors duration-200 hover:text-white"
+                      className="footer-link block py-3 text-sm text-white/55 transition-colors duration-150 hover:text-white"
                     >
                       {link.name}
                     </Link>
@@ -253,7 +253,7 @@ export async function Footer() {
                   href={instagram}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="footer-social-icon inline-flex size-10 items-center justify-center rounded-full bg-white/[0.06] text-white/50 transition-all duration-300 hover:bg-brand/20 hover:text-brand-light hover:shadow-[0_0_12px_rgba(var(--color-brand),0.15)]"
+                  className="footer-social-icon inline-flex size-10 items-center justify-center rounded-full bg-white/[0.06] text-white/50 transition-all duration-150 hover:bg-brand/20 hover:text-brand-light hover:shadow-[0_0_12px_rgba(var(--color-brand),0.15)]"
                   aria-label="Instagram"
                 >
                   <InstagramIcon className="size-[18px]" />
@@ -268,7 +268,7 @@ export async function Footer() {
                   href={facebook}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="footer-social-icon inline-flex size-10 items-center justify-center rounded-full bg-white/[0.06] text-white/50 transition-all duration-300 hover:bg-brand/20 hover:text-brand-light hover:shadow-[0_0_12px_rgba(var(--color-brand),0.15)]"
+                  className="footer-social-icon inline-flex size-10 items-center justify-center rounded-full bg-white/[0.06] text-white/50 transition-all duration-150 hover:bg-brand/20 hover:text-brand-light hover:shadow-[0_0_12px_rgba(var(--color-brand),0.15)]"
                   aria-label="Facebook"
                 >
                   <FacebookIcon className="size-[18px]" />
@@ -291,7 +291,7 @@ export async function Footer() {
         {/* Payment badges */}
         <div className="flex flex-col items-center gap-3 py-8">
           <p className="text-[10px] uppercase tracking-[0.2em] text-white/20">Platební metody</p>
-          <div className="flex flex-wrap items-center justify-center gap-2.5 opacity-60 grayscale transition-all duration-500 hover:opacity-80 hover:grayscale-0">
+          <div className="flex flex-wrap items-center justify-center gap-2.5 opacity-60 grayscale transition-all duration-150 hover:opacity-80 hover:grayscale-0">
             <VisaIcon />
             <MastercardIcon />
             <ApplePayIcon />
@@ -306,12 +306,12 @@ export async function Footer() {
         {/* Bottom bar — legal */}
         <div className="space-y-2.5 py-6">
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-white/25">
-            <CookieSettingsButton className="min-h-[44px] inline-flex items-center transition-colors duration-200 hover:text-white/50" />
+            <CookieSettingsButton className="min-h-[44px] inline-flex items-center transition-colors duration-150 hover:text-white/50" />
             <a
               href="https://ec.europa.eu/consumers/odr"
               target="_blank"
               rel="noopener noreferrer"
-              className="min-h-[44px] inline-flex items-center transition-colors duration-200 hover:text-white/50"
+              className="min-h-[44px] inline-flex items-center transition-colors duration-150 hover:text-white/50"
             >
               Řešení sporů online (ODR)
             </a>
