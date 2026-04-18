@@ -169,16 +169,18 @@ async function RelatedProductsSection({
   if (sold) {
     return (
       <section className="mt-16">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-sage-light/60 px-3 py-1 text-xs font-semibold tracking-wider text-sage-dark uppercase mb-3">
-          <span aria-hidden="true">◈</span> Podobné
-        </span>
-        <h2 className="font-heading text-xl font-bold text-foreground">
-          Podobné dostupné kousky
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Vybrali jsme kousky podobné velikosti, ceny a stylu
-        </p>
-        <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="mb-6">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-sage-light/60 px-3 py-1 text-xs font-semibold tracking-wider text-sage-dark uppercase mb-3">
+            <span aria-hidden="true">◈</span> Podobné
+          </span>
+          <h2 className="font-heading text-xl font-bold text-foreground">
+            Podobné dostupné kousky
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Vybrali jsme kousky podobné velikosti, ceny a stylu
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
           {relatedProducts.map((p) => (
             <ProductCard
               key={p.id}
@@ -403,19 +405,19 @@ export default async function ProductDetailPage({ params }: Props) {
             dangerouslySetInnerHTML={{ __html: jsonLdString(videoJsonLd) }}
           />
         )}
-        <nav className="mb-6 text-sm text-muted-foreground">
-          <Link href="/products" className="hover:text-foreground">
+        <nav className="mb-6 flex min-w-0 flex-wrap items-center gap-y-1 text-sm text-muted-foreground">
+          <Link href="/products" className="shrink-0 hover:text-foreground">
             Katalog
           </Link>
-          <span className="mx-2">/</span>
+          <span className="mx-2 shrink-0">/</span>
           <Link
             href={`/products?category=${product.category.slug}`}
-            className="hover:text-foreground"
+            className="shrink-0 hover:text-foreground"
           >
             {product.category.name}
           </Link>
-          <span className="mx-2">/</span>
-          <span className="text-foreground">{product.name}</span>
+          <span className="mx-2 shrink-0">/</span>
+          <span className="min-w-0 truncate text-foreground">{product.name}</span>
         </nav>
 
         <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
@@ -751,7 +753,7 @@ export default async function ProductDetailPage({ params }: Props) {
           {product.stock > 0 && (() => {
             const { from, to } = getEstimatedDelivery();
             return (
-              <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="mt-3 flex items-center gap-2 rounded-lg bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
                 <Truck className="size-3.5 shrink-0" />
                 <span>
                   Objednáte dnes — doručíme{" "}
