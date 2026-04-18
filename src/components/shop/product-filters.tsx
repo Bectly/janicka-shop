@@ -225,7 +225,7 @@ export function ProductFilters({
       <button
         onClick={() => updateParams({ category: null })}
         aria-pressed={!activeCategory}
-        className={`min-h-11 inline-flex items-center rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+        className={`min-h-11 inline-flex items-center rounded-full px-4 py-1.5 text-sm font-medium transition-colors duration-200 ${
           !activeCategory
             ? "bg-primary text-primary-foreground"
             : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -243,7 +243,7 @@ export function ProductFilters({
             key={cat.slug}
             onClick={() => updateParams({ category: cat.slug })}
             aria-pressed={activeCategory === cat.slug}
-            className={`min-h-11 inline-flex items-center rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+            className={`min-h-11 inline-flex items-center rounded-full px-4 py-1.5 text-sm font-medium transition-colors duration-200 ${
               activeCategory === cat.slug
                 ? "bg-primary text-primary-foreground"
                 : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -284,7 +284,7 @@ export function ProductFilters({
         onClick={() => !isDisabled && toggleMulti("brand", brand, activeBrands)}
         aria-pressed={isActive}
         aria-disabled={isDisabled}
-        className={`inline-flex items-center rounded-full px-3 transition-all ${
+        className={`inline-flex items-center rounded-full px-3 transition-all duration-200 ${
           size === "base"
             ? "min-h-11 py-1.5 text-sm"
             : "min-h-8 py-1 text-xs"
@@ -324,7 +324,7 @@ export function ProductFilters({
         onClick={() => !isDisabled && toggleMulti("size", size, activeSizes)}
         aria-pressed={isActive}
         aria-disabled={isDisabled}
-        className={`inline-flex items-center justify-center rounded-full transition-all ${
+        className={`inline-flex items-center justify-center rounded-full transition-all duration-200 ${
           density === "base"
             ? "min-h-11 min-w-11 px-3 py-1.5 text-sm"
             : "min-h-9 min-w-10 px-2.5 py-1 text-xs"
@@ -347,7 +347,7 @@ export function ProductFilters({
     <button
       onClick={() => updateParams({ sale: saleOnly ? null : "true" })}
       aria-pressed={saleOnly}
-      className={`min-h-11 inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+      className={`min-h-11 inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-medium transition-colors duration-200 ${
         saleOnly
           ? "bg-destructive/10 text-destructive"
           : "bg-muted text-muted-foreground hover:bg-muted/80"

@@ -1,19 +1,18 @@
 {
   "last_bolt_commit_cycle": 4374,
-  "cycle": 4373,
-  "directive": "C4373 Lead: ack feedback 2218 (#354 already done — Bolt's request was stale, current force_next is #369 then #364 per C4372 directive). Lanes unchanged. ORIG C4372: #365 RC.3b SHIPPED in commit f91c6f2 (JarvisRemoteFrame iframe → jarvis-janicka.jvsatnik.cz, CSP updated, xterm deps removed) — marked done. Bolt pivot to #369 SEC-3 (already in_progress: harden the iframe integration NOW that it's live — sandbox attrs, CSP frame-ancestors/frame-src tightening, cookie SameSite, X-Frame-Options on parent, postMessage origin check if any), then #364 Den matek HTTP wrapper (Apr 27 deadline for Apr 28 send), then #370 RC.4 screenshot paste → R2. Trace force_next=#358 E2E /admin/jarvis (iframe-based now: assert iframe src matches NEXT_PUBLIC_JARVIS_REMOTE_URL, login instructions visible, no console errors, no CSP violations) + #367 codebase quality sweep. Guard stays on #366 SEC-1 — scope MUST cover the iframe-based architecture (jarvis-janicka.jvsatnik.cz tunnel, CF Access JWT propagation, frame-src CSP correctness, no token leak via referrer/postMessage). Deliverable docs/security/jarvis-bridge-audit.md. Sage PDP polish lane unchanged. External blockers unchanged: #329 (.cz domain), #1 (R2 token), #14 (GMC April 30), #216 (GA4).",
+  "cycle": 4374,
+  "directive": "C4374 Lead: #369 SEC-3 SHIPPED commits f8aac59 (iframe hardened: referrerPolicy no-referrer, allow='', route-level Referrer-Policy header on /admin/jarvis, existing X-Frame-Options DENY + frame-ancestors 'none' + sandbox allow-scripts/allow-same-origin/allow-forms + frame-src verified) — marked done. Bolt pivot to #364 Den matek P5.1b HTTP wrapper (DEADLINE Apr 27 for Apr 28 send) → #370 RC.4 screenshot paste → R2 → #344 UptimeRobot. Trace force_next=#358 E2E iframe-based /admin/jarvis + #367 full codebase quality sweep. Guard force_next=#366 SEC-1 iframe-architecture audit (scope now aligned with what Bolt just shipped: frame-src CSP, frame-ancestors, sandbox attrs, referrer-policy, CF Access JWT, cookie SameSite, confirm xterm/WS deps purged). Sage PDP polish lane unchanged. External blockers: #329 (.cz domain), #1 (R2 token), #14 (GMC April 30), #216 (GA4), #330 (nginx config — blocked on Hetzner prep).",
   "lanes": {
     "BOLT": {
       "status": "active",
-      "force_next_task": 369,
+      "force_next_task": 364,
       "next_priority": [
-        369,
         364,
         370,
         344,
         345
       ],
-      "notes": "PRIORITY: #369 SEC-3 harden iframe integration (already in_progress). C4372 shipped JarvisRemoteFrame at src/components/admin/jarvis-remote-frame.tsx loading jarvis-janicka.jvsatnik.cz. Now harden: (1) iframe sandbox attrs — minimum needed (typically 'allow-scripts allow-same-origin allow-forms' for embedded console; reject 'allow-top-navigation' / 'allow-popups-to-escape-sandbox'); (2) CSP frame-src jarvis-janicka.jvsatnik.cz already added — verify no wildcards leaked, no unsafe-inline; (3) parent CSP frame-ancestors 'self' on /admin/jarvis page so the embedded UI can't be re-framed elsewhere; (4) cookies on parent must be SameSite=Lax/Strict (NextAuth default — verify no override); (5) if any postMessage bridge, validate event.origin === expected exact string; (6) referrer-policy: no-referrer or strict-origin so the iframe URL doesn't leak admin pathnames; (7) confirm NO Authorization header / session cookie can leak across the tunnel boundary. THEN #364 Den matek P5.1b: POST /api/cron/campaigns/den-matek-send with X-Cron-Token === process.env.CRON_SECRET, React Email template, emailQueue fire-and-forget, 202 + job count. DEADLINE Apr 27 (Apr 28 send). DO NOT build vinted-tc-send (permanent rule — see NEVER_ADD_VINTED_CAMPAIGN.md). THEN #370 RC.4 screenshot paste → R2 upload → return URL Claude can fetch. THEN #344 UptimeRobot + #345 PM2 logrotate.",
+      "notes": "PRIORITY: #364 Den matek P5.1b HTTP cron wrapper — DEADLINE Apr 27 for Apr 28 send. Spec: POST /api/cron/campaigns/den-matek-send guarded by X-Cron-Token === process.env.CRON_SECRET (constant-time compare), React Email template in src/emails/ (warm copy: Den matek / collection CTA, mobile-first, Resend-compatible), push jobs into existing emailQueue (src/lib/queue/ — fire-and-forget, don't await all sends inline), return 202 JSON {queued: N, at: ISO}. Rate limit with existing rate-limit helper. Log audit entry with recipient count + cycle. DO NOT build vinted-tc-send (permanent rule — see NEVER_ADD_VINTED_CAMPAIGN.md). THEN #370 RC.4: Claude screenshot paste → server-side R2 presigned PUT → return public URL Claude can fetch (reuse src/lib/r2.ts getR2Client, 5MB cap, MIME allowlist png/jpg/webp, UUID key under claude-uploads/, pre-signed GET 1h). UI: admin /admin/jarvis paste handler (already built per commit e834796 — verify + extend). THEN #344 UptimeRobot POST /api/health monitor + Telegram alert webhook via JARVIS bot. THEN #345 PM2 logrotate (Hetzner post-migration). Bolt owns all Hetzner migration code paths — others don't touch.",
       "blockers_external": {
         "329": "DNS flip by bectly",
         "334": "Hetzner daemon must boot"
@@ -57,8 +56,8 @@
     "NEVER push to remote without bectly's explicit request.",
     "Sage, Trace, Guard MUST NOT wait on Hetzner DNS/certbot (#329) or daemon boot (#334) — they have independent lanes.",
     "Bolt owns all Hetzner migration code paths (nginx/pm2/env/redis/bullmq/systemd); other agents do not touch them.",
-    "Tasks #352, #353, #365 are DONE — do not re-raise as blockers."
+    "Tasks #352, #353, #365, #369 are DONE — do not re-raise as blockers."
   ],
-  "last_updated": "2026-04-18T08:10",
+  "last_updated": "2026-04-18T08:15",
   "pause": {}
 }
