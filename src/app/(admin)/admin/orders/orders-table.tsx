@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useTransition } from "react";
 import Link from "next/link";
-import { AlertTriangle, Clock, Truck, Printer, X, Loader2, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, Clock, Truck, Printer, X, Loader2, CheckCircle2, ShoppingBag } from "lucide-react";
 import {
   ORDER_STATUS_LABELS,
   ORDER_STATUS_COLORS,
@@ -279,11 +279,12 @@ export function OrdersTable({ orders }: { orders: OrderRow[] }) {
             <tbody>
               {orders.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={8}
-                    className="px-4 py-12 text-center text-muted-foreground"
-                  >
-                    Žádné objednávky
+                  <td colSpan={8} className="px-4 py-16 text-center">
+                    <div className="flex flex-col items-center gap-3 text-muted-foreground">
+                      <ShoppingBag className="h-10 w-10 opacity-30" />
+                      <p className="font-medium">Žádné objednávky</p>
+                      <p className="text-sm">Objednávky se zde zobrazí, jakmile zákazníci nakoupí.</p>
+                    </div>
                   </td>
                 </tr>
               ) : (

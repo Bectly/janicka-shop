@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { z } from "zod";
 
 const commandSchema = z.object({
@@ -164,6 +165,22 @@ export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (session.user.role !== "admin") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const ip = await getClientIp();
+  const rl = checkRateLimit(
+    `jarvis:${session.user.id ?? ip}`,
+    20,
+    60 * 1000,
+  );
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: "Příliš mnoho příkazů — zkus to za chvíli." },
+      { status: 429 },
+    );
   }
 
   let body: unknown;
