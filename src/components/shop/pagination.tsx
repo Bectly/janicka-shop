@@ -76,9 +76,9 @@ export function Pagination({
   }
 
   const linkBase =
-    "inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150";
+    "inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150 active:scale-95";
   const pageBase =
-    "inline-flex min-h-[44px] min-w-11 items-center justify-center rounded-lg px-3 py-2 text-center text-sm font-medium transition-colors duration-150";
+    "inline-flex min-h-[44px] min-w-11 items-center justify-center rounded-lg px-3 py-2 text-center text-sm font-medium transition-all duration-150 active:scale-95";
 
   function goTo(p: number) {
     if (!isControlled) return;

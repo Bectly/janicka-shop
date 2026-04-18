@@ -73,7 +73,7 @@ export function AnalyticsSection({
               key={w}
               onClick={() => setWindow(w)}
               aria-pressed={analyticsWindow === w}
-              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-150 ${
+              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-150 active:scale-95 ${
                 analyticsWindow === w
                   ? "bg-background text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"

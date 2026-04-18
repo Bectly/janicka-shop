@@ -1,5 +1,5 @@
 {
-  "last_bolt_commit_cycle": 4386,
+  "last_bolt_commit_cycle": 4387,
   "cycle": 4387,
   "directive": "C4387 Lead: #375 CLOSED (rejected C4386, f8cf472 — premise inverted: hyphenated slugs filter correctly, short slugs don't exist in DB; no fix required, task marked done with rejection rationale). Bolt force_next pivots to #376 server-side pagination (2000-product listing = real perf debt) → #373 close out Sage 610/24h failure triage with concrete fix (currently diagnostic only) → #374 (extend redirect coverage if remaining slugs surface) → #377 PDP image quality → #341/#343 Hetzner migration behind #329 DNS. Sage shipped C4386 scale-95 polish on 24 interactive elements (build green). Trace #358 iframe E2E + #367 codebase sweep still force_next. Guard #366 SEC-1 iframe audit still force_next. External blockers unchanged: #329 DNS, #1 R2, #14 GMC (Apr 30 Doppl VTO — 12 days), #216 GA4, #330 nginx, #65 SITE_URL env var (Bolt blocker 2220 acknowledged — backlog now has #376+#373+#377 as actionable work).",
   "lanes": {

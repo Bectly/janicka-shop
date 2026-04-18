@@ -225,7 +225,7 @@ export function ProductFilters({
       <button
         onClick={() => updateParams({ category: null })}
         aria-pressed={!activeCategory}
-        className={`min-h-11 inline-flex items-center rounded-full px-4 py-1.5 text-sm font-medium transition-colors duration-200 ${
+        className={`min-h-11 inline-flex items-center rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200 active:scale-95 ${
           !activeCategory
             ? "bg-primary text-primary-foreground"
             : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -243,7 +243,7 @@ export function ProductFilters({
             key={cat.slug}
             onClick={() => updateParams({ category: cat.slug })}
             aria-pressed={activeCategory === cat.slug}
-            className={`min-h-11 inline-flex items-center rounded-full px-4 py-1.5 text-sm font-medium transition-colors duration-200 ${
+            className={`min-h-11 inline-flex items-center rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200 active:scale-95 ${
               activeCategory === cat.slug
                 ? "bg-primary text-primary-foreground"
                 : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -290,10 +290,10 @@ export function ProductFilters({
             : "min-h-8 py-1 text-xs"
         } font-medium ${
           isActive
-            ? "bg-primary text-primary-foreground shadow-sm"
+            ? "bg-primary text-primary-foreground shadow-sm active:scale-95"
             : isDisabled
               ? "bg-muted/40 text-muted-foreground/40 cursor-not-allowed"
-              : "bg-muted/60 text-foreground/80 hover:bg-muted hover:text-foreground"
+              : "bg-muted/60 text-foreground/80 hover:bg-muted hover:text-foreground active:scale-95"
         }`}
       >
         {brand}
@@ -330,10 +330,10 @@ export function ProductFilters({
             : "min-h-9 min-w-10 px-2.5 py-1 text-xs"
         } font-medium ${
           isActive
-            ? "bg-primary text-primary-foreground shadow-sm ring-1 ring-primary/30"
+            ? "bg-primary text-primary-foreground shadow-sm ring-1 ring-primary/30 active:scale-95"
             : isDisabled
               ? "bg-muted/40 text-muted-foreground/40 cursor-not-allowed"
-              : "bg-muted/60 text-foreground/80 hover:bg-muted hover:text-foreground"
+              : "bg-muted/60 text-foreground/80 hover:bg-muted hover:text-foreground active:scale-95"
         }`}
       >
         <span className="tabular-nums">{size}</span>
@@ -347,7 +347,7 @@ export function ProductFilters({
     <button
       onClick={() => updateParams({ sale: saleOnly ? null : "true" })}
       aria-pressed={saleOnly}
-      className={`min-h-11 inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-medium transition-colors duration-200 ${
+      className={`min-h-11 inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 active:scale-95 ${
         saleOnly
           ? "bg-destructive/10 text-destructive"
           : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -430,7 +430,7 @@ export function ProductFilters({
                   key={size}
                   onClick={() => toggleMulti("size", size, activeSizes)}
                   aria-pressed={isActive}
-                  className={`shrink-0 min-h-11 min-w-11 inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-medium transition-colors duration-200 ${
+                  className={`shrink-0 min-h-11 min-w-11 inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-medium transition-all duration-200 active:scale-95 ${
                     isActive
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -459,7 +459,7 @@ export function ProductFilters({
                   aria-pressed={isActive}
                   aria-label={color}
                   title={color}
-                  className={`group flex shrink-0 min-h-11 items-center gap-1 rounded-full py-1 pl-1.5 pr-2.5 text-xs font-medium transition-colors duration-200 ${
+                  className={`group flex shrink-0 min-h-11 items-center gap-1 rounded-full py-1 pl-1.5 pr-2.5 text-xs font-medium transition-all duration-200 active:scale-95 ${
                     isActive
                       ? "bg-primary/10 ring-2 ring-primary"
                       : "bg-muted hover:bg-muted/80"
@@ -503,7 +503,7 @@ export function ProductFilters({
             <button
               type="button"
               onClick={clearAll}
-              className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium text-muted-foreground transition-colors duration-150 hover:bg-destructive/10 hover:text-destructive"
+              className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium text-muted-foreground transition-all duration-150 hover:bg-destructive/10 hover:text-destructive active:scale-95"
             >
               <X className="size-3" aria-hidden="true" />
               Smazat vše
@@ -580,7 +580,7 @@ export function ProductFilters({
                           aria-pressed={isActive}
                           aria-label={`${color} (${count})`}
                           title={`${color} (${count})`}
-                          className={`group relative flex min-h-9 items-center gap-1.5 rounded-full pl-1 pr-2.5 py-1 text-xs font-medium transition-all duration-200 ${
+                          className={`group relative flex min-h-9 items-center gap-1.5 rounded-full pl-1 pr-2.5 py-1 text-xs font-medium transition-all duration-200 active:scale-95 ${
                             isActive
                               ? "bg-primary/10 ring-1 ring-primary shadow-sm"
                               : "bg-muted/40 hover:bg-muted"
@@ -654,7 +654,7 @@ export function ProductFilters({
                         key={key}
                         onClick={() => toggleMulti("condition", key, activeConditions)}
                         aria-pressed={isActive}
-                        className={`min-h-9 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all duration-200 ${
+                        className={`min-h-9 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all duration-200 active:scale-95 ${
                           isActive
                             ? "bg-primary text-primary-foreground shadow-sm"
                             : "bg-muted/60 text-foreground/80 hover:bg-muted hover:text-foreground"
@@ -884,12 +884,12 @@ export function ProductFilters({
                               aria-disabled={isDisabled}
                               aria-label={`${color} (${count})`}
                               title={`${color} (${count})`}
-                              className={`group relative flex min-h-11 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors duration-200 ${
+                              className={`group relative flex min-h-11 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-all duration-200 ${
                                 isActive
-                                  ? "bg-primary/10 ring-2 ring-primary"
+                                  ? "bg-primary/10 ring-2 ring-primary active:scale-95"
                                   : isDisabled
                                     ? "opacity-40 cursor-not-allowed"
-                                    : "hover:bg-muted/80"
+                                    : "hover:bg-muted/80 active:scale-95"
                               }`}
                             >
                               <span
@@ -960,7 +960,7 @@ export function ProductFilters({
                               key={key}
                               onClick={() => toggleMulti("condition", key, activeConditions)}
                               aria-pressed={isActive}
-                              className={`min-h-11 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors duration-200 ${
+                              className={`min-h-11 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-200 active:scale-95 ${
                                 isActive
                                   ? "bg-primary text-primary-foreground"
                                   : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -991,7 +991,7 @@ export function ProductFilters({
                       <button
                         onClick={() => updateParams({ sale: saleOnly ? null : "true" })}
                         aria-pressed={saleOnly}
-                        className={`min-h-11 inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-200 ${
+                        className={`min-h-11 inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 active:scale-95 ${
                           saleOnly
                             ? "bg-destructive/10 text-destructive"
                             : "bg-muted text-muted-foreground hover:bg-muted/80"

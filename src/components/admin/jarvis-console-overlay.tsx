@@ -97,7 +97,7 @@ export function JarvisConsoleOverlay() {
         <div className="flex items-center gap-1">
           <Link
             href="/admin/jarvis"
-            className="inline-flex size-7 items-center justify-center rounded transition-colors duration-150 hover:bg-muted"
+            className="inline-flex size-7 items-center justify-center rounded transition-all duration-150 hover:bg-muted active:scale-95"
             title="Otevřít ve fullscreenu"
             aria-label="Otevřít ve fullscreenu"
           >
@@ -106,7 +106,7 @@ export function JarvisConsoleOverlay() {
           <button
             type="button"
             onClick={close}
-            className="inline-flex size-7 items-center justify-center rounded transition-colors duration-150 hover:bg-muted"
+            className="inline-flex size-7 items-center justify-center rounded transition-all duration-150 hover:bg-muted active:scale-95"
             title="Zavřít (Esc)"
             aria-label="Zavřít konzoli"
           >

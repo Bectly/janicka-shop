@@ -125,7 +125,7 @@ export function BulkPriceDialog({
                 key={opt.value}
                 type="button"
                 onClick={() => setMode(opt.value)}
-                className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors duration-150 ${
+                className={`rounded-lg border px-3 py-2 text-sm font-medium transition-all duration-150 active:scale-95 ${
                   mode === opt.value
                     ? "border-primary bg-primary text-primary-foreground"
                     : "border-border bg-background text-foreground hover:border-primary/40"
