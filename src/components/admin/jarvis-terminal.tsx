@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import "@xterm/xterm/css/xterm.css";
+import { Shield, ShieldOff } from "lucide-react";
 
 type JarvisReply = {
   lines: string[];
   kind?: "info" | "ok" | "warn" | "err";
+  requiresConfirm?: boolean;
+  blocked?: boolean;
 };
 
 const BANNER = [
@@ -34,6 +37,8 @@ const C = {
   cyan: "\x1b[38;5;117m",
 };
 
+const SAFE_MODE_KEY = "jarvis:safeMode";
+
 function colorize(line: string, kind: JarvisReply["kind"]): string {
   switch (kind) {
     case "ok":
@@ -52,6 +57,26 @@ function colorize(line: string, kind: JarvisReply["kind"]): string {
 export function JarvisTerminal({ userName }: { userName: string }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const [safeMode, setSafeMode] = useState(true);
+  const safeModeRef = useRef(true);
+
+  useEffect(() => {
+    const stored = localStorage.getItem(SAFE_MODE_KEY);
+    if (stored !== null) {
+      const on = stored !== "false";
+      setSafeMode(on);
+      safeModeRef.current = on;
+    }
+  }, []);
+
+  const toggleSafeMode = useCallback(() => {
+    setSafeMode((prev) => {
+      const next = !prev;
+      safeModeRef.current = next;
+      localStorage.setItem(SAFE_MODE_KEY, next ? "true" : "false");
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -96,13 +121,19 @@ export function JarvisTerminal({ userName }: { userName: string }) {
       fit.fit();
 
       const prompt = `${C.rose}${userName}${C.reset}@${C.pink}janicka${C.reset} ${C.dim}$${C.reset} `;
+      const confirmPrompt = `${C.yellow}Potvrdit? [y/N]${C.reset} `;
+      let pendingConfirm: string | null = null;
       const writeBanner = () => {
         BANNER.forEach((l) => term.writeln(`${C.rose}${l}${C.reset}`));
       };
       const writePrompt = () => term.write(prompt);
       const clearInputLine = () => {
         term.write("\r\x1b[K");
-        writePrompt();
+        if (pendingConfirm) {
+          term.write(confirmPrompt);
+        } else {
+          writePrompt();
+        }
       };
 
       writeBanner();
@@ -113,19 +144,33 @@ export function JarvisTerminal({ userName }: { userName: string }) {
       let histIdx = -1;
       let busy = false;
 
-      const execCommand = async (cmd: string) => {
+      const execCommand = async (cmd: string, confirm = false) => {
         busy = true;
         try {
           const res = await fetch("/api/admin/jarvis", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ command: cmd }),
+            body: JSON.stringify({
+              command: cmd,
+              confirm,
+              safeMode: safeModeRef.current,
+            }),
           });
           if (!res.ok) {
             term.writeln(`${C.red}Chyba serveru (${res.status})${C.reset}`);
             return;
           }
           const data: JarvisReply = await res.json();
+
+          if (data.requiresConfirm) {
+            pendingConfirm = cmd;
+            for (const line of data.lines) {
+              term.writeln(colorize(line, data.kind));
+            }
+            term.write(confirmPrompt);
+            return;
+          }
+
           for (const line of data.lines) {
             if (line === "__CLEAR__") {
               term.clear();
@@ -149,9 +194,8 @@ export function JarvisTerminal({ userName }: { userName: string }) {
       const onData = term.onData(async (data: string) => {
         if (busy) return;
 
-        // Handle arrow-key escape sequences as whole strings
         if (data === "\x1b[A") {
-          if (history.length === 0) return;
+          if (pendingConfirm || history.length === 0) return;
           histIdx = Math.max(0, histIdx - 1);
           buffer = history[histIdx] ?? "";
           clearInputLine();
@@ -159,14 +203,13 @@ export function JarvisTerminal({ userName }: { userName: string }) {
           return;
         }
         if (data === "\x1b[B") {
-          if (history.length === 0) return;
+          if (pendingConfirm || history.length === 0) return;
           histIdx = Math.min(history.length, histIdx + 1);
           buffer = histIdx === history.length ? "" : (history[histIdx] ?? "");
           clearInputLine();
           term.write(buffer);
           return;
         }
-        // Ignore left/right arrow & other escape seqs
         if (data.startsWith("\x1b")) return;
 
         for (const char of data) {
@@ -174,12 +217,27 @@ export function JarvisTerminal({ userName }: { userName: string }) {
 
           if (char === "\r") {
             term.write("\r\n");
-            const cmd = buffer.trim();
+            const answer = buffer.trim();
             buffer = "";
-            if (cmd) {
-              history.push(cmd);
+
+            if (pendingConfirm) {
+              const cmdToConfirm = pendingConfirm;
+              pendingConfirm = null;
+              const lower = answer.toLowerCase();
+              const yes = lower === "y" || lower === "yes" || lower === "ano";
+              if (yes) {
+                await execCommand(cmdToConfirm, true);
+              } else {
+                term.writeln(`${C.dim}Zrušeno.${C.reset}`);
+              }
+              writePrompt();
+              continue;
+            }
+
+            if (answer) {
+              history.push(answer);
               histIdx = history.length;
-              await execCommand(cmd);
+              await execCommand(answer);
             }
             writePrompt();
             continue;
@@ -196,6 +254,10 @@ export function JarvisTerminal({ userName }: { userName: string }) {
           if (code === 0x03) {
             term.write("^C\r\n");
             buffer = "";
+            if (pendingConfirm) {
+              pendingConfirm = null;
+              term.writeln(`${C.dim}Zrušeno.${C.reset}`);
+            }
             writePrompt();
             continue;
           }
@@ -203,7 +265,11 @@ export function JarvisTerminal({ userName }: { userName: string }) {
           if (code === 0x0c) {
             term.clear();
             writeBanner();
-            writePrompt();
+            if (pendingConfirm) {
+              term.write(confirmPrompt);
+            } else {
+              writePrompt();
+            }
             term.write(buffer);
             continue;
           }
@@ -238,10 +304,50 @@ export function JarvisTerminal({ userName }: { userName: string }) {
   }, [userName, router]);
 
   return (
-    <div
-      ref={hostRef}
-      className="h-[calc(100vh-10rem)] min-h-[420px] w-full overflow-hidden rounded-xl border border-rose-900/30 bg-[#0f0a12] p-3 shadow-sm"
-      aria-label="JARVIS terminál"
-    />
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-xs text-muted-foreground">
+          {safeMode ? (
+            <span>
+              🛡 <strong>Safe mode zapnutý</strong> — nebezpečné příkazy
+              (cancel, refund, delete…) jsou blokovány.
+            </span>
+          ) : (
+            <span className="text-destructive">
+              ⚠ <strong>Safe mode vypnutý</strong> — nebezpečné příkazy projdou
+              po potvrzení.
+            </span>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={toggleSafeMode}
+          aria-pressed={safeMode}
+          aria-label={safeMode ? "Vypnout safe mode" : "Zapnout safe mode"}
+          className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors ${
+            safeMode
+              ? "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
+              : "border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/15"
+          }`}
+        >
+          {safeMode ? (
+            <>
+              <Shield className="h-3.5 w-3.5" />
+              Safe mode: ON
+            </>
+          ) : (
+            <>
+              <ShieldOff className="h-3.5 w-3.5" />
+              Safe mode: OFF
+            </>
+          )}
+        </button>
+      </div>
+      <div
+        ref={hostRef}
+        className="h-[calc(100vh-12rem)] min-h-[420px] w-full overflow-hidden rounded-xl border bg-[#0f0a12] p-3 shadow-sm"
+        aria-label="JARVIS terminál"
+      />
+    </div>
   );
 }
