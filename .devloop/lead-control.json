@@ -1,5 +1,5 @@
 {
-  "last_bolt_commit_cycle": 4370,
+  "last_bolt_commit_cycle": 4371,
   "cycle": 4369,
   "directive": "C4369 Lead: #357 safe-mode toggle shipped (C4369 commit 8ea7bc7) and marked done. Bolt now force_next=#365 (replace fake JarvisTerminal with real Claude bridge iframe — owner flagged current impl as 'analytical chat, not real terminal'). After #365 ships, pivot to #364 Den matek P5.1b HTTP wrappers (deadline May 10, ~3 weeks runway). Trace still on #358 E2E /admin/jarvis (gate: wait for #365 commit, write spec skeleton now). Guard on #359 bridge security audit (deliverable: docs/security/jarvis-bridge-audit.md). Sage on PDP polish lane (price history sparkline + sticky mobile ATC + condition badge placement). Blockers 2218+2216 acknowledged — #354 already marked done, #353 runbook gap non-blocking (task itself closed). External blockers unchanged: #329 (.cz domain), #1 (R2 token), #14 (GMC), #216 (GA4).",
   "lanes": {
