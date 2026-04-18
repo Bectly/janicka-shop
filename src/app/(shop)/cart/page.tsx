@@ -300,17 +300,17 @@ function CartItemRow({
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">Unikátní kus</span>
             {countdown && !isExpired && (
-              <span className={`flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium transition-colors ${
+              <span className={`flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-xs font-medium transition-colors ${
                 isUrgent
-                  ? "animate-pulse bg-destructive/10 text-destructive"
-                  : "bg-champagne-light text-charcoal-light"
+                  ? "animate-pulse border-destructive/30 bg-destructive/10 text-destructive"
+                  : "border-champagne-dark/30 bg-champagne-light text-charcoal-light"
               }`}>
                 <Clock className="size-3" />
                 {countdown}
               </span>
             )}
             {isExpired && (
-              <span className="flex items-center gap-1 rounded-md bg-destructive/10 px-1.5 py-0.5 text-xs font-medium text-destructive">
+              <span className="flex items-center gap-1 rounded-md border border-destructive/30 bg-destructive/10 px-1.5 py-0.5 text-xs font-medium text-destructive">
                 <AlertCircle className="size-3" />
                 Rezervace vypršela
               </span>

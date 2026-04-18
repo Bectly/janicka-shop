@@ -251,7 +251,7 @@ export default async function AdminDashboardPage({
           return (
             <div
               key={stat.label}
-              className="rounded-xl border bg-card p-5 shadow-sm"
+              className="rounded-xl border bg-card p-5 shadow-sm transition-all duration-150 hover:shadow-md hover:border-primary/30"
             >
               <div className="flex items-center gap-3">
                 <div className={`rounded-lg p-2 ${stat.color}`}>
@@ -350,7 +350,7 @@ export default async function AdminDashboardPage({
                 <Link
                   key={label}
                   href={`/admin/products?missing=${missing}`}
-                  className="group rounded-xl border bg-card p-4 shadow-sm transition-colors hover:border-primary/50 hover:bg-muted/30"
+                  className="group rounded-xl border bg-card p-4 shadow-sm transition-all duration-150 hover:border-primary/50 hover:bg-muted/30 hover:shadow-md"
                 >
                   <div className="flex items-center justify-between">
                     <div className={`rounded-lg p-2 ${iconBg}`}>

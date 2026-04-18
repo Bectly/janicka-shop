@@ -143,7 +143,7 @@ function CheckoutStep({
         type="button"
         onClick={isCompleted && !isActive ? onEdit : undefined}
         disabled={!isCompleted || isActive}
-        className={`flex w-full items-center gap-3 p-4 sm:p-6 text-left transition-colors duration-150 ${
+        className={`flex w-full items-center gap-3 p-4 sm:p-6 text-left transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset ${
           isCompleted && !isActive
             ? "cursor-pointer hover:bg-muted/50"
             : "cursor-default"
@@ -151,15 +151,15 @@ function CheckoutStep({
       >
         {/* Step indicator */}
         <div
-          className={`flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-bold transition-colors duration-150 ${
+          className={`flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-bold transition-all duration-200 ${
             isCompleted
-              ? "bg-sage-light text-sage-dark"
+              ? "bg-sage-light text-sage-dark ring-1 ring-sage/30"
               : isActive
-                ? "bg-primary text-primary-foreground"
+                ? "bg-primary text-primary-foreground shadow-sm"
                 : "bg-muted text-muted-foreground"
           }`}
         >
-          {isCompleted ? <Check className="size-4" /> : step + 1}
+          {isCompleted ? <Check className="size-4 animate-in zoom-in-50 duration-200" /> : step + 1}
         </div>
 
         {/* Title + summary */}

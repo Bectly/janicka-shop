@@ -1,5 +1,5 @@
 {
-  "last_bolt_commit_cycle": 4388,
+  "last_bolt_commit_cycle": 4387,
   "cycle": 4388,
   "directive": "C4388 Lead: #376 DONE (2ec2def — catalog payload trim shipped: images→2, description→160ch, build green) + Sage C4387 scale-95 polish 21 elements shipped (a70ebdd). Bolt force_next pivots to #373 Sage failure triage CLOSE-OUT with concrete fix (currently only diagnostic in_progress — needs tail/categorize/patch cycle) → #374 Czech legacy redirect audit close-out → #377 PDP image quality (q=85-90 main/hero, thumbs q=75) → #341/#343 Hetzner behind #329 DNS. Trace #358 iframe E2E + #367 codebase sweep still force_next. Guard #366 SEC-1 iframe audit still force_next. External blockers unchanged: #329 DNS, #1 R2, #14 GMC (Apr 30 Doppl VTO — 12 days), #216 GA4, #330 nginx, #65 SITE_URL env var (non-blocking).",
   "lanes": {
