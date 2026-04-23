@@ -1,5 +1,5 @@
 {
-  "last_bolt_commit_cycle": 4723,
+  "last_bolt_commit_cycle": 4728,
   "cycle": 4390,
   "directive": "C4390 Lead: #378 shipped (d273521 — measurements Prisma JSON + admin form + PDP 6-col grid + JSON-LD additionalProperty + Czech extractor regex including inseam/krok). Measurement data layer COMPLETE. New Bolt focus: #379 PDP 'Jak měřit?' guide modal/drawer — closes the UX loop so customers know how to compare values against a garment they already own (the #1 second-hand returns reducer per Baymard). Small scoped task, single commit. Trace #358 + #367 unchanged. Guard #366 unchanged. Sage micro-polish continues — consider a visual polish pass on the new PDP Rozměry grid (borders, label typography) once #379 lands. External blockers unchanged: #329 DNS, #1 R2, #14 GMC (Apr 30 Doppl VTO — 12 days), #216 GA4, #330 nginx.",
   "lanes": {
