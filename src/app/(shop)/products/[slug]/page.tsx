@@ -671,13 +671,14 @@ export default async function ProductDetailPage({ params }: Props) {
               measurementCount === 2 ? "grid-cols-2" :
               measurementCount === 3 ? "grid-cols-3" :
               measurementCount === 4 ? "grid-cols-2 sm:grid-cols-4" :
-              measurementCount === 5 ? "grid-cols-2 sm:grid-cols-5" :
-              "grid-cols-2 sm:grid-cols-6";
+              measurementCount === 5 ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5" :
+              "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6";
             return (
             <div className="mt-4 overflow-hidden rounded-xl border border-border">
               <div className="flex items-center gap-2 border-b border-border bg-muted/40 px-4 py-2.5">
                 <Ruler className="size-4 shrink-0 text-foreground/60" />
                 <span className="text-xs font-semibold tracking-wider text-foreground">Rozměry kusu</span>
+                <span className="text-xs text-muted-foreground/40" aria-hidden="true">·</span>
                 <MeasurementGuide />
                 <span className="ml-auto text-xs text-muted-foreground">v cm · ploché položení</span>
               </div>

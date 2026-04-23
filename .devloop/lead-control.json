@@ -61,5 +61,6 @@
     "Task #375 was rejected (C4386 f8cf472) — do not reopen without fresh production repro."
   ],
   "last_updated": "2026-04-18T09:30",
-  "pause": {}
+  "pause": {},
+  "paused_at_bolt_cycle": 4729
 }

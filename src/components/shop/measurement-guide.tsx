@@ -282,7 +282,7 @@ function GuideBody() {
 }
 
 const triggerClass =
-  "inline-flex min-h-9 items-center gap-1 rounded-sm text-[11px] font-medium text-primary transition-colors duration-150 hover:text-primary/80 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-1";
+  "inline-flex items-center gap-1 rounded-sm text-[11px] font-medium text-primary transition-colors duration-150 hover:text-primary/80 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-1";
 
 export function MeasurementGuide() {
   const [isDesktop, setIsDesktop] = useState<boolean | null>(null);
