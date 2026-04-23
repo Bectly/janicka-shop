@@ -33,7 +33,7 @@ export function NotifyMeForm({ categoryId, sizes, brand, categoryName }: NotifyM
   }
 
   return (
-    <div className="mt-6 rounded-xl border bg-card p-4">
+    <div className="mt-6 rounded-xl border border-primary/15 bg-primary/[0.03] p-4">
       <div className="flex items-center gap-2">
         <Bell className="size-4 text-primary" />
         <h3 className="text-sm font-semibold text-foreground">
@@ -54,7 +54,7 @@ export function NotifyMeForm({ categoryId, sizes, brand, categoryName }: NotifyM
           placeholder="váš@email.cz"
           required
           autoComplete="email"
-          className="h-9 text-sm"
+          className="h-9 min-w-0 flex-1 text-sm"
         />
         <Button type="submit" size="sm" disabled={isPending} className="shrink-0">
           {isPending ? "Odesílám…" : "Hlídat"}

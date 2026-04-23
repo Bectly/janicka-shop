@@ -27,7 +27,7 @@ function MeasurementDiagram({ type }: { type: Diagram }) {
     return (
       <svg
         viewBox="0 0 120 120"
-        className="h-24 w-24 shrink-0 text-foreground/80"
+        className="h-16 w-16 shrink-0 text-foreground/80 sm:h-24 sm:w-24"
         aria-hidden="true"
       >
         {/* T-shirt silhouette */}
@@ -68,7 +68,7 @@ function MeasurementDiagram({ type }: { type: Diagram }) {
     return (
       <svg
         viewBox="0 0 120 120"
-        className="h-24 w-24 shrink-0 text-foreground/80"
+        className="h-16 w-16 shrink-0 text-foreground/80 sm:h-24 sm:w-24"
         aria-hidden="true"
       >
         {/* T-shirt silhouette */}
@@ -108,7 +108,7 @@ function MeasurementDiagram({ type }: { type: Diagram }) {
     return (
       <svg
         viewBox="0 0 120 120"
-        className="h-24 w-24 shrink-0 text-foreground/80"
+        className="h-16 w-16 shrink-0 text-foreground/80 sm:h-24 sm:w-24"
         aria-hidden="true"
       >
         {/* Pants silhouette */}
@@ -148,7 +148,7 @@ function MeasurementDiagram({ type }: { type: Diagram }) {
   return (
     <svg
       viewBox="0 0 120 120"
-      className="h-24 w-24 shrink-0 text-foreground/80"
+      className="h-16 w-16 shrink-0 text-foreground/80 sm:h-24 sm:w-24"
       aria-hidden="true"
     >
       {/* Long-sleeve garment */}
