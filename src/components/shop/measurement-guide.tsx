@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Ruler } from "lucide-react";
+import { Lightbulb, Ruler } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -245,13 +245,16 @@ function GuideBody() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">
-        <p className="font-medium text-foreground">Tip od Janičky</p>
-        <p className="mt-1">
-          Nejspolehlivější způsob je porovnat rozměry s kusem, který ti už sedí.
-          Polož ho na plocho a změř stejným způsobem — rozdíl v cm ti hned
-          napoví, jestli ti kus sedne.
-        </p>
+      <div className="flex items-start gap-2.5 rounded-lg border border-primary/10 bg-primary/[0.035] p-3 text-xs text-muted-foreground">
+        <Lightbulb className="mt-0.5 size-3.5 shrink-0 text-primary/60" aria-hidden="true" />
+        <div>
+          <p className="font-medium text-foreground">Tip od Janičky</p>
+          <p className="mt-1">
+            Nejspolehlivější způsob je porovnat rozměry s kusem, který ti už sedí.
+            Polož ho na plocho a změř stejným způsobem — rozdíl v cm ti hned
+            napoví, jestli ti kus sedne.
+          </p>
+        </div>
       </div>
 
       <ul className="space-y-4">
