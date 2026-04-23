@@ -698,10 +698,11 @@ const measurementsPatchSchema = z.object({
   length: measurementFieldSchema,
   sleeve: measurementFieldSchema,
   inseam: measurementFieldSchema,
+  shoulders: measurementFieldSchema,
   fitNote: z.string().max(120).nullable().optional(),
 });
 
-const MEASUREMENT_KEYS = ["chest", "waist", "hips", "length", "sleeve", "inseam"] as const;
+const MEASUREMENT_KEYS = ["chest", "waist", "hips", "length", "sleeve", "inseam", "shoulders"] as const;
 
 export async function updateProductMeasurementsQuick(
   id: string,

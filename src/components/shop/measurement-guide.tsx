@@ -19,7 +19,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 
-type Diagram = "top" | "bottom" | "sleeve";
+type Diagram = "top" | "shoulders" | "bottom" | "sleeve";
 
 function MeasurementDiagram({ type }: { type: Diagram }) {
   const stroke = "currentColor";
@@ -57,6 +57,46 @@ function MeasurementDiagram({ type }: { type: Diagram }) {
         />
         <polyline
           points="86,58 90,62 86,66"
+          fill="none"
+          stroke="var(--color-primary, #d4788f)"
+          strokeWidth="2"
+        />
+      </svg>
+    );
+  }
+  if (type === "shoulders") {
+    return (
+      <svg
+        viewBox="0 0 120 120"
+        className="h-24 w-24 shrink-0 text-foreground/80"
+        aria-hidden="true"
+      >
+        {/* T-shirt silhouette */}
+        <path
+          d="M30 25 L45 15 L75 15 L90 25 L108 40 L98 55 L90 48 L90 105 L30 105 L30 48 L22 55 L12 40 Z"
+          fill="none"
+          stroke={stroke}
+          strokeWidth="2"
+          strokeLinejoin="round"
+        />
+        {/* Shoulder-to-shoulder measurement line */}
+        <line
+          x1="30"
+          y1="31"
+          x2="90"
+          y2="31"
+          stroke="var(--color-primary, #d4788f)"
+          strokeWidth="2"
+          strokeDasharray="4 3"
+        />
+        <polyline
+          points="34,27 30,31 34,35"
+          fill="none"
+          stroke="var(--color-primary, #d4788f)"
+          strokeWidth="2"
+        />
+        <polyline
+          points="86,27 90,31 86,35"
           fill="none"
           stroke="var(--color-primary, #d4788f)"
           strokeWidth="2"
@@ -164,7 +204,7 @@ function GuideBody() {
       title: "Šířka ramen",
       desc:
         "U topů a bund: od jednoho ramenního švu ke druhému — tam, kde se rukáv napojuje na tělo. Měř přímou čarou přes zadní díl, nikoli přes krk.",
-      diagram: "top",
+      diagram: "shoulders",
     },
     {
       key: "waist",
