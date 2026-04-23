@@ -46,12 +46,13 @@ export function MobileStickyAtc({
 
   return (
     <div
-      className={`fixed inset-x-0 z-50 border-t border-border/60 bg-background/95 px-4 pt-3 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] backdrop-blur-sm lg:hidden bottom-above-nav transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pb-[calc(0.75rem+env(safe-area-inset-bottom))] ${visible ? "translate-y-0" : "translate-y-full"}`}
+      id="mobile-sticky-atc"
+      className={`fixed inset-x-0 z-50 border-t border-border/60 bg-background/95 px-4 pt-3 pb-3 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] backdrop-blur-sm lg:hidden bottom-above-nav transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${visible ? "translate-y-0" : "translate-y-full"}`}
     >
       <div className="flex items-center gap-3">
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium">{productName}</p>
-          <p className="text-sm font-bold">{formatPrice(price)}</p>
+          <p className="text-base font-bold leading-none">{formatPrice(price)}</p>
         </div>
         <Button
           size="lg"

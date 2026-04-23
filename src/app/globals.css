@@ -589,6 +589,12 @@
     bottom: 1.5rem;
   }
 }
+/* Lift back-to-top above sticky ATC bar when it's visible (PDP mobile) */
+@media (max-width: 1023px) {
+  body:has(#mobile-sticky-atc.translate-y-0) .back-to-top-pos {
+    bottom: calc(8rem + env(safe-area-inset-bottom, 0px));
+  }
+}
 
 /* DevChat floating bubble: same visual position as bottom-20 on standard phones,
    but correctly clears the bottom nav on notched iPhones (accounts for safe-area-inset-bottom). */
