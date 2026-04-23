@@ -64,6 +64,7 @@ prisma/schema.prisma # DB schema
 - Core Web Vitals must pass
 
 ## Where to find details
-**`docs/specs.md`** — integrační spec (Comgate, Packeta, QR SPAYD, Heureka, UploadThing), competitive research, payment preferences, checkout UX, abandoned cart emails, Czech legal, SEO strategy, feature inspiration (vryp), devChat, Pick Pages, security, onboarding page.
+- **`docs/STRUCTURE.md`** — auto-generated code map (file paths + exports + 1-line descriptions). Grep this instead of reading full files. Regenerated on every `git commit` via post-commit hook.
+- **`docs/specs.md`** — integrační spec (Comgate, Packeta, QR SPAYD, Heureka), competitive research, payment preferences, checkout UX, abandoned cart, Czech legal, SEO, feature inspiration, devChat, Pick Pages, security, onboarding.
 
-Grep `docs/specs.md` podle tématu — nečti celý, najdi relevantní sekci.
+Grep by topic — don't read full files.

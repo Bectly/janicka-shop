@@ -667,7 +667,8 @@ export default async function ProductDetailPage({ params }: Props) {
           {hasMeasurements(measurements) && (() => {
             const measurementCount = [measurements.chest, measurements.waist, measurements.hips, measurements.length, measurements.sleeve, measurements.inseam, measurements.shoulders].filter(Boolean).length;
             const gridCols =
-              measurementCount <= 2 ? "grid-cols-2" :
+              measurementCount === 1 ? "grid-cols-1" :
+              measurementCount === 2 ? "grid-cols-2" :
               measurementCount === 3 ? "grid-cols-3" :
               measurementCount === 4 ? "grid-cols-2 sm:grid-cols-4" :
               measurementCount === 5 ? "grid-cols-2 sm:grid-cols-5" :
@@ -820,8 +821,8 @@ export default async function ProductDetailPage({ params }: Props) {
       {/* Recently viewed */}
       <RecentlyViewedSection excludeProductId={product.id} />
 
-      {/* Bottom spacer — prevents sticky ATC bar from obscuring related/recently viewed on mobile */}
-      {product.stock > 0 && <div className="h-20 lg:hidden" />}
+      {/* Bottom spacer — prevents sticky ATC bar (visible even on stock=0) from obscuring last content on mobile */}
+      <div className="h-20 lg:hidden" />
     </div>
   );
 }
