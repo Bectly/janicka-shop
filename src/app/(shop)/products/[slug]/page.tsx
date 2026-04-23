@@ -23,6 +23,7 @@ import { ProductDescription } from "@/components/shop/product-description";
 import { parseDefectImages } from "@/lib/defects";
 import { FreeShippingBar } from "@/components/shop/free-shipping-bar";
 import { NotifyMeForm } from "@/components/shop/notify-me-form";
+import { MeasurementGuide } from "@/components/shop/measurement-guide";
 import { BrowseAbandonmentTracker } from "@/components/shop/browse-abandonment-tracker";
 import { Truck, Leaf, Ruler, Sparkles, Heart } from "lucide-react";
 import { parseProductImages, parseMeasurements, hasMeasurements } from "@/lib/images";
@@ -664,7 +665,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
           {/* Measurements table */}
           {hasMeasurements(measurements) && (() => {
-            const measurementCount = [measurements.chest, measurements.waist, measurements.hips, measurements.length, measurements.sleeve, measurements.inseam].filter(Boolean).length;
+            const measurementCount = [measurements.chest, measurements.waist, measurements.hips, measurements.length, measurements.sleeve, measurements.inseam, measurements.shoulders].filter(Boolean).length;
             const gridCols =
               measurementCount <= 2 ? "grid-cols-2" :
               measurementCount === 3 ? "grid-cols-3" :
@@ -674,56 +675,65 @@ export default async function ProductDetailPage({ params }: Props) {
             return (
             <div className="mt-4 overflow-hidden rounded-xl border border-border">
               <div className="flex items-center gap-2 border-b border-border bg-muted/40 px-4 py-2.5">
-                <Ruler className="size-3.5 shrink-0 text-foreground/60" />
-                <span className="text-xs font-semibold tracking-wide text-foreground">Rozměry kusu</span>
-                <span className="ml-auto text-[10px] text-muted-foreground">v cm · ploché položení</span>
+                <Ruler className="size-4 shrink-0 text-foreground/60" />
+                <span className="text-xs font-semibold tracking-wider text-foreground">Rozměry kusu</span>
+                <MeasurementGuide />
+                <span className="ml-auto text-xs text-muted-foreground">v cm · ploché položení</span>
               </div>
               <div className={`grid gap-px bg-border ${gridCols}`}>
                 {measurements.chest && (
-                  <div className="flex flex-col gap-1 bg-background px-4 py-3 transition-colors duration-150 hover:bg-muted/50">
-                    <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Prsa</span>
+                  <div className="flex cursor-default flex-col gap-1 bg-background px-4 py-3 transition-colors duration-150 hover:bg-muted/50">
+                    <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Prsa</span>
                     <span className="text-lg font-bold tabular-nums leading-none text-foreground">
-                      {measurements.chest}<span className="ml-1 text-xs font-normal text-muted-foreground">cm</span>
+                      {measurements.chest}<span className="ml-1 text-[11px] font-normal text-muted-foreground">cm</span>
                     </span>
                   </div>
                 )}
                 {measurements.waist && (
-                  <div className="flex flex-col gap-1 bg-background px-4 py-3 transition-colors duration-150 hover:bg-muted/50">
-                    <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Pas</span>
+                  <div className="flex cursor-default flex-col gap-1 bg-background px-4 py-3 transition-colors duration-150 hover:bg-muted/50">
+                    <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Pas</span>
                     <span className="text-lg font-bold tabular-nums leading-none text-foreground">
-                      {measurements.waist}<span className="ml-1 text-xs font-normal text-muted-foreground">cm</span>
+                      {measurements.waist}<span className="ml-1 text-[11px] font-normal text-muted-foreground">cm</span>
                     </span>
                   </div>
                 )}
                 {measurements.hips && (
-                  <div className="flex flex-col gap-1 bg-background px-4 py-3 transition-colors duration-150 hover:bg-muted/50">
-                    <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Boky</span>
+                  <div className="flex cursor-default flex-col gap-1 bg-background px-4 py-3 transition-colors duration-150 hover:bg-muted/50">
+                    <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Boky</span>
                     <span className="text-lg font-bold tabular-nums leading-none text-foreground">
-                      {measurements.hips}<span className="ml-1 text-xs font-normal text-muted-foreground">cm</span>
+                      {measurements.hips}<span className="ml-1 text-[11px] font-normal text-muted-foreground">cm</span>
                     </span>
                   </div>
                 )}
                 {measurements.length && (
-                  <div className="flex flex-col gap-1 bg-background px-4 py-3 transition-colors duration-150 hover:bg-muted/50">
-                    <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Délka</span>
+                  <div className="flex cursor-default flex-col gap-1 bg-background px-4 py-3 transition-colors duration-150 hover:bg-muted/50">
+                    <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Délka</span>
                     <span className="text-lg font-bold tabular-nums leading-none text-foreground">
-                      {measurements.length}<span className="ml-1 text-xs font-normal text-muted-foreground">cm</span>
+                      {measurements.length}<span className="ml-1 text-[11px] font-normal text-muted-foreground">cm</span>
                     </span>
                   </div>
                 )}
                 {measurements.sleeve && (
-                  <div className="flex flex-col gap-1 bg-background px-4 py-3 transition-colors duration-150 hover:bg-muted/50">
-                    <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Rukáv</span>
+                  <div className="flex cursor-default flex-col gap-1 bg-background px-4 py-3 transition-colors duration-150 hover:bg-muted/50">
+                    <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Rukáv</span>
                     <span className="text-lg font-bold tabular-nums leading-none text-foreground">
-                      {measurements.sleeve}<span className="ml-1 text-xs font-normal text-muted-foreground">cm</span>
+                      {measurements.sleeve}<span className="ml-1 text-[11px] font-normal text-muted-foreground">cm</span>
                     </span>
                   </div>
                 )}
                 {measurements.inseam && (
-                  <div className="flex flex-col gap-1 bg-background px-4 py-3 transition-colors duration-150 hover:bg-muted/50">
-                    <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Vnitř. nohavice</span>
+                  <div className="flex cursor-default flex-col gap-1 bg-background px-4 py-3 transition-colors duration-150 hover:bg-muted/50">
+                    <span className="text-[11px] font-medium uppercase leading-tight tracking-wide text-muted-foreground">Vnitř. nohavice</span>
                     <span className="text-lg font-bold tabular-nums leading-none text-foreground">
-                      {measurements.inseam}<span className="ml-1 text-xs font-normal text-muted-foreground">cm</span>
+                      {measurements.inseam}<span className="ml-1 text-[11px] font-normal text-muted-foreground">cm</span>
+                    </span>
+                  </div>
+                )}
+                {measurements.shoulders && (
+                  <div className="flex cursor-default flex-col gap-1 bg-background px-4 py-3 transition-colors duration-150 hover:bg-muted/50">
+                    <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Ramena</span>
+                    <span className="text-lg font-bold tabular-nums leading-none text-foreground">
+                      {measurements.shoulders}<span className="ml-1 text-[11px] font-normal text-muted-foreground">cm</span>
                     </span>
                   </div>
                 )}
