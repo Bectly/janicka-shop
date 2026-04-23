@@ -160,6 +160,13 @@ function GuideBody() {
       diagram: "top",
     },
     {
+      key: "shoulders",
+      title: "Šířka ramen",
+      desc:
+        "U topů a bund: od jednoho ramenního švu ke druhému — tam, kde se rukáv napojuje na tělo. Měř přímou čarou přes zadní díl, nikoli přes krk.",
+      diagram: "top",
+    },
+    {
       key: "waist",
       title: "Šířka v pase (kalhoty, sukně)",
       desc:
