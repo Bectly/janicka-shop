@@ -658,9 +658,12 @@ export default async function ProductDetailPage({ params }: Props) {
 
           {/* Fit note */}
           {product.fitNote && (
-            <p className="mt-2 text-sm italic text-muted-foreground">
-              {product.fitNote}
-            </p>
+            <div className="mt-3 flex items-start gap-2.5 rounded-lg border border-primary/10 bg-primary/[0.035] px-3.5 py-2.5">
+              <Sparkles className="mt-0.5 size-3.5 shrink-0 text-primary/60" />
+              <p className="text-sm italic leading-relaxed text-foreground/75">
+                {product.fitNote}
+              </p>
+            </div>
           )}
 
           {/* Measurements table */}
@@ -680,7 +683,7 @@ export default async function ProductDetailPage({ params }: Props) {
                 <span className="text-xs font-semibold tracking-wider text-foreground">Rozměry kusu</span>
                 <span className="text-xs text-muted-foreground/40" aria-hidden="true">·</span>
                 <MeasurementGuide />
-                <span className="ml-auto text-xs text-muted-foreground">v cm · ploché položení</span>
+                <span className="ml-auto hidden text-xs text-muted-foreground sm:inline">v cm · ploché položení</span>
               </div>
               <div className={`grid gap-px bg-border ${gridCols}`}>
                 {measurements.chest && (
