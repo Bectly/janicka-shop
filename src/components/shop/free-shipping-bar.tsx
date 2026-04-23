@@ -36,7 +36,7 @@ export function FreeShippingBar({
   return (
     <div className="mt-3">
       {isFree ? (
-        <div className="flex items-center gap-2 rounded-lg bg-sage-light/60 px-3 py-2 text-sm font-medium text-sage-dark">
+        <div className="flex items-center gap-2 rounded-lg border border-sage-dark/15 bg-sage-light/60 px-3 py-2 text-sm font-medium text-sage-dark">
           <CheckCircle2 className="size-4 shrink-0" />
           <span>Doprava zdarma!</span>
         </div>

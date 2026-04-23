@@ -625,7 +625,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
           {/* Sustainability savings callout */}
           {hasDiscount && (
-            <div className="mt-3 flex items-center gap-2.5 rounded-lg bg-sage-light px-3.5 py-2.5">
+            <div className="mt-3 flex items-center gap-2.5 rounded-lg border border-sage-dark/15 bg-sage-light px-3.5 py-2.5">
               <Leaf className="size-4 shrink-0 text-sage-dark" />
               <div>
                 <p className="text-sm font-medium text-charcoal">
