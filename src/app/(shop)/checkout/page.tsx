@@ -202,7 +202,8 @@ function CheckoutStep({
           Fix: pin the grid's single column to `minmax(0, 1fr)` so it fills
           parent but never exceeds it. */}
       <div
-        className={`grid grid-cols-[minmax(0,1fr)] w-full min-w-0 max-w-full transition-all duration-300 ease-in-out ${
+        style={{ gridTemplateColumns: "minmax(0, 1fr)" }}
+        className={`grid w-full min-w-0 max-w-full transition-all duration-300 ease-in-out ${
           isActive
             ? "grid-rows-[1fr] opacity-100"
             : "grid-rows-[0fr] opacity-0"

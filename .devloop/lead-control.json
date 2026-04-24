@@ -1,16 +1,16 @@
 {
   "last_bolt_commit_cycle": 4815,
-  "cycle": 4814,
-  "directive": "C4814 Lead: CLOSED #453 (Bolt 15f55df — /api/suggest now guarded by checkRateLimit 30/min/IP via src/lib/rate-limit.ts, x-forwarded-for first-hop with 127.0.0.1 fallback, 429 JSON body + Retry-After:60 header; tsc clean, build green — Trace C4811 P0-1 resolved). Bolt rewired to #459 [P0] refs-in-render fix (Trace C4811 P0-2: product-gallery.tsx:578 lbDismissRef read inside inline style + hero-section.tsx:50 petalsRef read during JSX — React 19 stale-render hazards, 2-file atomic). Trace continues #367 read-only sweep (atomic chunks). Sage idle (standing micro-polish queue). Guard #368 P0 unchanged. DevChat 0 new, no DUE monitors (comgate/cz-competitors/vinted-cz-media all 0.6h fresh from C4808). No unacked bectly feedback. Second-hand scope intact.",
+  "cycle": 4815,
+  "directive": "C4815 Lead: CLOSED #459 (Bolt f4dc52e — hero-section.tsx petalsRef→useState lazy-initializer, product-gallery.tsx lbDismissRef mirrored to isLbDismissing state for inline-style reads; tsc clean, next build green, lint 80→79, P0-2 resolved atomically, no visual regression on PDP lightbox swipe-dismiss nor hero petals). Also noted out-of-loop commit 3bcd739 from bectly (checkout grid minmax pin) — untracked, ignored. Bolt rewired → #460 [P0] setState-in-effect product-quick-edit.tsx (3 sites, Trace C4811 P0-3 worst-offender subset). Other 4 P0-3 sites (mobile-nav/cart-button/cookie-consent/change-email) explicitly out of scope per audit line 170 (idiomatic, eslint-disable acceptable). Trace continues #367 read-only sweep. Sage idle with hands-off on product-quick-edit. Guard #368 P0 unchanged. DevChat 0 new, no DUE monitors (comgate/cz-competitors/vinted-cz-media all ~0.8h fresh from C4808). No unacked bectly feedback. Second-hand scope intact.",
   "lanes": {
     "BOLT": {
       "status": "active",
-      "force_next_task": 459,
+      "force_next_task": 460,
       "next_priority": [
-        459
+        460
       ],
-      "notes": "#453 CLOSED (15f55df — /api/suggest rate-limit 30/min/IP, checkRateLimit(\"suggest:\" + ip, 30, 60_000), x-forwarded-for first hop with 127.0.0.1 fallback, 429 JSON + Retry-After:60 header, tsc clean, build green). TOP PRIORITY: #459 [P0] refs-in-render fix. Trace C4811 P0-2 finding (docs/audits/codebase-sweep-2026-04-18.md): two sites read refs during JSX render — React 19 flags as stale-render hazards. (1) src/components/shop/product-gallery.tsx:578 — lbDismissRef.current.dismissing inside inline style transition (wrong transition on wrong frame during swipe). (2) src/components/shop/hero-section.tsx:50 — petalsRef.current inside petals.map during JSX construction. Fix: promote ref-read value to state via useSyncExternalStore OR useState+sync in handler OR useDeferredValue — pick smallest change per site independently. Acceptance: tsc clean, next build green, lint P0-2 warnings gone (other 80 unchanged), no visual regression on PDP lightbox swipe-dismiss nor hero petals, atomic commit. DO NOT expand to P0-3 setState-in-effect (separate follow-up). After #459: no queued Bolt items — go idle and await next Lead cycle. Do NOT touch #367 Trace lane. Do NOT start Hetzner.",
-      "source_finding": "docs/audits/codebase-sweep-2026-04-18.md P0-2 (Trace C4811)"
+      "notes": "#459 CLOSED (f4dc52e — petals lazy init + isLbDismissing state mirror, P0-2 atomic fix). TOP PRIORITY: #460 [P0] setState-in-effect product-quick-edit.tsx (Trace C4811 P0-3 finding, docs/audits/codebase-sweep-2026-04-18.md:59-71). Three sites in src/components/admin/product-quick-edit.tsx: (1) line 33 useEffect(() => setPrice(initial), [initial]) — props-to-state mirror; (2) line 34-42 useEffect on [editing, price] setDraft + setTimeout focus — side-effect churn; (3) line 142 useEffect(() => setState({active,featured}), [active,featured]) — props-to-state mirror. Fix: pick smallest change per site — (1)+(3) use <Component key={id+price}> remount + useState initializer OR drop mirror if derivable; (2) move setDraft + focus schedule into setEditing handler directly, eliminating the effect. Acceptance: tsc clean, build green, lint 3 quick-edit warnings (lines 33/36/142) gone, other 76 unchanged, no admin form-flash on inline edit open. Atomic single-file commit + optional parent key prop. DO NOT expand to mobile-nav/cart-button/cookie-consent/change-email (separate follow-up, idiomatic per audit line 170). DO NOT touch P1-1 page.tsx jsx-in-try-catch (44 warnings, separate task). After #460: no queued Bolt items — go idle and await next Lead cycle. Do NOT touch #367 Trace lane. Do NOT start Hetzner.",
+      "source_finding": "docs/audits/codebase-sweep-2026-04-18.md P0-3 worst-offender subset (Trace C4811)"
     },
     "TRACE": {
       "status": "active",
@@ -20,7 +20,7 @@
         358,
         351
       ],
-      "notes": "Continue #367 read-only codebase sweep (in_progress, atomic chunks <2min to dodge QA exit=143 pattern). C4811 re-verification cemented the follow-up queue: P0-1 now DONE via Bolt #453 (15f55df), P0-2 now assigned to Bolt #459, P0-3 setState-in-effect (7 sites) still open for a future Bolt task. After #367: #358 E2E ttyd admin console flow BLOCKED on Guard #368 P0 — do NOT start until #368 fix visible. Then #351 pre-migration code quality. Skip #342/#340/#347 (Hetzner-gated). Unpaused — #367 is independent read-only work."
+      "notes": "Continue #367 read-only codebase sweep (in_progress, atomic chunks <2min to dodge QA exit=143 pattern). C4811 follow-up queue burndown: P0-1 DONE (#453, 15f55df), P0-2 DONE (#459, f4dc52e), P0-3 worst-offender NOW assigned Bolt #460 (product-quick-edit 3 sites); remaining 4 P0-3 sites (mobile-nav/cart-button/cookie-consent/change-email) staying with eslint-disable per audit line 170 — no Trace follow-up needed. After #367: #358 E2E ttyd admin console flow BLOCKED on Guard #368 P0 — do NOT start until #368 fix visible. Then #351 pre-migration code quality. Skip #342/#340/#347 (Hetzner-gated). Unpaused — #367 is independent read-only work."
     },
     "SAGE": {
       "status": "paused",
@@ -30,7 +30,7 @@
         "cart_sold_item_toast",
         "checkout_accordion_polish"
       ],
-      "notes": "Idle this cycle — #420 closed C4798, no forced task. #346 remains blocked on P6.3 Hetzner traffic-cut. If worker lights up unprompted, pick smallest micro-polish from standing queue: (1) PDP měření grid readability on 320w, (2) cart 'prodáno mezitím' toast copy + timing, (3) checkout accordion step-indicator contrast. Atomic scope per polish (≤5 file deltas, no refactors). Do NOT attempt #346 full visual QA — blocked. Do NOT touch checkout/mock-payment (owned by Bolt #419 + already visually QA'd C4797 69c7015). Do NOT touch product-gallery or hero-section this cycle — owned by Bolt #459."
+      "notes": "Idle this cycle — #420 closed C4798, no forced task. #346 remains blocked on P6.3 Hetzner traffic-cut. If worker lights up unprompted, pick smallest micro-polish from standing queue: (1) PDP měření grid readability on 320w, (2) cart 'prodáno mezitím' toast copy + timing, (3) checkout accordion step-indicator contrast. Atomic scope per polish (≤5 file deltas, no refactors). Do NOT attempt #346 full visual QA — blocked. Do NOT touch checkout/mock-payment (owned by Bolt #419 + already visually QA'd C4797 69c7015). Do NOT touch product-quick-edit.tsx this cycle — owned by Bolt #460."
     },
     "GUARD": {
       "status": "paused",
@@ -50,13 +50,13 @@
     "Mock payment provider (src/lib/payments/mock.ts) MUST stay prod-guarded — NODE_ENV=production with PAYMENT_PROVIDER=mock must throw in provider factory. Do not soften this guard.",
     "Sage, Trace, Guard MUST NOT wait on Hetzner DNS/certbot (#329) or daemon boot (#334) — they have independent lanes.",
     "Bolt owns all Hetzner migration code paths (nginx/pm2/env/redis/bullmq/systemd); other agents do not touch them.",
-    "Tasks #337, #352, #353, #364, #365, #369, #370, #344, #371, #373, #374, #375, #376, #377, #378, #412, #413, #414, #415, #416, #417, #420, #421, #422, #449, #450, #451, #452, #453 are DONE — do not re-raise as blockers.",
+    "Tasks #337, #352, #353, #364, #365, #369, #370, #344, #371, #373, #374, #375, #376, #377, #378, #412, #413, #414, #415, #416, #417, #420, #421, #422, #449, #450, #451, #452, #453, #459 are DONE — do not re-raise as blockers.",
     "Task #375 was rejected (C4386 f8cf472) — do not reopen without fresh production repro.",
     "QA worker exit=143 pattern: keep Sage + Trace tasks atomic (<2min execution, single-purpose) until root cause diagnosed.",
     "#346 blocked until P6.3 traffic-cut completes — no Vercel-baseline visual QA possible pre-Hetzner cut.",
     "#342/#340/#347 all gated on Bolt P1-P4 Hetzner app deploy + bectly pre-approval + off-peak — Trace must NOT attempt ad-hoc prod failover/perf/restore drills."
   ],
-  "last_updated": "2026-04-24T11:00",
+  "last_updated": "2026-04-24T11:15",
   "pause": {},
   "paused_at_bolt_cycle": 4795
 }
