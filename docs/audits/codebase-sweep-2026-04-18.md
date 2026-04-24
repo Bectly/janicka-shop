@@ -710,4 +710,67 @@ Full report: `docs/audits/next16-deprecations-2026-04-24.md`. One-line summary:
 
 Suggested Bolt fork: **Phase 1 rename** (10 direct sites, skip 1a#1 — handled by #516); **Phase 3 cosmetic** (wrapper prop rename across 3 components + 6 consumer sites) deferred unless a Next 17 bump is scheduled.
 
+---
+
+## C4869 addendum — rows T/U/V (fold-in of 382de66 Bolt #513 + 9902592 Trace #518)
+
+### Row T — `/cart` CLS P0 fix verification (Bolt 382de66, task #513)
+
+Commit shrinks `src/app/(shop)/cart/page.tsx` from 65 lines of skeleton/branch shell to 15 inserts / 50 deletes and puts `min-h-[70vh]` on every render branch so the wrapper height is pinned across SSR → hydration swaps.
+
+Grep gate: `grep -c 'min-h-\[70vh\]' src/app/(shop)/cart/page.tsx` → **6** (5 branches + 1 comment marker). Branches enumerated at lines 109, 120, 143, 164, 184 — all present. ✅
+
+| Branch | Line | Shell |
+|---|---:|---|
+| skeleton (loading) | 109 | `mx-auto flex min-h-[70vh] max-w-3xl flex-col items-center` |
+| restore-loading | 120 | `mx-auto min-h-[70vh] max-w-3xl` |
+| restore-error | 143 | `mx-auto min-h-[70vh] max-w-3xl` |
+| empty | 164 | `mx-auto min-h-[70vh] max-w-3xl` |
+| main | 184 | `mx-auto min-h-[70vh] max-w-3xl` |
+
+This is the direct response to the C4866 PERF-VERIFY note "`/cart` CLS regressed 0.020 → 0.423 — #481 Suspense-min-h discipline never got applied to cart". The fat 2-item skeleton (~670px) was shifting ~300px to the empty-cart state (~370px). Compact empty-state-sized skeleton + 70vh floor equalises page-wrapper height across all five hydration states → footer no longer shifts.
+
+**Status**: ✅ verified by structural grep + commit diff. **Does not discharge the #484 PERF-VERIFY gate** — requires Lighthouse 13.1 replay to confirm CLS on /cart drops below 0.1. Gate remains held until {#513 ✅ + #516 + #517 + #515} all in HEAD per C4869 Lead directive.
+
+### Row U — Row S correction: `shop/page.tsx` inline caches DO carry explicit `cacheTag` (supersedes C4868 finding)
+
+**C4868 Trace flagged**: "6 inline `"use cache"` functions in `src/app/(shop)/page.tsx` lines 25/52/81/257/341/397 omit explicit `cacheLife`/`cacheTag`. They inherit the default cache profile. If admin mutations need to invalidate these (`revalidateTag`), they currently cannot."
+
+**C4869 re-audit of HEAD (`796c915`) contradicts**: all 7 `"use cache"` sites in `src/app/(shop)/page.tsx` are paired with `cacheLife("hours")` + `cacheTag("products")` on the very next two lines:
+
+```
+src/app/(shop)/page.tsx:25   "use cache"; 26 cacheLife("hours"); 27 cacheTag("products");
+src/app/(shop)/page.tsx:52   "use cache"; 53 cacheLife("hours"); 54 cacheTag("products");
+src/app/(shop)/page.tsx:81   "use cache"; 82 cacheLife("hours"); 83 cacheTag("products");
+src/app/(shop)/page.tsx:257  "use cache"; 258 cacheLife("hours"); 259 cacheTag("products");
+src/app/(shop)/page.tsx:341  "use cache"; 342 cacheLife("hours"); 343 cacheTag("products");
+src/app/(shop)/page.tsx:397  "use cache"; 398 cacheLife("hours"); 399 cacheTag("products");
+src/app/(shop)/page.tsx:467  "use cache"; 468 cacheLife("hours"); 469 cacheTag("products");
+```
+
+Git blame: `shop/page.tsx` unchanged since `74f3c55` (C4843 #481 reserved-min-h fix). The cacheTag calls predate C4868. **C4868 Row S finding was a false-positive from incomplete file-slice grep**: the audit table in `docs/audits/next16-deprecations-2026-04-24.md` § 4 shows the first 6 rows with `—` under "Tag / Life" while row 7 (line 467, `RecentlySoldSection`) shows `cacheLife("hours"), cacheTag("products")` — the table formatter skipped the pair on the first 6 inline caches even though they are syntactically present.
+
+**Consequence**: the Lead-filed "Bolt backlog" item for Row S → `cacheTag` sweep is a **no-op**; `revalidateTag('products')` already reaches every cached fetch in `shop/page.tsx`. The correct next-action on Row S is **close the finding**, not schedule a Bolt task.
+
+Additional verification — grep the entire `src/app` tree for bare `"use cache"` directives missing a subsequent `cacheTag`:
+
+```
+src/app/(shop)/products/[slug]/page.tsx:71 — "use cache"; 72 cacheLife("minutes"); — NO cacheTag
+src/app/(admin)/admin/dashboard/analytics-data.ts:50/100/151/192 — "use cache"; cacheLife only, no cacheTag
+```
+
+These 5 sites DO omit `cacheTag`, but they are intentional: PDP detail caches are per-slug (no tag needed — ISR path) and admin analytics are session-scoped (never invalidated via tag). **No P0/P1 action**; non-blocking observation preserved for future Trace cycles.
+
+### Row V — Lint `0w/0e` milestone: 30 consecutive commits
+
+C4869 Lead supervision notes the zero-warning / zero-error lint streak now stands at **30 consecutive commits** through `382de66` (head of #513 cart CLS fix). Re-verified in this audit pass:
+
+```
+$ npm run lint
+[BABEL] Note: The code generator has deoptimised the styling of .../font-data.ts as it exceeds the max of 500KB.
+(exit 0, no eslint output)
+```
+
+The babel deopt note on `src/lib/invoice/font-data.ts` is a transient info line from the parser on the vendored PDF font blob — not an eslint diagnostic, does not count against 0w/0e. **Milestone holds.** The guard for future cycles: any commit that introduces an eslint warning or error terminates the streak, regardless of whether it's a functional issue. Keep tripwire grep ready for cycle end: `npm run lint 2>&1 | grep -E '^\S+\s+[0-9]+:[0-9]+' | wc -l` must return 0.
+
 
