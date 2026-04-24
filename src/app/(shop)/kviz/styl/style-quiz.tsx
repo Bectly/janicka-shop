@@ -130,6 +130,7 @@ export function StyleQuiz() {
   );
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- SSR-safe localStorage hydration: reading during render would cause CSR/SSR markup mismatch. Matches C4817 Lead decision pattern for localStorage hydration sites.
     setState(loadState());
     setHydrated(true);
   }, []);

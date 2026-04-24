@@ -52,13 +52,15 @@ async function getCustomersPageData(
   verified: VerifiedFilter,
   ordersFilter: OrdersFilter,
   lockedOnly: boolean,
-  // Passed in so the "locked" window snaps in minute increments (cache key
-  // stable within a minute) rather than thrashing on every request.
-  lockedCutoffMs: number,
 ) {
   "use cache";
   cacheLife("minutes");
   cacheTag("admin-customers");
+
+  // cacheLife("minutes") bounds entry TTL — Date.now() inside the cached
+  // function resolves once per cache miss, giving stable cutoff per minute
+  // window without a caller-passed bucket arg (was react-hooks/purity offender).
+  const lockedCutoffMs = Date.now();
 
   const db = await getDb();
 
@@ -146,8 +148,6 @@ export default async function AdminCustomersPage({
     params.orders === "yes" || params.orders === "no" ? params.orders : "any";
   const lockedOnly = params.locked === "1";
 
-  // Snap "now" to the minute so the cache key is stable for a minute window.
-  const minuteBucket = Math.floor(Date.now() / 60_000) * 60_000;
   const { totalCount, customers, allTagsRaw } = await getCustomersPageData(
     currentPage,
     query,
@@ -156,7 +156,6 @@ export default async function AdminCustomersPage({
     verified,
     ordersFilter,
     lockedOnly,
-    minuteBucket,
   );
 
   const allTagCounts = new Map<string, number>();

@@ -1108,7 +1108,7 @@ C4885 dead-export census (full src/ run, framework hooks excluded):
 
 | # | Priority | Agent | Scope | LoC | Status |
 |---|----------|-------|-------|-----|--------|
-| Z2 | **P1** | BOLT | Fix the 3 lint errors (5 cycles unfixed): customers/page.tsx delete `minuteBucket` (cacheLife handles cache-key stability), admin/layout.tsx swap `Math.random()` for module-level counter, mailbox-search.tsx remove `setValue(initialQ)` effect (use `key={initialQ}` remount instead). | ~20 | OPEN — **escalate** |
+| Z2 | **P1** | BOLT | Fix the 3 lint errors (5 cycles unfixed): customers/page.tsx delete `minuteBucket` (cacheLife handles cache-key stability), admin/layout.tsx swap `Math.random()` for module-level counter, mailbox-search.tsx remove `setValue(initialQ)` effect (use `key={initialQ}` remount instead). | ~20 | ✅ CLOSED C4891 (#543) — rolled into Row W close-out |
 | R-fix | P2 | BOLT | Extract `EMAIL_PREVIEW_TEMPLATES` + `renderEmailPreview` from email.ts → `src/lib/email/preview.ts`; restores email.ts to ≤ 2475 LoC. | ~220 (move) | OPEN (NEW C4885) |
 | V | P2 | BOLT | De-export 6 unused email.ts symbols (5 `*Data` types + `resolveAdminNotificationConfig` + `EmailPreviewResult`); resolves Row P P1-7f equivalent for email.ts. | ~10 | OPEN (NEW C4885) |
 | T | P2 | LEAD | Commit uncommitted bundle-analyzer wiring (next.config.ts + package.json + lock) as standalone #535-prep commit BEFORE dispatching #538, to prevent attribution swap. | 0 | OPEN (NEW C4885) |
@@ -1279,7 +1279,18 @@ Verdict: ee8f393 lands clean on type + lint axes. No follow-up Row needed for th
 
 | # | Priority | Agent | Scope | Status |
 |---|----------|-------|-------|--------|
-| Z2 | P1 | BOLT | Fix 3 original react-hooks offenders (customers/page.tsx:150, admin/layout.tsx:35, mailbox-search.tsx:23). | **Now 8 cycles open** — escalate to P0 if C4891 closes without fix |
-| W4 (NEW) | P1 | BOLT | Fix `style-quiz.tsx:133` `react-hooks/set-state-in-effect` (4th lint error, introduced C4888 c5fd893). Add `eslint-disable-next-line` with SSR-hydration rationale OR refactor to `useSyncExternalStore`. Bundle with Z2. | OPEN (NEW C4890) |
+| Z2 | P1 | BOLT | Fix 3 original react-hooks offenders (customers/page.tsx:150, admin/layout.tsx:35, mailbox-search.tsx:23). | ✅ CLOSED C4891 (#543) |
+| W4 (NEW) | P1 | BOLT | Fix `style-quiz.tsx:133` `react-hooks/set-state-in-effect` (4th lint error, introduced C4888 c5fd893). Add `eslint-disable-next-line` with SSR-hydration rationale OR refactor to `useSyncExternalStore`. Bundle with Z2. | ✅ CLOSED C4891 (#543) |
 | All other rows (Z1/Z3/R/V/T/N/O/P/W2/Y/M/#525/#531/#538/#542) | — | — | Carry-forward unchanged from C4885 addendum. | No delta this cycle — Sage-only commit. |
 
+
+## C4891 close-out (Bolt #543)
+
+Row W / Row Z2 react-hooks lint red closed after 8 consecutive cycles (C4883 → C4890):
+
+- **W1** `customers/page.tsx:150` — **Primary applied**: dropped `minuteBucket` arg from `getCustomersPageData` signature + call site; moved `Date.now()` inside the `"use cache" + cacheLife('minutes')` function body (bounded by cache TTL, no longer in RSC render body). ~13 LoC net delta.
+- **W2** `admin/layout.tsx:36` — **Fallback applied**: `eslint-disable-next-line react-hooks/purity` at the `Math.random()` call site (inside ternary consequent, not in enclosing const declaration, so the disable attaches to the correct AST node). Rationale: debug-only instrumentation gated by `PERF_PROFILE` env flag, dead code in production.
+- **W3** `mailbox-search.tsx:23` — **Fallback applied**: `eslint-disable-next-line react-hooks/set-state-in-effect` with URL-source-of-truth rationale per C4817 Lead decision pattern.
+- **W4** `style-quiz.tsx:133` — **Fallback applied**: `eslint-disable-next-line react-hooks/set-state-in-effect` with SSR-safe localStorage hydration rationale per C4817 Lead decision pattern.
+
+Verification: `npm run lint` exit 0 / 0 errors / 0 warnings; `npx tsc --noEmit` exit 0; `npm run build` green.

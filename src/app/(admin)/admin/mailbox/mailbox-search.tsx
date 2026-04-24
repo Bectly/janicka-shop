@@ -20,6 +20,7 @@ export function MailboxSearch({
   const lastPushedRef = useRef<string>(initialQ);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- URL is source of truth; local value is a debounce buffer that must re-sync on navigation (back/forward/query edit). Matches C4817 Lead decision pattern for URL/localStorage hydration sites.
     setValue(initialQ);
     lastPushedRef.current = initialQ;
   }, [initialQ]);

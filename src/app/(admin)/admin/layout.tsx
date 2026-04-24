@@ -32,7 +32,8 @@ async function AdminAuthGate({
   children: React.ReactNode;
 }) {
   const navId = PERF_PROFILE
-    ? `admin-nav-${Math.random().toString(36).slice(2, 8)}`
+    ? // eslint-disable-next-line react-hooks/purity -- debug-only instrumentation gated by PERF_PROFILE env flag; dead code in production unless flag is set. navId only needs uniqueness per request for Vercel log filtering.
+      `admin-nav-${Math.random().toString(36).slice(2, 8)}`
     : "";
   perfStart(`${navId} total`);
   await connection();
