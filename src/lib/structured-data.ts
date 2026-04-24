@@ -13,7 +13,7 @@ import {
 import { getImageUrls } from "@/lib/images";
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://janicka-shop.vercel.app";
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://jvsatnik.cz";
 
 const CONDITION_TO_SCHEMA: Record<string, string> = {
   new_with_tags: "https://schema.org/NewCondition",

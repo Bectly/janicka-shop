@@ -100,7 +100,7 @@ export async function requestEmailChange(
     metadata: { newEmail: parsed.data.newEmail },
   });
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://jvsatnik.cz";
   const verifyUrl = `${baseUrl}/verify-email-change?token=${encodeURIComponent(token)}`;
   await sendEmailChangeVerifyEmail({
     newEmail: parsed.data.newEmail,

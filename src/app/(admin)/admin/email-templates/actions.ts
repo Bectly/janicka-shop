@@ -14,7 +14,7 @@ async function requireAdmin() {
 }
 
 function buildCampaignData(formData: FormData, products: CampaignProduct[]): CampaignEmailData {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://jvsatnik.cz";
   const bodyText = (formData.get("bodyText") as string)?.trim() ?? "";
   return {
     subject: (formData.get("subject") as string)?.trim() ?? "",

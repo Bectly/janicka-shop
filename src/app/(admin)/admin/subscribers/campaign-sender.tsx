@@ -220,7 +220,7 @@ export function CampaignSender({
                   id="campaign-cta-url"
                   name="ctaUrl"
                   type="url"
-                  placeholder="https://janicka-shop.vercel.app/products"
+                  placeholder="https://jvsatnik.cz/products"
                 />
                 <p className="mt-1 text-xs text-muted-foreground">
                   Prázdné = odkaz na novinky.

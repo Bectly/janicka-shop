@@ -11,7 +11,7 @@ import {
 import { logger } from "@/lib/logger";
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://janicka-shop.vercel.app";
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://jvsatnik.cz";
 
 /**
  * Map internal condition to Google Merchant Center condition values.

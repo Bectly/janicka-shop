@@ -38,7 +38,7 @@ export const metadata: Metadata = {
   description:
     "Objevte stylové oblečení pro každou příležitost. Šaty, topy, kalhoty, bundy a doplňky s rychlým doručením po celé ČR.",
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://janicka-shop.vercel.app"
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://jvsatnik.cz"
   ),
   icons: {
     icon: [

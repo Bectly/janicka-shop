@@ -726,7 +726,7 @@ export async function resolveAdminNotificationConfig(): Promise<{
 }
 
 function buildAdminNewOrderHtml(data: AdminOrderNotificationData): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const baseUrl = getBaseUrl();
   const adminUrl = data.orderId
     ? `${baseUrl}/admin/orders/${data.orderId}`
     : `${baseUrl}/admin/orders`;
@@ -900,7 +900,7 @@ export async function sendAdminDeadlineAlertEmail(
         <tbody>${rows}</tbody>
       </table>
       <p style="margin-top:16px;color:#6b7280;font-size:13px">
-        Zkontrolujte tyto objednávky v <a href="${process.env.NEXT_PUBLIC_BASE_URL ?? "https://janicka-shop.vercel.app"}/admin/orders">admin panelu</a>.
+        Zkontrolujte tyto objednávky v <a href="${getBaseUrl()}/admin/orders">admin panelu</a>.
       </p>
     </div>`;
 
@@ -1102,7 +1102,7 @@ interface AbandonedCartEmailData {
 }
 
 function buildCartItemsHtml(items: AbandonedCartItem[]): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const baseUrl = getBaseUrl();
   return items
     .map((item) => {
       const productUrl = item.slug ? `${baseUrl}/products/${item.slug}` : baseUrl;
@@ -1133,7 +1133,7 @@ function buildAbandonedCartEmailWrapper(
   ctaUrl: string,
   cartId: string,
 ): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const baseUrl = getBaseUrl();
   const unsubscribeUrl = `${baseUrl}/api/unsubscribe/abandoned-cart/${encodeURIComponent(cartId)}`;
   return `<!DOCTYPE html>
 <html lang="cs">
@@ -1173,7 +1173,7 @@ function buildAbandonedCartEmailWrapper(
  * "Zapomněla jsi na svůj kousek?" — gentle reminder with product images.
  */
 function buildAbandonedCartEmail1(data: AbandonedCartEmailData): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const baseUrl = getBaseUrl();
   const greeting = data.customerName ? escapeHtml(data.customerName) : "Ahoj";
 
   return buildAbandonedCartEmailWrapper(
@@ -1210,7 +1210,7 @@ function buildAbandonedCartEmail1(data: AbandonedCartEmailData): string {
  * @param soldProductIds - productIds of items that have been sold (matched by ID, not name).
  */
 function buildAbandonedCartEmail2(data: AbandonedCartEmailData, soldProductIds: string[]): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const baseUrl = getBaseUrl();
   const greeting = data.customerName ? escapeHtml(data.customerName) : "Ahoj";
   const soldIdSet = new Set(soldProductIds);
   const soldItems = data.items.filter((i) => soldIdSet.has(i.productId));
@@ -1256,7 +1256,7 @@ function buildAbandonedCartEmail2(data: AbandonedCartEmailData, soldProductIds: 
  * @param soldProductIds - productIds of items confirmed sold (matched by ID, not name).
  */
 function buildAbandonedCartEmail3(data: AbandonedCartEmailData, soldProductIds: string[]): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const baseUrl = getBaseUrl();
   const greeting = data.customerName ? escapeHtml(data.customerName) : "Ahoj";
   const soldIdSet = new Set(soldProductIds);
   const soldItems = data.items.filter((i) => soldIdSet.has(i.productId));
@@ -1362,7 +1362,7 @@ interface ReviewRequestEmailData {
 }
 
 function buildReviewRequestHtml(data: ReviewRequestEmailData): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const baseUrl = getBaseUrl();
   const orderUrl = `${baseUrl}/order/${data.orderNumber}?token=${data.accessToken}`;
   const shopUrl = `${baseUrl}/products?sort=newest`;
 
@@ -1468,7 +1468,7 @@ interface DeliveryCheckEmailData {
 }
 
 function buildDeliveryCheckHtml(data: DeliveryCheckEmailData): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const baseUrl = getBaseUrl();
   const orderUrl = `${baseUrl}/order/${data.orderNumber}?token=${data.accessToken}`;
   const returnsUrl = `${baseUrl}/returns`;
 
@@ -1593,7 +1593,7 @@ const CONDITION_LABELS_EMAIL: Record<string, string> = {
 };
 
 function buildNewArrivalProductsHtml(products: NewArrivalProduct[]): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const baseUrl = getBaseUrl();
 
   return products
     .map((p) => {
@@ -1631,7 +1631,7 @@ function buildNewArrivalProductsHtml(products: NewArrivalProduct[]): string {
 }
 
 function buildNewArrivalHtml(data: NewArrivalEmailData): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const baseUrl = getBaseUrl();
   const shopUrl = `${baseUrl}/products?sort=newest`;
   const greeting = data.firstName
     ? `${escapeHtml(data.firstName)}, máme`
@@ -1732,7 +1732,7 @@ export interface BrowseAbandonmentEmailData {
 }
 
 function buildBrowseAbandonmentHtml(data: BrowseAbandonmentEmailData): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const baseUrl = getBaseUrl();
   const productUrl = `${baseUrl}/products/${encodeURIComponent(data.productSlug)}`;
   const shopUrl = `${baseUrl}/products?sort=newest`;
 
@@ -1848,7 +1848,7 @@ export interface CrossSellFollowUpData {
 }
 
 function buildCrossSellFollowUpHtml(data: CrossSellFollowUpData): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const baseUrl = getBaseUrl();
 
   const crossSellHtml = buildCrossSellProductsHtml(data.products);
 
@@ -1938,7 +1938,7 @@ export interface WinBackEmailData {
 }
 
 function buildWinBackHtml(data: WinBackEmailData): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const baseUrl = getBaseUrl();
 
   const productsHtml = buildCrossSellProductsHtml(data.products);
 
@@ -2041,7 +2041,7 @@ export interface CampaignEmailData {
 }
 
 function buildCampaignProductGridHtml(products: CampaignProduct[]): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const baseUrl = getBaseUrl();
 
   // 2-column grid using nested tables for email client compatibility
   const cells = products.map((p) => {
@@ -2083,7 +2083,7 @@ function buildCampaignProductGridHtml(products: CampaignProduct[]): string {
 }
 
 function buildCampaignHtml(data: CampaignEmailData, recipientEmail: string): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const baseUrl = getBaseUrl();
   const unsubscribeUrl = `${baseUrl}/odhlasit-novinky?token=${encodeURIComponent(signUnsubscribeToken(recipientEmail))}`;
 
   const productsHtml = data.products.length > 0
@@ -2204,7 +2204,7 @@ function buildMothersDayProductGridHtml(
   products: CampaignProduct[],
   columns: 2 | 3 = 2,
 ): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const baseUrl = getBaseUrl();
 
   const cells = products.map((p) => {
     const productUrl = `${baseUrl}/products/${p.slug}`;
@@ -2255,7 +2255,7 @@ function buildMothersDayEmailShell(
   recipientEmail: string,
   innerHtml: string,
 ): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const baseUrl = getBaseUrl();
   const unsubscribeUrl = `${baseUrl}/odhlasit-novinky?token=${encodeURIComponent(signUnsubscribeToken(recipientEmail))}`;
 
   return `<!DOCTYPE html>
@@ -2298,7 +2298,7 @@ function buildMothersDayEmail1Html(
   products: CampaignProduct[],
   recipientEmail: string,
 ): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const baseUrl = getBaseUrl();
   const ctaUrl = `${baseUrl}/products?sort=newest`;
 
   const productsHtml = products.length > 0
@@ -2378,7 +2378,7 @@ function buildMothersDayEmail2Html(
   products: CampaignProduct[],
   recipientEmail: string,
 ): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const baseUrl = getBaseUrl();
   const ctaUrl = `${baseUrl}/products?sort=newest`;
 
   const productsHtml = products.length > 0
@@ -2432,7 +2432,7 @@ function buildMothersDayEmail3Html(
   products: CampaignProduct[],
   recipientEmail: string,
 ): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const baseUrl = getBaseUrl();
   const ctaUrl = `${baseUrl}/products?sort=newest`;
 
   const productsHtml = products.length > 0
@@ -2554,7 +2554,7 @@ const CUSTOMS_PREVIEWS: Record<CustomsEmailNumber, string> = {
 };
 
 function buildCustomsProductGridHtml(products: CampaignProduct[]): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const baseUrl = getBaseUrl();
 
   const cells = products.map((p) => {
     const productUrl = `${baseUrl}/products/${p.slug}`;
@@ -2599,7 +2599,7 @@ function buildCustomsEmailShell(
   recipientEmail: string,
   innerHtml: string,
 ): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const baseUrl = getBaseUrl();
   const unsubscribeUrl = `${baseUrl}/odhlasit-novinky?token=${encodeURIComponent(signUnsubscribeToken(recipientEmail))}`;
 
   return `<!DOCTYPE html>
@@ -2642,7 +2642,7 @@ function buildCustomsEmail1Html(
   products: CampaignProduct[],
   recipientEmail: string,
 ): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const baseUrl = getBaseUrl();
   const infoUrl = `${baseUrl}/nakupuj-cesky`;
   const shopUrl = `${baseUrl}/products?sort=newest`;
 
@@ -2712,7 +2712,7 @@ function buildCustomsEmail2Html(
   products: CampaignProduct[],
   recipientEmail: string,
 ): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const baseUrl = getBaseUrl();
   const shopUrl = `${baseUrl}/products?sort=newest`;
   const infoUrl = `${baseUrl}/nakupuj-cesky`;
 

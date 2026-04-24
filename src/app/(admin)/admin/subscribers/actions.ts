@@ -140,7 +140,7 @@ export async function sendNewsletterCampaign(formData: FormData): Promise<SendCa
   }
 
   const db = await getDb();
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://jvsatnik.cz";
 
   // Load products from collection if selected
   let products: CampaignProduct[] = [];

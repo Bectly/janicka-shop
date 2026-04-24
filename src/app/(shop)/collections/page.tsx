@@ -7,7 +7,7 @@ import { Layers } from "lucide-react";
 import type { Metadata } from "next";
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://janicka-shop.vercel.app";
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://jvsatnik.cz";
 
 export const metadata: Metadata = {
   title: "Kolekce",

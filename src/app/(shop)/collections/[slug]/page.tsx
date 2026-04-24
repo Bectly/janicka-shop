@@ -11,7 +11,7 @@ import { buildItemListSchema, buildBreadcrumbSchema, jsonLdString } from "@/lib/
 import type { Metadata } from "next";
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://janicka-shop.vercel.app";
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://jvsatnik.cz";
 
 const getCollection = cache(async (slug: string, now: Date) => {
   const db = await getDb();

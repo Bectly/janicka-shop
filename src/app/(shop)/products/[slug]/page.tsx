@@ -65,7 +65,7 @@ function formatDeliveryDate(date: Date): string {
 }
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://janicka-shop.vercel.app";
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://jvsatnik.cz";
 
 async function getProduct(slug: string) {
   "use cache";

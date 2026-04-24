@@ -8,7 +8,7 @@ import { ProductsClient, type CatalogProduct } from "./products-client";
 import type { Metadata } from "next";
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://janicka-shop.vercel.app";
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://jvsatnik.cz";
 
 interface SearchParams {
   category?: string;

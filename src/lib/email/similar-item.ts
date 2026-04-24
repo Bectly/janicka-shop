@@ -56,7 +56,7 @@ function buildSimilarItemHtml(
   recipientEmail: string,
 ): string {
   const baseUrl =
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://jvsatnik.cz";
 
   const soldName = `${soldProduct.brand ? `${escapeHtml(soldProduct.brand)} ` : ""}${escapeHtml(soldProduct.name)}`;
 
@@ -174,7 +174,7 @@ export function buildSimilarItemsArrivedHtml(
   recipientEmail: string,
 ): string {
   const baseUrl =
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://jvsatnik.cz";
 
   const cards = matchedProducts.slice(0, 3).map((p) => {
     const productUrl = `${baseUrl}/products/${p.slug}`;
