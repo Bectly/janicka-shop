@@ -30,6 +30,14 @@ export async function GET(req: NextRequest) {
     .filter((s) => s.length > 0 && s.length <= 128)
     .slice(0, 500);
 
+  const sizesParam = req.nextUrl.searchParams.get("sizes") ?? "";
+  const wantedSizes = sizesParam
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0 && s.length <= 8 && /^[A-Za-z0-9.,/+\-_ ]+$/.test(s))
+    .slice(0, 20);
+  const wantedSizesSet = new Set(wantedSizes);
+
   const db = await getDb();
   const products = await db.product.findMany({
     where: {
@@ -54,13 +62,26 @@ export async function GET(req: NextRequest) {
     },
   });
 
+  // Filter by sizes (sizes stored as JSON string array on product)
+  const filtered = wantedSizesSet.size > 0
+    ? products.filter((p) => {
+        try {
+          const parsed = JSON.parse(p.sizes);
+          if (!Array.isArray(parsed)) return false;
+          return parsed.some((s: unknown) => typeof s === "string" && wantedSizesSet.has(s));
+        } catch {
+          return false;
+        }
+      })
+    : products;
+
   // Fisher-Yates shuffle
-  for (let i = products.length - 1; i > 0; i--) {
+  for (let i = filtered.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [products[i], products[j]] = [products[j], products[i]];
+    [filtered[i], filtered[j]] = [filtered[j], filtered[i]];
   }
 
-  const items: ShuffleProduct[] = products.slice(0, limit).map((p) => ({
+  const items: ShuffleProduct[] = filtered.slice(0, limit).map((p) => ({
     id: p.id,
     name: p.name,
     slug: p.slug,

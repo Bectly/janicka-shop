@@ -22,9 +22,11 @@ import { parseJsonStringArray } from "@/lib/images";
 import type { ShuffleProduct } from "@/app/api/products/random/route";
 
 const SEEN_KEY = "shuffle-seen-v1";
+const SIZES_KEY = "shuffle-sizes-v1";
 const BATCH_SIZE = 10;
 const LOW_WATER_MARK = 3;
 const SWIPE_THRESHOLD = 80;
+const SIZE_OPTIONS = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"] as const;
 
 type Direction = "left" | "right" | null;
 
@@ -41,6 +43,7 @@ export function ShuffleOverlay() {
   const [dragging, setDragging] = useState(false);
   const [adding, setAdding] = useState(false);
   const [addedFlash, setAddedFlash] = useState<"cart" | "wishlist" | null>(null);
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
 
   const toggleWishlist = useWishlistStore((s) => s.toggle);
   const hasWishlist = useWishlistStore((s) => s.has);
@@ -52,13 +55,27 @@ export function ShuffleOverlay() {
   const touchStartX = useRef<number | null>(null);
   const initializedRef = useRef(false);
 
-  // Hydrate seen set from sessionStorage once
+  // Hydrate seen set from sessionStorage + selected sizes from localStorage once
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem(SEEN_KEY);
       if (raw) {
         const arr = JSON.parse(raw) as string[];
         if (Array.isArray(arr)) seenRef.current = new Set(arr);
+      }
+    } catch {
+      /* ignore */
+    }
+    try {
+      const raw = localStorage.getItem(SIZES_KEY);
+      if (raw) {
+        const arr = JSON.parse(raw) as string[];
+        if (Array.isArray(arr)) {
+          const valid = arr.filter((s): s is string =>
+            typeof s === "string" && (SIZE_OPTIONS as readonly string[]).includes(s),
+          );
+          if (valid.length > 0) setSelectedSizes(valid);
+        }
       }
     } catch {
       /* ignore */
@@ -80,9 +97,10 @@ export function ShuffleOverlay() {
       fetchingRef.current = true;
       try {
         const exclude = Array.from(seenRef.current).slice(-200).join(",");
+        const sizesQs = selectedSizes.length > 0 ? selectedSizes.join(",") : "";
         const url = `/api/products/random?limit=${BATCH_SIZE}${
           exclude ? `&exclude=${encodeURIComponent(exclude)}` : ""
-        }`;
+        }${sizesQs ? `&sizes=${encodeURIComponent(sizesQs)}` : ""}`;
         const res = await fetch(url, { cache: "no-store" });
         if (!res.ok) throw new Error("fetch-failed");
         const data = (await res.json()) as { items: ShuffleProduct[] };
@@ -103,8 +121,32 @@ export function ShuffleOverlay() {
         setLoading(false);
       }
     },
-    []
+    [selectedSizes]
   );
+
+  const toggleSize = useCallback((size: string) => {
+    setSelectedSizes((prev) => {
+      const next = prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size];
+      try {
+        localStorage.setItem(SIZES_KEY, JSON.stringify(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+    setQueue([]);
+    setExhausted(false);
+    setLoading(true);
+  }, []);
+
+  // Refetch when size filter changes (queue was cleared in toggleSize)
+  useEffect(() => {
+    if (!open) return;
+    if (!initializedRef.current) return;
+    if (queue.length > 0) return;
+    fetchBatch(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedSizes]);
 
   // Initial fetch when overlay opens for the first time
   useEffect(() => {
@@ -293,9 +335,31 @@ export function ShuffleOverlay() {
           <div className="w-[40px]" aria-hidden />
         </div>
 
-        <p className="mb-4 text-center text-sm text-muted-foreground">
+        <p className="mb-3 text-center text-sm text-muted-foreground">
           Swipe ← do oblíbených · swipe → další kousek
         </p>
+
+        {/* Size filter chips */}
+        <div className="mb-4 flex flex-wrap items-center justify-center gap-1.5">
+          {SIZE_OPTIONS.map((size) => {
+            const active = selectedSizes.includes(size);
+            return (
+              <button
+                key={size}
+                type="button"
+                onClick={() => toggleSize(size)}
+                aria-pressed={active}
+                className={`min-h-[32px] rounded-full border px-3 text-xs font-medium transition-colors duration-150 ${
+                  active
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-background text-muted-foreground hover:border-foreground/40 hover:text-foreground"
+                }`}
+              >
+                {size}
+              </button>
+            );
+          })}
+        </div>
 
         {/* Card area */}
         <div className="relative mx-auto flex w-full max-w-md flex-1 items-center justify-center">
