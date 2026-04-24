@@ -74,6 +74,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="cs" className={`${inter.variable} ${cormorant.variable} h-full antialiased`}>
+      <head>
+        <link rel="preconnect" href="https://pub-88d95c0ca85d4cb999122434d83fb3c9.r2.dev" crossOrigin="anonymous" />
+      </head>
       <body className="min-h-full flex flex-col">
         <a
           href="#main-content"
