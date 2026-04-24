@@ -99,15 +99,14 @@ export function CookieConsentBannerClient({
   if (!visible) return null;
 
   return (
-    <div className="bottom-above-nav fixed inset-x-0 z-50 p-4" role="dialog" aria-label="Nastavení cookies" aria-modal="false">
-      <div className="mx-auto max-w-2xl rounded-xl border bg-card p-6 shadow-lg">
-        <h3 className="font-heading text-base font-semibold text-foreground">
+    <div className="cookie-banner-enter bottom-above-nav fixed inset-x-0 z-50 p-4" role="dialog" aria-label="Nastavení cookies" aria-modal="false">
+      <div className="mx-auto max-w-2xl rounded-xl border bg-card p-5 shadow-lg">
+        <h3 className="font-heading text-sm font-semibold text-foreground">
           Soubory cookie
         </h3>
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          Používáme cookies pro základní fungování webu. Analytické a marketingové
-          cookies používáme pouze s vaším souhlasem, abychom mohli zlepšovat naše
-          služby. Svůj souhlas můžete kdykoli změnit.
+        <p className="mt-1.5 text-xs leading-snug text-muted-foreground">
+          Používáme cookies pro fungování webu. Analytické a marketingové jen
+          s vaším souhlasem, který můžete kdykoli změnit.
         </p>
 
         {showDetails && (
@@ -203,13 +202,12 @@ export function CookieConsentBannerClient({
           </Button>
         </div>
 
-        <p className="mt-3 text-xs text-muted-foreground">
+        <p className="mt-3 text-[11px] leading-snug text-muted-foreground">
           Více informací v{" "}
           <a href="/privacy" className="inline-flex min-h-[44px] items-center underline transition-colors duration-150 hover:text-foreground">
             zásadách ochrany osobních údajů
           </a>
-          . Dozorový úřad:{" "}
-          <span className="font-medium">ÚOOÚ</span> (Úřad pro ochranu osobních údajů).
+          . Dozorový úřad: <span className="font-medium">ÚOOÚ</span>.
         </p>
       </div>
     </div>
