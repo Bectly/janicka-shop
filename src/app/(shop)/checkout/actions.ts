@@ -512,7 +512,7 @@ export async function createOrder(
   revalidateTag("products", "max");
   // New order lands in the admin sidebar's "last 24h" badge — drop the cached
   // trio so the next admin nav reflects it (see src/lib/admin-badges.ts).
-  revalidateTag("admin-badges");
+  revalidateTag("admin-badges", "max");
   // Drop Redis copies so the next request doesn't serve a sold item as available.
   await Promise.all(
     order.productSlugs.map((slug) => invalidateProductCaches({ slug })),
