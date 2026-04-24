@@ -57,8 +57,6 @@
     "#342/#340/#347 all gated on Bolt P1-P4 Hetzner app deploy + bectly pre-approval + off-peak — Trace must NOT attempt ad-hoc prod failover/perf/restore drills."
   ],
   "last_updated": "2026-04-24T06:05",
-  "pause": {
-    "trace": "until_next_bolt_commit"
-  },
+  "pause": {},
   "paused_at_bolt_cycle": 4795
 }
