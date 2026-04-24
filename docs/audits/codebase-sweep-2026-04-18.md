@@ -696,4 +696,18 @@ Full report: `docs/audits/cwv-2026-04-24.md` § "C4866 PERF-VERIFY re-audit". 3 
 
 New finding out of the re-audit: **`/cart` CLS regressed 0.020 → 0.423** (4.2× budget) — the #481 Suspense-min-h discipline never got applied to `src/app/(shop)/cart/page.tsx`. Recommend BOLT task "[PERF-CART-CLS] replicate #481 min-h skeletons on cart route, ~10 LoC" — **P0** if Den matek drops ship through cart.
 
+---
+
+## Row S — Next 16 deprecation sweep (task #518, C4868 Trace)
+
+Full report: `docs/audits/next16-deprecations-2026-04-24.md`. One-line summary:
+
+- **`<Image priority>` → `<Image preload>`** rename is the only Next 16 deprecation in the tree. 11 direct `<Image priority>` sites + 6 consumer sites passing `priority` as a wrapper prop + 3 wrapper component prop definitions. PDP hero (`product-gallery.tsx:393`) is carved out to #516 (LCP hoist); remaining 10 direct sites are cosmetic Phase-1 renames.
+- **`next.config.ts`**: clean — `cacheComponents: true` is the stable successor to `experimental.dynamicIO`. No `ppr`, no `optimizeCss`, no deprecated flags.
+- **Pages Router artefacts**: absent. No `pages/`, no `_app`/`_document`, zero `legacyBehavior` / `next/legacy/*` / `layout=` / `objectFit=` matches.
+- **`"use cache"`**: 13/13 placements correct (function-top, paired with `cacheLife`/`cacheTag` where invalidation matters). Non-blocking observation: 6 inline caches in `app/(shop)/page.tsx` (lines 25/52/81/257/341/397) omit explicit tags — if `revalidateTag` should reach them, add `cacheTag('products')`.
+- **Dep pins**: no hard pin to `next@<16`. Watch `next-auth@5.0.0-beta.30` and unmaintained `vaul@1.1.2` before a future Next 17 bump.
+
+Suggested Bolt fork: **Phase 1 rename** (10 direct sites, skip 1a#1 — handled by #516); **Phase 3 cosmetic** (wrapper prop rename across 3 components + 6 consumer sites) deferred unless a Next 17 bump is scheduled.
+
 
