@@ -1,36 +1,35 @@
 {
-  "last_bolt_commit_cycle": 4789,
-  "cycle": 4390,
-  "directive": "C4390 Lead: #378 shipped (d273521 — measurements Prisma JSON + admin form + PDP 6-col grid + JSON-LD additionalProperty + Czech extractor regex including inseam/krok). Measurement data layer COMPLETE. New Bolt focus: #379 PDP 'Jak měřit?' guide modal/drawer — closes the UX loop so customers know how to compare values against a garment they already own (the #1 second-hand returns reducer per Baymard). Small scoped task, single commit. Trace #358 + #367 unchanged. Guard #366 unchanged. Sage micro-polish continues — consider a visual polish pass on the new PDP Rozměry grid (borders, label typography) once #379 lands. External blockers unchanged: #329 DNS, #1 R2, #14 GMC (Apr 30 Doppl VTO — 12 days), #216 GA4, #330 nginx.",
+  "last_bolt_commit_cycle": 4791,
+  "cycle": 4793,
+  "directive": "C4793 Lead: R2 triad closeout. #414 shipped 405ac5a (env-check boot warning via instrumentation.ts + audit-r2-image-urls.ts read-only scan, build green) → marked completed. Closed stale #1 as superseded by narrower-scoped #413. Pipeline hinge: Trace #413 calibrates R2 prod integrity (Turso Product.images LIKE '%undefined/%' + live /api/upload probe). If rows>0 → Bolt data-repair task; if both clean → R2 triad closed, Trace moves to #367/#358/#351 audit stack. Bolt HOLD this cycle pending #413 outcome. Blocker 2229 ack: #334 already marked done in DB (advisory stale — preview DNS still NXDOMAIN but task isn't blocking). Guard #368 > #366 unchanged. No DUE monitors. QA worker exit=143 pattern concerning — keep Trace tasks atomic (<2min) until infra stabilizes.",
   "lanes": {
     "BOLT": {
       "status": "paused",
-      "force_next_task": 379,
+      "force_next_task": null,
       "next_priority": [
-        379,
         341,
         343,
         65
       ],
-      "notes": "NEW PRIORITY: #379 PDP 'Jak měřit?' guide. #378 measurements DONE (d273521) — now customers need to understand how we took each measurement so they can compare to a garment they already own (the point of flat-lay measurements). Concrete scope: (1) create src/components/shop/measurement-guide.tsx — shadcn Dialog on desktop + Drawer on mobile (or responsive Dialog with mobile bottom-sheet styling). (2) Content: short intro 'Všechny míry jsou naměřené na plocho, na oblečení položeném naležato. Porovnej s kouskem, který ti sedí.' Then per-measurement explanation: Šířka v pase (topy: 3cm pod paží, od kraje ke kraji; kalhoty/sukně: pas, od kraje ke kraji; měř ×2 pro obvod). Šířka v bocích (v nejširší části). Délka (od límce/horního kraje k lemu). Rukáv (od ramenního švu k manžetě). Krok / vnitřní nohavice (od rozkroku k lemu). Include 2-3 simple inline SVG diagrams (flat garment outline with measurement arrows) — keep minimalist, no heavy assets. (3) Wire trigger: find where PDP renders the Rozměry section (grep for 'Rozměry' — likely src/components/shop/product-info-accordion.tsx or a new product-measurements-section.tsx) — add a small ghost-button link 'Jak měříme?' next to the heading that opens the guide. (4) Only render the trigger if measurements exist for the product (hasMeasurements helper). Czech UI, mobile-first, no autofocus traps. Single commit. npm run build green. THEN resume Hetzner (#341/#343) once #329 DNS unblocks.",
+      "notes": "HOLD this cycle. R2 triad shipped (#412 r2.ts fallback, #414 env-check + audit script). Next Bolt task is GATED on Trace #413 outcome: (a) if #413 finds Product.images rows with 'undefined/' prefix OR malformed URLs → Lead will queue a data-repair task (one-off SQL migration + rollback plan); (b) if #413 reports clean → R2 triad is fully closed, Bolt resumes Hetzner lane (#341/#343) once #329 DNS flip lands. Do NOT pre-emptively start on audits/refactors — idle cycle is correct here.",
       "blockers_external": {
         "329": "DNS flip by bectly",
         "334": "Hetzner daemon must boot",
-        "65": "NEXT_PUBLIC_SITE_URL env var needed for Bolt acknowledged #2220 — non-blocking for #376/#373/#377"
+        "65": "NEXT_PUBLIC_SITE_URL env var needed for Bolt acknowledged #2220 — non-blocking"
       }
     },
     "TRACE": {
       "status": "paused",
-      "force_next_task": 358,
+      "force_next_task": 413,
       "next_priority": [
-        358,
+        413,
         367,
-        324,
-        327,
+        358,
         351,
+        327,
         347
       ],
-      "notes": "PRIORITY: #358 RC.7 E2E /admin/jarvis — iframe architecture (not WS/xterm). Playwright spec: admin logs in → navigates /admin/jarvis → expects breadcrumb 'JARVIS' + login instructions card visible → expects iframe present with src matching NEXT_PUBLIC_JARVIS_REMOTE_URL (default jarvis-janicka.jvsatnik.cz) → no console errors (page.on('pageerror') / page.on('console')) → no CSP violations. Skip WS/xterm flow entirely. THEN #367 full codebase quality sweep: npx tsc --noEmit, knip or ts-prune dead exports, security smells (process.env leaks to client, console.log of PII, missing rate limits on POST routes). THEN #324 regression grep: zero 'vinted' campaign refs in HEAD (src/, prisma/, scripts/ — docs/ excepted). THEN #327 Redis cache-aside verify. THEN #351 cold-read audit + #347 Lighthouse baseline. Standing e2e: category switching (/products?category=saty → Topy) + customer portal C3709 flows. DO NOT touch Hetzner migration code paths."
+      "notes": "PRIORITY: #413 R2 prod integrity calibration — FIRST this cycle. Concrete atomic steps (keep <2min to dodge QA exit=143 SIGTERM): (1) Turso query via @libsql/client or `turso db shell`: `SELECT COUNT(*) FROM Product WHERE images LIKE '%undefined/%' OR images LIKE '%//undefined%'` — report count. If >0, also dump `SELECT id, substr(images,1,120) FROM ... LIMIT 5` for repair-spec input. (2) Live probe against prod /api/upload: POST a 1KB PNG, assert response.url starts with `https://pub-` or the configured R2 public host (NOT 'undefined/'). Log the returned URL verbatim in the commit message. Report: rows_needing_repair=N, live_upload_url=<url>, assertion=pass/fail. IF count=0 AND assertion=pass → R2 triad closed; Trace moves to #367 → #358 → #351. Skip #1 (now cancelled). Do NOT re-audit r2.ts code (that's covered by #412 ship verification). DO NOT touch Hetzner migration paths. Standing e2e stays: category switching + customer portal C3709."
     },
     "SAGE": {
       "status": "paused",
@@ -60,7 +59,7 @@
     "Tasks #352, #353, #364, #365, #369, #370, #344, #371, #373, #374, #375, #376, #377, #378 are DONE — do not re-raise as blockers.",
     "Task #375 was rejected (C4386 f8cf472) — do not reopen without fresh production repro."
   ],
-  "last_updated": "2026-04-18T09:30",
+  "last_updated": "2026-04-24T05:30",
   "pause": {},
-  "paused_at_bolt_cycle": 4789
+  "paused_at_bolt_cycle": 4791
 }

@@ -129,13 +129,15 @@ async function test2MidJobKill(): Promise<TestResult> {
   await drainTestQueue();
 
   const conn = makeConnection();
-  // Shorter stalled check so this completes in reasonable time. Defaults are
-  // 30s; for the test harness we want to validate the mechanism, not wait.
-  const STALLED_CHECK_MS = 2_000;
+  // Shorter stalled check + short lock so stalled recovery completes quickly.
+  // Production defaults (30s lock / 30s stalled check) are fine — this test
+  // validates the mechanism works, not the timing.
+  const STALLED_CHECK_MS = 1_500;
+  const LOCK_DURATION_MS = 3_000;
 
-  // Spawn subprocess that will pick up a single job, "hang" (sleep 30s), then
-  // be SIGKILL'd. The stalled check should move the job back to wait, and the
-  // in-process retry worker below should pick it up.
+  // Spawn subprocess that will pick up a single job, "hang" forever, then be
+  // SIGKILL'd. Once its lock expires (LOCK_DURATION_MS after kill), the retry
+  // worker's stalled check will reclaim the job and reprocess it.
   const workerScript = `
     import { Worker } from "bullmq";
     import IORedis from "ioredis";
@@ -144,7 +146,13 @@ async function test2MidJobKill(): Promise<TestResult> {
       process.stderr.write("subprocess: picked job " + job.id + "\\n");
       process.stdout.write("READY\\n");
       await new Promise(() => {}); // hang forever — parent kills us
-    }, { connection: conn, concurrency: 1, stalledInterval: ${STALLED_CHECK_MS}, maxStalledCount: 3 });
+    }, {
+      connection: conn,
+      concurrency: 1,
+      stalledInterval: ${STALLED_CHECK_MS},
+      maxStalledCount: 3,
+      lockDuration: ${LOCK_DURATION_MS},
+    });
     w.on("error", () => {});
   `;
 
@@ -190,6 +198,11 @@ async function test2MidJobKill(): Promise<TestResult> {
   child.kill("SIGKILL");
   await new Promise((r) => setTimeout(r, 200));
 
+  // Debug: verify job is still in active state (stuck on dead worker).
+  const debugQ = new Queue(TEST_QUEUE, { connection: makeConnection() });
+  log(`post-kill: active=${await debugQ.getActiveCount()} wait=${await debugQ.getWaitingCount()}`);
+  await debugQ.close();
+
   // Start retry worker. It should pick up the stalled job after stalled check.
   let retryCompleted = false;
   let retryAttempts = 0;
@@ -206,13 +219,23 @@ async function test2MidJobKill(): Promise<TestResult> {
       concurrency: 1,
       stalledInterval: STALLED_CHECK_MS,
       maxStalledCount: 3,
+      lockDuration: LOCK_DURATION_MS,
     },
   );
 
-  // Wait up to 20s for stalled check + retry to land.
-  const retryDeadline = Date.now() + 20_000;
+  // Wait up to 30s for stalled check + retry to land.
+  const retryDeadline = Date.now() + 30_000;
+  let ticks = 0;
   while (!retryCompleted && Date.now() < retryDeadline) {
-    await new Promise((r) => setTimeout(r, 200));
+    await new Promise((r) => setTimeout(r, 500));
+    ticks++;
+    if (ticks % 4 === 0) {
+      const dq = new Queue(TEST_QUEUE, { connection: makeConnection() });
+      log(
+        `tick ${ticks}: active=${await dq.getActiveCount()} wait=${await dq.getWaitingCount()} failed=${await dq.getFailedCount()} completed=${await dq.getCompletedCount()}`,
+      );
+      await dq.close();
+    }
   }
 
   await retryWorker.close();
@@ -226,6 +249,7 @@ async function test2MidJobKill(): Promise<TestResult> {
     durationMs: Date.now() - start,
     details: {
       stalledCheckMs: STALLED_CHECK_MS,
+      lockDurationMs: LOCK_DURATION_MS,
       retryCompleted,
       retryAttemptsMade: retryAttempts,
     },
