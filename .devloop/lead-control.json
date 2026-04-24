@@ -1,16 +1,16 @@
 {
-  "last_bolt_commit_cycle": 4818,
-  "cycle": 4818,
-  "directive": "C4818 Lead: CLOSED #461 (Bolt e468546 — split use-cache try/catch/JSX in src/app/(shop)/page.tsx across 5 sections L79/254/336/391/460, kept use cache/cacheLife/cacheTag at top, DB reads inside try with catch→null fallback, JSX returns moved outside try; data-only helpers L23/50 untouched; tsc clean, next build green, lint 76→35, all 44 P1-1 errors in page.tsx cleared, no P1-2/P1-3/P1-6 touched as directed). Remaining 35 lint issues breakdown: 16 errors (5 P1-6 entity escapes admin-only, 6 P1-2 impure-in-render admin+shop server components, 5 P0-3 setState-in-effect staying with eslint-disable per audit line 170) + 19 warnings (P1-3 unused vars). Created #465 [P1] P1-6 entity-escape sweep (5 sites across 4 admin files — email-editor L248, measurements-backfill L91, campaign-dry-run-dialog L325+L336, global-search L154). Trivial &quot; substitution, atomic single commit. Bolt force_next → #465. Trace continues #367 atomic chunks. Sage idle. Guard #368 P0 unchanged. No DUE monitors (comgate/cz-competitors/vinted-cz-media all <1h fresh from C4808). DevChat 0 new. Remaining audit follow-ups after #465: P1-2 admin Date.now() hoists, P1-4 uploadthing rename, P1-7 dead export prune.",
+  "last_bolt_commit_cycle": 4819,
+  "cycle": 4819,
+  "directive": "C4819 Lead: CLOSED #465 (escape sweep landed — 5 &quot; substitutions across 4 admin files, lint 16→11 errors). Commit topology note: the actual escape edits rode in on bectly's 851e8cc checkout-fix commit (diff shows admin/email-editor L248, measurements-backfill L91, campaign-dry-run-dialog L325+L336, global-search L154 — all 5 sites); Bolt's cycle commit 4738137 only carried docs/STRUCTURE.md regen. Tree state correct (5 escapes present, Czech „ diacritics preserved, tsc clean, build green), so task is done — flagging that `lint 16→11` claim verifies against the merged working tree, not 4738137 alone. Remaining 11 lint errors: 5 P1-2 impure-function-in-render (admin/layout L42, admin/customers/[id] L127, admin/customers L142, account/change-email L29, account/orders/[orderNumber] L60) + 6 P0-3 setState-in-effect (pick-logo L68, cart-button L27, express-checkout-buttons L32, cookie-consent L45, mobile-nav L51, product-gallery L236) — the 6 P0-3 sites stay with eslint-disable per audit line 170 (idiomatic hydration/route/DOM-sync patterns). Created #466 [P1] P1-2 impure-function sweep. Fix strategy: try hoist-Date-above-JSX first, fallback to per-site eslint-disable-next-line react-hooks/purity with justification — these are legitimate request-time reads in non-cached RSCs. Bolt force_next → #466. Trace continues #367 atomic chunks. Sage idle. Guard #368 P0 unchanged. No DUE monitors (comgate/cz-competitors/vinted-cz-media all <1h fresh). DevChat 0 new. After #466 lands: remaining lint 6 errors (all P0-3 staying via eslint-disable) + 19 warnings (P1-3 dead imports) — next Bolt candidate is P1-3 dead-import sweep or P1-4 uploadthing→upload-client rename.",
   "lanes": {
     "BOLT": {
       "status": "active",
-      "force_next_task": 465,
+      "force_next_task": 466,
       "next_priority": [
-        465
+        466
       ],
-      "notes": "#461 CLOSED (Bolt e468546, page.tsx use-cache try/catch/JSX split, lint 76→35 -41 errors). TOP PRIORITY: #465 [P1] react/no-unescaped-entities sweep — 5 admin-only sites. Fix pattern: replace raw `\"` inside JSX text with `&quot;` (or `{'\\\"'}` depending on context). Files + lines: email-templates/email-editor.tsx:248:55, settings/measurements-backfill.tsx:91:30, subscribers/campaign-dry-run-dialog.tsx:325:54 + 336:54, admin/global-search.tsx:154:42. Preserve Czech diacritics — do NOT normalize á/č/ř/ž/ů. Acceptance: lint 16→11 errors (5 P1-6 gone), tsc clean, next build green. Atomic single commit. DO NOT bundle with P1-2 admin Date hoists (separate task), P1-3 unused vars (separate), P1-4 uploadthing rename (separate), or P1-7 dead export prune (separate). DO NOT touch #367 Trace lane. DO NOT start Hetzner. After #465: no queued Bolt — go idle and await next Lead cycle.",
-      "source_finding": "docs/audits/codebase-sweep-2026-04-18.md §P1-6 line 142 (Trace C4811 + C4818 addendum)"
+      "notes": "#465 CLOSED (escapes landed in tree via 851e8cc, lint 16→11). TOP PRIORITY: #466 [P1] P1-2 impure-function-in-render sweep — 5 RSC sites. Target files + lines: src/app/(admin)/admin/layout.tsx:42 (new Date(Date.now() - 24*60*60*1000)), src/app/(admin)/admin/customers/[id]/page.tsx:127 (const now = Date.now()), src/app/(admin)/admin/customers/page.tsx:142 (Date.now() for stats), src/app/(shop)/account/change-email/page.tsx:29 (Date.now() in expression), src/app/(shop)/account/orders/[orderNumber]/page.tsx:60 (Date.now() in expression). These are RSCs — request-time reads are semantically correct, this is lint hygiene. Fix strategy: (1) try hoisting Date construction into a clearly-named local const above the JSX return (audit line 116 suggestion) — if lint still flags, proceed to (2) add `// eslint-disable-next-line react-hooks/purity -- request-time read in RSC, not re-rendered` single-line escape. Do NOT refactor into shared helpers across files; do NOT add `'use no cache'` directives (these pages are intentionally dynamic already). Acceptance: lint 11→6 errors, tsc clean, next build green, atomic single commit, Czech diacritics untouched. DO NOT bundle with P1-3 unused vars (separate), P1-4 uploadthing rename (separate), or P1-7 dead export prune (separate). DO NOT touch the 6 remaining P0-3 setState-in-effect sites — they stay per audit line 170. DO NOT touch #367 Trace lane. DO NOT start Hetzner. After #466: no queued Bolt — go idle and await next Lead cycle.",
+      "source_finding": "docs/audits/codebase-sweep-2026-04-18.md §P1-2 lines 109-118 (Trace C4811 + C4818 addendum)"
     },
     "TRACE": {
       "status": "active",
@@ -20,7 +20,7 @@
         358,
         351
       ],
-      "notes": "Continue #367 read-only codebase sweep (atomic chunks <2min to dodge QA exit=143 pattern). C4811 follow-up burndown: P0-1 DONE (#453 15f55df), P0-2 DONE (#459 f4dc52e), P0-3 worst-offender DONE (#460 bundled in 8d0fb22), P1-1 DONE (#461 e468546, 44 errors cleared, lint 76→35). Next audit candidates for Trace if atomic scope permits: cross-verify P1-2 impure-in-render sites are all server-component Date.now()/new Date() (RSC-legit pattern needing doc call-out not fix), or spot-check P1-7 dead exports against dynamic imports. Remaining 5 P0-3 setState-in-effect sites (mobile-nav/cart-button/cookie-consent/checkout express/product-gallery:236) staying with eslint-disable per audit line 170 — no Trace follow-up needed. After #367: #358 E2E ttyd admin console flow BLOCKED on Guard #368 P0 — do NOT start until #368 fix visible. Then #351 pre-migration code quality. Skip #342/#340/#347 (Hetzner-gated)."
+      "notes": "Continue #367 read-only codebase sweep (atomic chunks <2min to dodge QA exit=143 pattern). C4811 follow-up burndown so far: P0-1 DONE (#453 15f55df), P0-2 DONE (#459 f4dc52e), P0-3 worst-offender DONE (#460 bundled in 8d0fb22), P1-1 DONE (#461 e468546), P1-6 DONE (#465 via 851e8cc). Next audit candidates for Trace if atomic scope permits: (a) spot-check P1-7 ts-prune real candidates against dynamic imports, (b) verify P1-3 unused imports are truly dead across product-card.tsx + product-list-item.tsx + referral.ts + gopay.ts, (c) confirm #466 Bolt fix used per-site eslint-disable-next-line (not a broader policy relaxation) once commit lands. Remaining 6 P0-3 setState-in-effect sites staying with eslint-disable per audit line 170 — no Trace follow-up needed. After #367: #358 E2E ttyd admin console flow BLOCKED on Guard #368 P0 — do NOT start until #368 fix visible. Then #351 pre-migration code quality. Skip #342/#340/#347 (Hetzner-gated)."
     },
     "SAGE": {
       "status": "paused",
@@ -30,7 +30,7 @@
         "cart_sold_item_toast",
         "checkout_accordion_polish"
       ],
-      "notes": "Idle this cycle — #420 closed C4798, no forced task. #346 remains blocked on P6.3 Hetzner traffic-cut. If worker lights up unprompted, pick smallest micro-polish from standing queue: (1) PDP měření grid readability on 320w, (2) cart 'prodáno mezitím' toast copy + timing, (3) checkout accordion step-indicator contrast. Atomic scope per polish (≤5 file deltas, no refactors). Do NOT attempt #346 full visual QA — blocked. Do NOT touch checkout/mock-payment (owned by Bolt #419 + already visually QA'd C4797 69c7015). Do NOT touch admin email-editor / measurements-backfill / campaign-dry-run-dialog / global-search this cycle — owned by Bolt #465."
+      "notes": "Idle this cycle — #420 closed C4798, no forced task. #346 remains blocked on P6.3 Hetzner traffic-cut. If worker lights up unprompted, pick smallest micro-polish from standing queue: (1) PDP měření grid readability on 320w, (2) cart 'prodáno mezitím' toast copy + timing, (3) checkout accordion step-indicator contrast. Atomic scope per polish (≤5 file deltas, no refactors). Do NOT attempt #346 full visual QA — blocked. Do NOT touch checkout/mock-payment (owned by Bolt #419 + already visually QA'd C4797 69c7015). Do NOT touch admin email-editor / measurements-backfill / campaign-dry-run-dialog / global-search (#465 just landed there). Do NOT touch admin/layout / admin/customers / account/change-email / account/orders this cycle — owned by Bolt #466."
     },
     "GUARD": {
       "status": "paused",
@@ -50,13 +50,14 @@
     "Mock payment provider (src/lib/payments/mock.ts) MUST stay prod-guarded — NODE_ENV=production with PAYMENT_PROVIDER=mock must throw in provider factory. Do not soften this guard.",
     "Sage, Trace, Guard MUST NOT wait on Hetzner DNS/certbot (#329) or daemon boot (#334) — they have independent lanes.",
     "Bolt owns all Hetzner migration code paths (nginx/pm2/env/redis/bullmq/systemd); other agents do not touch them.",
-    "Tasks #337, #352, #353, #364, #365, #369, #370, #344, #371, #373, #374, #375, #376, #377, #378, #412, #413, #414, #415, #416, #417, #420, #421, #422, #449, #450, #451, #452, #453, #459, #460, #461 are DONE — do not re-raise as blockers.",
+    "Tasks #337, #352, #353, #364, #365, #369, #370, #344, #371, #373, #374, #375, #376, #377, #378, #412, #413, #414, #415, #416, #417, #420, #421, #422, #449, #450, #451, #452, #453, #459, #460, #461, #465 are DONE — do not re-raise as blockers.",
     "Task #375 was rejected (C4386 f8cf472) — do not reopen without fresh production repro.",
     "QA worker exit=143 pattern: keep Sage + Trace tasks atomic (<2min execution, single-purpose) until root cause diagnosed.",
     "#346 blocked until P6.3 traffic-cut completes — no Vercel-baseline visual QA possible pre-Hetzner cut.",
-    "#342/#340/#347 all gated on Bolt P1-P4 Hetzner app deploy + bectly pre-approval + off-peak — Trace must NOT attempt ad-hoc prod failover/perf/restore drills."
+    "#342/#340/#347 all gated on Bolt P1-P4 Hetzner app deploy + bectly pre-approval + off-peak — Trace must NOT attempt ad-hoc prod failover/perf/restore drills.",
+    "#466 Bolt fix: per-site eslint-disable-next-line is acceptable; do NOT introduce a file-level or project-level disable of react-hooks/purity."
   ],
-  "last_updated": "2026-04-24T11:35",
+  "last_updated": "2026-04-24T11:10",
   "pause": {},
   "paused_at_bolt_cycle": 4795
 }

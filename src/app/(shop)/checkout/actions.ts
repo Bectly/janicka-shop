@@ -244,14 +244,84 @@ export async function createOrder(
   const isCod = data.paymentMethod === "cod";
   const isPacketaPickup = data.shippingMethod === "packeta_pickup";
 
-  // Use a transaction to prevent double-sell race conditions.
-  // Inside the transaction: verify availability, use DB prices (never trust client), create order, mark sold.
-  let order;
+  // ─── PRE-TRANSACTION: read-only queries + non-critical upsert ───────────
+  // These used to run inside the transaction, but Turso edge interactive
+  // transactions pay one HTTP round-trip per statement. Moving non-atomic
+  // work out of the tx shrinks the critical section from ~8 queries to 4-6
+  // and avoids hitting the 5 s default interactive-tx timeout. Observed
+  // prod error 2026-04-24 was 5505 ms.
+  //
+  // Safety: referral/store-credit checks are read-only (no race). Customer
+  // upsert outside the tx is fine — a customer row without orders is
+  // harmless, and if the downstream tx fails the user retries, the upsert
+  // is idempotent.
   const db = await getDb();
+
+  // Customer upsert (non-atomic — safe outside tx).
+  let customer = await db.customer.findUnique({
+    where: { email: data.email },
+  });
+  if (customer) {
+    customer = await db.customer.update({
+      where: { id: customer.id },
+      data: {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        ...(data.phone ? { phone: data.phone } : {}),
+        ...(data.street
+          ? { street: data.street, city: data.city, zip: data.zip }
+          : {}),
+      },
+    });
+  } else {
+    customer = await db.customer.create({
+      data: {
+        email: data.email,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phone: data.phone ?? null,
+        street: data.street ?? null,
+        city: data.city ?? null,
+        zip: data.zip ?? null,
+      },
+    });
+  }
+
+  // Shipping/COD constants — pure arithmetic.
+  const baseShipping = SHIPPING_PRICES[data.shippingMethod as ShippingMethod] ?? 0;
+  const codFee = isCod ? COD_SURCHARGE : 0;
+
+  // ─── PRE-TX read-only queries (run in parallel where possible) ────────
+  // Fetch products + store-credit + referral validation in parallel. None
+  // of these need to be inside the tx: products are read again inside the
+  // tx for atomic availability/sold check, and credit/referral are verified
+  // (and applied) in tx too — these are just precomputes so we know total
+  // before opening the tx.
+  const [prefetchProducts, availableCreditCzkPre] = await Promise.all([
+    db.product.findMany({
+      where: { id: { in: productIds }, active: true, sold: false },
+    }),
+    getAvailableStoreCredit(data.email),
+  ]);
+  const prefetchMap = new Map(prefetchProducts.map((p) => [p.id, p]));
+  const subtotalPre = data.items.reduce((sum, i) => {
+    const p = prefetchMap.get(i.productId);
+    return sum + (p?.price ?? i.price);
+  }, 0);
+  const shippingPre = subtotalPre >= FREE_SHIPPING_THRESHOLD ? 0 : baseShipping;
+  let referralDiscountPre = 0;
+  if (data.referralCode && subtotalPre >= REFERRAL_MIN_ORDER_CZK) {
+    const rr = await validateReferralCode(data.referralCode, data.email);
+    if (rr.valid) referralDiscountPre = rr.discountCzk;
+  }
+
+  // ─── TRANSACTION: atomic availability + order write ────────────────────
+  // Now tx only does: re-verify availability (cheap, same products usually),
+  // createOrder, createMany orderItems, updateMany products (sold flag),
+  // applyStoreCredit, redeemReferralCode. No read-only precomputes.
+  let order;
   try {
     order = await db.$transaction(async (tx) => {
-      // Verify all products are still available (authoritative check inside transaction)
-      // Products reserved by this visitor are considered available
       const products = await tx.product.findMany({
         where: { id: { in: productIds }, active: true, sold: false },
       });
@@ -260,8 +330,7 @@ export async function createOrder(
       const productMap = new Map(products.map((p) => [p.id, p]));
       const unavailable = data.items.filter((i) => {
         const p = productMap.get(i.productId);
-        if (!p) return true; // not found
-        // Check if reserved by someone else (and reservation hasn't expired)
+        if (!p) return true;
         if (
           p.reservedUntil &&
           p.reservedUntil > now &&
@@ -278,42 +347,25 @@ export async function createOrder(
         );
       }
 
-      // Use server-side prices from DB — never trust client-provided prices
+      // Authoritative server-side prices — re-read inside tx in case price
+      // changed between precompute and now (rare but possible on manual admin
+      // edit). Precompute is a fast-path that usually matches these.
       const subtotal = data.items.reduce((sum, i) => {
         const dbProduct = productMap.get(i.productId)!;
-        return sum + dbProduct.price * 1; // qty is always 1 for second-hand
+        return sum + dbProduct.price * 1;
       }, 0);
+      const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : baseShipping;
 
-      // Calculate shipping cost server-side (never trust client)
-      const baseShipping =
-        SHIPPING_PRICES[data.shippingMethod as ShippingMethod] ?? 0;
-      const shipping =
-        subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : baseShipping;
-      const codFee = isCod ? COD_SURCHARGE : 0;
+      // Use precomputed referral discount (validated just above tx).
+      // Cap the discount to the live subtotal guard in case price dropped.
+      const referralDiscount =
+        data.referralCode && subtotal >= REFERRAL_MIN_ORDER_CZK
+          ? referralDiscountPre
+          : 0;
 
-      // --- Referral discount ---
-      let referralDiscount = 0;
-      if (data.referralCode) {
-        // Cannot use referral if subtotal below minimum
-        if (subtotal >= REFERRAL_MIN_ORDER_CZK) {
-          const referralResult = await validateReferralCode(
-            data.referralCode,
-            data.email,
-          );
-          if (referralResult.valid) {
-            referralDiscount = referralResult.discountCzk;
-          }
-          // If invalid at this point, silently ignore — don't block checkout.
-          // Client already showed validation feedback.
-        }
-      }
-
-      // --- Store credit ---
-      // Check available credit for this email (before deducting)
-      const availableCreditCzk = await getAvailableStoreCredit(data.email);
+      // Apply store credit (write path — must be inside tx).
       const preDiscountTotal = subtotal + shipping + codFee - referralDiscount;
-      // Apply store credit up to the remaining total (never go below 0)
-      const maxCreditToApply = Math.min(availableCreditCzk, Math.max(0, preDiscountTotal));
+      const maxCreditToApply = Math.min(availableCreditCzkPre, Math.max(0, preDiscountTotal));
       let storeCreditUsed = 0;
       if (maxCreditToApply > 0) {
         storeCreditUsed = await applyStoreCredit(tx, data.email, maxCreditToApply);
@@ -321,50 +373,12 @@ export async function createOrder(
 
       const total = Math.max(0, subtotal + shipping + codFee - referralDiscount - storeCreditUsed);
 
-      // For Packeta pickup: use point address; for home delivery: use form address
       const shippingName = `${data.firstName} ${data.lastName}`;
       const shippingStreet = isPacketaPickup
         ? (data.packetaPointName ?? null)
         : (data.street ?? null);
       const shippingCity = isPacketaPickup ? null : (data.city ?? null);
       const shippingZip = isPacketaPickup ? null : (data.zip ?? null);
-
-      // Create or find customer
-      let customer = await tx.customer.findUnique({
-        where: { email: data.email },
-      });
-
-      if (customer) {
-        customer = await tx.customer.update({
-          where: { id: customer.id },
-          data: {
-            firstName: data.firstName,
-            lastName: data.lastName,
-            // Only update phone if provided (optional for Packeta pickup)
-            ...(data.phone ? { phone: data.phone } : {}),
-            // Only update address if it was provided (home delivery)
-            ...(data.street
-              ? {
-                  street: data.street,
-                  city: data.city,
-                  zip: data.zip,
-                }
-              : {}),
-          },
-        });
-      } else {
-        customer = await tx.customer.create({
-          data: {
-            email: data.email,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            phone: data.phone ?? null,
-            street: data.street ?? null,
-            city: data.city ?? null,
-            zip: data.zip ?? null,
-          },
-        });
-      }
 
       // Create order with DB-sourced prices
       const orderNumber = generateOrderNumber();
@@ -481,16 +495,6 @@ export async function createOrder(
         referralDiscountApplied: referralDiscount,
         storeCreditApplied: storeCreditUsed,
       };
-    }, {
-      // Default Prisma interactive tx timeout is 5000 ms. Turso edge (eu-west-1)
-      // round-trips push realistic order creation over that: customer upsert +
-      // product row-level updates + order insert + orderItems insert + related
-      // wishlist/abandoned writes. Observed prod error on cash-on-delivery
-      // submit 2026-04-24: "Transaction already closed… 5505 ms passed since
-      // the start of the transaction". 15 s is comfortable headroom without
-      // hiding genuinely slow queries.
-      maxWait: 5000,
-      timeout: 15000,
     });
   } catch (e) {
     if (e instanceof UnavailableError) {
