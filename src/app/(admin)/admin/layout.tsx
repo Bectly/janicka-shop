@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { getAdminBadges } from "@/lib/admin-badges";
-import { AdminSidebar } from "@/components/admin/sidebar";
+import { AdminSidebar, AdminSidebarMobileTrigger } from "@/components/admin/sidebar";
 import { AdminOrderNotifier } from "@/components/admin/order-notifier";
 import { GlobalSearch } from "@/components/admin/global-search";
 import { Breadcrumbs } from "@/components/admin/breadcrumbs";
@@ -76,8 +76,15 @@ async function AdminAuthGate({
         mailboxUnread={mailboxUnread}
       />
       <main id="main-content" className="flex-1 overflow-auto">
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-card/95 px-4 backdrop-blur-sm sm:px-6 lg:px-8">
-          <Breadcrumbs />
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-2 border-b bg-card/95 px-3 backdrop-blur-sm sm:gap-4 sm:px-6 lg:px-8">
+          <div className="flex min-w-0 items-center gap-2">
+            <AdminSidebarMobileTrigger
+              userName={session.user.name ?? "Admin"}
+              ordersLast24h={ordersLast24h}
+              mailboxUnread={mailboxUnread}
+            />
+            <Breadcrumbs />
+          </div>
           <div className="flex items-center gap-2">
             <GlobalSearch />
             <JarvisConsoleToggle />

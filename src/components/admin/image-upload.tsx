@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from "react";
 import Image from "next/image";
 import { uploadFiles } from "@/lib/upload-client";
-import { X, GripVertical, ImagePlus, Loader2 } from "lucide-react";
+import { X, GripVertical, ImagePlus, Loader2, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ImageUploadProps {
@@ -18,6 +18,7 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const removeImage = useCallback(
     (index: number) => {
@@ -74,8 +75,9 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
       );
     } finally {
       setIsUploading(false);
-      // Reset file input so same files can be selected again
+      // Reset file inputs so same files can be selected again
       if (fileInputRef.current) fileInputRef.current.value = "";
+      if (cameraInputRef.current) cameraInputRef.current.value = "";
     }
   }
 
@@ -138,6 +140,42 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
       {/* Upload area */}
       {value.length < 10 && (
         <>
+          {/* Mobile-first: side-by-side camera + gallery buttons (sm-) */}
+          <div className="grid grid-cols-2 gap-2 sm:hidden">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-14 flex-col gap-1 text-xs"
+              disabled={isUploading}
+              onClick={() => !isUploading && cameraInputRef.current?.click()}
+            >
+              {isUploading ? (
+                <Loader2 className="size-5 animate-spin" />
+              ) : (
+                <Camera className="size-5" />
+              )}
+              <span>Vyfoť</span>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-14 flex-col gap-1 text-xs"
+              disabled={isUploading}
+              onClick={() => !isUploading && fileInputRef.current?.click()}
+            >
+              {isUploading ? (
+                <Loader2 className="size-5 animate-spin" />
+              ) : (
+                <ImagePlus className="size-5" />
+              )}
+              <span>Z galerie</span>
+            </Button>
+            <span className="col-span-2 text-center text-xs text-muted-foreground">
+              {value.length}/10 fotek — max 4 MB každá
+            </span>
+          </div>
+
+          {/* Desktop dropzone (sm+) */}
           <div
             onClick={() => !isUploading && fileInputRef.current?.click()}
             onDragOver={(e) => {
@@ -146,7 +184,7 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
             }}
             onDragLeave={() => setIsDragOver(false)}
             onDrop={handleDropzoneFilesDrop}
-            className={`flex cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-dashed p-6 transition-colors duration-150 ${
+            className={`hidden cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-dashed p-6 transition-colors duration-150 sm:flex ${
               isUploading
                 ? "cursor-default border-primary/30 bg-muted/30"
                 : isDragOver
@@ -180,6 +218,14 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
             type="file"
             accept="image/jpeg,image/jpg,image/png,image/webp,image/avif"
             multiple
+            className="hidden"
+            onChange={(e) => handleFilesSelected(e.target.files)}
+          />
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
             className="hidden"
             onChange={(e) => handleFilesSelected(e.target.files)}
           />

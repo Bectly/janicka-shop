@@ -24,7 +24,15 @@ import {
   PenLine,
   Ruler,
   Terminal,
+  Menu,
 } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 
 type NavItem =
   | { href: string; label: string; icon: React.ElementType; divider?: false }
@@ -51,19 +59,21 @@ const navItems: NavItem[] = [
   { href: "/admin/jarvis", label: "JARVIS", icon: Terminal },
 ];
 
-export function AdminSidebar({
+function SidebarBody({
   userName,
-  ordersLast24h = 0,
-  mailboxUnread = 0,
+  ordersLast24h,
+  mailboxUnread,
+  onNavigate,
 }: {
   userName: string;
-  ordersLast24h?: number;
-  mailboxUnread?: number;
+  ordersLast24h: number;
+  mailboxUnread: number;
+  onNavigate?: () => void;
 }) {
   const pathname = usePathname();
 
   return (
-    <aside aria-label="Administrace" className="sticky top-0 flex h-screen w-64 flex-col border-r bg-card">
+    <>
       {/* Logo */}
       <div className="flex h-16 items-center gap-2 border-b px-6">
         <Store className="size-5 text-primary" />
@@ -74,7 +84,7 @@ export function AdminSidebar({
       </div>
 
       {/* Navigation */}
-      <nav aria-label="Hlavní menu" className="flex-1 space-y-1 px-3 py-4">
+      <nav aria-label="Hlavní menu" className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
         {navItems.map((item, i) => {
           if ("divider" in item && item.divider) {
             return <hr key={`divider-${i}`} className="my-1 border-border/50" />;
@@ -94,6 +104,7 @@ export function AdminSidebar({
               key={item.href}
               href={item.href}
               prefetch
+              onClick={onNavigate}
               className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150 ${
                 isActive
                   ? "bg-primary/10 text-primary"
@@ -122,6 +133,7 @@ export function AdminSidebar({
           <p className="font-medium text-foreground">{userName}</p>
           <Link
             href="/"
+            onClick={onNavigate}
             className="text-xs text-muted-foreground transition-colors duration-150 hover:text-primary"
           >
             Zobrazit obchod &rarr;
@@ -135,6 +147,74 @@ export function AdminSidebar({
           Odhlásit se
         </button>
       </div>
+    </>
+  );
+}
+
+export function AdminSidebar({
+  userName,
+  ordersLast24h = 0,
+  mailboxUnread = 0,
+}: {
+  userName: string;
+  ordersLast24h?: number;
+  mailboxUnread?: number;
+}) {
+  return (
+    <aside
+      aria-label="Administrace"
+      className="sticky top-0 hidden h-screen w-64 flex-col border-r bg-card md:flex"
+    >
+      <SidebarBody
+        userName={userName}
+        ordersLast24h={ordersLast24h}
+        mailboxUnread={mailboxUnread}
+      />
     </aside>
+  );
+}
+
+export function AdminSidebarMobileTrigger({
+  userName,
+  ordersLast24h = 0,
+  mailboxUnread = 0,
+}: {
+  userName: string;
+  ordersLast24h?: number;
+  mailboxUnread?: number;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const totalBadges = ordersLast24h + mailboxUnread;
+
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative md:hidden"
+            aria-label="Otevřít menu"
+          />
+        }
+      >
+        <Menu className="size-5" />
+        {totalBadges > 0 ? (
+          <span className="absolute top-1 right-1 size-2 rounded-full bg-primary" />
+        ) : null}
+      </SheetTrigger>
+      <SheetContent
+        side="left"
+        className="flex w-72 max-w-[85vw] flex-col bg-card p-0 sm:max-w-sm"
+      >
+        <SheetTitle className="sr-only">Administrace menu</SheetTitle>
+        <SidebarBody
+          userName={userName}
+          ordersLast24h={ordersLast24h}
+          mailboxUnread={mailboxUnread}
+          onNavigate={() => setOpen(false)}
+        />
+      </SheetContent>
+    </Sheet>
   );
 }
