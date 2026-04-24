@@ -3,6 +3,7 @@ import { FROM_NEWSLETTER, REPLY_TO } from "@/lib/email/addresses";
 import { getDb } from "@/lib/db";
 import { signUnsubscribeToken } from "@/lib/unsubscribe-token";
 import { logger } from "@/lib/logger";
+import { CONDITION_LABELS } from "@/lib/constants";
 import {
   BRAND,
   FONTS,
@@ -14,14 +15,6 @@ import {
   renderEyebrow,
   renderDisplayHeading,
 } from "@/lib/email/layout";
-
-const CONDITION_LABELS: Record<string, string> = {
-  new_with_tags: "Nové s visačkou",
-  new_without_tags: "Nové bez visačky",
-  excellent: "Výborný stav",
-  good: "Dobrý stav",
-  visible_wear: "Viditelné opotřebení",
-};
 
 interface SoldProduct {
   id: string;

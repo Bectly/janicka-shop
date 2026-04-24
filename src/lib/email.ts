@@ -8,6 +8,7 @@ import {
 } from "@/lib/email/addresses";
 import { signUnsubscribeToken } from "@/lib/unsubscribe-token";
 import { logger } from "@/lib/logger";
+import { CONDITION_LABELS } from "@/lib/constants";
 import {
   BRAND,
   FONTS,
@@ -479,7 +480,7 @@ function buildCrossSellProductsHtml(products: CrossSellProduct[]): string {
         ? `<span style="text-decoration: line-through; color: ${BRAND.charcoalMuted}; font-size: 12px;">${formatPriceCzk(p.compareAt!)}</span> <strong style="color: ${BRAND.primary}; font-family: ${FONTS.serif}; font-size: 17px; font-weight: 700;">${formatPriceCzk(p.price)}</strong>`
         : `<strong style="color: ${BRAND.charcoal}; font-family: ${FONTS.serif}; font-size: 17px; font-weight: 700;">${formatPriceCzk(p.price)}</strong>`;
 
-      const conditionLabel = CONDITION_LABELS_SHIPPING[p.condition] ?? p.condition;
+      const conditionLabel = CONDITION_LABELS[p.condition] ?? p.condition;
       const sizesText = p.sizes.length > 0 ? p.sizes.join(", ") : null;
 
       return `
@@ -514,14 +515,6 @@ function buildCrossSellProductsHtml(products: CrossSellProduct[]): string {
       </p>
     </div>`;
 }
-
-const CONDITION_LABELS_SHIPPING: Record<string, string> = {
-  new_with_tags: "Nov\u00e9 s visa\u010dkou",
-  new_without_tags: "Nov\u00e9 bez visa\u010dky",
-  excellent: "V\u00fdborn\u00fd stav",
-  good: "Dobr\u00fd stav",
-  visible_wear: "Viditeln\u00e9 opot\u0159eben\u00ed",
-};
 
 function buildShippingNotificationHtml(data: ShippingNotificationData): string {
   const baseUrl = getBaseUrl();
@@ -604,7 +597,7 @@ export async function sendShippingNotificationEmail(data: ShippingNotificationDa
       from: FROM_ORDERS,
       replyTo: REPLY_TO,
       to: data.customerEmail,
-      subject: `Objedn\u00e1vka odesl\u00e1na \u2014 ${data.orderNumber} \u2014 Jani\u010dka Shop`,
+      subject: `Objednávka odeslána — ${data.orderNumber} — Janička Shop`,
       html: buildShippingNotificationHtml(data),
     });
     return true;
@@ -1515,18 +1508,10 @@ export interface NewArrivalEmailData {
   products: NewArrivalProduct[];
 }
 
-const CONDITION_LABELS_EMAIL: Record<string, string> = {
-  new_with_tags: "Nové s visačkou",
-  new_without_tags: "Nové bez visačky",
-  excellent: "Výborný stav",
-  good: "Dobrý stav",
-  visible_wear: "Viditelné opotřebení",
-};
-
 function newArrivalsToGridItems(products: NewArrivalProduct[]) {
   const baseUrl = getBaseUrl();
   return products.map((p) => {
-    const conditionLabel = CONDITION_LABELS_EMAIL[p.condition] ?? p.condition;
+    const conditionLabel = CONDITION_LABELS[p.condition] ?? p.condition;
     const sizes = p.sizes.length > 0 ? `Vel. ${p.sizes.join(", ")}` : null;
     const meta = [conditionLabel, sizes].filter(Boolean).join(" · ");
     return {
@@ -1714,7 +1699,7 @@ export interface CrossSellFollowUpData {
 function crossSellsToGridItems(products: CrossSellProduct[]) {
   const baseUrl = getBaseUrl();
   return products.map((p) => {
-    const conditionLabel = CONDITION_LABELS_EMAIL[p.condition] ?? p.condition;
+    const conditionLabel = CONDITION_LABELS[p.condition] ?? p.condition;
     const sizes = p.sizes.length > 0 ? `Vel. ${p.sizes.join(", ")}` : null;
     const meta = [conditionLabel, sizes].filter(Boolean).join(" · ");
     return {
@@ -1873,7 +1858,7 @@ export interface CampaignEmailData {
 function campaignsToGridItems(products: CampaignProduct[], caption?: string) {
   const baseUrl = getBaseUrl();
   return products.map((p) => {
-    const conditionLabel = CONDITION_LABELS_EMAIL[p.condition] ?? p.condition;
+    const conditionLabel = CONDITION_LABELS[p.condition] ?? p.condition;
     return {
       name: p.name,
       brand: p.brand,
