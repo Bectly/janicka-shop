@@ -13,6 +13,7 @@ import { sendWishlistSoldNotifications } from "@/lib/email/wishlist-sold";
 import { logOrderToHeureka } from "@/lib/heureka";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { invalidateProductCaches } from "@/lib/redis";
+import { invalidateCustomerScope } from "@/lib/customer-cache";
 import {
   PAYMENT_METHODS,
   SHIPPING_METHODS,
@@ -518,6 +519,11 @@ export async function createOrder(
   revalidateTag("admin-customers", "max");
   revalidateTag("admin-abandoned-carts", "max");
   revalidateTag("admin-referrals", "max");
+  if (order.customerId) {
+    invalidateCustomerScope(order.customerId, "orders");
+    invalidateCustomerScope(order.customerId, "dashboard");
+    invalidateCustomerScope(order.customerId, "wishlist");
+  }
   // Drop Redis copies so the next request doesn't serve a sold item as available.
   await Promise.all(
     order.productSlugs.map((slug) => invalidateProductCaches({ slug })),

@@ -1,9 +1,11 @@
+import { revalidateTag } from "next/cache";
 import { getDb } from "@/lib/db";
 import { sendPaymentConfirmedEmail, sendAdminNewOrderEmail } from "@/lib/email";
 import { dispatchEmail } from "@/lib/email-dispatch";
 import { logOrderToHeureka } from "@/lib/heureka";
 import type { ComgatePaymentStatus } from "./types";
 import { logger } from "@/lib/logger";
+import { invalidateCustomerScope } from "@/lib/customer-cache";
 
 /**
  * Map provider payment status to order status update.
@@ -37,6 +39,11 @@ export async function processPaymentStatus(
             },
           });
           if (order) {
+            if (order.customerId) {
+              invalidateCustomerScope(order.customerId, "orders");
+              invalidateCustomerScope(order.customerId, "dashboard");
+            }
+            revalidateTag("admin-orders", "max");
             dispatchEmail(
               "payment-confirmed",
               {
@@ -97,6 +104,7 @@ export async function processPaymentStatus(
     }
     case "CANCELLED": {
       if (currentOrderStatus === "pending") {
+        let customerIdForInvalidate: string | null = null;
         await db.$transaction(async (tx) => {
           const updated = await tx.order.updateMany({
             where: { id: orderId, status: "pending" },
@@ -113,7 +121,18 @@ export async function processPaymentStatus(
             where: { id: { in: productIds }, active: true, sold: true },
             data: { sold: false, stock: 1 },
           });
+
+          const o = await tx.order.findUnique({
+            where: { id: orderId },
+            select: { customerId: true },
+          });
+          customerIdForInvalidate = o?.customerId ?? null;
         });
+        if (customerIdForInvalidate) {
+          invalidateCustomerScope(customerIdForInvalidate, "orders");
+          invalidateCustomerScope(customerIdForInvalidate, "dashboard");
+        }
+        revalidateTag("admin-orders", "max");
       }
       break;
     }

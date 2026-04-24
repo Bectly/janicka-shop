@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { getDb } from "@/lib/db";
 import { logEvent } from "@/lib/audit-log";
 import { sendEmailChangeNoticeEmail } from "@/lib/email";
+import { invalidateCustomerScope } from "@/lib/customer-cache";
 
 export const metadata: Metadata = {
   title: "Potvrzení změny emailu — Janička",
@@ -89,6 +90,10 @@ async function verifyToken(token: string): Promise<
   } catch {
     // Collision (subscriber row already exists on new email) — ignore.
   }
+
+  invalidateCustomerScope(customer.id, "profile");
+  invalidateCustomerScope(customer.id, "settings");
+  invalidateCustomerScope(customer.id, "dashboard");
 
   await logEvent({
     customerId: customer.id,

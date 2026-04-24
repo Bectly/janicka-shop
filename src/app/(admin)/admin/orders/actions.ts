@@ -10,6 +10,7 @@ import { rateLimitAdmin } from "@/lib/rate-limit";
 import { generateInvoicePdf, type InvoiceData } from "@/lib/invoice/generate-invoice";
 import { createPacket, getPacketLabel, getPacketLabelsBatch } from "@/lib/shipping/packeta";
 import { logger } from "@/lib/logger";
+import { invalidateCustomerScope } from "@/lib/customer-cache";
 
 const VALID_STATUSES = [
   "pending",
@@ -48,7 +49,7 @@ export async function updateOrderStatus(orderId: string, status: string) {
 
   const order = await db.order.findUnique({
     where: { id: orderId },
-    select: { status: true, items: { select: { productId: true } } },
+    select: { status: true, customerId: true, items: { select: { productId: true } } },
   });
 
   if (!order) throw new Error("Objednávka nenalezena");
@@ -173,6 +174,10 @@ export async function updateOrderStatus(orderId: string, status: string) {
   revalidateTag("admin-products", "max");
   revalidateTag("admin-orders", "max");
   revalidateTag("admin-badges", "max");
+  if (order.customerId) {
+    invalidateCustomerScope(order.customerId, "orders");
+    invalidateCustomerScope(order.customerId, "dashboard");
+  }
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath("/products");
@@ -549,11 +554,16 @@ export async function updateTrackingNumber(orderId: string, trackingNumber: stri
 
   const db = await getDb();
 
-  await db.order.update({
+  const updated = await db.order.update({
     where: { id: orderId },
     data: { trackingNumber: trimmed || null },
+    select: { customerId: true },
   });
 
+  revalidateTag("admin-orders", "max");
+  if (updated.customerId) {
+    invalidateCustomerScope(updated.customerId, "orders");
+  }
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${orderId}`);
 }
@@ -819,6 +829,7 @@ export async function createPacketaShipment(
       shippingMethod: true,
       shippingPointId: true,
       total: true,
+      customerId: true,
       customer: {
         select: { firstName: true, lastName: true, email: true, phone: true },
       },
@@ -856,6 +867,10 @@ export async function createPacketaShipment(
     data: { packetId },
   });
 
+  revalidateTag("admin-orders", "max");
+  if (order.customerId) {
+    invalidateCustomerScope(order.customerId, "orders");
+  }
   revalidatePath(`/admin/orders/${orderId}`);
 
   return { packetId };
