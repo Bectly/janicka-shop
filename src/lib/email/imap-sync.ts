@@ -176,8 +176,16 @@ async function persistParsedMessage(
       const buf = Buffer.isBuffer(att.content) ? att.content : Buffer.from(att.content as Uint8Array);
       const checksum = createHash("sha256").update(buf).digest("hex");
       const safeName = att.filename.replace(/[^a-zA-Z0-9._-]/g, "-").slice(0, 120);
-      const key = `mailbox/${checksum}-${safeName}`;
-      await uploadToR2(buf, safeName, att.contentType ?? "application/octet-stream", "mailbox");
+      // Deterministic key so duplicate attachments dedupe in R2 and the stored
+      // r2Key always matches the object actually written.
+      const explicitKey = `mailbox/${checksum}-${safeName}`;
+      const { key } = await uploadToR2(
+        buf,
+        safeName,
+        att.contentType ?? "application/octet-stream",
+        "mailbox",
+        explicitKey,
+      );
       attachmentsData.push({
         filename: att.filename.slice(0, 255),
         contentType: (att.contentType ?? "application/octet-stream").slice(0, 120),

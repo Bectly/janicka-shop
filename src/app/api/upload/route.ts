@@ -142,7 +142,7 @@ export async function POST(req: NextRequest) {
     }
 
     const folder = isVideo ? "videos" : "products";
-    const url = await uploadToR2(buffer, file.name, file.type, folder);
+    const { url } = await uploadToR2(buffer, file.name, file.type, folder);
     urls.push(url);
   }
 
