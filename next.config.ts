@@ -5,6 +5,10 @@ const isDev = process.env.NODE_ENV === "development";
 const nextConfig: NextConfig = {
   output: "standalone",
   cacheComponents: true,
+  // Disable Next.js auto trailing-slash normalization so Czech→English aliases
+  // collapse to a single 301 hop instead of "/produkty/" → "/produkty" → "/products".
+  // Trailing slashes on other routes are normalized by the catch-all in redirects().
+  skipTrailingSlashRedirect: true,
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [
@@ -24,61 +28,45 @@ const nextConfig: NextConfig = {
     ],
   },
   async redirects() {
+    // Czech → English URL aliases. With skipTrailingSlashRedirect: true we must
+    // match BOTH "/alias" and "/alias/" explicitly, otherwise trailing-slash
+    // variants would fall through to the catch-all and cost two 301 hops.
+    const czechAliases: Array<{ from: string; to: string }> = [
+      { from: "/obchodni-podminky", to: "/terms" },
+      { from: "/ochrana-soukromi", to: "/privacy" },
+      { from: "/doprava", to: "/shipping" },
+      { from: "/kontakt", to: "/contact" },
+      { from: "/o-nas", to: "/about" },
+      { from: "/reklamace", to: "/returns" },
+      { from: "/vratky", to: "/returns" },
+      { from: "/kosik", to: "/cart" },
+      { from: "/produkty", to: "/products" },
+      { from: "/gdpr", to: "/privacy" },
+    ];
+    const aliasRules = czechAliases.flatMap(({ from, to }) => [
+      { source: from, destination: to, permanent: true },
+      { source: `${from}/`, destination: to, permanent: true },
+    ]);
+
     return [
-      // Czech → English URL redirects for informational pages
-      {
-        source: "/obchodni-podminky",
-        destination: "/terms",
-        permanent: true,
-      },
-      {
-        source: "/ochrana-soukromi",
-        destination: "/privacy",
-        permanent: true,
-      },
-      {
-        source: "/doprava",
-        destination: "/shipping",
-        permanent: true,
-      },
-      {
-        source: "/kontakt",
-        destination: "/contact",
-        permanent: true,
-      },
-      {
-        source: "/o-nas",
-        destination: "/about",
-        permanent: true,
-      },
-      {
-        source: "/reklamace",
-        destination: "/returns",
-        permanent: true,
-      },
-      {
-        source: "/vratky",
-        destination: "/returns",
-        permanent: true,
-      },
-      {
-        source: "/kosik",
-        destination: "/cart",
-        permanent: true,
-      },
-      {
-        source: "/produkty",
-        destination: "/products",
-        permanent: true,
-      },
+      ...aliasRules,
+      // Czech product detail slug + optional trailing slash → English canonical.
       {
         source: "/produkty/:slug*",
         destination: "/products/:slug*",
         permanent: true,
       },
       {
-        source: "/gdpr",
-        destination: "/privacy",
+        source: "/produkty/:slug*/",
+        destination: "/products/:slug*",
+        permanent: true,
+      },
+      // Catch-all trailing-slash normalizer for every other route. Replaces the
+      // built-in redirect we disabled via skipTrailingSlashRedirect so external
+      // links with a stray "/" still canonicalize in a single hop.
+      {
+        source: "/:path+/",
+        destination: "/:path+",
         permanent: true,
       },
     ];

@@ -391,6 +391,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                 style={swipeOffset !== 0 ? { transform: `translateX(${swipeOffset}px)` } : undefined}
                 sizes="(max-width: 1024px) 100vw, 50vw"
                 priority={activeIndex === 0}
+                fetchPriority={activeIndex === 0 ? "high" : "auto"}
                 placeholder="blur"
                 blurDataURL={BLUR_DATA_URL}
                 quality={90}
