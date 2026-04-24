@@ -211,6 +211,41 @@ export function AdminSettingsSkeleton() {
   );
 }
 
+export function AnalyticsSkeleton() {
+  return (
+    <div aria-busy="true" aria-live="polite" className="mt-8 space-y-8">
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-6 w-44" />
+        <Skeleton className="h-9 w-28 rounded-lg" />
+      </div>
+      <section>
+        <Skeleton className="mb-4 h-3 w-40" />
+        <div className="rounded-xl border bg-card p-4 shadow-sm">
+          <Skeleton className="h-[220px] w-full rounded-md" />
+        </div>
+      </section>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <section>
+          <Skeleton className="mb-3 h-3 w-56" />
+          <div className="overflow-hidden rounded-xl border bg-card p-4 shadow-sm">
+            <div className="space-y-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-9 w-full rounded-md" />
+              ))}
+            </div>
+          </div>
+        </section>
+        <section>
+          <Skeleton className="mb-3 h-3 w-44" />
+          <div className="flex min-h-[280px] items-center justify-center rounded-xl border bg-card p-4 shadow-sm">
+            <Skeleton className="size-52 rounded-full" />
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
 export function AdminCoverageSkeleton() {
   return (
     <div aria-busy="true" aria-live="polite" className="space-y-6">

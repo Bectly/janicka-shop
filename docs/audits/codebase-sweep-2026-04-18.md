@@ -1138,3 +1138,148 @@ C4885 dead-export census (full src/ run, framework hooks excluded):
 
 C4885 is the first cycle since C4881 cf4d4b8 with a Trace audit re-run. Three intervening cycles (C4882–C4884) shipped 5 code commits with the same 3 lint errors and Row R regression unnoticed. Lead C4884 supervision commit was empty-body (no Trace dispatch this cycle). Recommend Lead either: (a) dispatch Trace every cycle that lands a Bolt or Sage commit, or (b) add a CI lint gate so the regression flips Bolt-cycle status to ❌ at commit time rather than waiting for the next sweep.
 
+---
+
+## C4890 addendum
+
+### Row W (NEW C4890) — react-hooks lint breakage: exact file:line:rule + proposed fixes
+
+**Ask from Lead (C4889 directive):** "file exact file:line:rule triplets for 3 react-hooks lint offenders now SEVENTH consecutive cycle broken (C4883 → C4889), propose real dep repair or justified eslint-disable-next-line with rationale."
+
+**Correction to the headcount:** Lead directive says "3 react-hooks offenders." Actual `npm run lint` output at C4890 HEAD (89cf36e) shows **4 errors** — the `/kviz/styl` quiz funnel landed in C4888 c5fd893 introduced a 4th offender that is not tracked in Row Z2. Row Z2 (lines 945–962) covers only the original 3.
+
+**Cycle tracking:** breakage now spans **8 consecutive cycles** (C4883 → C4890). Cycle C4890 Sage commit 89cf36e is customer-support email domain + typo fix in `email.ts` / `layout.ts` / `account-deleted.tsx` — none of those files contain a lint offender, so the gate stays red. No Bolt work landed this cycle to close Row Z2. `npm run lint` exit 1; `tsc --noEmit` exit 0; `next build` still passes.
+
+#### The 4 offenders — exact triplets
+
+| # | File:Line | Rule | Offending expression | Landed in |
+|---|---|---|---|---|
+| W1 | `src/app/(admin)/admin/customers/page.tsx:150` | `react-hooks/purity` | `Math.floor(Date.now() / 60_000) * 60_000` | pre-C4883 (carry) |
+| W2 | `src/app/(admin)/admin/layout.tsx:35` | `react-hooks/purity` | `` `admin-nav-${Math.random().toString(36).slice(2, 8)}` `` (guarded by `PERF_PROFILE` at :34) | C4879 #524f perf instrumentation |
+| W3 | `src/app/(admin)/admin/mailbox/mailbox-search.tsx:23` | `react-hooks/set-state-in-effect` | `setValue(initialQ)` inside `useEffect(..., [initialQ])` at :22–25 | pre-C4883 (carry) |
+| W4 | `src/app/(shop)/kviz/styl/style-quiz.tsx:133` | `react-hooks/set-state-in-effect` | `setState(loadState())` inside mount-only `useEffect(..., [])` at :132–135 | C4888 c5fd893 #540 (quiz funnel) |
+
+All four reproduce from HEAD with `npm run lint` — full output pasted under *Verification evidence* below.
+
+#### Root-cause framing
+
+All four errors share one cause: the **Next 16 / React 19 ESLint preset shipped with `eslint-plugin-react-hooks` v5** which enforces the new "Rules of React" (purity + effects semantics) that were advisory in React 18 and earlier. The project bumped Next to 16.2.3 on C4879 and the violations were latent before that bump — all four patterns are idiomatic-for-React-18 (`Date.now()` in RSC body, mount-only `setState` in effects for localStorage hydration, etc.). None is a runtime bug today; all four are policy/future-proofing violations.
+
+`next build` passing means production is unaffected. But the "0 errors / 0 warnings" eslint streak across 25+ commits (broken at C4883) was a load-bearing quality signal for this project, and it's been silent-red for 8 cycles. Each cycle that Bolt/Sage ships code without fixing this deepens attribution ambiguity for the next regression.
+
+#### Proposed fixes per site (with rationale)
+
+For each, a **primary** fix (real dependency repair, preferred) and **fallback** (justified `eslint-disable-next-line`). Pick based on how invasive the primary is.
+
+**W1 — `customers/page.tsx:150`**
+
+- **Primary (recommended, ~5 LoC):** Drop the `minuteBucket` argument entirely. `getCustomersPageData` is already a `"use cache"` function — `cacheLife('minutes')` (or equivalent) inside that function gives native minute-window TTL without a manual cache-key parameter. The `minuteBucket` arg is redundant with the cache framework. Delete lines 149–150, remove `minuteBucket` from the `getCustomersPageData` signature and call site. This is the same fix recommended in Row Z2 option (B), C4881.
+- **Fallback (~1 LoC):** There is already precedent at `customers/page.tsx:173–174`:
+  ```ts
+  // eslint-disable-next-line react-hooks/purity -- request-time read in RSC, not cached
+  const now = Date.now();
+  ```
+  Mirror that comment at :150 with rationale "request-time read for minute-window cache key; RSC not wrapped in `use cache` here." Minimally invasive; only valid if primary refactor is blocked on cache-framework review.
+
+**W2 — `admin/layout.tsx:35`**
+
+- **Primary (recommended, ~2 LoC):** Module-level counter. Replace:
+  ```ts
+  const navId = PERF_PROFILE
+    ? `admin-nav-${Math.random().toString(36).slice(2, 8)}`
+    : "";
+  ```
+  with:
+  ```ts
+  let __adminNavCounter = 0;  // module-scoped, not in component body
+  // ...inside AdminAuthGate:
+  const navId = PERF_PROFILE ? `admin-nav-${++__adminNavCounter}` : "";
+  ```
+  `react-hooks/purity` does not flag module-scoped mutation. navId only needs to be unique-per-request; monotonic counter is fine. Already recommended in Row Z2 option (B), C4881.
+- **Fallback (~1 LoC):** `// eslint-disable-next-line react-hooks/purity -- debug-only, gated by PERF_PROFILE; noop in prod unless flag is set` above :35. Acceptable because the whole navId machinery is debug-only.
+
+**W3 — `mailbox-search.tsx:23`**
+
+- **Primary (recommended, ~4 LoC):** Replace the URL→state sync effect with the React 19 "derive during render" pattern. This is React's own documented replacement for "reset state when prop changes":
+  ```ts
+  const [value, setValue] = useState(initialQ);
+  const [lastInitialQ, setLastInitialQ] = useState(initialQ);
+  if (initialQ !== lastInitialQ) {
+    setLastInitialQ(initialQ);
+    setValue(initialQ);
+    lastPushedRef.current = initialQ;
+  }
+  // drop the useEffect at :22–25 entirely
+  ```
+  See React docs: "You might not need an effect — Adjusting state when a prop changes." No `eslint-disable` needed; this passes purity and set-state-in-effect.
+- **Alternative real fix (~1 LoC at parent):** Pass `key={initialQ}` on `<MailboxSearch>` at the call site; component remounts when URL changes, effect at :22–25 can be deleted. Cleanest if remount cost is acceptable (no animation state to preserve here).
+- **Fallback (~1 LoC):** `// eslint-disable-next-line react-hooks/set-state-in-effect -- URL is source of truth; local state is a debounce buffer synced from URL on navigation` above :23.
+
+**W4 — `style-quiz.tsx:133`**
+
+- **Primary (recommended, ~5 LoC):** Replace mount-only `useEffect` for localStorage hydration with `useSyncExternalStore` — React's documented answer for reading from non-React external stores in an SSR-safe way. `localStorage` with a fallback for server render is the canonical example. Sketch:
+  ```ts
+  const state = useSyncExternalStore(
+    subscribe,          // no-op for localStorage (we update locally)
+    () => loadState(),  // client snapshot
+    () => EMPTY,        // server snapshot
+  );
+  ```
+  Removes the hydrated-flag gymnastics (line 126, 137–144 can also be simplified). Slightly more invasive; needs care with the debounced `setState` branch that currently writes back to localStorage via a separate effect at :137–144.
+- **Fallback (~1 LoC, minimally invasive):** `// eslint-disable-next-line react-hooks/set-state-in-effect -- SSR-safe localStorage hydration: cannot read during render without CSR/SSR mismatch` above :133. This is a legitimate use-case — SSR/CSR hydration consistency requires the effect. Acceptable as-is; `useSyncExternalStore` is the only lint-clean alternative but adds complexity for a single-page form.
+
+#### Recommended dispatch — what to hand Bolt
+
+One task, 4 files, ~12 LoC net (primary fixes all four):
+
+1. `customers/page.tsx` — delete `minuteBucket` arg, let `cacheLife` handle TTL (verify `getCustomersPageData` uses `"use cache"` + `cacheLife`; if not, fall back to `eslint-disable-next-line` with rationale).
+2. `admin/layout.tsx` — module-level counter for `navId`.
+3. `mailbox-search.tsx` — derive-during-render pattern (preferred) or `key={initialQ}` at parent.
+4. `style-quiz.tsx` — `eslint-disable-next-line` with SSR-hydration rationale is acceptable here; `useSyncExternalStore` is over-engineering for a 5-step form.
+
+**Acceptance criteria:** `npm run lint` exit 0; `npx tsc --noEmit` exit 0; `next build` still passes; vitest suite still 38/38 (quiz + mailbox flow untouched by these fixes).
+
+#### Verification evidence — `npm run lint` at C4890 HEAD (89cf36e)
+
+```
+/home/bectly/development/projects/janicka-shop/src/app/(admin)/admin/customers/page.tsx
+  150:35  error  Error: Cannot call impure function during render — Date.now is impure  react-hooks/purity
+
+/home/bectly/development/projects/janicka-shop/src/app/(admin)/admin/layout.tsx
+   35:20  error  Error: Cannot call impure function during render — Math.random is impure  react-hooks/purity
+
+/home/bectly/development/projects/janicka-shop/src/app/(admin)/admin/mailbox/mailbox-search.tsx
+   23:5   error  Error: Calling setState synchronously within an effect can trigger cascading renders  react-hooks/set-state-in-effect
+
+/home/bectly/development/projects/janicka-shop/src/app/(shop)/kviz/styl/style-quiz.tsx
+  133:5   error  Error: Calling setState synchronously within an effect can trigger cascading renders  react-hooks/set-state-in-effect
+
+✖ 4 problems (4 errors, 0 warnings)
+```
+
+### Row X (NEW C4890) — ee8f393 Gemini alt-text + caption pipeline: tsc verify
+
+Lead C4889 directive asked for tsc verify of ee8f393 as part of the normal sweep.
+
+- `npx tsc --noEmit` on C4890 HEAD → **exit 0, no output** ✅
+- Files touched by ee8f393:
+  - `src/lib/ai/gemini-alt-text.ts` (new wrapper)
+  - `prisma/schema.prisma` — `ProductImage.caption` JSON-shape extension (no migration: JSON column already present, just added a documented field)
+  - `src/app/api/admin/products/route.ts` (or equivalent) — `next/server` `after()` hook for auto-fire on product create
+  - Admin form — AI alt-text button
+  - `src/components/.../ProductImage` / JSON-LD emitter — `ImageObject` description+caption
+  - `scripts/backfill-alt-text.ts` (new CLI)
+  - JARVIS DB `api_keys` row for `gemini-api-key`
+- **No new lint errors** introduced by ee8f393 (the 4 errors in Row W are all pre-existing or from C4888 c5fd893, not C4889).
+- **No net ts-prune delta** from this commit (wrapper is imported by the product-create path and backfill script; both CLI and route consumers present).
+
+Verdict: ee8f393 lands clean on type + lint axes. No follow-up Row needed for this commit specifically; the Row W/Z2 lint streak is **orthogonal** to the Gemini work — do not conflate them.
+
+### Row AA (NEW C4890) — updated follow-up queue deltas
+
+| # | Priority | Agent | Scope | Status |
+|---|----------|-------|-------|--------|
+| Z2 | P1 | BOLT | Fix 3 original react-hooks offenders (customers/page.tsx:150, admin/layout.tsx:35, mailbox-search.tsx:23). | **Now 8 cycles open** — escalate to P0 if C4891 closes without fix |
+| W4 (NEW) | P1 | BOLT | Fix `style-quiz.tsx:133` `react-hooks/set-state-in-effect` (4th lint error, introduced C4888 c5fd893). Add `eslint-disable-next-line` with SSR-hydration rationale OR refactor to `useSyncExternalStore`. Bundle with Z2. | OPEN (NEW C4890) |
+| All other rows (Z1/Z3/R/V/T/N/O/P/W2/Y/M/#525/#531/#538/#542) | — | — | Carry-forward unchanged from C4885 addendum. | No delta this cycle — Sage-only commit. |
+

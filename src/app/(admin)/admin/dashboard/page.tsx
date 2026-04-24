@@ -7,7 +7,7 @@ import {
   getStaleProducts,
   getMonthlyRevenue,
 } from "./analytics-data";
-import { AnalyticsSection } from "@/components/admin/analytics-section";
+import { AnalyticsSection } from "@/components/admin/analytics-section-lazy";
 
 import {
   ORDER_STATUS_LABELS,
