@@ -1,8 +1,54 @@
 # Codebase Quality Sweep — 2026-04-18
 
-**Agent**: Trace (DevLoop C4808, re-verified C4811/C4817/C4821/C4826, task #367)
+**Agent**: Trace (DevLoop C4808, re-verified C4811/C4817/C4821/C4826/C4833, task #367)
 **Scope**: `src/**`, `prisma/**`, `next.config.ts`, `package.json`
 **Commands run**: `npx tsc --noEmit`, `npm run lint`, `npx ts-prune`, `npx depcheck`, targeted grep sweeps
+
+## C4833 P1-7e ts-prune candidate classification (2026-04-24)
+
+Lead directive C4832 requested DELETE/KEEP verdicts for the 3 remaining src/ ts-prune candidates gating P1-7e. Grep-verified across `src/`, `scripts/`, `tests/`, `prisma/`, and documentation:
+
+### 1. `src/lib/actions/reservation.ts:145` — `checkAvailability`
+
+**Verdict: DELETE** (~40 LoC function, lines 141-end of function).
+
+- `grep -r "checkAvailability" src/ scripts/ tests/ prisma/` → zero call sites. Only hits: self-definition at L145 + `docs/STRUCTURE.md:659` export listing (auto-generated, will regenerate on post-commit hook).
+- Sibling exports `reserveProduct` (L17), `releaseReservation` (L69), `extendReservations` (L86) are all live — keep file, delete `checkAvailability` only.
+- JSDoc at L141-143 claims "used on product pages" — stale comment; product-gallery/product-card do not import it. Dead code from an abandoned product-page badge plan.
+- No Prisma / scripts / tests consumers. Safe to restore from git if reservation-status UI is revived.
+
+### 2. `src/lib/products-cache.ts:74,82` — `getProducts` + `getCategories`
+
+**Verdict: DELETE both** (~15 LoC: lines 74-88 for the two exported functions, plus lines 24-52 for the internal `loadCatalog` + `loadCategories` helpers which become unreferenced, plus `CachedCatalog` + `CachedCategory` type exports at L101 — reference to `loadCategories`/`loadCatalog` ReturnType).
+
+- `grep -r "getProducts\|getCategories" src/` → only self-definitions + unrelated `getCategoriesWithCounts` in `src/lib/category-counts.ts:13` (different function, different signature — used by `header.tsx:10,18,20`).
+- `grep -r "from.*products-cache"` → single consumer `src/app/(shop)/products/[slug]/page.tsx:6` imports **only** `getProductBySlug` (L90). That export + its internal `loadProductBySlug` + `CachedProduct` type must be PRESERVED.
+- After delete: file shrinks from 102 LoC → ~50 LoC, containing only `loadProductBySlug` + `getProductBySlug` + `CachedProduct` type export.
+- Redis invalidation comment in file header (L16-17) references `invalidateProductCaches()` — that key family stays valid since `getProductBySlug` still uses the product cache key.
+
+### 3. `src/lib/shipping/packeta.ts:212` — `cancelPacket`
+
+**Verdict: DELETE** (~15 LoC function lines 209-226 including JSDoc).
+
+- `grep -r "cancelPacket" src/ scripts/ tests/ prisma/` → zero consumers. Only hits: self-definition + JSDoc header comment at L11 + `docs/STRUCTURE.md:760` export listing + `docs/specs.md:136` ("planned" spec).
+- Sibling `getPacketStatus` (L185) IS consumed by `scripts/cron/order-status-sync.ts:23,90` — **KEEP**.
+- Sibling `createPacket` / `getPacketLabel` / `getPacketLabelsBatch` are live (used by admin order actions per `TODO.archived.md:173`).
+- Delete `cancelPacket` only. Also update JSDoc header comment at L11 (`cancelPacket(packetId) → void` line) to keep doc in sync. Safe to restore from git if admin adds a "Storno zásilky" button later.
+
+### Bonus: `src/lib/sizes.ts:305` — `normalizeSizesForCategory`
+
+**Verdict: KEEP** (unchanged from C4826 addendum). Consumer confirmed: `scripts/normalize-sizes.ts:17` imports and invokes it. Outside src/-only sweep scope but worth reiterating — do NOT delete in P1-7e.
+
+### P1-7e recommended Bolt scope
+
+Single commit, 3-file diff, ~70 LoC net delete:
+1. `src/lib/actions/reservation.ts` — delete `checkAvailability` + its JSDoc (L141 onwards through function close ~L195).
+2. `src/lib/products-cache.ts` — delete `getProducts` (L74-80), `getCategories` (L82-88), `loadCatalog` (L24-39), `loadCategories` (L41-52); prune `CachedCatalog` + `CachedCategory` from L101 re-export; keep `CachedProduct` + `getProductBySlug` + `loadProductBySlug`.
+3. `src/lib/shipping/packeta.ts` — delete `cancelPacket` (L209-226) + trim JSDoc header L11 line referencing it.
+
+Post-diff gates: `npx tsc --noEmit` clean, `npm run lint` preserves 0w/0e MILESTONE (no new unused imports — all three files have no removed import dependencies), `npx ts-prune` on src/ should return zero remaining non-framework candidates, `npm run build` green. After this lands, src/ ts-prune sweep is FULLY complete; any further prune work moves to scripts/+tests/+prisma/ (out of P1-7 scope per C4830 directive).
+
+---
 
 ## C4826 re-verification addendum (2026-04-24) — P1 cleanup burn-down
 
