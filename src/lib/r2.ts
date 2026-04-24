@@ -1,8 +1,4 @@
-import {
-  S3Client,
-  PutObjectCommand,
-  DeleteObjectCommand,
-} from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { randomUUID } from "crypto";
 
 export function getR2Client(): S3Client {
@@ -43,22 +39,4 @@ export async function uploadToR2(
   const publicUrl =
     process.env.R2_PUBLIC_URL ?? process.env.NEXT_PUBLIC_R2_PUBLIC_URL;
   return `${publicUrl}/${key}`;
-}
-
-/**
- * Delete a file from Cloudflare R2 by its public URL.
- * Silently skips URLs that don't belong to our bucket.
- */
-export async function deleteFromR2(url: string): Promise<void> {
-  const publicUrl =
-    process.env.R2_PUBLIC_URL ?? process.env.NEXT_PUBLIC_R2_PUBLIC_URL;
-  if (!publicUrl || !url.startsWith(publicUrl)) return;
-  const R2 = getR2Client();
-  const key = url.slice(publicUrl.length + 1);
-  await R2.send(
-    new DeleteObjectCommand({
-      Bucket: process.env.R2_BUCKET_NAME!,
-      Key: key,
-    })
-  );
 }

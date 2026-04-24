@@ -63,7 +63,6 @@ export const SHOE_SIZES = [
   "42",
   "43",
 ] as const;
-export type ShoeSize = (typeof SHOE_SIZES)[number];
 
 export const BRA_SIZES = [
   "65A",
@@ -86,10 +85,8 @@ export const BRA_SIZES = [
   "85C",
   "85D",
 ] as const;
-export type BraSize = (typeof BRA_SIZES)[number];
 
 export const ONE_SIZE = ["Univerzální"] as const;
-export type OneSize = (typeof ONE_SIZE)[number];
 
 /** Every allowed size value across all systems. Use for validation. */
 export const ALL_SIZES = [
