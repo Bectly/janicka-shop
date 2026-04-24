@@ -18,6 +18,7 @@ export function BackToTop() {
   return (
     <button
       type="button"
+      data-hide-on-lightbox
       onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
       className={`back-to-top-pos fixed right-4 z-40 rounded-full bg-primary p-3 text-primary-foreground shadow-lg transition-all duration-300 hover:bg-primary/90 sm:right-6 lg:right-6 ${
         visible

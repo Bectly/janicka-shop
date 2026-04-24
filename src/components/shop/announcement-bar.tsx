@@ -31,7 +31,7 @@ function MarqueeTrack() {
 
 export function AnnouncementBar() {
   return (
-    <div className="announcement-bar relative overflow-hidden bg-gradient-to-r from-brand via-brand-dark to-brand text-white">
+    <div data-hide-on-lightbox className="announcement-bar relative overflow-hidden bg-gradient-to-r from-brand via-brand-dark to-brand text-white">
       <div className="announcement-shimmer pointer-events-none absolute inset-0" aria-hidden="true" />
 
       <svg className="ann-blossom pointer-events-none absolute -left-3 top-1/2 size-10 -translate-y-1/2 text-white/10" viewBox="0 0 200 200" fill="currentColor" aria-hidden="true">

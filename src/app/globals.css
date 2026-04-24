@@ -604,9 +604,11 @@
   }
 }
 
-/* Hide bottom nav when product image lightbox is open — thumbs at lightbox bottom collide with nav */
-body.lightbox-open nav[aria-label="Spodní navigace"] {
-  display: none;
+/* Hide page chrome when product image lightbox is open — prevents sticky header / announcement bar / BottomNav / shuffle+back-to-top from bleeding over the z-[100] backdrop.
+   Any future overlay-breaking element can opt in by adding data-hide-on-lightbox. */
+body.lightbox-open nav[aria-label="Spodní navigace"],
+body.lightbox-open [data-hide-on-lightbox] {
+  display: none !important;
 }
 
 /* DevChat floating bubble: same visual position as bottom-20 on standard phones,

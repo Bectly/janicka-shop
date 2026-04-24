@@ -576,14 +576,16 @@ export default async function HomePage() {
       </Suspense>
 
       {/* New products — above-fold priority on mobile (Sage C4803) */}
+      {/* min-h reserves space so CategoriesSection below doesn't shift when this streams in */}
       <ScrollReveal>
-        <Suspense fallback={null}>
+        <Suspense fallback={<div className="min-h-[500px]" aria-hidden="true" />}>
           <NewProductsSection />
         </Suspense>
       </ScrollReveal>
 
       {/* Categories — streams independently */}
-      <Suspense fallback={null}>
+      {/* min-h reserves space so sections below don't shift when this streams in */}
+      <Suspense fallback={<div className="min-h-[740px]" aria-hidden="true" />}>
         <CategoriesSection />
       </Suspense>
 
@@ -603,7 +605,7 @@ export default async function HomePage() {
 
       {/* Popular brands — streams independently */}
       <ScrollReveal>
-        <Suspense fallback={null}>
+        <Suspense fallback={<div className="min-h-[340px]" aria-hidden="true" />}>
           <PopularBrandsSection />
         </Suspense>
       </ScrollReveal>

@@ -58,7 +58,7 @@ async function HeaderNav() {
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80">
+    <header data-hide-on-lightbox className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80">
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
         <Suspense
           fallback={

@@ -74,6 +74,10 @@ export default function TermsPage() {
               nenošené, s&nbsp;původní visačkou
             </li>
             <li>
+              <strong className="text-foreground">Nové bez visačky</strong> —
+              nepoužité zboží bez originální visačky
+            </li>
+            <li>
               <strong className="text-foreground">Výborný stav</strong> —
               minimální známky nošení
             </li>
