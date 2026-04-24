@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { cacheLife, cacheTag } from "next/cache";
 import { connection } from "next/server";
-import { Mail, Paperclip, PenSquare, Search } from "lucide-react";
+import { Mail, Paperclip, PenSquare } from "lucide-react";
 import type { Metadata } from "next";
 import type { Prisma } from "@prisma/client";
 import { getDb } from "@/lib/db";
 import { formatRelativeTime } from "@/lib/format";
+import { MailboxSearch } from "./mailbox-search";
 
 export const metadata: Metadata = {
   title: "Schránka",
@@ -42,6 +43,9 @@ async function getMailboxPageData(tab: "inbox" | "archived", q: string) {
       ? { archived: true, trashed: false }
       : { archived: false, trashed: false };
 
+  // #524d: bodyText + fromAddress dropped from search OR. bodyText is an unindexed
+  // large TEXT column (table-scan on every keystroke); fromAddress is redundant with
+  // participants which already contains the normalized address list.
   const where: Prisma.EmailThreadWhereInput = q
     ? {
         AND: [
@@ -52,13 +56,7 @@ async function getMailboxPageData(tab: "inbox" | "archived", q: string) {
               { participants: { contains: q.toLowerCase() } },
               {
                 messages: {
-                  some: {
-                    OR: [
-                      { bodyText: { contains: q } },
-                      { fromAddress: { contains: q.toLowerCase() } },
-                      { fromName: { contains: q } },
-                    ],
-                  },
+                  some: { fromName: { contains: q } },
                 },
               },
             ],
@@ -129,33 +127,7 @@ export default async function AdminMailboxPage({
         </Link>
       </div>
 
-      <form
-        method="GET"
-        action="/admin/mailbox"
-        className="mt-4 flex items-center gap-2"
-      >
-        {tab === "archived" ? (
-          <input type="hidden" name="tab" value="archived" />
-        ) : null}
-        <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="search"
-            name="q"
-            defaultValue={q}
-            placeholder="Hledat v konverzacích (předmět, odesílatel, text)…"
-            className="w-full rounded-lg border bg-background py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
-          />
-        </div>
-        {q ? (
-          <Link
-            href={tab === "archived" ? "/admin/mailbox?tab=archived" : "/admin/mailbox"}
-            className="rounded-lg border px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            Vymazat
-          </Link>
-        ) : null}
-      </form>
+      <MailboxSearch tab={tab} initialQ={q} />
 
       <div className="mt-4 flex gap-1 border-b">
         <Link

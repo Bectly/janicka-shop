@@ -2367,3 +2367,344 @@ export async function sendCustomsCampaignEmail(
     return false;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Admin preview — renders any template against realistic fixtures so a stylist
+// can eyeball the design in-browser without triggering real sends. The preview
+// endpoint (src/app/api/admin/email-preview/route.ts) is auth-gated and uses
+// the registry below to drive template selection.
+// ---------------------------------------------------------------------------
+
+const SAMPLE_CUSTOMER_NAME = "Marie Nováková";
+const SAMPLE_CUSTOMER_EMAIL = "marie.novakova@example.cz";
+const SAMPLE_ORDER_NUMBER = "JS-2026-0421";
+const SAMPLE_TOKEN = "preview-access-token";
+
+const SAMPLE_ITEMS: OrderItem[] = [
+  { name: "Vlněný kabát Max Mara", price: 2490, size: "M (38)", color: "camel" },
+  { name: "Hedvábná halenka Zara", price: 690, size: "S (36)", color: "ivory" },
+  { name: "Džíny Levi's 501", price: 890, size: "W28 L32", color: "indigo wash" },
+];
+
+const SAMPLE_CROSS_SELL: CrossSellProduct[] = [
+  {
+    name: "Kašmírový svetr COS",
+    slug: "kasmirovy-svetr-cos",
+    price: 1290,
+    compareAt: 1890,
+    brand: "COS",
+    condition: "excellent",
+    image: null,
+    sizes: ["M"],
+  },
+  {
+    name: "Trenčkot Burberry",
+    slug: "trenckot-burberry",
+    price: 4990,
+    compareAt: null,
+    brand: "Burberry",
+    condition: "good",
+    image: null,
+    sizes: ["38"],
+  },
+  {
+    name: "Šaty & Other Stories",
+    slug: "saty-other-stories",
+    price: 790,
+    compareAt: null,
+    brand: "& Other Stories",
+    condition: "new_with_tags",
+    image: null,
+    sizes: ["S"],
+  },
+  {
+    name: "Kabelka Coccinelle",
+    slug: "kabelka-coccinelle",
+    price: 1490,
+    compareAt: 2190,
+    brand: "Coccinelle",
+    condition: "excellent",
+    image: null,
+    sizes: [],
+  },
+];
+
+function sampleOrderEmailData(): OrderEmailData {
+  return {
+    orderNumber: SAMPLE_ORDER_NUMBER,
+    customerName: SAMPLE_CUSTOMER_NAME,
+    customerEmail: SAMPLE_CUSTOMER_EMAIL,
+    items: SAMPLE_ITEMS,
+    subtotal: 4070,
+    shipping: 89,
+    total: 4159,
+    paymentMethod: "comgate",
+    shippingMethod: "packeta_pickup",
+    shippingName: SAMPLE_CUSTOMER_NAME,
+    shippingStreet: "Zásilkovna, Vinohradská 112",
+    shippingCity: "Praha 3",
+    shippingZip: "130 00",
+    shippingPointId: "12345",
+    note: "Pokud to jde, prosím zabalit do hedvábného papíru — je to dárek.",
+    accessToken: SAMPLE_TOKEN,
+    isCod: false,
+    expectedDeliveryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+  };
+}
+
+function sampleStatusEmailData(): StatusEmailData {
+  return {
+    orderNumber: SAMPLE_ORDER_NUMBER,
+    customerName: SAMPLE_CUSTOMER_NAME,
+    customerEmail: SAMPLE_CUSTOMER_EMAIL,
+    total: 4159,
+    accessToken: SAMPLE_TOKEN,
+    trackingNumber: "Z 1234 5678 9012",
+  };
+}
+
+function sampleShippingNotificationData(): ShippingNotificationData {
+  return {
+    orderNumber: SAMPLE_ORDER_NUMBER,
+    customerName: SAMPLE_CUSTOMER_NAME,
+    customerEmail: SAMPLE_CUSTOMER_EMAIL,
+    total: 4159,
+    accessToken: SAMPLE_TOKEN,
+    trackingNumber: "Z 1234 5678 9012",
+    items: SAMPLE_ITEMS,
+    crossSellProducts: SAMPLE_CROSS_SELL.slice(0, 4),
+  };
+}
+
+function sampleAbandonedCartData(): AbandonedCartEmailData {
+  return {
+    email: SAMPLE_CUSTOMER_EMAIL,
+    customerName: SAMPLE_CUSTOMER_NAME,
+    cartId: "preview-cart-id",
+    cartTotal: 2180,
+    items: [
+      { productId: "p1", name: "Hedvábná halenka Zara", price: 690, size: "S", slug: "hedvabna-halenka-zara" },
+      { productId: "p2", name: "Vlněný kabát Max Mara", price: 2490, size: "M", slug: "vlneny-kabat-max-mara" },
+    ],
+  };
+}
+
+export interface EmailPreviewResult {
+  subject: string;
+  html: string;
+}
+
+/**
+ * Render an email template against fixture data for visual QA. Keys match
+ * the template mailer functions. Returns both subject and HTML so the admin
+ * preview page can show what the recipient would see end-to-end.
+ */
+export function renderEmailPreview(templateKey: string): EmailPreviewResult | null {
+  switch (templateKey) {
+    case "order-confirmation": {
+      const data = sampleOrderEmailData();
+      return {
+        subject: `Potvrzení objednávky ${data.orderNumber} — Janička Shop`,
+        html: buildOrderConfirmationHtml(data),
+      };
+    }
+    case "order-confirmation-cod": {
+      const data: OrderEmailData = { ...sampleOrderEmailData(), paymentMethod: "cod", isCod: true, total: 4199 };
+      return {
+        subject: `Potvrzení objednávky ${data.orderNumber} — Janička Shop`,
+        html: buildOrderConfirmationHtml(data),
+      };
+    }
+    case "payment-confirmed": {
+      const data = sampleOrderEmailData();
+      return {
+        subject: `Platba přijata — ${data.orderNumber} — Janička Shop`,
+        html: buildPaymentConfirmedHtml(data),
+      };
+    }
+    case "order-confirmed":
+      return {
+        subject: `Objednávka potvrzena — ${SAMPLE_ORDER_NUMBER} — Janička Shop`,
+        html: buildOrderConfirmedHtml(sampleStatusEmailData()),
+      };
+    case "order-shipped":
+      return {
+        subject: `Zásilka na cestě — ${SAMPLE_ORDER_NUMBER} — Janička Shop`,
+        html: buildOrderShippedHtml(sampleStatusEmailData()),
+      };
+    case "order-delivered":
+      return {
+        subject: `Doručeno — ${SAMPLE_ORDER_NUMBER} — Janička Shop`,
+        html: buildOrderDeliveredHtml(sampleStatusEmailData()),
+      };
+    case "order-cancelled":
+      return {
+        subject: `Objednávka zrušena — ${SAMPLE_ORDER_NUMBER} — Janička Shop`,
+        html: buildOrderCancelledHtml(sampleStatusEmailData()),
+      };
+    case "shipping-notification":
+      return {
+        subject: `Objednávka odeslána — ${SAMPLE_ORDER_NUMBER} — Janička Shop`,
+        html: buildShippingNotificationHtml(sampleShippingNotificationData()),
+      };
+    case "newsletter-welcome":
+      return {
+        subject: "Vítej v Janičce! — Janička Shop",
+        html: buildNewsletterWelcomeHtml(SAMPLE_CUSTOMER_EMAIL),
+      };
+    case "admin-new-order":
+      return {
+        subject: `Nová objednávka ${SAMPLE_ORDER_NUMBER} — ${formatPriceCzk(4159)}`,
+        html: buildAdminNewOrderHtml({
+          orderNumber: SAMPLE_ORDER_NUMBER,
+          customerName: SAMPLE_CUSTOMER_NAME,
+          customerEmail: SAMPLE_CUSTOMER_EMAIL,
+          items: SAMPLE_ITEMS,
+          total: 4159,
+          paymentMethod: "comgate",
+          shippingMethod: "packeta_pickup",
+          orderId: "preview-order-id",
+          paid: true,
+        }),
+      };
+    case "email-change-verify":
+      return {
+        subject: "Potvrď změnu emailu — Janička Shop",
+        html: (() => {
+          // The real sender composes HTML via renderLayout inline; reuse the
+          // builder via a throwaway call that produces the same template.
+          const baseUrl = getBaseUrl();
+          const content = `
+            ${renderEyebrow("Zabezpečení účtu")}
+            ${renderDisplayHeading("Potvrď změnu, Marie.")}
+            <p style="margin: 0 0 20px; font-family: ${FONTS.sans}; font-size: 15px; line-height: 1.7; color: ${BRAND.charcoalSoft};">
+              Požádala jsi o změnu přihlašovacího emailu na svém účtu Janička Shop. Pro dokončení klikni na tlačítko níže. Odkaz je platný <strong style="color: ${BRAND.charcoal};">jednu hodinu</strong>.
+            </p>
+            <div style="margin: 28px 0 8px;">${renderButton({ href: `${baseUrl}/ucet/email/potvrdit?token=preview`, label: "Potvrdit změnu emailu", variant: "primary" })}</div>
+            ${renderInfoCard(`<p style="margin: 0; font-family: ${FONTS.sans}; font-size: 13px; color: ${BRAND.charcoalSoft}; line-height: 1.6;"><strong style="color: ${BRAND.charcoal};">Nežádala jsi?</strong> Tenhle email ignoruj. Tvůj účet zůstane beze změny a přihlašovací údaje platné dál.</p>`, "blush")}`;
+          return renderLayout({ preheader: "Potvrď změnu přihlašovacího emailu u Janičky.", contentHtml: content });
+        })(),
+      };
+    case "wishlist-sold":
+      // buildWishlistSoldHtml lives in src/lib/email/wishlist-sold.ts and is not
+      // exported; preview surfaces the newsletter-welcome shell as placeholder.
+      return {
+        subject: "Tvůj vysněný kousek se právě prodal — podívej se na podobné",
+        html: buildNewsletterWelcomeHtml(SAMPLE_CUSTOMER_EMAIL),
+      };
+    case "review-request":
+      return {
+        subject: `Jak jsi spokojená? — ${SAMPLE_ORDER_NUMBER} — Janička Shop`,
+        html: buildReviewRequestHtml({
+          orderNumber: SAMPLE_ORDER_NUMBER,
+          customerName: SAMPLE_CUSTOMER_NAME,
+          customerEmail: SAMPLE_CUSTOMER_EMAIL,
+          accessToken: SAMPLE_TOKEN,
+          items: SAMPLE_ITEMS,
+        }),
+      };
+    case "delivery-check":
+      return {
+        subject: `Dorazilo vše v pořádku? — ${SAMPLE_ORDER_NUMBER} — Janička Shop`,
+        html: buildDeliveryCheckHtml({
+          orderNumber: SAMPLE_ORDER_NUMBER,
+          customerName: SAMPLE_CUSTOMER_NAME,
+          customerEmail: SAMPLE_CUSTOMER_EMAIL,
+          accessToken: SAMPLE_TOKEN,
+          items: SAMPLE_ITEMS,
+        }),
+      };
+    case "new-arrival":
+      return {
+        subject: `${SAMPLE_CROSS_SELL.length} nových kousků pro tebe! — Janička Shop`,
+        html: buildNewArrivalHtml({
+          email: SAMPLE_CUSTOMER_EMAIL,
+          firstName: "Marie",
+          products: SAMPLE_CROSS_SELL.map((p) => ({
+            name: p.name,
+            slug: p.slug,
+            price: p.price,
+            compareAt: p.compareAt,
+            brand: p.brand,
+            condition: p.condition,
+            image: p.image,
+            sizes: p.sizes,
+          })),
+        }),
+      };
+    case "browse-abandonment":
+      return {
+        subject: "Ještě tam je — Max Mara Vlněný kabát vel. M — Janička Shop",
+        html: buildBrowseAbandonmentHtml({
+          email: SAMPLE_CUSTOMER_EMAIL,
+          productName: "Vlněný kabát",
+          productSlug: "vlneny-kabat-max-mara",
+          productImage: null,
+          productPrice: 2490,
+          productBrand: "Max Mara",
+          productSize: "M",
+        }),
+      };
+    case "cross-sell-followup":
+      return {
+        subject: "Nové kousky ve tvém stylu — Janička Shop",
+        html: buildCrossSellFollowUpHtml({
+          customerName: SAMPLE_CUSTOMER_NAME,
+          customerEmail: SAMPLE_CUSTOMER_EMAIL,
+          orderNumber: SAMPLE_ORDER_NUMBER,
+          products: SAMPLE_CROSS_SELL,
+        }),
+      };
+    case "win-back":
+      return {
+        subject: "Nové kousky čekají — Janička Shop",
+        html: buildWinBackHtml({
+          customerName: SAMPLE_CUSTOMER_NAME,
+          customerEmail: SAMPLE_CUSTOMER_EMAIL,
+          products: SAMPLE_CROSS_SELL,
+        }),
+      };
+    case "abandoned-cart-1":
+      return {
+        subject: "Zapomněla jsi na svůj košík — Janička Shop",
+        html: buildAbandonedCartEmail1(sampleAbandonedCartData()),
+      };
+    case "abandoned-cart-2":
+      return {
+        subject: "Tvůj košík stále čeká — Janička Shop",
+        html: buildAbandonedCartEmail2(sampleAbandonedCartData(), ["p1"]),
+      };
+    case "abandoned-cart-3":
+      return {
+        subject: "Poslední upozornění — Janička Shop",
+        html: buildAbandonedCartEmail3(sampleAbandonedCartData(), []),
+      };
+    default:
+      return null;
+  }
+}
+
+/** List of template keys exposed to the admin preview UI. */
+export const EMAIL_PREVIEW_TEMPLATES: { key: string; label: string; group: string }[] = [
+  { key: "order-confirmation", label: "Potvrzení objednávky (Comgate)", group: "Objednávka" },
+  { key: "order-confirmation-cod", label: "Potvrzení objednávky (dobírka)", group: "Objednávka" },
+  { key: "payment-confirmed", label: "Platba přijata", group: "Objednávka" },
+  { key: "order-confirmed", label: "Objednávka potvrzena", group: "Objednávka" },
+  { key: "order-shipped", label: "Zásilka na cestě", group: "Objednávka" },
+  { key: "order-delivered", label: "Doručeno", group: "Objednávka" },
+  { key: "order-cancelled", label: "Objednávka zrušena", group: "Objednávka" },
+  { key: "shipping-notification", label: "Expedice + cross-sell", group: "Objednávka" },
+  { key: "delivery-check", label: "Kontrola doručení (ship+4d)", group: "Po nákupu" },
+  { key: "review-request", label: "Žádost o hodnocení (ship+7d)", group: "Po nákupu" },
+  { key: "cross-sell-followup", label: "Cross-sell (T+14d)", group: "Po nákupu" },
+  { key: "newsletter-welcome", label: "Vítej v newsletteru", group: "Marketing" },
+  { key: "new-arrival", label: "Novinky", group: "Marketing" },
+  { key: "browse-abandonment", label: "Browse abandonment", group: "Marketing" },
+  { key: "abandoned-cart-1", label: "Opuštěný košík #1 (30-60 min)", group: "Marketing" },
+  { key: "abandoned-cart-2", label: "Opuštěný košík #2 (12-24 h)", group: "Marketing" },
+  { key: "abandoned-cart-3", label: "Opuštěný košík #3 (48-72 h)", group: "Marketing" },
+  { key: "win-back", label: "Win-back (30+ dní)", group: "Marketing" },
+  { key: "wishlist-sold", label: "Wishlist — prodáno", group: "Marketing" },
+  { key: "email-change-verify", label: "Potvrzení změny emailu", group: "Účet" },
+  { key: "admin-new-order", label: "Admin: nová objednávka", group: "Admin" },
+];
