@@ -123,6 +123,7 @@ export async function createReturn(data: {
     },
   });
 
+  revalidateTag("admin-returns", "max");
   revalidatePath("/admin/returns");
   revalidatePath(`/admin/orders/${data.orderId}`);
 
@@ -187,6 +188,9 @@ export async function updateReturnStatus(
     });
 
     revalidateTag("products", "max");
+    revalidateTag("admin-products", "max");
+    revalidateTag("admin-returns", "max");
+    revalidateTag("admin-orders", "max");
     revalidatePath("/admin/returns");
     revalidatePath(`/admin/returns/${returnId}`);
     revalidatePath(`/admin/orders/${returnRecord.orderId}`);
@@ -200,6 +204,7 @@ export async function updateReturnStatus(
     data: updateData,
   });
 
+  revalidateTag("admin-returns", "max");
   revalidatePath("/admin/returns");
   revalidatePath(`/admin/returns/${returnId}`);
   revalidatePath(`/admin/orders/${returnRecord.orderId}`);

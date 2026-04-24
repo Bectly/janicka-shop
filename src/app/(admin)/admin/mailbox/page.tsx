@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cacheLife, cacheTag } from "next/cache";
 import { connection } from "next/server";
 import { Mail, Paperclip, PenSquare, Search } from "lucide-react";
 import type { Metadata } from "next";
@@ -28,16 +29,12 @@ function truncate(text: string | null | undefined, max = 140): string {
   return collapsed.length > max ? collapsed.slice(0, max - 1) + "…" : collapsed;
 }
 
-export default async function AdminMailboxPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ tab?: string; q?: string }>;
-}) {
-  const params = await searchParams;
-  const tab = params.tab === "archived" ? "archived" : "inbox";
-  const q = (params.q ?? "").trim();
+async function getMailboxPageData(tab: "inbox" | "archived", q: string) {
+  "use cache";
+  // Mailbox is expected to feel fresh — 30s TTL keeps IMAP sync visibility tight.
+  cacheLife({ stale: 30, revalidate: 30, expire: 120 });
+  cacheTag("admin-mailbox");
 
-  await connection();
   const db = await getDb();
 
   const baseWhere: Prisma.EmailThreadWhereInput =
@@ -95,7 +92,20 @@ export default async function AdminMailboxPage({
     }),
   ]);
 
-  const unread = totalUnread._sum.unreadCount ?? 0;
+  return { threads, unread: totalUnread._sum.unreadCount ?? 0 };
+}
+
+export default async function AdminMailboxPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string; q?: string }>;
+}) {
+  await connection();
+  const params = await searchParams;
+  const tab: "inbox" | "archived" = params.tab === "archived" ? "archived" : "inbox";
+  const q = (params.q ?? "").trim();
+
+  const { threads, unread } = await getMailboxPageData(tab, q);
 
   return (
     <>

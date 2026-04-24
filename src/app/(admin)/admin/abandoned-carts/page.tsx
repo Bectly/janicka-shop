@@ -1,6 +1,7 @@
+import { cacheLife, cacheTag } from "next/cache";
+import { connection } from "next/server";
 import { getDb } from "@/lib/db";
 import { formatPrice, formatDate } from "@/lib/format";
-import { connection } from "next/server";
 import { ShoppingCart, Check, Clock } from "lucide-react";
 import { Suspense } from "react";
 import { Pagination, PaginationSkeleton } from "@/components/shop/pagination";
@@ -40,29 +41,35 @@ function EmailBadge({ sentAt, label }: { sentAt: Date | null; label: string }) {
   );
 }
 
-export default async function AdminAbandonedCartsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ page?: string }>;
-}) {
-  const params = await searchParams;
-  const currentPage = Math.max(1, parseInt(params.page ?? "1") || 1);
+async function getAbandonedCartsPageData(currentPage: number) {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("admin-abandoned-carts");
 
-  await connection();
   const db = await getDb();
-
-  const [totalCount, carts] = await Promise.all([
+  const [totalCount, carts, recoveredCount] = await Promise.all([
     db.abandonedCart.count(),
     db.abandonedCart.findMany({
       orderBy: { createdAt: "desc" },
       skip: (currentPage - 1) * ADMIN_ABANDONED_PER_PAGE,
       take: ADMIN_ABANDONED_PER_PAGE,
     }),
+    db.abandonedCart.count({ where: { status: "recovered" } }),
   ]);
+  return { totalCount, carts, recoveredCount };
+}
 
-  const recoveredCount = await db.abandonedCart.count({
-    where: { status: "recovered" },
-  });
+export default async function AdminAbandonedCartsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  await connection();
+  const params = await searchParams;
+  const currentPage = Math.max(1, parseInt(params.page ?? "1") || 1);
+
+  const { totalCount, carts, recoveredCount } =
+    await getAbandonedCartsPageData(currentPage);
 
   return (
     <>

@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidateTag } from "next/cache";
 import { getDb } from "@/lib/db";
 import { z } from "zod";
 import { rateLimitNewsletter } from "@/lib/rate-limit";
@@ -50,6 +51,7 @@ export async function subscribeNewsletter(
       create: { email, active: true, source: "website" },
       update: { active: true },
     });
+    revalidateTag("admin-subscribers", "max");
 
     // Send welcome email only for new subscribers (fire-and-forget)
     if (isNew) {

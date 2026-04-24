@@ -1,4 +1,5 @@
 import { cacheLife, cacheTag } from "next/cache";
+import { connection } from "next/server";
 import { getDb } from "@/lib/db";
 import Link from "next/link";
 
@@ -25,6 +26,10 @@ async function getCategoriesPageData() {
 }
 
 export default async function AdminCategoriesPage() {
+  // Opt the PAGE SHELL out of prerender (admin is auth-gated at runtime). The
+  // cached fetcher below still serves warm-cache hits across requests — this
+  // mirrors the admin layout's `getAdminBadges()` pattern.
+  await connection();
   const categories = await getCategoriesPageData();
 
   return (

@@ -226,6 +226,7 @@ export async function createProduct(formData: FormData) {
   });
 
   revalidateTag("products", "max");
+  revalidateTag("admin-products", "max");
   await invalidateProductCaches({ slug: product.slug, id: product.id });
   revalidatePath("/admin/products");
   revalidatePath("/products");
@@ -317,6 +318,7 @@ export async function updateProduct(id: string, formData: FormData) {
   });
 
   revalidateTag("products", "max");
+  revalidateTag("admin-products", "max");
   await invalidateProductCaches({ slug, id });
   revalidatePath("/admin/products");
   revalidatePath(`/products/${slug}`);
@@ -426,6 +428,7 @@ export async function quickCreateProduct(formData: FormData) {
   });
 
   revalidateTag("products", "max");
+  revalidateTag("admin-products", "max");
   await invalidateProductCaches({ slug: product.slug, id: product.id });
   revalidatePath("/admin/products");
   revalidatePath("/products");
@@ -483,6 +486,7 @@ export async function duplicateProduct(id: string) {
   });
 
   revalidateTag("products", "max");
+  revalidateTag("admin-products", "max");
   await invalidateProductCaches({ slug: copy.slug, id: copy.id });
   revalidatePath("/admin/products");
   redirect(`/admin/products/${copy.id}/edit`);
@@ -570,6 +574,7 @@ export async function bulkUpdateProducts(ids: string[], action: string) {
   }
 
   revalidateTag("products", "max");
+  revalidateTag("admin-products", "max");
   await invalidateProductCaches();
   revalidatePath("/admin/products");
   revalidatePath("/products");
@@ -628,6 +633,7 @@ export async function bulkUpdatePrice(
   }
 
   revalidateTag("products", "max");
+  revalidateTag("admin-products", "max");
   await Promise.all(products.map((p) => invalidateProductCaches({ slug: p.slug, id: p.id })));
   revalidatePath("/admin/products");
   revalidatePath("/products");
@@ -684,6 +690,7 @@ export async function updateProductQuick(
   });
 
   revalidateTag("products", "max");
+  revalidateTag("admin-products", "max");
   revalidateTag(`product-${current.slug}`, "max");
   await invalidateProductCaches({ slug: current.slug, id });
   revalidatePath("/admin/products");
@@ -778,6 +785,7 @@ export async function updateProductMeasurementsQuick(
   });
 
   revalidateTag("products", "max");
+  revalidateTag("admin-products", "max");
   revalidateTag(`product-${current.slug}`, "max");
   await invalidateProductCaches({ slug: current.slug, id });
   revalidatePath("/admin/products");
@@ -816,6 +824,7 @@ export async function deleteProduct(id: string) {
   }
 
   revalidateTag("products", "max");
+  revalidateTag("admin-products", "max");
   await invalidateProductCaches({ slug: existing?.slug, id });
   revalidatePath("/admin/products");
   revalidatePath("/products");

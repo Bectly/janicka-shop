@@ -106,6 +106,7 @@ export async function syncImapInbox(): Promise<SyncResult> {
   if (inserted > 0) {
     try {
       revalidateTag("admin-badges", "max");
+      revalidateTag("admin-mailbox", "max");
     } catch {
       // revalidateTag may not be callable outside a request scope (e.g. cron
       // wrapper). Non-fatal — TTL will still refresh the badge within minutes.

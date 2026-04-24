@@ -1,7 +1,8 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { getDb } from "@/lib/db";
+import { cacheLife, cacheTag } from "next/cache";
 import { connection } from "next/server";
+import { getDb } from "@/lib/db";
 import { formatPrice, formatDate } from "@/lib/format";
 import { Gift, Ticket, Wallet, TrendingUp, Users } from "lucide-react";
 import { Pagination, PaginationSkeleton } from "@/components/shop/pagination";
@@ -25,23 +26,20 @@ const REFERRAL_STATUS_COLORS: Record<string, string> = {
   expired: "bg-muted text-muted-foreground",
 };
 
-export default async function AdminReferralsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ status?: string; tab?: string; page?: string }>;
-}) {
-  await connection();
+async function getReferralsPageData(
+  currentPage: number,
+  activeTab: "credits" | "referrals",
+  status: string,
+) {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("admin-referrals");
+
   const db = await getDb();
-  const params = await searchParams;
-
-  const currentPage = Math.max(1, parseInt(params.page ?? "1") || 1);
-  const activeTab = params.tab === "credits" ? "credits" : "referrals";
-
-  // --- Referral codes ---
   const referralWhere: Record<string, unknown> = {};
   const VALID_STATUSES = ["pending", "redeemed", "expired"];
-  if (params.status && params.status !== "all" && VALID_STATUSES.includes(params.status)) {
-    referralWhere.status = params.status;
+  if (status && status !== "all" && VALID_STATUSES.includes(status)) {
+    referralWhere.status = status;
   }
 
   let referralCount = 0;
@@ -70,16 +68,50 @@ export default async function AdminReferralsPage({
     ]);
   }
 
-  // --- Stats ---
-  const totalCodes = await db.referralCode.count();
-  const redeemedCodes = await db.referralCode.count({ where: { status: "redeemed" } });
-  const redemptionRate = totalCodes > 0 ? Math.round((redeemedCodes / totalCodes) * 100) : 0;
+  const [totalCodes, redeemedCodes, allCredits] = await Promise.all([
+    db.referralCode.count(),
+    db.referralCode.count({ where: { status: "redeemed" } }),
+    db.storeCredit.findMany({ select: { amount: true, remainingAmount: true } }),
+  ]);
 
-  const allCredits = await db.storeCredit.findMany({
-    select: { amount: true, remainingAmount: true },
-  });
+  const redemptionRate = totalCodes > 0 ? Math.round((redeemedCodes / totalCodes) * 100) : 0;
   const totalCreditIssued = allCredits.reduce((sum, c) => sum + c.amount, 0);
   const totalCreditUsed = allCredits.reduce((sum, c) => sum + (c.amount - c.remainingAmount), 0);
+
+  return {
+    referralCount,
+    referralCodes,
+    creditsCount,
+    storeCredits,
+    totalCodes,
+    redeemedCodes,
+    redemptionRate,
+    totalCreditIssued,
+    totalCreditUsed,
+  };
+}
+
+export default async function AdminReferralsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string; tab?: string; page?: string }>;
+}) {
+  await connection();
+  const params = await searchParams;
+  const currentPage = Math.max(1, parseInt(params.page ?? "1") || 1);
+  const activeTab: "credits" | "referrals" = params.tab === "credits" ? "credits" : "referrals";
+
+  const {
+    referralCount,
+    referralCodes,
+    creditsCount,
+    storeCredits,
+    totalCodes,
+    redeemedCodes,
+    redemptionRate,
+    totalCreditIssued,
+    totalCreditUsed,
+  } = await getReferralsPageData(currentPage, activeTab, params.status ?? "");
 
   const activeStatus = params.status || "all";
 

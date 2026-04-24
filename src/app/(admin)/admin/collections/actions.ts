@@ -2,7 +2,7 @@
 
 import { getDb } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
@@ -94,6 +94,7 @@ export async function createCollection(
     },
   });
 
+  revalidateTag("admin-collections", "max");
   revalidatePath("/admin/collections");
   revalidatePath("/");
   redirect("/admin/collections");
@@ -160,6 +161,7 @@ export async function updateCollection(
     },
   });
 
+  revalidateTag("admin-collections", "max");
   revalidatePath("/admin/collections");
   // Revalidate new slug page
   revalidatePath(`/collections/${slug}`);
@@ -176,6 +178,7 @@ export async function deleteCollection(id: string): Promise<void> {
   const db = await getDb();
   const collection = await db.collection.findUnique({ where: { id } });
   await db.collection.delete({ where: { id } });
+  revalidateTag("admin-collections", "max");
   revalidatePath("/admin/collections");
   if (collection) revalidatePath(`/collections/${collection.slug}`);
   revalidatePath("/");

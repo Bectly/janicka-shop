@@ -74,6 +74,8 @@ export async function createCategory(formData: FormData) {
   });
 
   revalidateTag("products", "max");
+  revalidateTag("admin-products", "max");
+  revalidateTag("admin-categories", "max");
   await invalidateProductCaches();
   revalidatePath("/admin/categories");
   revalidatePath("/products");
@@ -125,6 +127,8 @@ export async function updateCategory(id: string, formData: FormData) {
   });
 
   revalidateTag("products", "max");
+  revalidateTag("admin-products", "max");
+  revalidateTag("admin-categories", "max");
   await invalidateProductCaches();
   revalidatePath("/admin/categories");
   revalidatePath("/products");
@@ -152,6 +156,8 @@ export async function deleteCategory(id: string) {
   await db.category.delete({ where: { id } });
 
   revalidateTag("products", "max");
+  revalidateTag("admin-products", "max");
+  revalidateTag("admin-categories", "max");
   await invalidateProductCaches();
   revalidatePath("/admin/categories");
   revalidatePath("/products");

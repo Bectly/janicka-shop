@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { getDb } from "@/lib/db";
+import { cacheLife, cacheTag } from "next/cache";
 import { connection } from "next/server";
+import { getDb } from "@/lib/db";
 import { formatPrice, formatDate } from "@/lib/format";
 import {
   RETURN_STATUS_LABELS,
@@ -15,25 +16,22 @@ export const metadata: Metadata = {
   title: "Vratky",
 };
 
-export default async function AdminReturnsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ status?: string }>;
-}) {
-  await connection();
-  const db = await getDb();
-  const params = await searchParams;
+async function getReturnsPageData(status: string) {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("admin-returns");
 
+  const db = await getDb();
   const where: Record<string, unknown> = {};
   if (
-    params.status &&
-    params.status !== "all" &&
-    ["pending", "approved", "rejected", "completed"].includes(params.status)
+    status &&
+    status !== "all" &&
+    ["pending", "approved", "rejected", "completed"].includes(status)
   ) {
-    where.status = params.status;
+    where.status = status;
   }
 
-  const returns = await db.return.findMany({
+  return db.return.findMany({
     where,
     orderBy: { createdAt: "desc" },
     take: 200,
@@ -47,6 +45,16 @@ export default async function AdminReturnsPage({
       _count: { select: { items: true } },
     },
   });
+}
+
+export default async function AdminReturnsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>;
+}) {
+  await connection();
+  const params = await searchParams;
+  const returns = await getReturnsPageData(params.status ?? "");
 
   const statusFilters = [
     { value: "all", label: "Všechny" },

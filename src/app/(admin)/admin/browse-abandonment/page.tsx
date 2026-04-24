@@ -1,6 +1,7 @@
+import { cacheLife, cacheTag } from "next/cache";
+import { connection } from "next/server";
 import { getDb } from "@/lib/db";
 import { formatPrice, formatDate } from "@/lib/format";
-import { connection } from "next/server";
 import { Eye, Check, Clock } from "lucide-react";
 import { Suspense } from "react";
 import { Pagination, PaginationSkeleton } from "@/components/shop/pagination";
@@ -27,29 +28,35 @@ const STATUS_COLORS: Record<string, string> = {
   cart_added: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
 };
 
-export default async function AdminBrowseAbandonmentPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ page?: string }>;
-}) {
-  const params = await searchParams;
-  const currentPage = Math.max(1, parseInt(params.page ?? "1") || 1);
+async function getBrowseAbandonmentPageData(currentPage: number) {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("admin-browse-abandonment");
 
-  await connection();
   const db = await getDb();
-
-  const [totalCount, records] = await Promise.all([
+  const [totalCount, records, sentCount] = await Promise.all([
     db.browseAbandonment.count(),
     db.browseAbandonment.findMany({
       orderBy: { createdAt: "desc" },
       skip: (currentPage - 1) * ADMIN_BROWSE_PER_PAGE,
       take: ADMIN_BROWSE_PER_PAGE,
     }),
+    db.browseAbandonment.count({ where: { status: "sent" } }),
   ]);
+  return { totalCount, records, sentCount };
+}
 
-  const sentCount = await db.browseAbandonment.count({
-    where: { status: "sent" },
-  });
+export default async function AdminBrowseAbandonmentPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  await connection();
+  const params = await searchParams;
+  const currentPage = Math.max(1, parseInt(params.page ?? "1") || 1);
+
+  const { totalCount, records, sentCount } =
+    await getBrowseAbandonmentPageData(currentPage);
 
   return (
     <>

@@ -1,4 +1,5 @@
 import { cacheLife, cacheTag } from "next/cache";
+import { connection } from "next/server";
 import { getDb } from "@/lib/db";
 import Link from "next/link";
 
@@ -32,6 +33,7 @@ async function getCollectionsPageData() {
 }
 
 export default async function AdminCollectionsPage() {
+  await connection();
   const collectionsWithCounts = await getCollectionsPageData();
 
   return (

@@ -102,6 +102,7 @@ export async function updateShopSettings(
   revalidatePath("/");
   // soundNotifications is part of the cached admin-badge payload.
   revalidateTag("admin-badges", "max");
+  revalidateTag("admin-settings", "max");
 
   return { success: true, message: "Nastavení uloženo" };
 }

@@ -1,8 +1,9 @@
 import { Suspense } from "react";
+import { cacheLife, cacheTag } from "next/cache";
+import { connection } from "next/server";
 import { getDb } from "@/lib/db";
 import { formatDate } from "@/lib/format";
 import { parseJsonStringArray } from "@/lib/images";
-import { connection } from "next/server";
 
 import { Mail } from "lucide-react";
 import { Pagination, PaginationSkeleton } from "@/components/shop/pagination";
@@ -28,17 +29,12 @@ function safeJsonParseArray(json: string): string[] {
   }
 }
 
-export default async function AdminSubscribersPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ page?: string }>;
-}) {
-  const params = await searchParams;
-  const currentPage = Math.max(1, parseInt(params.page ?? "1") || 1);
+async function getSubscribersPageData(currentPage: number) {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("admin-subscribers");
 
-  await connection();
   const db = await getDb();
-
   const [totalCount, activeCount, withPrefs, subscribers, categories] =
     await Promise.all([
       db.newsletterSubscriber.count(),
@@ -62,9 +58,6 @@ export default async function AdminSubscribersPage({
       }),
     ]);
 
-  const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
-
-  // Load collections + campaign history for CampaignSender
   const [collections, campaignHistory] = await Promise.all([
     db.collection.findMany({
       where: { active: true },
@@ -76,6 +69,38 @@ export default async function AdminSubscribersPage({
       take: 10,
     }),
   ]);
+
+  return {
+    totalCount,
+    activeCount,
+    withPrefs,
+    subscribers,
+    categories,
+    collections,
+    campaignHistory,
+  };
+}
+
+export default async function AdminSubscribersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  await connection();
+  const params = await searchParams;
+  const currentPage = Math.max(1, parseInt(params.page ?? "1") || 1);
+
+  const {
+    totalCount,
+    activeCount,
+    withPrefs,
+    subscribers,
+    categories,
+    collections,
+    campaignHistory,
+  } = await getSubscribersPageData(currentPage);
+
+  const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
 
   const collectionOptions = collections.map((c) => ({
     id: c.id,

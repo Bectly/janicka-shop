@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
+import { connection } from "next/server";
 import { getDb } from "@/lib/db";
 import { SettingsForm } from "./settings-form";
 import { PasswordChangeForm } from "./password-form";
@@ -21,6 +22,7 @@ async function getCachedShopSettings() {
 }
 
 export default async function AdminSettingsPage() {
+  await connection();
   let settings = await getCachedShopSettings();
   if (!settings) {
     const db = await getDb();

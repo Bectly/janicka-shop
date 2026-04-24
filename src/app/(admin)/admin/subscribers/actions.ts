@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidateTag } from "next/cache";
 import { getDb } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { rateLimitAdmin } from "@/lib/rate-limit";
@@ -38,6 +39,7 @@ export async function toggleSubscriberActive(id: string, active: boolean) {
     where: { id },
     data: { active },
   });
+  revalidateTag("admin-subscribers", "max");
 }
 
 export async function getSubscribersCsv(): Promise<string> {
@@ -257,6 +259,7 @@ export async function sendNewsletterCampaign(formData: FormData): Promise<SendCa
     },
   });
 
+  revalidateTag("admin-subscribers", "max");
   return { success: true, sentCount, failedCount };
 }
 
@@ -386,6 +389,7 @@ export async function sendCustomsDutyCampaign(
     data: { status: "completed", sentCount, failedCount },
   });
 
+  revalidateTag("admin-subscribers", "max");
   return { success: true, sentCount, failedCount };
 }
 

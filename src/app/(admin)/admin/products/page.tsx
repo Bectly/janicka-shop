@@ -1,7 +1,8 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { getDb } from "@/lib/db";
+import { cacheLife, cacheTag } from "next/cache";
 import { connection } from "next/server";
+import { getDb } from "@/lib/db";
 
 import { Plus, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -58,32 +59,20 @@ function hasChestAndLength(raw: string): boolean {
   }
 }
 
-export default async function AdminProductsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{
-    page?: string;
-    q?: string;
-    status?: string;
-    category?: string;
-    missing?: string;
-  }>;
-}) {
-  const params = await searchParams;
-  const currentPage = Math.max(1, parseInt(params.page ?? "1") || 1);
-  const query = params.q?.trim() ?? "";
-  const statusFilter = params.status ?? "all";
-  const categoryFilter = params.category ?? "";
-  const missingFilter = (
-    MISSING_KINDS.includes(params.missing as MissingKind)
-      ? (params.missing as MissingKind)
-      : null
-  );
+async function getProductsPageData(
+  currentPage: number,
+  query: string,
+  statusFilter: string,
+  categoryFilter: string,
+  missingFilter: MissingKind | null,
+) {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("admin-products");
 
-  // Build Prisma where clause
+  const db = await getDb();
+
   const where: Prisma.ProductWhereInput = {};
-
-  // Status filter
   if (statusFilter === "active") {
     where.active = true;
     where.sold = false;
@@ -93,13 +82,9 @@ export default async function AdminProductsPage({
     where.active = false;
     where.sold = false;
   }
-
-  // Category filter
   if (categoryFilter) {
     where.categoryId = categoryFilter;
   }
-
-  // Search by name, SKU, or brand
   if (query) {
     where.OR = [
       { name: { contains: query } },
@@ -107,10 +92,6 @@ export default async function AdminProductsPage({
       { brand: { contains: query } },
     ];
   }
-
-  await connection();
-  const db = await getDb();
-
   // When filtering by "missing" field, JSON-string fields require in-memory
   // filtering. Default the status to active unsold if caller didn't restrict
   // (catalog quality only matters for what's actually on sale).
@@ -132,8 +113,6 @@ export default async function AdminProductsPage({
   >;
 
   if (missingFilter) {
-    // Fetch all matching rows (catalog is bounded — hundreds to low thousands),
-    // filter in JS, then paginate.
     const all = await db.product.findMany({
       where,
       orderBy: { createdAt: "desc" },
@@ -153,7 +132,6 @@ export default async function AdminProductsPage({
       if (missingFilter === "fitnote") {
         return !p.fitNote || p.fitNote.trim() === "";
       }
-      // "defects": non-new items without defectsNote
       if (NEW_CONDITIONS.has(p.condition)) return false;
       return !p.defectsNote || p.defectsNote.trim() === "";
     });
@@ -175,6 +153,39 @@ export default async function AdminProductsPage({
   }
 
   const categories = await categoriesPromise;
+  return { products, totalCount, categories };
+}
+
+export default async function AdminProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    page?: string;
+    q?: string;
+    status?: string;
+    category?: string;
+    missing?: string;
+  }>;
+}) {
+  await connection();
+  const params = await searchParams;
+  const currentPage = Math.max(1, parseInt(params.page ?? "1") || 1);
+  const query = params.q?.trim() ?? "";
+  const statusFilter = params.status ?? "all";
+  const categoryFilter = params.category ?? "";
+  const missingFilter = (
+    MISSING_KINDS.includes(params.missing as MissingKind)
+      ? (params.missing as MissingKind)
+      : null
+  );
+
+  const { products, totalCount, categories } = await getProductsPageData(
+    currentPage,
+    query,
+    statusFilter,
+    categoryFilter,
+    missingFilter,
+  );
 
   // Build URL helper preserving other params
   function filterUrl(overrides: Record<string, string>) {

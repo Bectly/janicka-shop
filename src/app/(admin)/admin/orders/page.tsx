@@ -1,7 +1,8 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { getDb } from "@/lib/db";
+import { cacheLife, cacheTag } from "next/cache";
 import { connection } from "next/server";
+import { getDb } from "@/lib/db";
 
 import { OrderSearch } from "@/components/admin/order-search";
 import { OrderExportButton } from "@/components/admin/order-export-button";
@@ -15,24 +16,18 @@ export const metadata: Metadata = {
   title: "Objednávky",
 };
 
-export default async function AdminOrdersPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ status?: string; q?: string }>;
-}) {
-  await connection();
+const VALID_STATUSES = ["pending", "confirmed", "paid", "shipped", "delivered", "cancelled"];
+
+async function getOrdersPageData(status: string, query: string) {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("admin-orders");
+
   const db = await getDb();
-  const params = await searchParams;
-  const query = params.q?.trim() ?? "";
-
-  const VALID_STATUSES = ["pending", "confirmed", "paid", "shipped", "delivered", "cancelled"];
-
   const where: Prisma.OrderWhereInput = {};
-  if (params.status && params.status !== "all" && VALID_STATUSES.includes(params.status)) {
-    where.status = params.status;
+  if (status && status !== "all" && VALID_STATUSES.includes(status)) {
+    where.status = status;
   }
-
-  // Search by order number, customer name, or customer email
   if (query) {
     where.OR = [
       { orderNumber: { contains: query } },
@@ -42,7 +37,7 @@ export default async function AdminOrdersPage({
     ];
   }
 
-  const orders = await db.order.findMany({
+  return db.order.findMany({
     where,
     orderBy: { createdAt: "desc" },
     take: 200,
@@ -62,6 +57,17 @@ export default async function AdminOrdersPage({
       _count: { select: { items: true } },
     },
   });
+}
+
+export default async function AdminOrdersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string; q?: string }>;
+}) {
+  await connection();
+  const params = await searchParams;
+  const query = params.q?.trim() ?? "";
+  const orders = await getOrdersPageData(params.status ?? "", query);
 
   // Compute delivery deadline urgency for active orders + shape for client table
   const now = new Date();

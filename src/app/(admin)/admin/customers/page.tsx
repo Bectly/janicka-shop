@@ -1,7 +1,8 @@
 import { Suspense } from "react";
+import { cacheLife, cacheTag } from "next/cache";
+import { connection } from "next/server";
 import { getDb } from "@/lib/db";
 import { formatPrice, formatDate } from "@/lib/format";
-import { connection } from "next/server";
 
 import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from "@/lib/constants";
 import {
@@ -43,34 +44,22 @@ type Sort = "recent" | "alpha" | "spent";
 type VerifiedFilter = "any" | "yes" | "no";
 type OrdersFilter = "any" | "yes" | "no";
 
-export default async function AdminCustomersPage({
-  searchParams,
-}: {
-  searchParams: Promise<{
-    page?: string;
-    q?: string;
-    tag?: string;
-    sort?: string;
-    verified?: string;
-    orders?: string;
-    locked?: string;
-  }>;
-}) {
-  const params = await searchParams;
-  const currentPage = Math.max(1, parseInt(params.page ?? "1") || 1);
-  const query = (params.q ?? "").trim();
-  const tag = (params.tag ?? "").trim();
-  const sort: Sort =
-    params.sort === "alpha" || params.sort === "spent" || params.sort === "recent"
-      ? params.sort
-      : "recent";
-  const verified: VerifiedFilter =
-    params.verified === "yes" || params.verified === "no" ? params.verified : "any";
-  const ordersFilter: OrdersFilter =
-    params.orders === "yes" || params.orders === "no" ? params.orders : "any";
-  const lockedOnly = params.locked === "1";
+async function getCustomersPageData(
+  currentPage: number,
+  query: string,
+  tag: string,
+  sort: Sort,
+  verified: VerifiedFilter,
+  ordersFilter: OrdersFilter,
+  lockedOnly: boolean,
+  // Passed in so the "locked" window snaps in minute increments (cache key
+  // stable within a minute) rather than thrashing on every request.
+  lockedCutoffMs: number,
+) {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("admin-customers");
 
-  await connection();
   const db = await getDb();
 
   const where: Prisma.CustomerWhereInput = {};
@@ -89,13 +78,13 @@ export default async function AdminCustomersPage({
   if (verified === "no") where.emailVerified = null;
   if (ordersFilter === "yes") where.orders = { some: {} };
   if (ordersFilter === "no") where.orders = { none: {} };
-  if (lockedOnly) where.lockedUntil = { gt: new Date() };
+  if (lockedOnly) where.lockedUntil = { gt: new Date(lockedCutoffMs) };
 
   const orderBy: Prisma.CustomerOrderByWithRelationInput =
     sort === "alpha"
       ? { lastName: "asc" }
       : sort === "spent"
-        ? { updatedAt: "desc" } // spent sort handled client-side after aggregation
+        ? { updatedAt: "desc" }
         : { createdAt: "desc" };
 
   const [totalCount, customers, allTagsRaw] = await Promise.all([
@@ -118,8 +107,6 @@ export default async function AdminCustomersPage({
         },
       },
     }),
-    // Fetch tag strings from all customers to build the filter chip row.
-    // Limited to 1000 recent records to keep this cheap; covers practical usage.
     db.customer.findMany({
       where: { tags: { not: "[]" } },
       select: { tags: true },
@@ -127,6 +114,50 @@ export default async function AdminCustomersPage({
       take: 1000,
     }),
   ]);
+
+  return { totalCount, customers, allTagsRaw };
+}
+
+export default async function AdminCustomersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    page?: string;
+    q?: string;
+    tag?: string;
+    sort?: string;
+    verified?: string;
+    orders?: string;
+    locked?: string;
+  }>;
+}) {
+  await connection();
+  const params = await searchParams;
+  const currentPage = Math.max(1, parseInt(params.page ?? "1") || 1);
+  const query = (params.q ?? "").trim();
+  const tag = (params.tag ?? "").trim();
+  const sort: Sort =
+    params.sort === "alpha" || params.sort === "spent" || params.sort === "recent"
+      ? params.sort
+      : "recent";
+  const verified: VerifiedFilter =
+    params.verified === "yes" || params.verified === "no" ? params.verified : "any";
+  const ordersFilter: OrdersFilter =
+    params.orders === "yes" || params.orders === "no" ? params.orders : "any";
+  const lockedOnly = params.locked === "1";
+
+  // Snap "now" to the minute so the cache key is stable for a minute window.
+  const minuteBucket = Math.floor(Date.now() / 60_000) * 60_000;
+  const { totalCount, customers, allTagsRaw } = await getCustomersPageData(
+    currentPage,
+    query,
+    tag,
+    sort,
+    verified,
+    ordersFilter,
+    lockedOnly,
+    minuteBucket,
+  );
 
   const allTagCounts = new Map<string, number>();
   for (const row of allTagsRaw) {

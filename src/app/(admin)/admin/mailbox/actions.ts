@@ -95,6 +95,7 @@ export async function markThreadReadAction(threadId: string) {
   revalidatePath("/admin/mailbox");
   revalidatePath(`/admin/mailbox/${threadId}`);
   revalidateTag("admin-badges", "max");
+  revalidateTag("admin-mailbox", "max");
 }
 
 export async function markThreadUnreadAction(threadId: string) {
@@ -115,6 +116,7 @@ export async function markThreadUnreadAction(threadId: string) {
   revalidatePath("/admin/mailbox");
   revalidatePath(`/admin/mailbox/${threadId}`);
   revalidateTag("admin-badges", "max");
+  revalidateTag("admin-mailbox", "max");
 }
 
 export async function archiveThreadAction(threadId: string) {
@@ -128,6 +130,7 @@ export async function archiveThreadAction(threadId: string) {
   });
   revalidatePath("/admin/mailbox");
   revalidateTag("admin-badges", "max");
+  revalidateTag("admin-mailbox", "max");
   redirect("/admin/mailbox");
 }
 
@@ -143,6 +146,7 @@ export async function unarchiveThreadAction(threadId: string) {
   revalidatePath("/admin/mailbox");
   revalidatePath(`/admin/mailbox/${threadId}`);
   revalidateTag("admin-badges", "max");
+  revalidateTag("admin-mailbox", "max");
 }
 
 export async function trashThreadAction(threadId: string) {
@@ -156,6 +160,7 @@ export async function trashThreadAction(threadId: string) {
   });
   revalidatePath("/admin/mailbox");
   revalidateTag("admin-badges", "max");
+  revalidateTag("admin-mailbox", "max");
   redirect("/admin/mailbox");
 }
 
@@ -317,6 +322,7 @@ export async function sendReplyAction(
 
   revalidatePath("/admin/mailbox");
   revalidatePath(`/admin/mailbox/${threadId}`);
+  revalidateTag("admin-mailbox", "max");
   return { ok: true };
 }
 
@@ -403,5 +409,6 @@ export async function sendNewMessageAction(
   });
 
   revalidatePath("/admin/mailbox");
+  revalidateTag("admin-mailbox", "max");
   redirect(`/admin/mailbox/${thread.id}`);
 }
