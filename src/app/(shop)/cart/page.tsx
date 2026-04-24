@@ -99,60 +99,25 @@ export default function CartPage() {
   }, [removeItem]);
 
   if (!mounted) {
+    // Compact SSR shell sized to match the empty-cart state (the most common
+    // first-paint target: fresh visitors + Lighthouse have no persisted cart).
+    // Fat item-row skeletons caused /cart CLS regression 0.020→0.423 on mobile
+    // Lighthouse as hydration swapped ~670px skeleton → ~370px empty state and
+    // dragged the footer up by ~300px. Keeping dimensions within the same
+    // min-h-[70vh] shell absorbs residual shifts for real users with items.
     return (
-      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="flex items-end gap-3">
-          <Skeleton className="h-9 w-24" />
-          <Skeleton className="mb-1 h-5 w-16 rounded-full" />
-        </div>
-        <Skeleton className="mt-4 h-11 w-full rounded-lg" />
-        <div className="mt-6 divide-y">
-          {Array.from({ length: 2 }).map((_, i) => (
-            <div key={i} className="flex gap-4 py-4">
-              <Skeleton className="size-20 shrink-0 rounded-lg" />
-              <div className="flex flex-1 flex-col gap-2">
-                <div className="flex justify-between">
-                  <Skeleton className="h-4 w-36" />
-                  <Skeleton className="h-4 w-16" />
-                </div>
-                <Skeleton className="h-3 w-24" />
-                <div className="mt-auto flex items-center justify-between pt-2">
-                  <Skeleton className="h-5 w-20 rounded-md" />
-                  <Skeleton className="size-11 rounded-lg" />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="mt-8 rounded-xl border border-brand/10 bg-gradient-to-br from-brand/[0.03] via-card to-champagne-light/20 p-6">
-          <div className="flex items-center justify-between">
-            <Skeleton className="h-5 w-24" />
-            <Skeleton className="h-5 w-20" />
-          </div>
-          <div className="mt-3 space-y-1.5">
-            <Skeleton className="h-3 w-16" />
-            <Skeleton className="h-3 w-full" />
-            <Skeleton className="h-3 w-3/4" />
-          </div>
-          <Skeleton className="mt-4 h-2.5 w-full rounded-full" />
-          <Skeleton className="mt-6 h-12 w-full rounded-lg" />
-          <Skeleton className="mt-4 h-12 w-full rounded-xl" />
-          <div className="mt-4 flex flex-wrap justify-center gap-4 border-t pt-4">
-            <Skeleton className="h-4 w-28" />
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-4 w-20" />
-          </div>
-        </div>
-        <div className="mt-4 flex justify-center">
-          <Skeleton className="h-4 w-40" />
-        </div>
+      <div className="mx-auto flex min-h-[70vh] max-w-3xl flex-col items-center px-4 py-20 text-center sm:px-6 lg:px-8">
+        <Skeleton className="size-20 rounded-2xl" />
+        <Skeleton className="mt-6 h-8 w-40" />
+        <Skeleton className="mt-3 h-4 w-64 max-w-full" />
+        <Skeleton className="mt-8 h-12 w-48 rounded-lg" />
       </div>
     );
   }
 
   if (restoreState === "loading" || restoreState === "success") {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-20 sm:px-6 lg:px-8">
+      <div className="mx-auto min-h-[70vh] max-w-3xl px-4 py-20 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center text-center">
           <div className="flex size-20 items-center justify-center rounded-2xl bg-gradient-to-br from-sage/20 to-champagne-light ring-1 ring-inset ring-black/[0.04]">
             {restoreState === "success"
@@ -175,7 +140,7 @@ export default function CartPage() {
 
   if (restoreState === "error" && items.length === 0) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-20 sm:px-6 lg:px-8">
+      <div className="mx-auto min-h-[70vh] max-w-3xl px-4 py-20 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center text-center">
           <div className="flex size-20 items-center justify-center rounded-2xl bg-destructive/10 ring-1 ring-inset ring-destructive/20">
             <AlertCircle className="size-9 text-destructive" />
@@ -196,7 +161,7 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-20 sm:px-6 lg:px-8">
+      <div className="mx-auto min-h-[70vh] max-w-3xl px-4 py-20 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center text-center">
           <div className="flex size-20 items-center justify-center rounded-2xl bg-gradient-to-br from-blush to-champagne-light ring-1 ring-inset ring-black/[0.04]">
             <ShoppingBag className="size-9 text-primary/60" />
@@ -216,7 +181,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto min-h-[70vh] max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="flex items-end gap-3">
         <h1 className="font-heading text-3xl font-bold">Košík</h1>
         <span className="mb-1 inline-flex items-center rounded-full border border-primary/20 bg-primary/[0.06] px-2.5 py-0.5 text-xs font-semibold text-primary">
