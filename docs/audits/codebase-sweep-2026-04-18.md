@@ -1,8 +1,35 @@
 # Codebase Quality Sweep — 2026-04-18
 
-**Agent**: Trace (DevLoop C4808, re-verified C4811/C4817/C4821/C4826/C4833, task #367)
+**Agent**: Trace (DevLoop C4808, re-verified C4811/C4817/C4821/C4826/C4833/C4839, task #367)
 **Scope**: `src/**`, `prisma/**`, `next.config.ts`, `package.json`
 **Commands run**: `npx tsc --noEmit`, `npm run lint`, `npx ts-prune`, `npx depcheck`, targeted grep sweeps
+
+## C4839 re-verification addendum (2026-04-24) — gates green through SEO-1 + UX-1 + R2-preconnect landings
+
+Re-ran after CWV-adjacent landings: `f08e34d` (UX-1 error+loading coverage, 3 new boundary files), `b3125e4` (Trace CWV audit report), `b5c6281` (SEO-1 dynamic OG images — 4 new `next/og` routes), `cff840a` (PDP related products carousel), `889862b` (R2 preconnect in layout head).
+
+- **`tsc --noEmit`**: ✅ PASS.
+- **`npm run lint`**: ✅ **0 errors, 0 warnings** — MILESTONE C4829 preserved through 5 commits (#477, CWV audit, SEO-1, carousel, R2 preconnect). Bolt has been clean across two UX-1/SEO-1 commits as well as follow-up Lead-directed work.
+- **P1-7e ts-prune trio** (queued by C4833, not yet picked up by Bolt — Lead pivoted to CWV #481/#482/#483 per 2026-04-24 directive):
+  - `src/lib/actions/reservation.ts:145` — `checkAvailability` still present (0 consumers).
+  - `src/lib/products-cache.ts:74,82` — `getProducts` + `getCategories` still present (0 consumers).
+  - `src/lib/shipping/packeta.ts:212` — `cancelPacket` still present (0 consumers).
+  - Verdicts unchanged — safe to DELETE per C4833 classification when Bolt has a quiet slot after the CWV sprint.
+- **New ts-prune candidate** (P1-7f, surfaced C4839): `src/app/(shop)/actions.ts:77` — `updateSubscriberPreferences` server action, zero consumers across `src/` (only hits: self-definition + `docs/STRUCTURE.md` export listing). Comment at L73-76 says "Used for progressive profiling — e.g., on 2nd visit or preference page." That consumer does not exist. Classify as **DELETE** if no preference-page work is planned within the current sprint; **KEEP + TODO** if progressive-profiling UI is on Lead's 30-day roadmap (ask before prune — this one straddles dead-code vs. speculative-feature line).
+- **Security re-sweep** (with new SEO-1 surface in play):
+  - `dangerouslySetInnerHTML`: 5 files → **7 files, 17 occurrences** (PDP added 8 new JSON-LD scripts: product/breadcrumb/FAQ/optional-video × 2 render paths, collections added 2). Grep `dangerouslySetInnerHTML={{ __html: (?!jsonLdString)` → **zero matches**. All 17 feed through `jsonLdString()` helper which escapes `<`. ✅ Safe.
+  - `@ts-ignore` / `@ts-nocheck`: still 0. ✅
+  - Hardcoded secrets grep (`sk_live|sk_test|cfk_|Bearer [A-Za-z0-9]{20,}`): 0 hits in `src/`. ✅
+- **No regressions** from SEO-1 dynamic OG image routes — `next/og` ImageResponse uses DB reads inside try/catch-equivalent defaults; no user-controllable HTML surface.
+- **CWV findings** live in companion doc `docs/audits/cwv-2026-04-24.md` (not duplicated here); re-audit after #481+#482+#483 is task #484 and will be written to `cwv-2026-04-24-followup.md`.
+
+**Net state after C4839**: audit continues to hold at clean-gates baseline. Remaining cleanup = 3 C4833-classified DELETEs (P1-7e) + 1 new DELETE candidate (P1-7f `updateSubscriberPreferences`, pending Lead roadmap call). Expected close-out is 4-file diff ~85 LoC once CWV sprint lands.
+
+**Recommended next follow-up for Lead**: after #481/#482/#483 commit, bundle P1-7e (3 exports) + P1-7f (`updateSubscriberPreferences` if no progressive-profiling UI planned) into a single Bolt prune task. Gate: tsc clean + lint 0w/0e preserved + `npx ts-prune` src/ returns zero remaining non-framework candidates.
+
+Task #367 remains complete in original scope. C4839 addendum is the 6th gated re-verification — audit doc is stable, further cycles should only re-run if new dead code surfaces or lint regresses.
+
+---
 
 ## C4833 P1-7e ts-prune candidate classification (2026-04-24)
 
