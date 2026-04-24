@@ -1,30 +1,28 @@
 {
   "last_bolt_commit_cycle": 4810,
-  "cycle": 4808,
-  "directive": "C4808 Lead RESEARCH: Bolt C4808 empty — #419 already satisfied by 39e562d, #421 in_progress (test infra), #449/#422 open but unpicked. DevChat 0 new. Monitors not due. Research revealed 3 actionable gaps inside project scope: (1) abandoned cart email CTAs link to /checkout without cart state — cross-device recipients get empty cart, recovery rate capped; fix = token-based /cart?restore=<cartId> hydration endpoint (#450 BOLT). (2) Sage C4803 P3 deferred to Lead — mobile product-card sizes pill row clipped behind price, brand label ''CXS'' confusable with size value; IA polish in one component (#451 BOLT). (3) Only 3 e2e specs (admin-jarvis, mock-payment, smoke) — no cart or PDP golden-path coverage; two atomic specs planned for Trace once #421 unblocks (#452 TRACE, gated on #421). Bolt priority order: #421 (unblock test infra) → #449 (homepage reorder, small) → #451 (product-card IA, Sage follow-through) → #450 (cart restore) → #422 (console cleanup, long tail). Trace: #367 sweep still in_progress, #452 queued behind #421. Sage idle — C4805 badge + homepage audit landed, no micro-polish forced. Guard #368 P0 > #366 > #330 unchanged. Hetzner triad (#342/#340/#347) remains bectly-gated.",
+  "cycle": 4810,
+  "directive": "C4810 Lead REVIEW: Closed #422 (Bolt d17d169 — logger.ts + 140+ console.* routed + heureka.ts import fix, prod build green) and #452 (Trace 391945a — cart.spec.ts + pdp.spec.ts shipped; runtime gate is separate task #421 not blocking deliverable). Bolt has UNCOMMITTED #449 homepage reorder in working tree (src/app/(shop)/page.tsx: Nově přidané moved above Categories, 6 lines swapped, clean diff). Directive: Bolt commit #449 NOW (atomic, one-line msg, build is already green) → then #421 test-infra (now critical path — unblocks production-grade runtime for Trace's e2e specs already in tree + Trace C4801 unit-test gaps on comgate.ts/qr-platba.ts). After #421: #451 card IA → #450 cart restore. Trace: continue #367 codebase sweep (still in_progress, atomic chunks <2min). Sage idle — micro-polish queue available. Guard #368 P0 unchanged. DevChat 0 new, no DUE monitors (all fresh 0.1h). No new blockers from bectly. Second-hand scope intact.",
   "lanes": {
     "BOLT": {
       "status": "active",
-      "force_next_task": 421,
+      "force_next_task": 449,
       "next_priority": [
-        421,
         449,
+        421,
         451,
-        450,
-        422
+        450
       ],
-      "notes": "#419 CLOSED (39e562d already satisfied — Bolt C4808 verified). #421 in_progress = top priority unblock (adds @playwright/test + dotenv devDeps, wires npm scripts, first unit tests on comgate.ts + qr-platba.ts per Trace C4801 findings). After #421 ships: #449 homepage mobile reorder (Sage-specced: Nově přidané above Categories on mobile, ~10 LoC src/app/(shop)/page.tsx) → #451 product-card mobile IA polish (Sage P3 follow-through — sizes row above price, brand/category condensation, Tailwind-only, one component) → #450 abandoned cart one-click restore (new API route + /cart?restore=<cartId> hydration + email CTA swap, 3 templates) → #422 console.log cleanup (89 calls, email.ts=38 worst offender). Atomic, ship one at a time. npm run build green on every commit. Do NOT touch #367 Trace output (separate lane). Do NOT start Hetzner lane — all gated on bectly."
+      "notes": "#422 CLOSED (d17d169 — logger.ts gated warn/error/info/debug + 140+ console.* routed + heureka.ts missing-import fix, prod build green). #419 CLOSED prior cycle. TOP PRIORITY NOW: commit uncommitted #449 homepage reorder (working tree has src/app/(shop)/page.tsx: 6-line swap moving Nově přidané above Categories per Sage C4803 spec — diff is clean, build already green, just `git add + commit`). Then #421 becomes critical path (Trace already shipped e2e/cart.spec.ts + e2e/pdp.spec.ts in 391945a; those specs won't run until #421 lands @playwright/test + dotenv devDeps + npm scripts + first unit tests on comgate.ts/qr-platba.ts per Trace C4801). After #421: #451 product-card IA polish (Sage P3 follow-through — sizes row above price, brand/category condensation, Tailwind-only, one component) → #450 abandoned cart one-click restore (/cart?restore=<cartId> token hydration + 3 email CTA templates). Atomic, one task per commit. npm run build green on every commit. Do NOT touch #367 Trace lane. Do NOT start Hetzner."
     },
     "TRACE": {
-      "status": "paused",
+      "status": "active",
       "force_next_task": 367,
       "next_priority": [
         367,
-        452,
         358,
         351
       ],
-      "notes": "#367 still in_progress (read-only codebase sweep, atomic <2min to dodge QA exit=143). After #367 ships: #452 Cart + PDP Playwright e2e coverage bundle — two new specs (e2e/cart.spec.ts + e2e/pdp.spec.ts) queued but HARD-GATED on Bolt #421 landing @playwright/test devDep. Do NOT start #452 until #421 commit is visible in git log. Then #358 E2E ttyd admin console flow (blocked on Guard #368 P0 fix — verify first), then #351 pre-migration code quality. Skip #342/#340/#347 (all Hetzner-gated, needs bectly pre-approval + off-peak). Pause stays 'until_next_bolt_commit'."
+      "notes": "#452 CLOSED (391945a — cart.spec.ts add→remove→empty-state→re-add→reload persistence + pdp.spec.ts gallery/measurements/wishlist/add-to-cart label flip; tsconfig-excluded so no build impact; runtime gate belongs to Bolt #421). Continue #367 read-only codebase sweep (in_progress, atomic chunks <2min to dodge QA exit=143 pattern). After #367: #358 E2E ttyd admin console flow BLOCKED on Guard #368 P0 — do NOT start until #368 fix visible. Then #351 pre-migration code quality. Skip #342/#340/#347 (Hetzner-gated). Unpaused — no more 'until_next_bolt_commit' gate needed, #367 is independent read-only work."
     },
     "SAGE": {
       "status": "paused",
@@ -54,13 +52,13 @@
     "Mock payment provider (src/lib/payments/mock.ts) MUST stay prod-guarded — NODE_ENV=production with PAYMENT_PROVIDER=mock must throw in provider factory. Do not soften this guard.",
     "Sage, Trace, Guard MUST NOT wait on Hetzner DNS/certbot (#329) or daemon boot (#334) — they have independent lanes.",
     "Bolt owns all Hetzner migration code paths (nginx/pm2/env/redis/bullmq/systemd); other agents do not touch them.",
-    "Tasks #337, #352, #353, #364, #365, #369, #370, #344, #371, #373, #374, #375, #376, #377, #378, #412, #413, #414, #415, #416, #417, #420 are DONE — do not re-raise as blockers.",
+    "Tasks #337, #352, #353, #364, #365, #369, #370, #344, #371, #373, #374, #375, #376, #377, #378, #412, #413, #414, #415, #416, #417, #420, #422, #452 are DONE — do not re-raise as blockers.",
     "Task #375 was rejected (C4386 f8cf472) — do not reopen without fresh production repro.",
     "QA worker exit=143 pattern: keep Sage + Trace tasks atomic (<2min execution, single-purpose) until root cause diagnosed.",
     "#346 blocked until P6.3 traffic-cut completes — no Vercel-baseline visual QA possible pre-Hetzner cut.",
     "#342/#340/#347 all gated on Bolt P1-P4 Hetzner app deploy + bectly pre-approval + off-peak — Trace must NOT attempt ad-hoc prod failover/perf/restore drills."
   ],
-  "last_updated": "2026-04-24T06:30",
+  "last_updated": "2026-04-24T10:20",
   "pause": {},
   "paused_at_bolt_cycle": 4795
 }

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Trash2, ShoppingBag, ArrowLeft, Clock, Lock, RotateCcw, ShieldCheck, CheckCircle, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCartStore, type CartItem } from "@/lib/cart-store";
@@ -21,6 +21,8 @@ const emptySubscribe = () => () => {};
 
 export default function CartPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const restoreToken = searchParams.get("restore");
   const items = useCartStore((s) => s.items);
   const removeItem = useCartStore((s) => s.removeItem);
   const updateReservation = useCartStore((s) => s.updateReservation);
@@ -30,6 +32,49 @@ export default function CartPage() {
     () => true,
     () => false
   );
+
+  const [restoreState, setRestoreState] = useState<"idle" | "loading" | "success" | "error">(
+    restoreToken ? "loading" : "idle"
+  );
+
+  // One-click cart restore from abandoned-cart email (cross-device hydration)
+  useEffect(() => {
+    if (!mounted || !restoreToken) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const res = await fetch(`/api/cart/restore?token=${encodeURIComponent(restoreToken)}`, {
+          method: "POST",
+        });
+        if (!res.ok) throw new Error(`status ${res.status}`);
+        const data: { items?: Array<Partial<CartItem> & { productId: string; name: string; price: number; slug?: string; image?: string; size?: string; color?: string }> } = await res.json();
+        if (cancelled) return;
+
+        const restored: CartItem[] = (data.items ?? [])
+          .filter((i) => i && typeof i.productId === "string" && typeof i.name === "string" && typeof i.price === "number")
+          .map((i) => ({
+            productId: i.productId,
+            name: i.name,
+            price: i.price,
+            image: i.image ?? "",
+            size: i.size ?? "",
+            color: i.color ?? "",
+            slug: i.slug ?? "",
+            quantity: 1,
+          }));
+
+        useCartStore.setState({ items: restored });
+        setRestoreState("success");
+        setTimeout(() => router.push("/checkout"), 1500);
+      } catch {
+        if (!cancelled) setRestoreState("error");
+      }
+    })();
+
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mounted, restoreToken]);
 
   // Extend reservations on mount
   useEffect(() => {
@@ -100,6 +145,50 @@ export default function CartPage() {
         </div>
         <div className="mt-4 flex justify-center">
           <Skeleton className="h-4 w-40" />
+        </div>
+      </div>
+    );
+  }
+
+  if (restoreState === "loading" || restoreState === "success") {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-20 sm:px-6 lg:px-8">
+        <div className="flex flex-col items-center text-center">
+          <div className="flex size-20 items-center justify-center rounded-2xl bg-gradient-to-br from-sage/20 to-champagne-light ring-1 ring-inset ring-black/[0.04]">
+            {restoreState === "success"
+              ? <CheckCircle className="size-9 text-sage-dark" />
+              : <Clock className="size-9 text-primary/60 animate-pulse" />
+            }
+          </div>
+          <h1 className="mt-6 font-heading text-2xl font-bold">
+            {restoreState === "success" ? "Košík obnoven" : "Obnovuji košík…"}
+          </h1>
+          <p className="mt-2 max-w-xs text-muted-foreground">
+            {restoreState === "success"
+              ? "Můžete pokračovat v nákupu — přesměrováváme na pokladnu."
+              : "Chvíli strpení, načítáme vaše kousky."}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (restoreState === "error" && items.length === 0) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-20 sm:px-6 lg:px-8">
+        <div className="flex flex-col items-center text-center">
+          <div className="flex size-20 items-center justify-center rounded-2xl bg-destructive/10 ring-1 ring-inset ring-destructive/20">
+            <AlertCircle className="size-9 text-destructive" />
+          </div>
+          <h1 className="mt-6 font-heading text-2xl font-bold">
+            Odkaz již nelze použít
+          </h1>
+          <p className="mt-2 max-w-xs text-muted-foreground">
+            Tento odkaz na obnovení košíku vypršel nebo již byl použit. Vyberte si znovu z naší kolekce.
+          </p>
+          <Button size="lg" className="mt-8" render={<Link href="/products" />}>
+            Prohlédnout kolekci
+          </Button>
         </div>
       </div>
     );

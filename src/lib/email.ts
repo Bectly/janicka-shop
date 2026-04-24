@@ -1242,7 +1242,7 @@ function buildAbandonedCartEmail1(data: AbandonedCartEmailData): string {
         </p>
       </div>`,
     "Dokončit objednávku",
-    `${baseUrl}/checkout`,
+    `${baseUrl}/cart?restore=${encodeURIComponent(data.cartId)}`,
     data.cartId,
   );
 }
@@ -1275,7 +1275,7 @@ function buildAbandonedCartEmail2(data: AbandonedCartEmailData, soldProductIds: 
     : "";
 
   const ctaText = availableItems.length > 0 ? "Dokončit objednávku" : "Prohlédnout podobné kousky";
-  const ctaUrl = availableItems.length > 0 ? `${baseUrl}/checkout` : `${baseUrl}/products?sort=newest`;
+  const ctaUrl = availableItems.length > 0 ? `${baseUrl}/cart?restore=${encodeURIComponent(data.cartId)}` : `${baseUrl}/products?sort=newest`;
 
   return buildAbandonedCartEmailWrapper(
     `
@@ -1321,7 +1321,7 @@ function buildAbandonedCartEmail3(data: AbandonedCartEmailData, soldProductIds: 
     : "";
 
   const ctaText = availableItems.length > 0 ? "Naposledy — dokončit objednávku" : "Prohlédnout novinky";
-  const ctaUrl = availableItems.length > 0 ? `${baseUrl}/checkout` : `${baseUrl}/products?sort=newest`;
+  const ctaUrl = availableItems.length > 0 ? `${baseUrl}/cart?restore=${encodeURIComponent(data.cartId)}` : `${baseUrl}/products?sort=newest`;
 
   return buildAbandonedCartEmailWrapper(
     `
