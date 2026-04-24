@@ -308,7 +308,6 @@ export async function createOrder(
     const p = prefetchMap.get(i.productId);
     return sum + (p?.price ?? i.price);
   }, 0);
-  const shippingPre = subtotalPre >= FREE_SHIPPING_THRESHOLD ? 0 : baseShipping;
   let referralDiscountPre = 0;
   if (data.referralCode && subtotalPre >= REFERRAL_MIN_ORDER_CZK) {
     const rr = await validateReferralCode(data.referralCode, data.email);

@@ -59,7 +59,7 @@ export function ProductCard({
   condition,
   sizes,
   colors,
-  stock = 1,
+  stock: _stock = 1,
   createdAt,
   isReserved,
   lowestPrice30d,

@@ -64,8 +64,6 @@ export default async function AdminAbandonedCartsPage({
     where: { status: "recovered" },
   });
 
-  const totalValue = carts.reduce((sum, c) => sum + c.cartTotal, 0);
-
   return (
     <>
       <div className="flex items-center justify-between">
