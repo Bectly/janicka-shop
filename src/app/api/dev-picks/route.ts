@@ -3,7 +3,7 @@ import { getDb } from "@/lib/db";
 import { z } from "zod";
 
 function isLeadAuthorized(request: Request): boolean {
-  const apiKey = process.env.DEVCHAT_API_KEY;
+  const apiKey = process.env.LEAD_API_KEY;
   if (!apiKey) return false;
   const authHeader = request.headers.get("authorization");
   return authHeader === `Bearer ${apiKey}`;
@@ -24,7 +24,7 @@ const createPickSchema = z.object({
 
 /**
  * POST /api/dev-picks — Lead creates a new pick for Janička.
- * Auth: DEVCHAT_API_KEY Bearer token.
+ * Auth: LEAD_API_KEY Bearer token.
  */
 export async function POST(request: Request) {
   if (!isLeadAuthorized(request)) {
@@ -79,7 +79,7 @@ export async function POST(request: Request) {
 
 /**
  * GET /api/dev-picks — Lead reads picks (with optional status filter).
- * Auth: DEVCHAT_API_KEY Bearer token.
+ * Auth: LEAD_API_KEY Bearer token.
  */
 export async function GET(request: Request) {
   if (!isLeadAuthorized(request)) {

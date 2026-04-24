@@ -4,7 +4,6 @@ import { Footer } from "@/components/shop/footer";
 import { CookieConsentBanner } from "@/components/shop/cookie-consent";
 import { BackToTop } from "@/components/shop/back-to-top";
 import { AnnouncementBar } from "@/components/shop/announcement-bar";
-import { DevChatWidget } from "@/components/dev-chat/dev-chat-widget";
 import { ReferralTracker } from "@/components/shop/referral-tracker";
 import { BottomNav } from "@/components/shop/bottom-nav";
 import { PullToRefresh } from "@/components/shop/pull-to-refresh";
@@ -48,11 +47,6 @@ export default function ShopLayout({
         <ShuffleButton />
       </Suspense>
       <ShuffleOverlay />
-      {false && (
-        <Suspense>
-          <DevChatWidget />
-        </Suspense>
-      )}
     </>
   );
 }

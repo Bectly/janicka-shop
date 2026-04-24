@@ -5,7 +5,6 @@ import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { AdminSidebar } from "@/components/admin/sidebar";
 import { AdminOrderNotifier } from "@/components/admin/order-notifier";
-import { DevChatWidget } from "@/components/dev-chat/dev-chat-widget";
 import { GlobalSearch } from "@/components/admin/global-search";
 import { Breadcrumbs } from "@/components/admin/breadcrumbs";
 import {
@@ -68,9 +67,6 @@ async function AdminAuthGate({
         </div>
       </main>
       <AdminOrderNotifier soundEnabled={settings?.soundNotifications ?? false} />
-      <Suspense>
-        <DevChatWidget />
-      </Suspense>
       <JarvisConsoleOverlay />
     </>
   );

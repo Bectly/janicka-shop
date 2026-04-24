@@ -611,17 +611,6 @@ body.lightbox-open [data-hide-on-lightbox] {
   display: none !important;
 }
 
-/* DevChat floating bubble: same visual position as bottom-20 on standard phones,
-   but correctly clears the bottom nav on notched iPhones (accounts for safe-area-inset-bottom). */
-.devchat-bubble-pos {
-  bottom: calc(3.5rem + 1.5rem + env(safe-area-inset-bottom, 0px));
-}
-@media (min-width: 1024px) {
-  .devchat-bubble-pos {
-    bottom: 1.5rem;
-  }
-}
-
 /* ─── Hero cherry blossom petal fall ─── */
 @keyframes petal-fall {
   0% {
