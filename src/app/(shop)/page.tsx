@@ -16,6 +16,7 @@ import { getLowestPrices30d } from "@/lib/price-history";
 import { HeroSection } from "@/components/shop/hero-section";
 import { buildItemListSchema, buildWebSiteSchema, buildOrganizationSchema, jsonLdString } from "@/lib/structured-data";
 import { ScrollReveal } from "@/components/shop/scroll-reveal";
+import { ProductCarousel } from "@/components/shop/product-carousel";
 import { LayoutGrid, Star, Tag, Heart, Layers, Mail } from "lucide-react";
 
 /* ---------- Cached DB fetches (cross-request via "use cache") ---------- */
@@ -153,10 +154,11 @@ async function NewProductsSection() {
           Zobrazit vše &rarr;
         </Link>
       </div>
-      <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
-        {newProducts.map((product, i) => (
-          <div key={product.id} className={i === 0 || i === 5 ? "col-span-2" : undefined}>
+      <div className="mt-8">
+        <ProductCarousel ariaLabel="Nově přidané produkty">
+          {newProducts.map((product, i) => (
             <ProductCard
+              key={product.id}
               id={product.id}
               name={product.name}
               slug={product.slug}
@@ -173,10 +175,9 @@ async function NewProductsSection() {
               isReserved={false}
               lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
               priority={i < 4}
-              variant={i === 0 || i === 5 ? "featured" : "standard"}
             />
-          </div>
-        ))}
+          ))}
+        </ProductCarousel>
       </div>
       <div className="mt-8 text-center sm:hidden">
         <Button

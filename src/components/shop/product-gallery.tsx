@@ -217,12 +217,14 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
     document.body.style.top = `-${scrollY}px`;
     document.body.style.width = "100%";
     document.body.style.overflow = "hidden";
+    document.body.classList.add("lightbox-open");
     return () => {
       document.removeEventListener("keydown", handleKey);
       document.body.style.position = "";
       document.body.style.top = "";
       document.body.style.width = "";
       document.body.style.overflow = "";
+      document.body.classList.remove("lightbox-open");
       window.scrollTo(0, scrollY);
     };
   }, [lightboxOpen, closeLightbox, imageSlideIndices]);

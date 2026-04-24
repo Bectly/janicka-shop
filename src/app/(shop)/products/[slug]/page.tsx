@@ -7,6 +7,7 @@ import { getProductBySlug } from "@/lib/products-cache";
 import { formatPrice } from "@/lib/format";
 import { CONDITION_LABELS, CONDITION_COLORS } from "@/lib/constants";
 import { ProductCard } from "@/components/shop/product-card";
+import { ProductCarousel } from "@/components/shop/product-carousel";
 import { ProductGallery } from "@/components/shop/product-gallery";
 import { AddToCartButton } from "@/components/shop/add-to-cart-button";
 import { getLowestPrices30d } from "@/lib/price-history";

@@ -604,6 +604,11 @@
   }
 }
 
+/* Hide bottom nav when product image lightbox is open — thumbs at lightbox bottom collide with nav */
+body.lightbox-open nav[aria-label="Spodní navigace"] {
+  display: none;
+}
+
 /* DevChat floating bubble: same visual position as bottom-20 on standard phones,
    but correctly clears the bottom nav on notched iPhones (accounts for safe-area-inset-bottom). */
 .devchat-bubble-pos {
