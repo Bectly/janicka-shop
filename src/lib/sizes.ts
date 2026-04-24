@@ -109,21 +109,6 @@ export function isValidSize(value: string): value is AnySize {
 }
 
 /** Letter ↔ EU equivalence for clothing sizes. */
-export const LETTER_TO_EU: Record<ClothingLetterSize, ClothingEuSize> = {
-  XXS: "32",
-  XS: "34",
-  S: "36",
-  M: "38",
-  L: "40",
-  XL: "42",
-  XXL: "44",
-  XXXL: "46",
-  "4XL": "48",
-  "5XL": "50",
-  "6XL": "52",
-  "7XL": "54",
-};
-
 export const EU_TO_LETTER: Record<ClothingEuSize, ClothingLetterSize> = {
   "32": "XXS",
   "34": "XS",

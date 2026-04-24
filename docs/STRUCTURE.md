@@ -770,7 +770,7 @@ Workers: grep this instead of reading full files. Use `Read` only on specific fi
   Exports: `sendTelegramAdminMessage`
 - **src/lib/unsubscribe-token.ts** (54 LOC)
   Exports: `signUnsubscribeToken, verifyUnsubscribeToken`
-- **src/lib/uploadthing.ts** (31 LOC) — R2 Upload helpers — replaces the old UploadThing integration.
+- **src/lib/upload-client.ts** (31 LOC) — R2 Upload helpers — replaces the old UploadThing integration.
   Exports: `uploadFiles`
 - **src/lib/utils.ts** (7 LOC)
   Exports: `cn`
