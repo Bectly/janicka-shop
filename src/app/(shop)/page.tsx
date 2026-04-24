@@ -568,17 +568,17 @@ export default async function HomePage() {
         <MothersDayBanner />
       </Suspense>
 
-      {/* Categories — streams independently */}
-      <Suspense fallback={null}>
-        <CategoriesSection />
-      </Suspense>
-
-      {/* New products — streams independently */}
+      {/* New products — above-fold priority on mobile (Sage C4803) */}
       <ScrollReveal>
         <Suspense fallback={null}>
           <NewProductsSection />
         </Suspense>
       </ScrollReveal>
+
+      {/* Categories — streams independently */}
+      <Suspense fallback={null}>
+        <CategoriesSection />
+      </Suspense>
 
       {/* Featured products — streams independently */}
       <ScrollReveal>

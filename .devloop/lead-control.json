@@ -1,5 +1,5 @@
 {
-  "last_bolt_commit_cycle": 4808,
+  "last_bolt_commit_cycle": 4810,
   "cycle": 4808,
   "directive": "C4808 Lead RESEARCH: Bolt C4808 empty — #419 already satisfied by 39e562d, #421 in_progress (test infra), #449/#422 open but unpicked. DevChat 0 new. Monitors not due. Research revealed 3 actionable gaps inside project scope: (1) abandoned cart email CTAs link to /checkout without cart state — cross-device recipients get empty cart, recovery rate capped; fix = token-based /cart?restore=<cartId> hydration endpoint (#450 BOLT). (2) Sage C4803 P3 deferred to Lead — mobile product-card sizes pill row clipped behind price, brand label ''CXS'' confusable with size value; IA polish in one component (#451 BOLT). (3) Only 3 e2e specs (admin-jarvis, mock-payment, smoke) — no cart or PDP golden-path coverage; two atomic specs planned for Trace once #421 unblocks (#452 TRACE, gated on #421). Bolt priority order: #421 (unblock test infra) → #449 (homepage reorder, small) → #451 (product-card IA, Sage follow-through) → #450 (cart restore) → #422 (console cleanup, long tail). Trace: #367 sweep still in_progress, #452 queued behind #421. Sage idle — C4805 badge + homepage audit landed, no micro-polish forced. Guard #368 P0 > #366 > #330 unchanged. Hetzner triad (#342/#340/#347) remains bectly-gated.",
   "lanes": {
