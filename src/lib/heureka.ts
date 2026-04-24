@@ -8,6 +8,8 @@
  * Docs: https://sluzby.heureka.cz/napoveda/overeno-zakazniky/
  */
 
+import { logger } from "@/lib/logger";
+
 const HEUREKA_ORDER_LOG_URL =
   "https://api.heureka.cz/shop-certification/v2/order/log";
 
