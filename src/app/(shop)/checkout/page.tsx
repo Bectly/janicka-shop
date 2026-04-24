@@ -139,14 +139,14 @@ function CheckoutStep({
   return (
     <div
       data-checkout-step={step}
-      className="rounded-xl border bg-card shadow-sm overflow-hidden scroll-mt-20 lg:scroll-mt-24"
+      className="w-full max-w-full min-w-0 rounded-xl border bg-card shadow-sm overflow-hidden scroll-mt-20 lg:scroll-mt-24"
     >
       {/* Header — clickable when completed (to re-edit) */}
       <button
         type="button"
         onClick={isCompleted && !isActive ? onEdit : undefined}
         disabled={!isCompleted || isActive}
-        className={`flex w-full items-center gap-3 p-4 sm:p-6 text-left transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset ${
+        className={`flex w-full max-w-full min-w-0 items-center gap-3 p-4 sm:p-6 text-left transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset ${
           isCompleted && !isActive
             ? "cursor-pointer hover:bg-muted/50"
             : "cursor-default"
@@ -197,8 +197,10 @@ function CheckoutStep({
             : "grid-rows-[0fr] opacity-0"
         }`}
       >
-        <div className="overflow-hidden" inert={!isActive}>
-          <div className="px-4 pt-4 pb-6 sm:px-6 sm:pt-6">{children}</div>
+        <div className="overflow-hidden min-w-0" inert={!isActive}>
+          <div className="min-w-0 max-w-full overflow-x-hidden px-4 pt-4 pb-6 sm:px-6 sm:pt-6">
+            {children}
+          </div>
         </div>
       </div>
     </div>
@@ -615,7 +617,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto w-full max-w-4xl overflow-x-hidden px-4 py-8 sm:px-6 lg:px-8">
       <Link
         href="/cart"
         className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors duration-150 hover:text-foreground"
