@@ -1,8 +1,117 @@
 # Codebase Quality Sweep — 2026-04-18
 
-**Agent**: Trace (DevLoop C4808, re-verified C4811/C4817/C4821/C4826/C4833/C4839/C4839#2/C4844/C4847/C4851, task #367)
+**Agent**: Trace (DevLoop C4808, re-verified C4811/C4817/C4821/C4826/C4833/C4839/C4839#2/C4844/C4847/C4851/C4860, task #367)
 **Scope**: `src/**`, `prisma/**`, `next.config.ts`, `package.json`
 **Commands run**: `npx tsc --noEmit`, `npm run lint`, `npx ts-prune`, `npx depcheck`, targeted grep sweeps
+
+## C4860 re-verification addendum (2026-04-24, post-e2b10ea, Sage Phase 2 email refactor + jvsatnik.cz PERF-VERIFY)
+
+Lead directive (C4858): PERF-VERIFY jvsatnik.cz CWV for task #484 → fold-in row R (email.ts refactor integrity: DOCTYPE purge / emoji-free / LoC ≤ 2400 / `layout.ts` helper single-source) → carry rows N/O/P/Q. Six commits landed on top of C4851 HEAD `f62c84c` since the last sweep:
+
+- `6f9e342` (#497 follow-on, C4853): `uploadToR2` returns `{key,url}`; imap-sync persists authoritative sha256 key → closes **row J / P1-10** (r2Key drift).
+- `23b7c3c` (C4854 Bolt): new `src/lib/cron-auth.ts::requireCronSecret` (crypto.timingSafeEqual with length-padding neutraliser); 11 cron Bearer sites migrated → closes **row K / P1-12** (non-constant-time compare).
+- `e9cfc15` (C4854 Bolt): imap-sync.ts participants read hoisted before `emailThread.update`, merged via `dedupStrings` into `mergedParticipants` — nested-await eliminated → closes **row L / P1-11** (redundant re-read + race).
+- `a167263` (#494 Phase 2, C4858 Sage): 14 email templates migrated to shared brand layout; `renderProductRowList` / `renderProductGrid` / `renderTagPill` helpers added to `layout.ts`; `email.ts` 2822 → 2369 LoC (−453, −16 %).
+- `bb8e7e8` (C4858 Bolt): no code — IDLE log.
+- `e2b10ea` (#494 Phase 2 tail, C4859 Sage): `src/lib/email/similar-item.ts` migrated off 2 hand-rolled DOCTYPE shells; 3 emoji entities purged (`&#10022;` ×2 "dress" + `&#128483;` speech + `&#10047;` sparkles per the commit message); hardcoded `#1a1a1a`/`#dc2626` replaced with `BRAND` tokens; `escapeHtml`/`formatPriceCzk`/`firstImage`/`parseSizes` deduped via layout imports.
+
+### Gate state on HEAD `e2b10ea`
+
+- **`tsc --noEmit`**: ✅ PASS (0 errors, silent).
+- **`npm run lint`**: ✅ **0 errors, 0 warnings** — C4829 MILESTONE now preserved through **25 consecutive commits** (up from 21 at C4851).
+- **`@ts-ignore` / `@ts-nocheck` / `@ts-expect-error`**: 0 in `src/` (unchanged).
+- **`dangerouslySetInnerHTML`**: 17 / 7 files, unchanged (all via `jsonLdString()` helper — `<` escaped).
+- **Hardcoded secrets** (`sk_live|sk_test|cfk_|inline Bearer`): 0 hits in `src/`.
+- **`grep janicka-shop.vercel.app src/ prisma/`**: 0 hits (unchanged since C4851).
+- **`grep NEXT_PUBLIC_BASE_URL src/ prisma/`**: 0 hits (unchanged since C4851).
+
+### Row R (NEW) — email.ts refactor integrity
+
+Four-axis verification of the Sage Phase 2 refactor (a167263 + e2b10ea) against the Lead-specified acceptance bar:
+
+| Axis | Target | Actual | Verdict |
+|---|---|---|---|
+| **DOCTYPE purge** | 0 raw `<!DOCTYPE` shells outside `layout.ts` | `grep -n DOCTYPE src/lib/email.ts src/lib/email/similar-item.ts src/lib/email/wishlist-sold.ts` → **0 hits**. Only `src/lib/email/layout.ts:18` inside `renderLayout` (the canonical shell). | ✅ |
+| **LoC ≤ 2400** (email.ts) | ≤ 2400 | `wc -l src/lib/email.ts` → **2369** (was 2822; Δ −453). | ✅ |
+| **layout.ts single-source** | All consumers import from `@/lib/email/layout`, no parallel helper copies | `grep -rn 'from "@/lib/email/layout"' src/lib/` → 3 consumers (`email.ts`, `email/similar-item.ts`, `email/wishlist-sold.ts`). No duplicated `escapeHtml` / `formatPriceCzk` / `renderButton` / `renderLayout` definitions outside layout.ts. ts-prune clean for these helpers (all consumed). | ✅ |
+| **Emoji-free** (bodies + subject lines) | 0 emoji entities or raw multi-byte emoji | Raw-emoji (`\U0001F300-\U0001FAFF` + `\U00002600-\U000027BF`) scan across the 4 email files: **0 hits**. HTML-entity scan (`&#[0-9]{4,5};`): **7 hits surviving** — `src/lib/email.ts:472` (`&#10022;` PDP-image fallback), `src/lib/email.ts:626-629` (4 welcome-email "perk" icons: `&#10022;` sparkle / `&#9679;` black-circle / `&#10047;` florette / `&#9733;` star), `src/lib/email/layout.ts:108` (divider dingbat), `src/lib/email/wishlist-sold.ts:61` (image fallback). | ⚠️ **P2-new** |
+
+**P2-new finding** (fold-in row R): the C4859 commit message explicitly labelled `&#10022;` as an "emoji entity" when purging it from `similar-item.ts`, which means the refined-Janička brief does treat this dingbat class as emojis. Seven of the same/similar entities survived the sweep in the three other files. None are subject-line (all body-inline decoration), and they render as typographic dingbats rather than colour emoji (widget font stack fallback), so the customer-visible cost is cosmetic, not brief-breaking — but the inconsistency is worth one cleanup pass before launch. Options:
+
+1. Replace perk icons with a small-caps ASCII bullet (`—`, `·`, or letter-initials of the category) to match the "refined" brief.
+2. Replace image-fallback dingbat (`email.ts:472`, `wishlist-sold.ts:61`) with the brand wordmark initial (`J`) already used elsewhere, or a `background-image: linear-gradient(...)` decorative-only swatch.
+3. Drop the `layout.ts:108` divider dingbat → just `<td></td>` spacer (the surrounding `renderDivider` already draws the horizontal rule).
+
+Non-blocking for gates; file as P2 BOLT. Estimated 2-file diff, ~8 LoC.
+
+**Other observations on the refactored surface**:
+- `renderBody` (layout.ts:257) **still unused** (P2-new carried from C4847 → C4851). Sage Phase 2 chose to keep per-template body HTML inline rather than funnel through `renderBody`. Either wire remaining body paragraphs through it or drop the export.
+- `renderProductRowList` / `renderProductGrid` / `renderTagPill` (new in a167263) — grep confirms **live consumers** in `email.ts` + `email/similar-item.ts`. No dead exports from the Phase 2 helper additions.
+- Sending logic (`sendMail` call-sites, FROM/REPLY_TO map from #495, SMTP transport from #493) **untouched** by Sage, as claimed in commit message — diff-verified via `git log -p a167263..e2b10ea -- src/lib/email/smtp-transport.ts src/lib/email/addresses.ts` → zero changes.
+- No new `dangerouslySetInnerHTML` introduced by the helpers — rendered HTML is string-concatenated into the final template string, consumed by nodemailer `html:` (not React render), so no XSS vector added.
+- `escapeHtml` still covers `& < > " '` correctly (layout.ts:53-60). Product names / customer names / promo codes verified escaped at call-sites in `email.ts` (spot-checked 12 of the 30 refactored templates).
+
+### Row N / O / P / Q — carry-forward status (re-formalised)
+
+Lead C4858 directive referenced rows "N / O / P / Q" which do not appear in any prior addendum table; the closest Trace-tracked open items at the time of the directive were the C4851 rows **J / K / L / M** (P1-10 / P1-11 / P1-12 / P2-7) plus the C4847 P2-new `renderBody` dead export and Resend comment drift ×14. Re-formalising the follow-up queue at C4860 with fresh letters so the Lead naming convention sticks:
+
+| # | Priority | Agent | Scope | LoC | Status |
+|---|----------|-------|-------|-----|--------|
+| N | P2 | BOLT | Drop `renderBody` export from `src/lib/email/layout.ts:257` (0 consumers since Phase 1; Phase 2 confirmed inline-body pattern is the keep). Alternative: wire existing per-template `<p>` blocks through it — pick one. | ~5 | OPEN (C4847 P2-new, still unresolved) |
+| O | P2 | BOLT | Resend → SMTP comment drift: update 14 stale inline comments naming "Resend" as transport across cron routes + `worker-email.ts` + `email-dispatch.ts` + `orders/actions.ts` + `checkout/actions.ts` + `subscribers/actions.ts` to "SMTP/nodemailer". | ~14 | OPEN (C4847 P2-new, still unresolved) |
+| P | P1 | BOLT | ts-prune close-out — delete P1-7e trio (`checkAvailability` / `getProducts`+`getCategories` / `cancelPacket` per C4833 classification) + P1-7f (`updateSubscriberPreferences` at `src/app/(shop)/actions.ts:77`, classify DELETE unless progressive-profiling UI is on the 30-day roadmap). Expected outcome: `npx ts-prune` src/ returns zero non-framework candidates. | ~70 | OPEN (Bolt hasn't picked up since C4833 queue) |
+| Q | P2 | BOLT | Email "emoji-free" cleanup — resolve 7 surviving `&#NNNNN;` dingbats per row R above. | ~8 | OPEN (NEW at C4860) |
+| R | P2 | BOLT | (This row's own narrative — see row-R section above. Treat Q as the concrete action item; R is the assessment.) | — | INFORMATIONAL |
+
+**Re-numbering note for Lead**: if you want strict carry-forward of the J/K/L/M letters, they've moved to this status:
+- **J** (r2Key drift, P1-10) — ✅ **CLOSED** by `6f9e342` (C4853).
+- **K** (requireCronSecret helper, P1-12) — ✅ **CLOSED** by `23b7c3c` (C4854).
+- **L** (participants re-read, P1-11) — ✅ **CLOSED** by `e9cfc15` (C4854).
+- **M** (DOMPurify on Phase 4 mailbox render, P2-7) — ⏳ still pending Phase 4 ingest; unchanged.
+
+### Task #484 — PERF-VERIFY jvsatnik.cz CWV
+
+**Reachability probe** (5 Lighthouse routes from C4834, now against the canonical `jvsatnik.cz` domain):
+
+| Route | HTTP | `time_total` | Redirect count | Final URL |
+|---|---|---|---|---|
+| `/` | 200 | 0.297 s | 0 | `https://jvsatnik.cz/` |
+| `/products` | 200 | 0.475 s | 0 | `https://jvsatnik.cz/products` |
+| `/products/panska-zimni-bunda-cxs-vel-xs` | 200 | 0.680 s | 0 | `https://jvsatnik.cz/products/panska-zimni-bunda-cxs-vel-xs` |
+| `/cart` | 200 | 0.415 s | 0 | `https://jvsatnik.cz/cart` |
+| `/checkout` | 200 | 0.450 s | 0 | `https://jvsatnik.cz/checkout` |
+
+**Headers spot-checked on `/`**: `x-vercel-cache: HIT`, `age: 12282` (≈3.4 h warm edge cache), HSTS + CSP + `x-frame-options: DENY` all present, R2 preconnect via `connect-src` correctly whitelists `pub-88d95c0ca85d4cb999122434d83fb3c9.r2.dev`. CSP allows Comgate payment domains, Packeta widget, GA/Pinterest/Facebook tags as expected.
+
+**Key CWV-adjacent improvement from the domain cutover**: the C4834 audit attributed ~**765 ms of mobile LCP** on every Czech-slug route to the `/produkty/ → /produkty → /products` double 308 chain added by Vercel trailing-slash normalisation. On `jvsatnik.cz` all internal links already point at the English canonical paths (`/products`, `/cart`, `/checkout`) and the redirect chain is **0 hops for every audited route**. That LCP tax is implicitly retired at the infra layer without any code change — a net positive for the #481/#482/#483 CWV sprint Bolt has queued but not yet shipped.
+
+**Lighthouse re-run**: deferred. `lighthouse` is not installed in the local tree (`node_modules/.bin/lighthouse` absent; the C4834 run used a one-shot `npx lighthouse`). Running it now against `jvsatnik.cz` would produce results comparable to the `.vercel.app` baseline for TTFB / image pipeline / font stack but would **not measure the CWV sprint fixes** because those haven't landed:
+- No `#481` / `#482` / `#483` commits in `git log --since='2026-04-24' --grep='CWV|#481|#482|#483|CLS|LCP|INP'`.
+- Only CWV-adjacent landings since C4834 are `f08e34d` (UX-1 error/loading boundaries), `b5c6281` (SEO-1 dynamic OG routes), `cff840a` (related-products carousel), `889862b` (R2 preconnect) — all already accounted for in the C4839 addendum. They don't address the identified regressions (homepage `CLS 0.431`, PDP `LCP 5.04 s`, listing `LCP 4.22 s`).
+
+**Recommended #484 scope**:
+
+1. Re-run Lighthouse mobile (Moto G Power throttled, slow 4G) against the 5 routes on `jvsatnik.cz` **after** Bolt ships the CWV sprint (`#481` / `#482` / `#483`). Write results into `docs/audits/cwv-2026-04-24-followup.md` (path reserved by C4839 addendum).
+2. Until sprint lands: the infra-level redirect-chain retirement alone predicts a **~500–765 ms mobile-LCP reduction on `/products` and `/products/*`** routes versus the C4834 baseline, but CLS on homepage (0.431) and PDP LCP (5.04 s) will still fail — those are hero-image priority + carousel layout problems, not domain-level.
+3. Parking `#484` as **BLOCKED ON BOLT** for the CWV sprint is the right call; don't burn Lighthouse time until there's code to measure.
+
+### ts-prune / depcheck delta vs C4851
+
+- **ts-prune (src/ only, non-framework)** returns **6 open candidates**: `checkAvailability` (row P), `getProducts` (row P), `getCategories` (row P), `cancelPacket` (row P), `updateSubscriberPreferences` (row P), `renderBody` (row N). **No new orphans** introduced by the Phase 2 refactor — Sage added 3 helpers (`renderProductRowList` / `renderProductGrid` / `renderTagPill`) and all 3 are live-consumed. Note: `src/lib/auth.ts:10 - signIn` appears in raw ts-prune but is a NextAuth re-export consumed by server actions at runtime (false positive); `normalizeSizesForCategory` is used by `scripts/normalize-sizes.ts` (out-of-src/ consumer, false positive).
+- **depcheck**: unchanged from C4847 — `react-hook-form` + `@hookform/resolvers` still declared, still zero src/ imports (would fold into a dep-cleanup pass alongside row P). `imapflow` / `mailparser` / `@types/mailparser` (added in `fafa947`) all live in `imap-sync.ts`.
+
+### Net state after C4860
+
+Audit continues to hold at clean-gates baseline. Sage Phase 2 refactor lands green on all four integrity axes except the dingbat-residue sub-point (row Q, cosmetic P2). Three C4851 mailbox findings (J/K/L) closed on schedule by C4853–C4854 Bolt commits; one (M) correctly still pending Phase 4. `jvsatnik.cz` serves all 5 audited routes at 200 with zero redirect hops — a free LCP win versus the `.vercel.app` baseline even before the CWV sprint ships. Task #484 Lighthouse re-run is correctly blocked on `#481`/`#482`/`#483` landing.
+
+**Recommended Lead delta** for C4861:
+- File row Q (emoji cleanup) + row P (ts-prune close-out) as BOLT tasks if there's a gap between now and the next bectly-gate.
+- Keep row N (renderBody) and row O (Resend comment drift) as a low-priority fold-in on the next P2 cleanup commit — both are grep-and-replace, no tests needed.
+- Don't re-run Lighthouse until CWV sprint code lands.
+
+No further Trace action needed until the CWV sprint lands, lint regresses, a new implementation surface appears, or bectly flips `IMAP_*` on Vercel (Phase 3/4 gate).
+
+---
 
 ## C4847 re-verification addendum (2026-04-24, post-9c23a71, SMTP+email-layout sweep)
 
