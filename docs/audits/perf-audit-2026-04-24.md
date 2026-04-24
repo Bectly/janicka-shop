@@ -175,6 +175,51 @@ Add `/account/layout.tsx` check as P0.5 follow-up — same pattern as admin layo
 
 ---
 
+## Phase 1.5 — /account section (the "v eshopu" half of the complaint)
+
+Confirmed: every `/account/*` route reproduces the admin pathology. Same `await connection()` + `await auth()` + uncached Prisma pattern, zero `"use cache"` anywhere under `src/app/(shop)/account/`.
+
+### Per-route Prisma query count (uncached, per nav)
+
+| Route | File | Queries | Notes |
+|---|---|---|---|
+| `/account` (dashboard) | `src/app/(shop)/account/page.tsx:17-46` | auth + customer.findUnique + order.findMany(take:3) + order.count | 4 RTT |
+| `/account/orders` | `src/app/(shop)/account/orders/page.tsx:16-34` | auth + order.findMany (no take limit, includes items) | 2 RTT, **unbounded fetch** — orders list grows forever |
+| `/account/profile` | `src/app/(shop)/account/profile/page.tsx:16-42` | auth + customer + address.count + address.findFirst | 2 RTT (parallel trio) |
+| `/account/oblibene` | `src/app/(shop)/account/oblibene/page.tsx:14-30` | auth + wishlist.findMany + category include | 2 RTT |
+| `/account/adresy` | `src/app/(shop)/account/adresy/page.tsx:13-24` | auth + address.findMany | 2 RTT |
+| `/account/nastaveni` | `src/app/(shop)/account/nastaveni/page.tsx:14-36` | auth + customer + auditLog.findMany(take:20) | 2 RTT (parallel pair) |
+
+Layout (`src/app/(shop)/account/layout.tsx:11-12`) adds 1 RTT (`auth()`) on top of each page's count because `await connection()` gates the tree at request time. Unlike the admin layout, this one is *only* a session check — it does NOT fetch any badge data, so the layout itself is cheap. The cost is all in the pages.
+
+### Key findings specific to `/account`
+
+1. **No unbounded fetch cap on `/account/orders`** (`account/orders/page.tsx:23`) — `findMany` with no `take`. Any customer with 100+ orders pays O(n) wall-clock per nav. Fix: paginate or `take: 50` with "Load more" client action.
+2. **Wishlist re-fetches categories inline** (`account/oblibene/page.tsx:21-26`) — `include: { product: { include: { category: {...} } } }` on every nav. Wishlist rarely changes; strong cache candidate with `cacheTag("customer:${id}:wishlist")` + invalidate on add/remove.
+3. **Audit log read on every `/nastaveni` nav** (`account/nastaveni/page.tsx:28-35`) — take:20, by definition new rows appear constantly, so caching must be short-TTL (30s) with `cacheTag("customer:${id}:audit")`.
+4. **All routes use `session.user.id` as `customerId`** — so the cache key is naturally per-customer. `cacheTag("customer:${customerId}:<scope>")` pattern works cleanly; invalidate scoped to a single customer on their writes without nuking the shared cache.
+
+### Subtask split for Lead (update to #524e)
+
+Replace the original `#524e — /account layout + page cache sweep (~5 commits)` with a sharper breakdown:
+
+- **#524e1** — `/account` dashboard + `/account/orders` cache (per-customer tag, short TTL 60s, invalidate on new order via `revalidateTag('customer:${id}:orders')` in checkout server action). Also add `take: 50` to `/account/orders` findMany.
+- **#524e2** — `/account/profile` + `/account/adresy` + `/account/nastaveni` cache (per-customer tag, 5min TTL — these change rarely, invalidate on profile/address/settings write).
+- **#524e3** — `/account/oblibene` cache (per-customer tag, 1min TTL, invalidate on wishlist toggle server action).
+
+Expected delta per nav: 2–4 RTT (~400–800 ms) → cache hit (<50 ms). Cold-cache first visit still pays the round-trip, but section-switching within a session drops to near-instant.
+
+### Not a bottleneck (ruled out)
+
+- `/account/layout.tsx` — session-only, no data fetches. No work to do here.
+- Zustand-driven client pages (cart, checkout) — no server round-trip per section, consistent with user's "stránky se přepínají rychle" observation.
+
+### Cross-reference
+
+This section CLOSES the Phase 1 TL;DR note "Add `/account/layout.tsx` check as P0.5 follow-up". Result: layout is clean, pages need the same treatment as admin. Severity downgraded from P0.5 to P1 (customer-facing but per-customer cache tags make invalidation trivial).
+
+---
+
 ## Instrumentation gap (Phase 1b)
 
 Static analysis caught the architectural cause. To close the audit with numbers, Phase 1b needs:
@@ -195,7 +240,7 @@ Recommend splitting task #524 into:
 - **#524b — P0 admin page cache sweep** (Bolt, ~12 commits, one per page): add `"use cache"` + cacheTag to each admin data-fetching page. Acceptance: cold-cache repeat-nav identical-filter returns in <100 ms.
 - **#524c — P1 Prisma Order.createdAt index** (Bolt, 1 commit + migration): add `@@index([createdAt])` + `@@index([status, createdAt])`, run migration, verify `EXPLAIN QUERY PLAN` uses it.
 - **#524d — P1 mailbox search degrade** (Bolt, 1 commit): drop bodyText from nested OR search, add 300ms debounce on input.
-- **#524e — P0.5 /account layout + page cache sweep** (Bolt, ~5 commits): mirror admin treatment for customer-facing account section.
+- **#524e — P1 /account page cache sweep** (Bolt, 3 commits — see Phase 1.5 breakdown below for #524e1/e2/e3): per-customer `cacheTag("customer:${id}:<scope>")` + invalidate on write. Layout itself is clean, work is all at page level.
 - **#524f — Phase 1b instrumentation** (Trace, 1 commit): wire query log + Vercel timings, publish before+after tables in this doc.
 - **#524g — Phase 4 verification** (Trace, 1 commit): re-run Phase 1b methodology after all fixes land; target p50 <300ms section switch, p95 <800ms.
 
