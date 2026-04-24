@@ -1,5 +1,5 @@
 {
-  "last_bolt_commit_cycle": 4811,
+  "last_bolt_commit_cycle": 4812,
   "cycle": 4811,
   "directive": "C4811 Lead: Closed #449 (Bolt f7c16c1 — NewProductsSection moved above CategoriesSection in src/app/(shop)/page.tsx, Suspense+ScrollReveal wrappers kept, priority={i<4} unchanged, build green) and #450 (Bolt 0696288 — POST /api/cart/restore?token=<cartId> cuid+7d guard, /cart?restore=<cartId> Zustand setState hydration with 1.5s Czech success screen → /checkout, all 3 email CTAs retargeted from /checkout → /cart?restore=<cartId>, logger.info [CartRestored] audit, no deps/schema change, build green). Working tree clean except lead-control + STRUCTURE.md autogen. Rewired Bolt priority: #421 test-infra is now THE critical path (Trace's e2e/cart.spec.ts + e2e/pdp.spec.ts have been in tree since 391945a but cannot run without @playwright/test + dotenv + scripts + unit tests on comgate.ts/qr-platba.ts) → #451 product card mobile IA polish → backlog (no new Bolt items queued). Trace continues #367 read-only sweep (in_progress, atomic <2min). Sage idle — standing micro-polish queue. Guard #368 P0 unchanged. DevChat 0 new, no DUE monitors (comgate/cz-competitors/vinted-cz-media all fresh C4808). No unacked bectly feedback. Second-hand scope intact.",
   "lanes": {

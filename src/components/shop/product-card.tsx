@@ -228,55 +228,34 @@ export function ProductCard({
         {/* Subtle hover gradient */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/25 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
       </div>
-      <div className="mt-3 space-y-0.5">
-        <div className="flex items-center gap-1.5">
+      <div className="mt-3 flex flex-col gap-0.5">
+        <div className="order-1 flex min-w-0 items-center gap-1.5">
           {brand && (
-            <p className="text-[11px] font-semibold tracking-[0.1em] text-primary/70 uppercase">
+            <p className="truncate text-[11px] font-semibold tracking-[0.08em] text-primary/70 uppercase sm:tracking-[0.1em]">
               {brand}
             </p>
           )}
-          {brand && <span className="text-[10px] text-muted-foreground/30">&middot;</span>}
-          <p className="text-[11px] text-muted-foreground/60">{categoryName}</p>
+          {brand && <span className="shrink-0 text-[10px] text-muted-foreground/30">&middot;</span>}
+          <p className="truncate text-[11px] text-muted-foreground/60">{categoryName}</p>
         </div>
-        <h3 className="text-sm font-medium leading-snug text-foreground/90 transition-colors duration-150 line-clamp-1 group-hover:text-primary">
+        <h3 className="order-2 text-sm font-medium leading-snug text-foreground/90 transition-colors duration-150 line-clamp-1 group-hover:text-primary">
           {name}
         </h3>
-        <div className="flex items-baseline gap-2 pt-0.5">
-          <span className="text-sm font-bold tracking-tight">{formatPrice(price)}</span>
-          {hasDiscount && (
-            <span className="text-xs text-muted-foreground/50 line-through">
-              {formatPrice(compareAt)}
-            </span>
-          )}
-        </div>
-        {hasDiscount && lowestPrice30d != null && (
-          <p className="text-[10px] leading-tight text-muted-foreground/70">
-            Nejnižší cena za 30 dní: {formatPrice(lowestPrice30d)}
-          </p>
-        )}
-        {price >= FREE_SHIPPING_THRESHOLD && (
-          <div className="flex items-center gap-1">
-            <Truck className="size-3 text-sage-dark" />
-            <p className="text-[10px] font-medium leading-tight text-sage-dark">
-              Doprava zdarma
-            </p>
-          </div>
-        )}
-        {/* Size & color indicators */}
+        {/* Size & color indicators — mobile: above price (order 3); desktop: below all (order 7) */}
         {(parsedSizes.length > 0 || parsedColors.length > 0) && (
-          <div className="flex items-center gap-2 pt-1">
+          <div className="order-3 flex items-center gap-2 pt-1 sm:order-7" aria-label="velikost">
             {parsedSizes.length > 0 && (
               <div className="flex flex-wrap gap-0.5">
                 {parsedSizes.slice(0, 4).map((s) => (
                   <span
                     key={s}
-                    className="rounded-sm bg-muted/80 px-1.5 py-px text-[10px] leading-tight text-muted-foreground"
+                    className="rounded-sm border border-foreground/15 bg-background px-1.5 py-px text-[10px] leading-tight text-foreground/75"
                   >
                     {s}
                   </span>
                 ))}
                 {parsedSizes.length > 4 && (
-                  <span className="rounded-sm bg-muted/80 px-1.5 py-px text-[10px] leading-tight text-muted-foreground">
+                  <span className="rounded-sm border border-foreground/15 bg-background px-1.5 py-px text-[10px] leading-tight text-foreground/75">
                     +{parsedSizes.length - 4}
                   </span>
                 )}
@@ -305,6 +284,27 @@ export function ProductCard({
                 </div>
               );
             })()}
+          </div>
+        )}
+        <div className="order-4 flex items-baseline gap-2 pt-0.5 sm:order-3">
+          <span className="text-sm font-bold tracking-tight">{formatPrice(price)}</span>
+          {hasDiscount && (
+            <span className="text-xs text-muted-foreground/50 line-through">
+              {formatPrice(compareAt)}
+            </span>
+          )}
+        </div>
+        {hasDiscount && lowestPrice30d != null && (
+          <p className="order-5 text-[10px] leading-tight text-muted-foreground/70 sm:order-4">
+            Nejnižší cena za 30 dní: {formatPrice(lowestPrice30d)}
+          </p>
+        )}
+        {price >= FREE_SHIPPING_THRESHOLD && (
+          <div className="order-6 flex items-center gap-1 sm:order-5">
+            <Truck className="size-3 text-sage-dark" />
+            <p className="text-[10px] font-medium leading-tight text-sage-dark">
+              Doprava zdarma
+            </p>
           </div>
         )}
       </div>

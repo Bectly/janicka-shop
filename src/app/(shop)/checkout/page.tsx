@@ -190,16 +190,22 @@ function CheckoutStep({
         )}
       </button>
 
-      {/* Collapsible content */}
+      {/* Collapsible content.
+          w-full + min-w-0 on the grid wrapper is CRITICAL: CSS `display: grid`
+          without explicit column sizing auto-fits to children's min-content,
+          so long labels ("Zásilkovna — výdejní místo" + description) push the
+          grid wider than its parent card. Parent's overflow-hidden then clips
+          the right side — user sees half-cut prices ("6" / "9" / "8" instead
+          of "69 Kč" / "99 Kč" / "89 Kč"). bectly 2026-04-24, iPhone X 375px. */}
       <div
-        className={`grid transition-all duration-300 ease-in-out ${
+        className={`grid w-full min-w-0 max-w-full transition-all duration-300 ease-in-out ${
           isActive
             ? "grid-rows-[1fr] opacity-100"
             : "grid-rows-[0fr] opacity-0"
         }`}
       >
-        <div className="overflow-hidden min-w-0" inert={!isActive}>
-          <div className="min-w-0 max-w-full overflow-x-hidden px-4 pt-4 pb-6 sm:px-6 sm:pt-6">
+        <div className="overflow-hidden min-w-0 w-full" inert={!isActive}>
+          <div className="min-w-0 w-full max-w-full overflow-x-hidden px-4 pt-4 pb-6 sm:px-6 sm:pt-6">
             {children}
           </div>
         </div>
