@@ -2,34 +2,27 @@ import { getMailer } from "@/lib/email/smtp-transport";
 import { getDb } from "@/lib/db";
 import { signUnsubscribeToken } from "@/lib/unsubscribe-token";
 import { logger } from "@/lib/logger";
+import {
+  BRAND,
+  FONTS,
+  getBaseUrl,
+  escapeHtml,
+  formatPriceCzk,
+  renderLayout,
+  renderButton,
+  renderEyebrow,
+  renderDisplayHeading,
+} from "@/lib/email/layout";
 
 const NEWSLETTER_FROM_EMAIL =
   process.env.NEWSLETTER_EMAIL_FROM ?? "Janička Shop <novinky@janicka-shop.cz>";
 
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-function formatPriceCzk(price: number): string {
-  return new Intl.NumberFormat("cs-CZ", {
-    style: "currency",
-    currency: "CZK",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(price);
-}
-
 const CONDITION_LABELS: Record<string, string> = {
-  new_with_tags: "Nov\u00e9 s visa\u010dkou",
-  new_without_tags: "Nov\u00e9 bez visa\u010dky",
-  excellent: "V\u00fdborn\u00fd stav",
-  good: "Dobr\u00fd stav",
-  visible_wear: "Viditeln\u00e9 opot\u0159eben\u00ed",
+  new_with_tags: "Nové s visačkou",
+  new_without_tags: "Nové bez visačky",
+  excellent: "Výborný stav",
+  good: "Dobrý stav",
+  visible_wear: "Viditelné opotřebení",
 };
 
 interface SoldProduct {
@@ -61,118 +54,97 @@ function parseFirstImage(images: string): string | null {
   }
 }
 
+function buildSimilarCard(p: SimilarProduct, baseUrl: string): string {
+  const productUrl = `${baseUrl}/products/${p.slug}`;
+  const firstImage = parseFirstImage(p.images);
+
+  const imageHtml = firstImage
+    ? `<img src="${escapeHtml(firstImage)}" alt="${escapeHtml(p.name)}" width="180" style="width: 100%; height: 200px; object-fit: cover; display: block; border: 0;" />`
+    : `<div style="width: 100%; height: 200px; background: ${BRAND.blush}; line-height: 200px; text-align: center; font-family: ${FONTS.serif}; font-size: 36px; color: ${BRAND.primaryLight};">&#10022;</div>`;
+
+  const discount =
+    p.compareAt && p.compareAt > p.price
+      ? Math.round(((p.compareAt - p.price) / p.compareAt) * 100)
+      : null;
+
+  const priceHtml = discount
+    ? `<span style="text-decoration: line-through; color: ${BRAND.charcoalMuted}; font-size: 12px;">${formatPriceCzk(p.compareAt!)}</span> <strong style="color: ${BRAND.primary}; font-family: ${FONTS.serif}; font-size: 16px; font-weight: 700;">${formatPriceCzk(p.price)}</strong>`
+    : `<strong style="color: ${BRAND.charcoal}; font-family: ${FONTS.serif}; font-size: 16px; font-weight: 700;">${formatPriceCzk(p.price)}</strong>`;
+
+  const conditionLabel = CONDITION_LABELS[p.condition] ?? p.condition;
+  let sizesArr: string[] = [];
+  try {
+    sizesArr = JSON.parse(p.sizes);
+  } catch {
+    /* ignore */
+  }
+  const sizesText = sizesArr.length > 0 ? sizesArr.join(", ") : null;
+
+  return `
+    <td style="width: 33.33%; padding: 6px; vertical-align: top;">
+      <a href="${productUrl}" style="text-decoration: none; display: block; border: 1px solid ${BRAND.borderSoft}; border-radius: 10px; overflow: hidden; background: ${BRAND.white};">
+        ${imageHtml}
+        <div style="padding: 12px;">
+          ${p.brand ? `<p style="margin: 0 0 2px; font-family: ${FONTS.sans}; color: ${BRAND.primary}; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em;">${escapeHtml(p.brand)}</p>` : ""}
+          <p style="margin: 0; font-family: ${FONTS.serif}; color: ${BRAND.charcoal}; font-size: 14px; font-weight: 600; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(p.name)}</p>
+          <p style="margin: 4px 0 8px; font-family: ${FONTS.sans}; color: ${BRAND.charcoalSoft}; font-size: 11px;">${escapeHtml(conditionLabel)}${sizesText ? ` &middot; vel. ${escapeHtml(sizesText)}` : ""}</p>
+          <p style="margin: 0;">${priceHtml}</p>
+        </div>
+      </a>
+    </td>`;
+}
+
 function buildWishlistSoldHtml(
   soldProduct: SoldProduct,
   similarProducts: SimilarProduct[],
   recipientEmail: string,
 ): string {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app";
+  const baseUrl = getBaseUrl();
+  const unsubscribeUrl = `${baseUrl}/odhlasit-novinky?token=${encodeURIComponent(signUnsubscribeToken(recipientEmail))}`;
 
-  const soldName = `${soldProduct.brand ? `${escapeHtml(soldProduct.brand)} ` : ""}${escapeHtml(soldProduct.name)}`;
+  const soldName = `${soldProduct.brand ? `${soldProduct.brand} ` : ""}${soldProduct.name}`;
   const soldImage = parseFirstImage(soldProduct.images);
 
   const soldImageHtml = soldImage
-    ? `<img src="${escapeHtml(soldImage)}" alt="${escapeHtml(soldProduct.name)}" style="width: 120px; height: 120px; object-fit: cover; border-radius: 8px; display: block; margin: 0 auto; filter: grayscale(100%); opacity: 0.7;" />`
+    ? `<img src="${escapeHtml(soldImage)}" alt="${escapeHtml(soldProduct.name)}" width="140" style="width: 140px; height: 140px; object-fit: cover; border-radius: 12px; display: block; margin: 0 auto; filter: grayscale(100%); opacity: 0.75; border: 1px solid ${BRAND.borderSoft};" />`
     : "";
 
-  const cards = similarProducts.map((p) => {
-    const productUrl = `${baseUrl}/products/${p.slug}`;
-    const firstImage = parseFirstImage(p.images);
-
-    const imageHtml = firstImage
-      ? `<img src="${escapeHtml(firstImage)}" alt="${escapeHtml(p.name)}" style="width: 100%; height: 180px; object-fit: cover; border-radius: 8px 8px 0 0; display: block;" />`
-      : `<div style="width: 100%; height: 180px; background: #f5f5f5; border-radius: 8px 8px 0 0; display: flex; align-items: center; justify-content: center;"><span style="font-size: 40px;">&#128087;</span></div>`;
-
-    const discount =
-      p.compareAt && p.compareAt > p.price
-        ? Math.round(((p.compareAt - p.price) / p.compareAt) * 100)
-        : null;
-
-    const priceHtml = discount
-      ? `<span style="text-decoration: line-through; color: #999; font-size: 11px;">${formatPriceCzk(p.compareAt!)}</span> <strong style="color: #dc2626; font-size: 14px;">${formatPriceCzk(p.price)}</strong>`
-      : `<strong style="color: #1a1a1a; font-size: 14px;">${formatPriceCzk(p.price)}</strong>`;
-
-    const conditionLabel = CONDITION_LABELS[p.condition] ?? p.condition;
-    let sizesArr: string[] = [];
-    try {
-      sizesArr = JSON.parse(p.sizes);
-    } catch {
-      /* ignore */
-    }
-    const sizesText = sizesArr.length > 0 ? sizesArr.join(", ") : null;
-
-    return `
-      <td style="width: 33%; padding: 6px; vertical-align: top;">
-        <a href="${productUrl}" style="text-decoration: none; display: block; border: 1px solid #f0f0f0; border-radius: 8px; overflow: hidden;">
-          ${imageHtml}
-          <div style="padding: 10px;">
-            <p style="margin: 0; color: #1a1a1a; font-size: 13px; font-weight: 600; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(p.name)}</p>
-            ${p.brand ? `<p style="margin: 2px 0 0; color: #888; font-size: 11px;">${escapeHtml(p.brand)}</p>` : ""}
-            <p style="margin: 2px 0 0; color: #666; font-size: 11px;">${escapeHtml(conditionLabel)}${sizesText ? ` &middot; Vel.: ${escapeHtml(sizesText)}` : ""}</p>
-            <p style="margin: 6px 0 0;">${priceHtml}</p>
-          </div>
-        </a>
-      </td>`;
-  });
-
   const cells = [
-    cards[0],
-    cards[1] ?? '<td style="width: 33%; padding: 6px;"></td>',
-    cards[2] ?? '<td style="width: 33%; padding: 6px;"></td>',
+    similarProducts[0] ? buildSimilarCard(similarProducts[0], baseUrl) : `<td style="width: 33.33%; padding: 6px;"></td>`,
+    similarProducts[1] ? buildSimilarCard(similarProducts[1], baseUrl) : `<td style="width: 33.33%; padding: 6px;"></td>`,
+    similarProducts[2] ? buildSimilarCard(similarProducts[2], baseUrl) : `<td style="width: 33.33%; padding: 6px;"></td>`,
   ];
-  const row = `<tr>${cells.join("")}</tr>`;
 
-  return `<!DOCTYPE html>
-<html lang="cs">
-<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/></head>
-<body style="margin: 0; padding: 0; background-color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333;">
-  <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
-
-    <div style="text-align: center; padding: 24px 0;">
-      <a href="${baseUrl}" style="text-decoration: none;">
-        <h1 style="margin: 0; font-size: 24px; color: #1a1a1a;">Jani&ccaron;ka Shop</h1>
-      </a>
-    </div>
-
-    <div style="background: #fff; border-radius: 12px; padding: 32px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
-
-      <div style="text-align: center;">
-        ${soldImageHtml}
-        <div style="width: 64px; height: 64px; background: #fee2e2; border-radius: 50%; margin: 16px auto; display: flex; align-items: center; justify-content: center;">
-          <span style="font-size: 32px; line-height: 64px;">&#128148;</span>
-        </div>
-        <h2 style="margin: 0 0 8px; font-size: 20px; color: #1a1a1a;">Tv\u016fj vysn\u011bn\u00fd kousek se pr\u00e1v\u011b prodal</h2>
-        <p style="margin: 0; color: #666; font-size: 14px; line-height: 1.5;">
-          <strong>${soldName}</strong> u&zcaron; na&scaron;el novou majitelku. &#128549;<br/>
-          Ale ne&ccaron;ekej na dal&scaron;&iacute; &mdash; m&aacute;me pro tebe podobn&eacute; kousky, kter&eacute; ti mohou padnout stejn&ecaron;.
-        </p>
-      </div>
-
-      <div style="margin-top: 28px;">
-        <h3 style="margin: 0 0 12px; font-size: 16px; color: #1a1a1a; text-align: center;">Pod\u00edvej se na podobn\u00e9</h3>
-        <table style="width: 100%; border-collapse: collapse;">
-          ${row}
-        </table>
-      </div>
-
-      <div style="text-align: center; margin-top: 24px;">
-        <a href="${baseUrl}/products?sort=newest" style="display: inline-block; background: #1a1a1a; color: #fff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
-          Prohl&eacute;dnout v&scaron;echny novinky
-        </a>
-      </div>
-
-    </div>
-
-    <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
-      <p style="margin: 0;">Jani&ccaron;ka Shop &mdash; Second hand m&oacute;da</p>
-      <p style="margin: 8px 0 0;">
-        <a href="${baseUrl}/odhlasit-novinky?token=${encodeURIComponent(signUnsubscribeToken(recipientEmail))}" style="color: #999; text-decoration: underline;">Odhl&aacute;sit se z odb&ecaron;ru</a>
+  const content = `
+    <div style="text-align: center;">
+      ${soldImageHtml}
+      <div style="margin-top: 20px;"></div>
+      ${renderEyebrow("Kousek se prodal")}
+      ${renderDisplayHeading("Někdo byl rychlejší.")}
+      <p style="margin: 0 0 8px; font-family: ${FONTS.sans}; font-size: 15px; line-height: 1.7; color: ${BRAND.charcoalSoft};">
+        <strong style="color: ${BRAND.charcoal};">${escapeHtml(soldName)}</strong> už má novou majitelku.
+      </p>
+      <p style="margin: 0 0 24px; font-family: ${FONTS.serif}; font-style: italic; font-size: 16px; color: ${BRAND.primary};">
+        Ale mám pro tebe pár kousků, které by ti mohly padnout stejně.
       </p>
     </div>
-  </div>
-</body>
-</html>`;
+
+    <div style="margin-top: 12px;">
+      <p style="margin: 0 0 14px; font-family: ${FONTS.sans}; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: ${BRAND.primary}; text-align: center;">Podobné kousky</p>
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse: separate; border-spacing: 0;">
+        <tr>${cells.join("")}</tr>
+      </table>
+    </div>
+
+    <div style="margin: 32px 0 8px;">
+      ${renderButton({ href: `${baseUrl}/products?sort=newest`, label: "Prohlédnout všechny novinky", variant: "primary" })}
+    </div>`;
+
+  return renderLayout({
+    preheader: `${soldName} se prodal. Tady jsou podobné kousky.`,
+    contentHtml: content,
+    unsubscribeUrl,
+  });
 }
 
 /**
@@ -202,7 +174,6 @@ export async function sendWishlistSoldNotifications(
       });
       if (subscribers.length === 0) continue;
 
-      // Parse sold sizes so we can prefer similar items in same size range
       let soldSizes: string[] = [];
       try {
         soldSizes = JSON.parse(soldProduct.sizes);
@@ -210,7 +181,6 @@ export async function sendWishlistSoldNotifications(
         /* ignore corrupted JSON */
       }
 
-      // Query up to 12 candidates, filter by size overlap in JS, take top 3
       const candidates = await db.product.findMany({
         where: {
           categoryId: soldProduct.categoryId,
@@ -250,7 +220,7 @@ export async function sendWishlistSoldNotifications(
 
       if (similarProducts.length === 0) continue;
 
-      const subject = `Tv\u016fj vysn\u011bn\u00fd kousek se pr\u00e1v\u011b prodal \u2014 pod\u00edvej se na podobn\u00e9`;
+      const subject = `Tvůj vysněný kousek se právě prodal — podívej se na podobné`;
 
       const notifiedIds: string[] = [];
       for (const sub of subscribers) {
