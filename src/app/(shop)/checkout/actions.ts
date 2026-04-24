@@ -481,6 +481,16 @@ export async function createOrder(
         referralDiscountApplied: referralDiscount,
         storeCreditApplied: storeCreditUsed,
       };
+    }, {
+      // Default Prisma interactive tx timeout is 5000 ms. Turso edge (eu-west-1)
+      // round-trips push realistic order creation over that: customer upsert +
+      // product row-level updates + order insert + orderItems insert + related
+      // wishlist/abandoned writes. Observed prod error on cash-on-delivery
+      // submit 2026-04-24: "Transaction already closed… 5505 ms passed since
+      // the start of the transaction". 15 s is comfortable headroom without
+      // hiding genuinely slow queries.
+      maxWait: 5000,
+      timeout: 15000,
     });
   } catch (e) {
     if (e instanceof UnavailableError) {

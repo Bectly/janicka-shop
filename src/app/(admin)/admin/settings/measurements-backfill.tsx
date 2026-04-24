@@ -88,7 +88,7 @@ export function MeasurementsBackfill() {
           {isPending ? "Zpracovávám…" : "Doplnit rozměry z popisků"}
         </Button>
         <p className="text-xs text-muted-foreground">
-          Přečte „📏 Rozměry:" z popisků produktů a uloží hrudník / pas / boky /
+          Přečte „📏 Rozměry:&quot; z popisků produktů a uloží hrudník / pas / boky /
           délku do strukturovaných dat. Produkty, které už rozměry mají, přeskočí.
         </p>
       </div>

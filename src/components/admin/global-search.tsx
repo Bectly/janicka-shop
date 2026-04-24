@@ -151,7 +151,7 @@ export function GlobalSearch() {
                 </p>
               ) : total === 0 && !loading ? (
                 <p className="px-4 py-8 text-center text-sm text-muted-foreground">
-                  Nic nenalezeno pro „{q}"
+                  Nic nenalezeno pro „{q}&quot;
                 </p>
               ) : (
                 <div className="py-2">

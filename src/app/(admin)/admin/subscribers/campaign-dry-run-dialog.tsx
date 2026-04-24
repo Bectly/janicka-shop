@@ -322,7 +322,7 @@ export function CampaignDryRunDialog({
                       <span className="text-[11px] text-primary">Subject A</span>
                     </div>
                     <p className="mt-0.5 truncate text-foreground" title={preview.segmentSubjects.warm}>
-                      „{preview.segmentSubjects.warm}"
+                      „{preview.segmentSubjects.warm}&quot;
                     </p>
                   </div>
                   <div className="rounded-md border border-muted-foreground/30 bg-muted/40 p-2">
@@ -333,7 +333,7 @@ export function CampaignDryRunDialog({
                       <span className="text-[11px] text-muted-foreground">Subject B</span>
                     </div>
                     <p className="mt-0.5 truncate text-foreground" title={preview.segmentSubjects.cold}>
-                      „{preview.segmentSubjects.cold}"
+                      „{preview.segmentSubjects.cold}&quot;
                     </p>
                   </div>
                 </div>

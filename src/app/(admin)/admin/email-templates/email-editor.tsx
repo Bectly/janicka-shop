@@ -245,7 +245,7 @@ export function EmailEditor({ collections }: Props) {
         ) : (
           <div className="flex h-[700px] flex-col items-center justify-center gap-3 text-muted-foreground">
             <Eye className="size-10 opacity-20" />
-            <p className="text-sm">Klikněte na „Náhled" pro zobrazení.</p>
+            <p className="text-sm">Klikněte na „Náhled&quot; pro zobrazení.</p>
           </div>
         )}
       </div>
