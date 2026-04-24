@@ -223,23 +223,25 @@ async function persistParsedMessage(
     },
   });
 
+  const existingThread = await db.emailThread.findUnique({
+    where: { id: threadId },
+    select: { participants: true },
+  });
+  const existingParticipants: string[] = existingThread?.participants
+    ? JSON.parse(existingThread.participants)
+    : [];
+  const mergedParticipants = dedupStrings([
+    ...existingParticipants,
+    ...participants,
+  ]);
+
   await db.emailThread.update({
     where: { id: threadId },
     data: {
       lastMessageAt: receivedAt,
       messageCount: { increment: 1 },
       unreadCount: { increment: 1 },
-      participants: JSON.stringify(
-        dedupStrings([
-          ...JSON.parse(
-            (await db.emailThread.findUnique({
-              where: { id: threadId },
-              select: { participants: true },
-            }))?.participants ?? "[]",
-          ),
-          ...participants,
-        ]),
-      ),
+      participants: JSON.stringify(mergedParticipants),
     },
   });
 
