@@ -729,7 +729,12 @@ export default function CheckoutPage() {
           </div>
         )}
 
-        <div className="grid gap-8 lg:grid-cols-3">
+        {/* grid-cols-1 instead of default (auto-min-content): Tailwind compiles
+            grid-cols-1 to `repeat(1, minmax(0, 1fr))` which prevents the single
+            mobile column from growing to its min-content width. Without this
+            the collapsed step 0 form fields set column width to ~441px and
+            break the whole viewport. */}
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           {/* Accordion form steps */}
           <div className="space-y-4 lg:col-span-2">
             {/* Step 1: Contact */}

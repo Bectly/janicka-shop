@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useRef, useState, useTransition } from "react";
 import { Eye, EyeOff, Star, StarOff, Pencil, Check, X } from "lucide-react";
 import { formatPrice } from "@/lib/format";
 import { updateProductQuick } from "@/app/(admin)/admin/products/actions";
@@ -25,21 +25,24 @@ export function InlinePriceEdit({
 }) {
   const [editing, setEditing] = useState(false);
   const [price, setPrice] = useState(initial);
+  const [prevInitial, setPrevInitial] = useState(initial);
   const [draft, setDraft] = useState(String(initial));
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => setPrice(initial), [initial]);
-  useEffect(() => {
-    if (editing) {
-      setDraft(String(price));
-      setTimeout(() => {
-        inputRef.current?.focus();
-        inputRef.current?.select();
-      }, 0);
+  if (initial !== prevInitial) {
+    setPrevInitial(initial);
+    setPrice(initial);
+  }
+
+  const focusInput = useCallback((el: HTMLInputElement | null) => {
+    inputRef.current = el;
+    if (el) {
+      el.focus();
+      el.select();
     }
-  }, [editing, price]);
+  }, []);
 
   function save() {
     const n = parseFloat(draft.replace(",", "."));
@@ -70,6 +73,7 @@ export function InlinePriceEdit({
         type="button"
         onClick={(e) => {
           e.stopPropagation();
+          setDraft(String(price));
           setEditing(true);
         }}
         className="group inline-flex items-center gap-1 rounded px-1 py-0.5 font-medium transition-colors duration-150 hover:bg-muted"
@@ -87,7 +91,7 @@ export function InlinePriceEdit({
       onClick={(e) => e.stopPropagation()}
     >
       <Input
-        ref={inputRef}
+        ref={focusInput}
         type="number"
         inputMode="decimal"
         step="1"
@@ -137,9 +141,13 @@ export function InlinePriceEdit({
 
 export function ProductQuickToggles({ id, active, featured, sold }: TogglesProps) {
   const [state, setState] = useState({ active, featured });
+  const [prev, setPrev] = useState({ active, featured });
   const [isPending, startTransition] = useTransition();
 
-  useEffect(() => setState({ active, featured }), [active, featured]);
+  if (prev.active !== active || prev.featured !== featured) {
+    setPrev({ active, featured });
+    setState({ active, featured });
+  }
 
   function toggle(key: "active" | "featured") {
     const next = !state[key];
