@@ -115,6 +115,122 @@ export async function updateSubscriberPreferences(input: {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Style quiz (/kviz/styl) — captures email + size/condition/color/price
+// preferences, subscribes to newsletter, returns prefilled /products URL.
+// ---------------------------------------------------------------------------
+
+const QUIZ_STYLES = ["casual", "elegant", "street", "boho", "minimal"] as const;
+const QUIZ_CONDITIONS = ["new_only", "any"] as const;
+
+const styleQuizSchema = z.object({
+  email: z.string().trim().email("Zadejte platný e-mail").max(254),
+  sizes: z.array(z.string().max(16)).max(12).default([]),
+  style: z.enum(QUIZ_STYLES),
+  conditionTolerance: z.enum(QUIZ_CONDITIONS),
+  colors: z.array(z.string().max(32)).max(10).default([]),
+  maxPrice: z.number().int().min(0).max(999999).nullable(),
+});
+
+export type StyleQuizInput = z.infer<typeof styleQuizSchema>;
+
+export async function submitStyleQuiz(
+  _prev: { success: boolean; message: string; redirectUrl?: string } | null,
+  formData: FormData,
+): Promise<{ success: boolean; message: string; redirectUrl?: string }> {
+  const rl = await rateLimitNewsletter();
+  if (!rl.success) {
+    return {
+      success: false,
+      message: "Příliš mnoho pokusů. Zkuste to prosím za chvíli.",
+    };
+  }
+
+  const rawSizes = formData.getAll("sizes").map(String).filter(Boolean);
+  const rawColors = formData.getAll("colors").map(String).filter(Boolean);
+  const rawMaxPrice = formData.get("maxPrice");
+  const parsedMaxPrice =
+    typeof rawMaxPrice === "string" && rawMaxPrice.trim() !== ""
+      ? Number(rawMaxPrice)
+      : null;
+
+  const parsed = styleQuizSchema.safeParse({
+    email: formData.get("email"),
+    sizes: rawSizes,
+    style: formData.get("style"),
+    conditionTolerance: formData.get("conditionTolerance"),
+    colors: rawColors,
+    maxPrice: Number.isFinite(parsedMaxPrice) ? parsedMaxPrice : null,
+  });
+
+  if (!parsed.success) {
+    return { success: false, message: "Vyplňte prosím všechny otázky a platný e-mail." };
+  }
+
+  const allowedSizes = new Set(ALL_SIZES);
+  const allowedColors = new Set(Object.keys(COLOR_MAP));
+  const sizes = parsed.data.sizes.filter((s) => allowedSizes.has(s));
+  const colors = parsed.data.colors.filter((c) => allowedColors.has(c));
+
+  const email = parsed.data.email.toLowerCase();
+
+  try {
+    const db = await getDb();
+    const existing = await db.newsletterSubscriber.findUnique({
+      where: { email },
+      select: { active: true },
+    });
+    const isNew = !existing || !existing.active;
+
+    await db.newsletterSubscriber.upsert({
+      where: { email },
+      create: {
+        email,
+        active: true,
+        source: "kviz-styl",
+        preferredSizes: sizes.length ? JSON.stringify(sizes) : null,
+      },
+      update: {
+        active: true,
+        ...(sizes.length ? { preferredSizes: JSON.stringify(sizes) } : {}),
+      },
+    });
+    revalidateTag("admin-subscribers", "max");
+
+    if (isNew) {
+      sendNewsletterWelcomeEmail(email).catch((err) => {
+        logger.error(`[StyleQuiz] Welcome email failed for ${email}:`, err);
+      });
+    }
+  } catch (err) {
+    logger.error("[StyleQuiz] DB error:", err);
+    return {
+      success: false,
+      message: "Něco se pokazilo. Zkuste to prosím znovu.",
+    };
+  }
+
+  // Build prefilled /products URL — only real catalog filters.
+  const sp = new URLSearchParams();
+  for (const s of sizes) sp.append("size", s);
+  for (const c of colors) sp.append("color", c);
+  if (parsed.data.conditionTolerance === "new_only") {
+    sp.append("condition", "new_with_tags");
+    sp.append("condition", "new_without_tags");
+  }
+  if (parsed.data.maxPrice !== null) {
+    sp.set("maxPrice", String(parsed.data.maxPrice));
+  }
+  const qs = sp.toString();
+  const redirectUrl = qs ? `/products?${qs}` : "/products";
+
+  return {
+    success: true,
+    message: "Hotovo! Připravujeme váš výběr…",
+    redirectUrl,
+  };
+}
+
 /**
  * Fetch cross-sell product recommendations for the cart page.
  * Returns up to 4 available products from the same categories as cart items,

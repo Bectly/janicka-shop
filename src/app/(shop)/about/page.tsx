@@ -1,33 +1,33 @@
 import type { Metadata } from "next";
-import { Leaf, ShieldCheck, Star } from "lucide-react";
+import { Heart, Sparkles, Hand } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "O nás | Janička",
   description:
-    "Janička — second hand eshop s kvalitním oblečením pro moderní ženy. Udržitelná móda, unikátní kousky, skvělé ceny.",
+    "Janička — česká rodinná second hand značka. Každý kousek osobně vybraný a nafocený. Žádný sklad, žádný algoritmus — jen pečlivý výběr a jeden originál.",
 };
 
 const values = [
   {
-    icon: Leaf,
-    title: "Udržitelná móda",
-    body: "Každý kousek, který si od nás koupíš, dostává druhý život. Méně odpadu, méně fast fashion — víc stylu s vědomím, že to dělá smysl.",
-    gradient: "from-sage-light/30 to-champagne-light/20",
-    iconGradient: "from-sage-light/60 to-champagne-light/40",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Pečlivý výběr",
-    body: "Každý kousek osobně kontrolujeme. Uvádíme přesný stav, značku i velikost — abyste přesně věděly, co kupujete. Žádné překvapení.",
+    icon: Hand,
+    title: "Vybírám osobně",
+    body: "Každý kousek prochází mýma rukama. Nafotím ho, zkontroluji stav, popíšu každý detail. Žádný sklad, žádný algoritmus — jen pečlivý ruční výběr.",
     gradient: "from-brand/[0.06] to-champagne-light/30",
     iconGradient: "from-brand/20 to-blush",
   },
   {
-    icon: Star,
-    title: "Unikátní kousky",
-    body: "Vybíráme jen prémiové značky v skvělém stavu. Nenajdete u nás hromadné kolekce — každý kousek je originál.",
+    icon: Sparkles,
+    title: "Jeden kus, jedna šance",
+    body: "Každý kousek je u nás jen jednou. Když padne do oka, neváhejte — zítra už tu nemusí být. Žádné duplikáty, žádné hromadné kolekce.",
     gradient: "from-blush-light/40 to-brand/[0.04]",
     iconGradient: "from-blush to-brand/20",
+  },
+  {
+    icon: Heart,
+    title: "Česká a blízká",
+    body: "Malý rodinný second hand z Česka, ne korporace. Napíšete a odpovídá vám člověk — ne chatbot. Na balíčcích poznáte, že je baleno s péčí.",
+    gradient: "from-sage-light/30 to-champagne-light/20",
+    iconGradient: "from-sage-light/60 to-champagne-light/40",
   },
 ] as const;
 
@@ -37,23 +37,33 @@ export default function AboutPage() {
       {/* Editorial header */}
       <div className="mb-10 flex flex-col items-start gap-2">
         <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1 text-xs font-semibold tracking-wide text-primary">
-          <Leaf className="size-3" />
+          <Heart className="size-3" />
           Náš příběh
         </span>
         <h1 className="font-heading text-[1.75rem] font-bold text-foreground sm:text-3xl">
           O nás
         </h1>
         <p className="text-muted-foreground">
-          Janička — kurátorský second hand pro moderní ženy. Kvalita, styl a
-          udržitelnost v každém kousku.
+          Janička — česká rodinná second hand značka. Jeden pár rukou, který
+          vybírá, kontroluje a fotí každý kousek osobně.
         </p>
       </div>
 
       <div className="space-y-8 text-muted-foreground leading-relaxed">
         <p>
           Vítejte v <strong className="text-foreground">Janičce</strong> —
-          vašem oblíbeném second hand obchodu s oblečením. Věříme, že krásné
-          oblečení nemusí být drahé a že udržitelná móda je budoucnost.
+          malém českém second handu vedeném z&nbsp;lásky k&nbsp;oblečení, které
+          má&nbsp;ještě co&nbsp;říct. Nejsme sklad. Nejsme algoritmus. Jsme
+          jeden pár rukou, který každý den vybírá, kontroluje a&nbsp;fotí
+          kousky, co&nbsp;si&nbsp;zaslouží druhou šanci.
+        </p>
+
+        <p>
+          Na&nbsp;velkých platformách se&nbsp;ztratíte mezi desítkami tisíc
+          nabídek od&nbsp;cizích prodejců. U&nbsp;nás je&nbsp;to&nbsp;naopak —
+          menší výběr, ale&nbsp;každý kus osobně prohlédnutý, přesně
+          popsaný a&nbsp;nafocený tak, aby&nbsp;přesně seděl popis. Žádná
+          překvapení po&nbsp;rozbalení.
         </p>
 
         {/* Values grid */}
@@ -87,11 +97,17 @@ export default function AboutPage() {
             <li>Bundy a kabáty na každé počasí</li>
             <li>Doplňky — šperky, kabelky, šátky</li>
           </ul>
+          <p className="mt-3 text-sm">
+            A&nbsp;jeden důležitý detail: každý kus je u&nbsp;nás jen jednou.
+            Žádné hromadné dodávky, žádná druhá stejná velikost. Unikát v&nbsp;tom
+            pravém slova smyslu.
+          </p>
         </section>
 
         <p>
-          Děkujeme, že nakupujete u nás a podporujete udržitelnou módu.{" "}
-          <Leaf className="inline-block size-4 align-text-bottom text-sage-dark" aria-hidden="true" />
+          Děkujeme, že nakupujete právě u&nbsp;nás — podporujete tím malý český
+          obchod a&nbsp;zároveň udržitelnou módu.{" "}
+          <Heart className="inline-block size-4 align-text-bottom text-brand" aria-hidden="true" />
         </p>
       </div>
     </div>

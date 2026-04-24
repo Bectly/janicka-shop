@@ -100,11 +100,11 @@ export function HeroSection() {
               : "opacity-0 translate-y-6"
           }`}
         >
-          Unikátní kousky za&nbsp;zlomek ceny. Značkové oblečení
-          v&nbsp;skvělém stavu, udržitelná móda pro moderní ženy.
+          Každý kousek vybírám a&nbsp;fotím osobně. Jeden kus, jedna
+          velikost — když ho někdo koupí, zmizí.
         </p>
 
-        {/* Second hand badge */}
+        {/* Brand promise badge — Czech, family-run, curated (not an algorithm) */}
         <p
           className={`mt-2 text-sm font-medium tracking-wider text-brand uppercase sm:text-base transition-all duration-1000 delay-300 ease-out ${
             mounted
@@ -112,7 +112,7 @@ export function HeroSection() {
               : "opacity-0 translate-y-6"
           }`}
         >
-          Second hand &amp; vintage
+          Česká rodinná second hand značka
         </p>
 
         {/* CTA buttons */}

@@ -12,8 +12,8 @@ const badges: {
 }[] = [
   {
     icon: ShieldCheck,
-    title: "Ověřená kvalita",
-    description: "Každý kousek pečlivě kontrolujeme a fotografujeme",
+    title: "Vybíráme osobně",
+    description: "Každý kus projde našima rukama — foto, stav, detaily",
     cardBg: "from-sage-light/20 to-sage/[0.06]",
     iconBg: "from-sage-light/50 to-sage/20",
     border: "border-sage/20",
