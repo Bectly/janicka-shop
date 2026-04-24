@@ -773,4 +773,132 @@ $ npm run lint
 
 The babel deopt note on `src/lib/invoice/font-data.ts` is a transient info line from the parser on the vendored PDF font blob — not an eslint diagnostic, does not count against 0w/0e. **Milestone holds.** The guard for future cycles: any commit that introduces an eslint warning or error terminates the streak, regardless of whether it's a functional issue. Keep tripwire grep ready for cycle end: `npm run lint 2>&1 | grep -E '^\S+\s+[0-9]+:[0-9]+' | wc -l` must return 0.
 
+---
+
+## C4875 addendum — rows W2 / Y (fold-in of 2794cac Bolt #517 step 1)
+
+### Row W2 — `experimental.optimizeCss` flag verification — **P0 ROLLBACK CANDIDATE**
+
+**Commit:** 2794cac (C4874 Bolt, #517 step 1) added
+
+```ts
+experimental: {
+  optimizeCss: true,
+},
+```
+
+to `next.config.ts:11-13` with the leading comment *"inline critical CSS (via beasties) so the 32KB framework chunk stops render-blocking on mobile. Non-critical rules ship async after first paint. Needed package is auto-picked-up by Next 16."*
+
+**Three independent defects found in this audit:**
+
+**1. Package not installed (and not a Next 16 dependency).** Next 16.2.3's post-processor calls `require('critters')` (legacy name — Next never renamed to `beasties`). Neither `critters` nor `beasties` is present:
+
+```
+$ grep -E '"(beasties|critters)"' package.json package-lock.json
+(no matches)
+$ find node_modules -maxdepth 4 -type d -name 'beasties' -o -name 'critters'
+(no matches)
+$ node -e "const p=require('./node_modules/next/package.json'); for (const s of ['dependencies','optionalDependencies','peerDependencies']) console.log(s, Object.keys(p[s]||{}).filter(k=>/critter|beasti/.test(k)))"
+dependencies []
+optionalDependencies []
+peerDependencies []
+```
+
+Next 16 does **not** auto-bundle critters — the project must install it as a runtime dep if `optimizeCss` is enabled. The commit comment ("auto-picked-up by Next 16") is incorrect.
+
+**2. `optimizeCss` is a Pages-Router-only post-processor in Next 16.2.3.** Grepping the compiled dist for the consumer:
+
+```
+$ grep -rn "require('critters')" node_modules/next/dist
+node_modules/next/dist/server/post-process.js:16
+node_modules/next/dist/esm/server/post-process.js:6
+```
+
+`post-process.js` is wired from `render.js` (Pages Router SSR path) and `route-modules/pages/pages-handler.js`. There is **no App Router invocation**. Janicka-shop is 100% App Router (verified Row S: `pages/` / `_app` / `_document` all absent). Therefore the flag fires on zero routes — the entire shop surface (`/`, `/products`, `/products/[slug]`, `/cart`, `/checkout`, `/admin/**`) bypasses the CSS-inlining code path entirely.
+
+**3. If App Router ever gained optimizeCss support, the current config would SSR-crash.** `post-process.js` uses an eager `require('critters')` with no try/catch and no `typeof cache === 'undefined'` guard — the first affected SSR render would throw `Cannot find module 'critters'` and 500 the page. Enabling the flag without installing the package is only "safe" because of defect #2 (the codepath never fires).
+
+**Consequence — the #517 step-1 premise is hollow:**
+
+- Bolt commit message: *"retires the 32KB render-blocking framework chunk on mobile routes"* — **false.** The framework CSS chunk is untouched. `.next/static/css/*.css` before and after 2794cac are byte-identical (same hash), and every App Router route still ships the full stylesheet via `<link rel="stylesheet">`.
+- Bolt commit message: *"next build green (prints ✓ optimizeCss in experiments)"* — **technically true but misleading.** The ✓ confirms Next recognized the experimental flag name, not that CSS was inlined. Next 16 prints the experiments table for every enabled flag regardless of whether the downstream codepath runs.
+- The C4835 Lighthouse bundle (#513 + #515 + #516 + #517) that #525 [PERF-VERIFY-BUNDLE] is gated on will measure **zero** delta from 2794cac — real LCP wins come from #515 (cookie non-LCP) + #516 (PDP preload hoist) + #513 (/cart min-h). #517 contributes nothing measurable.
+
+**Required remediation (Bolt — new step under #517):**
+
+1. **Pick the fix direction** — either
+   - (A) **Install `critters` + wait for App Router support** (no App Router wiring exists in 16.2.3 → Do NOT do this, dead end until Next 17+), OR
+   - (B) **Rollback the flag** (`experimental.optimizeCss`) and pursue a different payload-reduction strategy for the 32KB framework chunk — e.g. dynamic import boundaries, `next/dynamic` on admin-only Tailwind utilities, or a postcss-purge pass that sheds unused classes from the /products route's shipped CSS, OR
+   - (C) **Leave the flag and correct the narrative** — mark #517 step 1 as no-op documentation, close with "flag enabled for future Next-17 App-Router support, no current effect".
+2. **Recommendation:** (B) — the LCP regression on mobile is real (cwv-2026-04-24 reports 32KB render-blocking CSS) but `optimizeCss` is not the lever. A proper dynamic-import audit on `/products` / `/products/[slug]` would shed the admin-only utility classes that Tailwind JIT bakes into the shared bundle.
+3. **Fix the stale comment** regardless of remediation path — comment says "via beasties / auto-picked-up by Next 16" but Next references `critters` and does not auto-install. If keeping the flag, comment should read: *"Enabled for forward-compat with Next 17 App Router CSS inlining. Currently no-op — no App Router postprocess path in 16.2.3. Do NOT install critters until Next wires it up for App Router or SSR will crash."*
+
+**Gate for #525 [PERF-VERIFY-BUNDLE]:** Trace Lighthouse replay must explicitly report *"#517 contribution: 0 (flag no-op, see audit Row W2)"* in the per-task attribution column so the bundle's measured gains are correctly credited to #513/#515/#516 only. Do not let the flag dilute future attribution math.
+
+**Status**: ⚠️ P0 documentation / P1 perf — the code doesn't break anything, but it creates a false-positive perf claim in the commit log and misroutes future fixes. Lead directive already flagged #517 step 2 ("verify beasties actually fired") — this audit answers the question: it didn't, and it can't, on the current App Router + missing-critters configuration.
+
+### Row Y — `prisma/dev.db*` binaries tracked in git + missing `.gitignore` rules
+
+**Trigger:** Commit `2794cac` accidentally added `prisma/dev.db-shm` (0 → 32768B) and `prisma/dev.db-wal` (empty) alongside the `next.config.ts` edit — SQLite WAL sidecars left behind by a dev session. `b750124` (C4875 Sage) reverted the two sidecars, so HEAD no longer tracks them. But the underlying `.gitignore` gap remains.
+
+**Current tracked-state in HEAD:**
+
+```
+$ git ls-files prisma/
+prisma/dev.db              (2.6M — full SQLite database)
+prisma/dev.db.bak          (1.3M — stale backup)
+prisma/pending-drops/001_drop_devchat.sql
+prisma/schema.prisma
+prisma/seed.ts
+```
+
+**Historical deletes of the WAL sidecars (same pattern, recurring):**
+
+```
+$ git log --all --diff-filter=D --summary -- prisma/dev.db-shm prisma/dev.db-wal | head
+b750124 Sage C4875 Phase 3                    (deleted dev.db-shm + dev.db-wal)
+90c40b0 C4805 Bolt #419                       (deleted dev.db-shm + dev.db-wal)
+6702b98 C4801 Trace                           (deleted dev.db-shm + dev.db-wal)
+c25aa81 C4794 Trace                           (deleted dev.db-shm + dev.db-wal)
+51442a2 C4344 Bolt P1.2 Redis cache           (deleted dev.db-shm + dev.db-wal)
+```
+
+**≥5 separate commits have fire-and-forgotten these sidecars.** The pattern repeats because `.gitignore` has zero prisma rules:
+
+```
+$ grep -c prisma .gitignore
+0
+```
+
+The existing `.gitignore` covers `/node_modules`, `/.next/`, `.env*`, `*.pem`, `/coverage`, `/playwright-report`, `/test-results`, `/build`, `.DS_Store`, `*.tsbuildinfo`, `next-env.d.ts`, `.vercel`, `.pnp*`, `/out/`, debug logs — **no SQLite, no dev DB, no prisma local state**.
+
+**Recommended fix (single Bolt commit, ~5 LoC):**
+
+```diff
+# .gitignore
++# local prisma dev database (SQLite) — prod uses Turso
++prisma/dev.db
++prisma/dev.db-*
++prisma/dev.db.bak
++prisma/*.db-journal
+```
+
+Then:
+
+```
+$ git rm --cached prisma/dev.db prisma/dev.db.bak
+$ git commit -m "chore(gitignore): stop tracking local SQLite dev DB binaries"
+```
+
+**Why this matters:**
+
+1. **Repo bloat.** `prisma/dev.db` + `prisma/dev.db.bak` = **3.9 MB of binary churn** per schema change / per seed run. Every `prisma migrate dev` rewrites pages in the db file → git sees a totally different blob → history grows unboundedly. The git pack is almost certainly >50% SQLite binary diffs at this point.
+2. **Merge conflicts.** Two developers running `prisma db push` on different branches get unresolvable binary conflicts.
+3. **Secret exposure risk.** `prisma/dev.db` currently contains **real dev data** — seeded admin password hash, test orders, customer emails from testing. It is 2.6 MB of SQLite and is world-readable on GitHub once this repo is pushed (janicka-shop remote is `git@github.com:Bectly/janicka-shop.git`). Bectly has historically asked "NEVER push to remote without explicit request" — this .gitignore gap is *why*, because every push would leak dev DB contents.
+4. **WAL sidecars keep re-appearing.** As long as `.gitignore` misses `prisma/dev.db-*`, any worker that runs a test after SQLite opens in WAL journal mode will `git add .` the sidecars back in. b750124 already had to delete them this cycle; 2794cac re-added them within 4 minutes.
+
+**Priority:** P1 (operational pain + repo hygiene) escalating to P0 if the repo is ever pushed to GitHub remote, because the existing tracked `dev.db` blob contains PII from test orders. The `git rm --cached` step does **not** remove it from history — follow-up `git filter-repo --path prisma/dev.db --invert-paths` is required before any public push. Flag to bectly before pushing.
+
+**Status**: tracked as Row Y for #367 sweep. Bolt fork directive (fold under #517 step 2 or spin as new task): .gitignore patch + `git rm --cached` for 2 binaries + decision on whether to filter-repo scrub the existing `prisma/dev.db` blob from history.
+
 
