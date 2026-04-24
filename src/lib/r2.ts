@@ -40,7 +40,9 @@ export async function uploadToR2(
     })
   );
 
-  return `${process.env.R2_PUBLIC_URL}/${key}`;
+  const publicUrl =
+    process.env.R2_PUBLIC_URL ?? process.env.NEXT_PUBLIC_R2_PUBLIC_URL;
+  return `${publicUrl}/${key}`;
 }
 
 /**
@@ -48,7 +50,8 @@ export async function uploadToR2(
  * Silently skips URLs that don't belong to our bucket.
  */
 export async function deleteFromR2(url: string): Promise<void> {
-  const publicUrl = process.env.R2_PUBLIC_URL;
+  const publicUrl =
+    process.env.R2_PUBLIC_URL ?? process.env.NEXT_PUBLIC_R2_PUBLIC_URL;
   if (!publicUrl || !url.startsWith(publicUrl)) return;
   const R2 = getR2Client();
   const key = url.slice(publicUrl.length + 1);
