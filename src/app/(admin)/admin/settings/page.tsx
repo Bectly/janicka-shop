@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { connection } from "next/server";
-import { getShopSettings } from "./actions";
+import { cacheLife, cacheTag } from "next/cache";
+import { getDb } from "@/lib/db";
 import { SettingsForm } from "./settings-form";
 import { PasswordChangeForm } from "./password-form";
 import { MeasurementsBackfill } from "./measurements-backfill";
@@ -9,9 +9,23 @@ export const metadata: Metadata = {
   title: "Nastavení obchodu",
 };
 
+async function getCachedShopSettings() {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("admin-settings");
+
+  const db = await getDb();
+  return db.shopSettings.findUnique({
+    where: { id: "singleton" },
+  });
+}
+
 export default async function AdminSettingsPage() {
-  await connection();
-  const settings = await getShopSettings();
+  let settings = await getCachedShopSettings();
+  if (!settings) {
+    const db = await getDb();
+    settings = await db.shopSettings.create({ data: { id: "singleton" } });
+  }
 
   return (
     <>

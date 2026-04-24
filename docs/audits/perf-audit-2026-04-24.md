@@ -362,3 +362,156 @@ Each atomic Bolt commit MUST include wall-clock delta in message body (per task 
 1. Lead reviews subtask split, creates #524a-g in devloop_tasks.
 2. Bolt picks up #524a (single high-leverage commit, ~20 LoC).
 3. Trace wires #524f instrumentation in parallel so measurements are ready when fixes land.
+
+---
+
+## Phase 4 — Verification (#524g / task #532)
+
+**Opened:** 2026-04-24, cycle #4879. **Closes:** when all five fix subtasks (#524a–e) are
+landed in HEAD AND the Vercel `PERF_PROFILE` / `PERF_PROFILE_PRISMA` sample has baked 24 h
+on the post-fix build.
+
+### Gate tracker — what's landed in HEAD
+
+As of `git rev-parse HEAD` = `8f43a82` (Cycle #4879 Bolt commit):
+
+| Subtask | Area | Status | Commit | Notes |
+|---|---|---|---|---|
+| #524a | admin layout badge cache (`getAdminBadges` + `revalidateTag("admin-badges","max")`) | ✅ landed | `8f43a82` (Bolt) + core files in `5eb68ff` (Trace bundle per Bolt note) | 9 write-path call sites carry `"max"` profile arg: 5× mailbox/actions + 1× orders/actions + 1× settings/actions + 1× checkout/actions + 1× imap-sync. `src/lib/admin-badges.ts` uses `"use cache"` + `cacheLife("minutes")` + `cacheTag("admin-badges")`. |
+| #524b | 12-admin-page `"use cache"` sweep (`/admin/products`, `/admin/orders`, `/admin/orders/[id]`, `/admin/customers`, `/admin/customers/[id]`, `/admin/mailbox`, `/admin/mailbox/[threadId]`, `/admin/mailbox/compose`, `/admin/settings`, `/admin/jarvis`, `/admin/dashboard`, …) | ⏳ pending | — | Gated on #524a landed per Lead split; status: **blocks Phase 4**. |
+| #524c | `@@index([createdAt])` + `@@index([status, createdAt])` on `Order` + migration | ⏳ pending | — | Gated only by parallel capacity; status: **blocks Phase 4**. |
+| #524d | mailbox search degrade (drop `bodyText` from nested OR, 300 ms debounce) | ⏳ pending | — | Status: **blocks Phase 4**. |
+| #524e | `/account/*` page cache sweep (`customer:${id}:<scope>` tags, #524e1/e2/e3) | ⏳ pending | — | Status: **blocks Phase 4**. |
+| #524f | Phase 1b instrumentation (`PERF_PROFILE` + `PERF_PROFILE_PRISMA`) | ✅ landed | `5eb68ff` | Baseline capture is a **bectly gate** — env vars must be set on Vercel for 24 h before either pre- or post-fix p50/p95 can be computed. |
+| #524g | Phase 4 re-capture (this section) | 🟡 scaffolded, waiting on above | — | This commit creates the verification framework; numbers fill in after gate opens. |
+
+**Verdict — Phase 4 cannot execute yet.** Four of five fix subtasks are still unlanded, and
+even if they were, the Phase 1b sample requires `PERF_PROFILE=1` + `PERF_PROFILE_PRISMA=1`
+to be turned on in Vercel for 24 h pre-fix (baseline) and again 24 h post-fix (delta).
+Earliest Phase 4 close is therefore: max(last of #524b–e landing, 24 h post-flag-enable).
+
+### What IS measurable now (interim, #524a partial)
+
+With only #524a in HEAD, a narrow measurement IS possible and is worth capturing while
+the rest of the bundle lands, because it isolates the single highest-leverage win:
+
+1. Set `PERF_PROFILE=1` on Vercel Production for ≥6 h.
+2. Pull `[perf] admin-nav-<id> badge-trio:` lines from Vercel logs.
+3. Expected: on warm cache the `badge-trio` timer drops from the pre-fix ~235 ms p50 /
+   ~450 ms p95 (Phase 1b baseline) to <5 ms (cache hit, no Prisma RTT). The layout
+   `total` timer should drop by roughly the `badge-trio` delta (session.auth +
+   admin.findUnique untouched until #524b lands layout-wide auth cache, which is
+   out of current scope).
+4. Cold-cache after deploy or after `revalidateTag("admin-badges", …)` fires should
+   still show the full ~235 ms once, then 0 RTT for `cacheLife("minutes")` window.
+
+If this interim capture shows the expected shape, we have early confirmation #524a's
+`"use cache"` helper is wiring correctly before committing to the full #524b sweep. If
+it does NOT, stop the sweep — #524a has a caching bug that the rest inherits.
+
+**Interim capture table (fill after 6 h PERF_PROFILE bake on commit 8f43a82):**
+
+```
+Date captured: ____________
+Vercel env:    Production
+Sample size:   ____ admin navs over 6h (post-8f43a82 only)
+
+                     pre-#524a (Phase 1b)    post-#524a
+                     p50     p95              p50     p95
+badge-trio          ___ms   ___ms             ___ms   ___ms    [expect ≤5ms warm]
+admin.findUnique    ___ms   ___ms             ___ms   ___ms    [unchanged — not in scope]
+session.auth        ___ms   ___ms             ___ms   ___ms    [unchanged — not in scope]
+total               ___ms   ___ms             ___ms   ___ms    [expect total − Δbadge-trio]
+
+Query count per admin nav (prisma-query lines between perf brackets):
+                    pre            post
+  min ___           ___            ___      [expect 4→2 warm on admin layout]
+  median ___        ___            ___
+  max ___           ___            ___
+```
+
+### Full Phase 4 methodology (run once #524b/c/d/e all in HEAD)
+
+Exact repetition of the Phase 1b capture procedure, with the commit-at-time-of-capture
+recorded so the audit trail is unambiguous:
+
+1. **Record HEAD sha** of post-fix commit. All five of #524a/b/c/d/e must be ancestors.
+   Record Prisma migration hash for #524c (from `prisma migrate status`).
+2. **Enable flags:** `PERF_PROFILE=1` + `PERF_PROFILE_PRISMA=1` in Vercel Production
+   (unless the 24 h pre-fix baseline capture left them on, in which case the bake
+   continues with the new build).
+3. **Bake 24 h** with real admin traffic. If low volume, synthetic walk: admin → dashboard
+   → produkty → objednávky → zákazníci → mailbox → nastavení → dashboard, 6× per hour,
+   interleaved cold (new session) and warm (same session). Capture at least 40 total
+   navs across the 24 h.
+4. **Client-side Chrome DevTools trace** (LCP/TTI per nav — what the user feels):
+   - Cold (new session): Performance tab → record → sidebar walk → export to
+     `docs/audits/traces/phase4-admin-cold-<shortsha>.json`
+   - Warm (same session, repeat walk): export to
+     `phase4-admin-warm-<shortsha>.json`
+   - Same pair for `/account` walk: dashboard → objednávky → profil → adresy →
+     wishlist → vratky: `phase4-account-cold-<shortsha>.json` +
+     `phase4-account-warm-<shortsha>.json`
+5. **Unset flags** (redeploy) to stop log cost.
+6. **Fill the per-task attribution table below.** Each row attributes the measured
+   delta to a specific subtask's mechanism — this is how we prove the fix bundle did
+   what it claimed.
+
+### Per-task attribution table (Phase 4 fills this in)
+
+| Subtask | Mechanism | Metric | Pre (Phase 1b) | Post (Phase 4) | Δ | Target | ✓/✗ |
+|---|---|---|---|---|---|---|---|
+| #524a | admin badge cache (`getAdminBadges`) | admin layout `badge-trio` p50 warm | ~235 ms | — | — | <10 ms | — |
+| #524a | admin badge cache | Prisma queries per admin nav warm | 4 | — | — | ≤2 | — |
+| #524b | admin page `"use cache"` sweep | repeat-same-filter `/admin/orders` TTI warm | ~800 ms | — | — | <100 ms | — |
+| #524b | admin page `"use cache"` sweep | Prisma queries per admin `page.tsx` warm | varies | — | — | 0 on cache hit | — |
+| #524c | Order.createdAt composite indexes | `EXPLAIN QUERY PLAN` for order.count createdAt>=yesterday | SCAN | — | — | SEARCH using idx_Order_createdAt | — |
+| #524c | Order.createdAt composite indexes | `/admin/orders` sort-by-createdAt p95 | — | — | — | match pre (no regression) or improve | — |
+| #524d | mailbox search degrade | `/admin/mailbox?q=…` input-to-result TTI p95 | ~1800 ms | — | — | <600 ms | — |
+| #524d | mailbox search degrade | Prisma plan uses index (no full scan of Message.bodyText) | full scan | — | — | index scan | — |
+| #524e | `/account/*` per-customer cache | `/account/orders` warm TTI | — | — | — | <200 ms | — |
+| #524e | `/account/*` per-customer cache | `/account` layout Prisma RTTs per nav warm | 2–4 | — | — | 0 on cache hit | — |
+| **total** | **bundle** | **admin section-switch p50 (user-perceived LCP)** | — | — | — | **<300 ms** | — |
+| **total** | **bundle** | **admin section-switch p95 (user-perceived LCP)** | — | — | — | **<800 ms** | — |
+| **total** | **bundle** | **`/account` section-switch p50** | — | — | — | **<300 ms** | — |
+| **total** | **bundle** | **`/account` section-switch p95** | — | — | — | **<800 ms** | — |
+
+The two `total`/bundle rows are the **acceptance criteria** for task #524 as spawned by
+Lead in C4878. Failing them means the bundle delivered wins but missed the launch target,
+and we need a Phase 5 tail-latency chase (unlikely; more plausible cause would be
+cold-start lambda dominating, which is a separate `vercel.json` `maxDuration` / runtime
+discussion, not Prisma/cache).
+
+### Failure modes to watch for during Phase 4 capture
+
+Past experience (Phase 1b wiring, C4835 bundle attribution) flags these:
+
+- **Cache miss storm on deploy.** First few minutes after a Vercel deploy every function
+  is cold + every `"use cache"` entry is empty → p95 explodes. Discard first 10 minutes
+  of post-deploy sample, or capture after ≥1 h bake.
+- **`revalidateTag("admin-badges", "max")` calling during synthetic walk.** If the walk
+  hits `POST /admin/orders/<id>` (status change) or creates test orders, the badge
+  cache invalidates and the next nav looks like a cold-cache miss. Keep walks
+  read-only, or segregate write-driven numbers.
+- **Prisma log off for the post run.** Double-check both env vars are still set on the
+  post-fix build; deploys can drop them if someone edits Vercel env between captures.
+- **Client-side LCP polluted by image loads, not layout.** If PDP or gallery routes
+  creep into the walk, LCP will be image-bound and not reflect section-switch cost.
+  Admin routes are text-heavy so this shouldn't happen in the admin walk, but
+  `/account/orders` might show an order-card image in the first visible row —
+  confirm LCP element is text, not image, in DevTools.
+
+### Acceptance for #524g (this task)
+
+- [x] Phase 4 section scaffolded in this doc with methodology, gate tracker, per-task attribution table, and failure-mode notes.
+- [x] Gate tracker records which subtasks ARE landed (#524a, #524f) vs pending (#524b, c, d, e).
+- [x] Interim measurement plan documented for #524a partial, so we can validate the `"use cache"` mechanism shape before #524b commits ×12 land.
+- [ ] **bectly gate + worker gate** — all of: #524b, #524c, #524d, #524e landed in HEAD; `PERF_PROFILE` + `PERF_PROFILE_PRISMA` enabled in Vercel for 24 h post-fix baseline; Chrome DevTools pre/post traces exported to `docs/audits/traces/`; per-task attribution table filled in by Trace.
+
+### Why Phase 4 cannot land its numbers this cycle
+
+The Phase 4 gate requires four still-unlanded Bolt commits (#524b ×12 page commits,
+#524c migration, #524d mailbox search, #524e ×3 account page commits) **and** a 24 h
+Vercel flag bake. Earliest possible close is therefore days away, not same-cycle. This
+commit lays down the scaffold so the moment the gate opens, Phase 4 numbers can be
+dropped straight into the table with zero structural rework.

@@ -1,6 +1,6 @@
+import { cacheLife, cacheTag } from "next/cache";
 import { getDb } from "@/lib/db";
 import Link from "next/link";
-import { connection } from "next/server";
 
 import { Plus, Layers } from "lucide-react";
 import type { Metadata } from "next";
@@ -11,15 +11,17 @@ export const metadata: Metadata = {
   title: "Kolekce",
 };
 
-export default async function AdminCollectionsPage() {
-  await connection();
+async function getCollectionsPageData() {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("admin-collections");
+
   const db = await getDb();
   const collections = await db.collection.findMany({
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
   });
 
-  // Count products per collection
-  const collectionsWithCounts = collections.map((c) => {
+  return collections.map((c) => {
     let productCount = 0;
     try {
       const ids = JSON.parse(c.productIds);
@@ -27,6 +29,10 @@ export default async function AdminCollectionsPage() {
     } catch { /* */ }
     return { ...c, productCount };
   });
+}
+
+export default async function AdminCollectionsPage() {
+  const collectionsWithCounts = await getCollectionsPageData();
 
   return (
     <>
@@ -52,7 +58,7 @@ export default async function AdminCollectionsPage() {
       </div>
 
       <div className="mt-6 overflow-hidden rounded-xl border bg-card shadow-sm">
-        {collections.length === 0 ? (
+        {collectionsWithCounts.length === 0 ? (
           <div className="p-12 text-center">
             <Layers className="mx-auto size-12 text-muted-foreground/30" />
             <p className="mt-4 text-lg font-medium text-muted-foreground">

@@ -1,6 +1,6 @@
+import { cacheLife, cacheTag } from "next/cache";
 import { getDb } from "@/lib/db";
 import Link from "next/link";
-import { connection } from "next/server";
 
 import { Layers, Plus } from "lucide-react";
 import type { Metadata } from "next";
@@ -10,15 +10,22 @@ export const metadata: Metadata = {
   title: "Kategorie",
 };
 
-export default async function AdminCategoriesPage() {
-  await connection();
+async function getCategoriesPageData() {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("admin-categories");
+
   const db = await getDb();
-  const categories = await db.category.findMany({
+  return db.category.findMany({
     orderBy: { sortOrder: "asc" },
     include: {
       _count: { select: { products: true } },
     },
   });
+}
+
+export default async function AdminCategoriesPage() {
+  const categories = await getCategoriesPageData();
 
   return (
     <>
