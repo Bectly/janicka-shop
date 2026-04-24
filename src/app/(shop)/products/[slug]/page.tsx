@@ -161,7 +161,7 @@ async function RelatedProductsSection({
         scored.sort((a, b) => b.score - a.score);
         return scored.slice(0, 8).map((s) => s.product);
       })()
-    : await db.product.findMany({ ...relatedQuery, take: 4 });
+    : await db.product.findMany({ ...relatedQuery, take: 8 });
 
   if (relatedProducts.length === 0) return null;
 
@@ -182,7 +182,7 @@ async function RelatedProductsSection({
             Vybrali jsme kousky podobné velikosti, ceny a stylu
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+        <ProductCarousel ariaLabel="Podobné dostupné kousky">
           {relatedProducts.map((p) => (
             <ProductCard
               key={p.id}
@@ -203,7 +203,7 @@ async function RelatedProductsSection({
               lowestPrice30d={lowestPricesMap.get(p.id) ?? null}
             />
           ))}
-        </div>
+        </ProductCarousel>
       </section>
     );
   }
@@ -218,7 +218,7 @@ async function RelatedProductsSection({
           Mohlo by se vám líbit
         </h2>
       </div>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+      <ProductCarousel ariaLabel="Mohlo by se vám líbit">
         {relatedProducts.map((p) => (
           <ProductCard
             key={p.id}
@@ -238,7 +238,7 @@ async function RelatedProductsSection({
             lowestPrice30d={lowestPricesMap.get(p.id) ?? null}
           />
         ))}
-      </div>
+      </ProductCarousel>
     </section>
   );
 }
