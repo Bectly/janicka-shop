@@ -422,9 +422,9 @@ export default async function ProductDetailPage({ params }: Props) {
           <span className="min-w-0 truncate text-foreground">{product.name}</span>
         </nav>
 
-        <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
+        <div className="grid min-w-0 grid-cols-1 gap-8 overflow-hidden lg:grid-cols-2 lg:gap-12">
           {/* Image — greyed out */}
-          <div className="relative">
+          <div className="relative min-w-0 overflow-hidden">
             <div className="opacity-60 grayscale">
               <ProductGallery images={productImages} productName={product.name} videoUrl={product.videoUrl} />
             </div>
@@ -436,7 +436,7 @@ export default async function ProductDetailPage({ params }: Props) {
           </div>
 
           {/* Info */}
-          <div className="flex flex-col">
+          <div className="flex min-w-0 flex-col">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span>{product.category.name}</span>
               {product.brand && (

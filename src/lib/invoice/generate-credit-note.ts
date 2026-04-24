@@ -216,7 +216,8 @@ export function generateCreditNotePdf(data: CreditNoteData): Uint8Array {
 
   const tableHead = [["Položka", "Počet", "Cena/ks", "Vráceno"]];
   const tableBody = data.items.map((item) => {
-    const name = item.size ? `${item.name} (vel. ${item.size})` : item.name;
+    const hasVelMarker = /\(vel\.\s*[^)]+\)/i.test(item.name);
+    const name = item.size && !hasVelMarker ? `${item.name} (vel. ${item.size})` : item.name;
     return [
       name,
       String(item.quantity),
