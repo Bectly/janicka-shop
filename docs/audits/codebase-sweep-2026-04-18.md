@@ -1,8 +1,35 @@
 # Codebase Quality Sweep — 2026-04-18
 
-**Agent**: Trace (DevLoop C4808, re-verified C4811/C4817/C4821/C4826/C4833/C4839, task #367)
+**Agent**: Trace (DevLoop C4808, re-verified C4811/C4817/C4821/C4826/C4833/C4839/C4839#2, task #367)
 **Scope**: `src/**`, `prisma/**`, `next.config.ts`, `package.json`
 **Commands run**: `npx tsc --noEmit`, `npm run lint`, `npx ts-prune`, `npx depcheck`, targeted grep sweeps
+
+## C4839 re-verification #2 addendum (2026-04-24, post-f093d03) — shuffle size filter lands clean
+
+Re-ran after bectly's manual hot-feature `f093d03` (size filter on Objevuj overlay, XS–XXXL). 2-file diff: `src/app/api/products/random/route.ts` (+27/-3) + `src/components/shop/shuffle-overlay.tsx` (+72/-4).
+
+- **`tsc --noEmit`**: ✅ PASS.
+- **`npm run lint`**: ✅ **0 errors, 0 warnings** — C4829 MILESTONE now preserved through **6 consecutive commits** (#477, CWV audit, SEO-1, carousel, R2 preconnect, shuffle-size).
+- **Security spot-check on the new `/api/products/random` surface**:
+  - `sizes` query param: whitelisted `/^[A-Za-z0-9.,/+\-_ ]+$/` regex + 8-char length cap per token + 20-token array cap + Set dedup. No injection into Prisma query (filter happens in-memory via `JSON.parse(p.sizes)` on fetched rows — no raw interpolation). ✅
+  - `exclude` param: trimmed + 128-char length cap + 500-token array cap, passed only to Prisma `notIn` (parameterized). ✅
+  - `limit`: clamped `[1, 30]`. ✅
+  - No new `dangerouslySetInnerHTML` / `innerHTML` / `eval` / shell calls introduced.
+- **Client code (`shuffle-overlay.tsx`)**:
+  - `localStorage` hydration of persisted sizes filters through `(SIZE_OPTIONS as readonly string[]).includes(s)` allowlist before state set — immune to tampered keys. ✅
+  - Size-change effect clears queue + refetches; no stale-closure / race — guarded by `fetchingRef`.
+  - Fisher-Yates shuffle uses `Math.random()` (non-cryptographic) — acceptable for UX randomization; not a security surface. ✅
+- **Re-grep post-commit** (no regression from C4839 addendum #1):
+  - `dangerouslySetInnerHTML`: **17 occurrences / 7 files**, unchanged (only meta hit is a comment in `src/lib/structured-data.ts` about safety). Zero raw-`__html` sites. ✅
+  - `@ts-ignore` / `@ts-nocheck` / `@ts-expect-error`: **0**. ✅
+  - Hardcoded secrets grep (`sk_live|sk_test|cfk_|Bearer [A-Za-z0-9]{20,}`): 0 hits in `src/`. ✅
+- **ts-prune backlog unchanged**: P1-7e trio (reservation/products-cache/packeta) + P1-7f (`updateSubscriberPreferences`) still the only open candidates — shuffle-size diff is net-additive, no new orphans.
+
+**Net state after C4839 #2**: audit holds. New feature passes all gates and adds zero new findings. Lead's CWV sprint (#481/#482/#483) remains the next implementation priority; P1-7 close-out still queued behind it.
+
+No further Trace action needed until CWV sprint lands or lint regresses — task #367 remains a stable re-verification anchor.
+
+---
 
 ## C4839 re-verification addendum (2026-04-24) — gates green through SEO-1 + UX-1 + R2-preconnect landings
 
