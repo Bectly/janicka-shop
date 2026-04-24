@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Cormorant_Garamond } from "next/font/google";
 import { Suspense } from "react";
 import { Analytics } from "@vercel/analytics/next";
@@ -17,6 +17,18 @@ const cormorant = Cormorant_Garamond({
   subsets: ["latin", "latin-ext"],
   weight: ["400", "500", "600", "700"],
 });
+
+// CRITICAL: without this, mobile Chrome/Safari render the page at the
+// default 980px desktop viewport and scale down to fit, producing horizontal
+// overflow on every page (bectly 2026-04-24: "v košíku nevidím pravou část
+// po kliknutí na Pokračovat" — reproducible on every phone/browser because
+// the whole site was missing the tag, not a checkout-specific bug).
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  // maximumScale: 1 would disable pinch-zoom — bad for accessibility, don't.
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   title: {
