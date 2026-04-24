@@ -1,16 +1,15 @@
 {
   "last_bolt_commit_cycle": 4812,
-  "cycle": 4811,
-  "directive": "C4811 Lead: Closed #449 (Bolt f7c16c1 — NewProductsSection moved above CategoriesSection in src/app/(shop)/page.tsx, Suspense+ScrollReveal wrappers kept, priority={i<4} unchanged, build green) and #450 (Bolt 0696288 — POST /api/cart/restore?token=<cartId> cuid+7d guard, /cart?restore=<cartId> Zustand setState hydration with 1.5s Czech success screen → /checkout, all 3 email CTAs retargeted from /checkout → /cart?restore=<cartId>, logger.info [CartRestored] audit, no deps/schema change, build green). Working tree clean except lead-control + STRUCTURE.md autogen. Rewired Bolt priority: #421 test-infra is now THE critical path (Trace's e2e/cart.spec.ts + e2e/pdp.spec.ts have been in tree since 391945a but cannot run without @playwright/test + dotenv + scripts + unit tests on comgate.ts/qr-platba.ts) → #451 product card mobile IA polish → backlog (no new Bolt items queued). Trace continues #367 read-only sweep (in_progress, atomic <2min). Sage idle — standing micro-polish queue. Guard #368 P0 unchanged. DevChat 0 new, no DUE monitors (comgate/cz-competitors/vinted-cz-media all fresh C4808). No unacked bectly feedback. Second-hand scope intact.",
+  "cycle": 4812,
+  "directive": "C4812 Lead: CLOSED #421 (Bolt 85ae24c — test harness lit up: vitest unit tests on comgate.ts 14× + qr-platba.ts 12× + rewrote orphan campaign-lock.test.ts → vitest 12× [DB-hitting Part 2 dropped per 'no network in unit tests'], /playwright-report + /test-results added to .gitignore; npm test 38/38 pass, test:e2e --list 20 specs, tsc clean, build green; infra already in HEAD so zero package.json churn). Trace's e2e/cart.spec.ts + e2e/pdp.spec.ts (391945a) can now run end-to-end. Bolt rewired to #451 product-card mobile IA polish (Sage C4803 P3 — sizes row above price, brand/category condensation, Tailwind-only, src/components/shop/product-card.tsx). Trace continues #367 read-only sweep. Sage idle (standing micro-polish queue). Guard #368 P0 unchanged. DevChat 0 new, no DUE monitors (comgate/cz-competitors/vinted-cz-media all fresh from C4808, 0.3h ago). No unacked bectly feedback. Second-hand scope intact.",
   "lanes": {
     "BOLT": {
       "status": "active",
-      "force_next_task": 421,
+      "force_next_task": 451,
       "next_priority": [
-        421,
         451
       ],
-      "notes": "#449 CLOSED (f7c16c1 — NewProductsSection above Categories, build green). #450 CLOSED (0696288 — /api/cart/restore cuid+7d + /cart?restore token-hydration + 3 email CTA retargeting + [CartRestored] audit, no deps/schema, build green). TOP PRIORITY NOW: #421 TEST-INFRA — this is the critical path. Trace's e2e/cart.spec.ts + e2e/pdp.spec.ts have been sitting in tree since 391945a (C4810) and cannot run without runtime. Deliverable: add @playwright/test + dotenv to devDependencies, wire npm scripts (`test:e2e`, `test:unit`), copy .env.local → .env.test template, first unit tests on src/lib/payments/comgate.ts (signature/HMAC verify) + src/lib/payments/qr-platba.ts (SPAYD encoding) per Trace C4801 gap. Atomic commit, build green, do not touch e2e content (Trace owns). After #421: #451 product-card mobile IA polish (Sage P3 — sizes row above price, brand/category condensation, Tailwind-only, src/components/shop/product-card.tsx). Do NOT touch #367 Trace lane. Do NOT start Hetzner."
+      "notes": "#421 CLOSED (85ae24c — vitest harness green: comgate 14×, qr-platba 12×, campaign-lock 12× [parts 1/3/4 pure, part 2 dropped per no-network rule]; /playwright-report + /test-results gitignored; 38/38 pass, test:e2e --list 20 specs, tsc clean, build green). TOP PRIORITY: #451 product-card mobile IA polish — Sage C4803 P3 finding. Deliverable: in src/components/shop/product-card.tsx move sizes pill row ABOVE the price/free-shipping block so 320w mobile doesn't clip sizes; condense brand + category into a single muted line above title to reclaim vertical space. Tailwind-only, ≤80 LoC delta, no prop changes, no new deps. Acceptance: on 375w viewport, first two sizes pills visible without scroll; brand+category single line; build green. Atomic commit. After #451: no queued Bolt items — go idle and await next Lead cycle. Do NOT touch #367 Trace lane. Do NOT start Hetzner."
     },
     "TRACE": {
       "status": "active",
@@ -50,13 +49,13 @@
     "Mock payment provider (src/lib/payments/mock.ts) MUST stay prod-guarded — NODE_ENV=production with PAYMENT_PROVIDER=mock must throw in provider factory. Do not soften this guard.",
     "Sage, Trace, Guard MUST NOT wait on Hetzner DNS/certbot (#329) or daemon boot (#334) — they have independent lanes.",
     "Bolt owns all Hetzner migration code paths (nginx/pm2/env/redis/bullmq/systemd); other agents do not touch them.",
-    "Tasks #337, #352, #353, #364, #365, #369, #370, #344, #371, #373, #374, #375, #376, #377, #378, #412, #413, #414, #415, #416, #417, #420, #422, #449, #450, #452 are DONE — do not re-raise as blockers.",
+    "Tasks #337, #352, #353, #364, #365, #369, #370, #344, #371, #373, #374, #375, #376, #377, #378, #412, #413, #414, #415, #416, #417, #420, #421, #422, #449, #450, #452 are DONE — do not re-raise as blockers.",
     "Task #375 was rejected (C4386 f8cf472) — do not reopen without fresh production repro.",
     "QA worker exit=143 pattern: keep Sage + Trace tasks atomic (<2min execution, single-purpose) until root cause diagnosed.",
     "#346 blocked until P6.3 traffic-cut completes — no Vercel-baseline visual QA possible pre-Hetzner cut.",
     "#342/#340/#347 all gated on Bolt P1-P4 Hetzner app deploy + bectly pre-approval + off-peak — Trace must NOT attempt ad-hoc prod failover/perf/restore drills."
   ],
-  "last_updated": "2026-04-24T10:40",
+  "last_updated": "2026-04-24T10:50",
   "pause": {},
   "paused_at_bolt_cycle": 4795
 }
