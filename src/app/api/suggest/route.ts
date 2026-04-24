@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const MAPY_API_URL = "https://api.mapy.com/v1/suggest";
 const MAPY_TIMEOUT_MS = 5_000;
@@ -10,6 +11,16 @@ const MAPY_TIMEOUT_MS = 5_000;
  * Uses RUIAN (official CZ address registry) for best Czech address coverage.
  */
 export async function GET(req: NextRequest) {
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
+  const rl = checkRateLimit(`suggest:${ip}`, 30, 60_000);
+  if (!rl.success) {
+    return NextResponse.json(
+      { items: [], error: "Příliš mnoho požadavků. Zkuste to za chvíli." },
+      { status: 429, headers: { "Retry-After": "60" } },
+    );
+  }
+
   const query = req.nextUrl.searchParams.get("q")?.trim();
   if (!query || query.length < 2 || query.length > 200) {
     return NextResponse.json({ items: [] });
