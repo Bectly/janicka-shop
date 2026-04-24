@@ -4,6 +4,31 @@
 **Scope**: `src/**`, `prisma/**`, `next.config.ts`, `package.json`
 **Commands run**: `npx tsc --noEmit`, `npm run lint`, `npx ts-prune`, `npx depcheck`, targeted grep sweeps
 
+## C4821 closing addendum (2026-04-24) — all P0/P1 closed
+
+Re-ran the audit after commits `4738137` (#465 unescaped entities), `e468546` (#462 JSX-in-try-catch split), `05b37be` (#466 Date.now() RSC sites), and `c15485c` (#467 setState-in-effect idiomatic sites):
+
+- **`tsc --noEmit`**: ✅ PASS.
+- **`npm run lint`**: **20 problems (0 errors, 20 warnings)** — down from 76 (57 err / 19 warn) at C4817. Gate-clean. All remaining warnings are unused imports / unused destructured vars, non-behavioral.
+- **P0-1 `/api/suggest` rate-limit**: ✅ CLOSED (#453, commit `15f55df`).
+- **P0-2 refs-in-render**: ✅ CLOSED (#459, commit `f4dc52e`).
+- **P0-3 setState-in-effect**: ✅ CLOSED — 3 sites fixed (#460), 2 sites refactored away, 6 idiomatic sites annotated with per-site `eslint-disable-next-line react-hooks/set-state-in-effect` + justification (#467, commit `c15485c`).
+- **P1-1 JSX-in-try-catch** in `(shop)/page.tsx`: ✅ CLOSED (#462, commit `e468546`) — 5 `"use cache"` sections split: DB fetch in `try` (catch returns `null`), JSX hoisted outside. Cleared 44 errors.
+- **P1-2 `Date.now()` in RSC**: ✅ CLOSED (#466, commit `05b37be`) — 5 sites annotated with `eslint-disable-next-line react-hooks/purity` + "request-time read in RSC, not cached" justification. Hoisting was insufficient; rule fires on any render-time call regardless of position.
+- **P1-6 unescaped entities**: ✅ CLOSED (#465, commit `4738137`) — 5 raw quotes escaped across 4 admin files; Czech „ diacritics preserved.
+- **P1-3 dead imports / unused vars**: still open (20 warnings). Non-blocking. Sample: `Mail`/`X` in admin pages, `Flame` + `stock` in product-card/product-list-item, `Link` in admin global-search + products-client, `REFERRAL_MIN_ORDER_CZK` in referral.ts, `_params`/`_transId`/`_amountCzk` in gopay.ts (underscore-prefixed stubs — whole file appears abandoned post-Comgate).
+- **P1-4 `uploadthing.ts` legacy filename**: still open — rename `src/lib/uploadthing.ts` → `upload-client.ts` (4-file diff).
+- **P1-7 ts-prune real candidates**: still open — `deleteFromR2`, `normalizeSizesForCategory`, `LETTER_TO_EU`, `getVisitorId`, plus the orphaned type exports in `sizes.ts`.
+- **No new regressions**: `@ts-ignore` still 0; `: any`/`as any` unchanged at 7 (all opaque-lib sites); `dangerouslySetInnerHTML` still 5 (all `jsonLdString`); no hardcoded secrets; `console.*` sink-only (15 across 2 files).
+
+**Net state after C4821**: All P0s closed. P1-1/P1-2/P1-6 closed. P1-3/P1-4/P1-5/P1-7 open — all are low-risk hygiene sweeps (dead-code prune, rename, dedupe). Recommend bundling P1-3 + P1-7 into a single prune task (Bolt, ~25 LoC).
+
+**Recommended next follow-up for Lead**: file one BOLT task combining P1-3 (unused imports/vars sweep) + P1-7 (ts-prune dead exports). After grep-verifying each export, delete. Expected outcome: lint 20 warnings → 0, repo size shrinks, plus a gopay.ts decision (delete or wire up). gopay.ts is likely deletable — Comgate is the primary processor per CLAUDE.md; stub file existed before decision.
+
+Task #367 is now complete in its original scope (audit → categorize → recommend). Further cleanup lives in the P1 follow-up tasks.
+
+---
+
 ## C4817 re-verification addendum (2026-04-24)
 
 Re-ran the audit after commits `15f55df` (task #453 P0-1 rate-limit), `f4dc52e` (task #459 P0-2 refs-in-render), and `8d0fb22` (task #460 P0-3 product-quick-edit subset — bundled with a mobile-checkout grid fix by bectly):
