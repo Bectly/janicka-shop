@@ -13,7 +13,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { InstantSearch } from "./instant-search";
+import { InstantSearch } from "./instant-search-lazy";
 import { useShuffleStore } from "@/lib/shuffle-store";
 
 const categories = [

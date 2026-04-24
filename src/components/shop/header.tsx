@@ -4,7 +4,7 @@ import Image from "next/image";
 import { CartButton } from "./cart-button";
 import { WishlistHeaderButton } from "./wishlist-header-button";
 import { MobileNav } from "./mobile-nav";
-import { InstantSearch } from "./instant-search";
+import { InstantSearch } from "./instant-search-lazy";
 import { DesktopNavLinks } from "./desktop-nav-links";
 import { AccountHeaderButton } from "./account-header-button";
 import { getCategoriesWithCounts } from "@/lib/category-counts";

@@ -79,9 +79,12 @@ interface InstantSearchProps {
   /** "icon" = compact square icon button (header default).
    *  "bar"  = full-width search-bar styled trigger (mobile nav). */
   variant?: "icon" | "bar";
+  /** When true, open the dialog immediately on mount. Used by the lazy
+   *  wrapper to auto-open after it finishes dynamic-importing this module. */
+  defaultOpen?: boolean;
 }
 
-export function InstantSearch({ variant = "icon" }: InstantSearchProps) {
+export function InstantSearch({ variant = "icon", defaultOpen = false }: InstantSearchProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -181,6 +184,13 @@ export function InstantSearch({ variant = "icon" }: InstantSearchProps) {
       requestAnimationFrame(() => inputRef.current?.focus());
     }
   }, [open]);
+
+  // Auto-open on mount when the lazy wrapper requests it (post-hydration)
+  useEffect(() => {
+    if (defaultOpen) openSearch();
+    // openSearch is stable via useCallback; run exactly once per mount intent
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Lock body scroll when open — snapshot previous value so we don't clobber
   // any outer scroll lock (e.g. base-ui Sheet/Dialog already active).
