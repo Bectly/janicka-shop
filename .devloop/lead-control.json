@@ -1,18 +1,17 @@
 {
-  "last_bolt_commit_cycle": 4794,
-  "cycle": 4794,
-  "directive": "C4794 Lead: R2 triad & P4.3 queue tests BOTH shipped this cycle. (a) Bolt #415 Vinted→R2 migration LIVE on Turso prod — 343 products / 1965 URLs / 0 failures in ~6min, verify-no-vinted-urls.ts returns 0, rejectVintedHost schema refine blocks regressions (b9637e8) → marked done. (b) Trace #337 queue integration tests green 4/4 after orphan-subprocess fix (c25aa81) → marked done. Bolt auto-picked up #417 Mock payment provider (P1, in_progress) — unblocks end-to-end checkout testing before GoPay. Sage has new P1 from bectly: #416 mobile checkout step 2+ viewport overflow (user-reported UX blocker). Pipeline now: Bolt finishes #417, Sage fixes #416, Trace still owns #413 prod calibration (narrower relevance now that migration purged all vinted.* URLs, but still valuable to confirm no 'undefined/' prefix URLs from historical env-mismatch era remain). Blocker 2229 ack: #334 preview NXDOMAIN still unresolved, task already marked done, not blocking other lanes. Guard #368 P0 > #366 unchanged. No DUE monitors (comgate 04-25, cz-comp 04-30, vinted-cz-media PAUSED). QA worker exit=143 pattern persists → Trace tasks MUST stay atomic <2min. NOTE: Bolt flagged R2 access keys missing from .env.local (used JARVIS DB r2-janicka inline) — owner action item, not a blocker.",
+  "last_bolt_commit_cycle": 4795,
+  "cycle": 4795,
+  "directive": "C4795 Lead: Both P1s shipped this cycle. Bolt #417 Mock payment provider live (7ae16f3) — env-flagged mock/comgate/gopay factory, /checkout/mock-payment gate, Comgate webhook refactored to share process-status.ts, prod guard rejects mock, build green. Sage #416 mobile checkout step 2+ overflow fixed (2a53d00) — auto-scroll active accordion into view, scroll-mt-20 clearing sticky header, bottom spacer sized to actual MobileCheckoutSummary (h-16 → h-[calc(4.5rem+env(safe-area-inset-bottom))]) so final CTA not hidden on notched phones. Both marked done. #346 Sage visual QA post-migration moved to blocked (matches Sage's own C4794 2d2944f commit — requires 100% Hetzner traffic before baseline snapshot possible). Follow-ups queued: Bolt #419 Playwright e2e for mock payment flow (flagged missing in 7ae16f3 commit); Sage #420 visual QA of /checkout/mock-payment gate page (mobile+desktop). Trace stays on #413 atomic R2 prod calibration. Guard #368 P0 > #366 unchanged. Blocker 2229 ack'd — #334 already done in DB, NXDOMAIN advisory stale; no action needed on Trace lane. No DUE monitors (comgate 140/168h, cz-competitors 12/168h, vinted-cz-media 144/720h paused). QA worker exit=143 pattern persists → tight atomic scope on Sage #420 and Bolt #419.",
   "lanes": {
     "BOLT": {
-      "status": "paused",
-      "force_next_task": 417,
+      "status": "active",
+      "force_next_task": 419,
       "next_priority": [
-        417,
-        341,
-        343,
+        419,
+        420,
         65
       ],
-      "notes": "IN PROGRESS: #417 Mock payment provider ('TEST CARD' for checkout testing before GoPay). Keep scope tight: add a mock provider next to Comgate/Stripe in src/lib/payments/ that accepts a hardcoded test card (e.g. 4242 4242 4242 4242 → auto-success, 4000 0000 0000 0002 → auto-decline), wire into checkout paymentMethod selector behind NEXT_PUBLIC_ENABLE_MOCK_PAYMENT env flag (default false in prod), sync webhook to flip Order.paymentStatus=paid and fire confirmation email exactly like real provider. NO schema changes if avoidable — reuse existing Payment model. npm run build green required. DO NOT pre-emptively start Hetzner lane (#341/#343 marked done in DB; re-verify if resurfaced). R2 triad fully closed — no more R2 tasks this week unless #413 Trace flags repair need. After #417 ships, HOLD for Lead directive."
+      "notes": "PRIORITY: #419 Playwright e2e for mock payment flow — explicitly flagged missing in 7ae16f3 commit. Scope (atomic, one file): tests/e2e/checkout-mock-payment.spec.ts. Set env PAYMENT_PROVIDER=mock before dev server in test fixture. Flow: visit /, click first product, add to cart, open cart, proceed to checkout, fill delivery (jméno, adresa, město, PSČ, telefon, email), select Packeta or doručení, advance to payment step, click Zaplatit → assert URL = /checkout/mock-payment, select 'Úspěšná platba' radio, click Zaplatit → assert redirect to /objednavka/[id] with status paragraph containing 'zaplaceno' or 'paid'. One test, one describe block. npm run build green. No refactors. No Page Object abstractions — inline selectors. If Playwright not installed, HOLD and report — do NOT install deps without Lead sign-off. After #419 ships, HOLD for Lead directive. R2 triad fully closed — no more R2 tasks. Do NOT start Hetzner lane (#341/#343 done, #334 done)."
     },
     "TRACE": {
       "status": "paused",
@@ -25,18 +24,18 @@
         340,
         347
       ],
-      "notes": "PRIORITY: #413 R2 prod integrity calibration — atomic (<2min to dodge QA exit=143). (1) Turso query via @libsql/client: `SELECT COUNT(*) FROM Product WHERE images LIKE '%undefined/%' OR images LIKE '%//undefined%'` → report count. If >0 also dump `SELECT id, substr(images,1,120) LIMIT 5` for repair spec. (2) Live probe /api/upload: POST 1KB PNG, assert response.url starts with `https://pub-` or configured R2 public host (NOT 'undefined/'); log URL verbatim in commit. Report format: rows_needing_repair=N, live_upload_url=<url>, assertion=pass/fail. CONTEXT UPDATE: After #415 migration all 1965 Vinted URLs are now R2-hosted, so the dataset #413 surveys is fresh — any remaining 'undefined/' rows are historical from pre-#412 env-mismatch era only. If count=0 AND assertion=pass → R2 triad CLOSED; Trace advances to #367 (codebase quality sweep) → #358 (remote console E2E) → #351 (pre-migration audit) → #340 (cron + R2 backup rehearsal). Skip #1 (cancelled). Do NOT re-audit r2.ts — covered by #412 ship. Standing e2e: category switching + customer portal C3709."
+      "notes": "UNCHANGED from C4794. PRIORITY: #413 R2 prod integrity calibration — atomic (<2min to dodge QA exit=143). (1) Turso query via @libsql/client: `SELECT COUNT(*) FROM Product WHERE images LIKE '%undefined/%' OR images LIKE '%//undefined%'` → report count. If >0 also dump `SELECT id, substr(images,1,120) LIMIT 5` for repair spec. (2) Live probe /api/upload: POST 1KB PNG, assert response.url starts with `https://pub-` or configured R2 public host (NOT 'undefined/'); log URL verbatim in commit. Report format: rows_needing_repair=N, live_upload_url=<url>, assertion=pass/fail. After #415 migration all 1965 Vinted URLs are R2-hosted, so dataset #413 surveys is fresh — any remaining 'undefined/' rows are historical from pre-#412 env-mismatch era only. If count=0 AND assertion=pass → R2 triad CLOSED; Trace advances to #367 → #358 → #351 → #340. Skip #1 (cancelled). Do NOT re-audit r2.ts — covered by #412 ship. Standing e2e: category switching + customer portal C3709."
     },
     "SAGE": {
       "status": "active",
-      "force_next_task": 416,
+      "force_next_task": 420,
       "next_priority": [
-        416,
+        420,
         "pdp_measurements_grid_polish",
         "cart_sold_item_toast",
         "checkout_accordion_polish"
       ],
-      "notes": "PRIORITY: #416 Mobile cart/checkout step 2+ viewport overflow — P1 user-reported (bectly, 07:32 CEST): 'V košíku od kroku 2 je na telefonu velký problém, obsah nevidíš celý.' Likely suspects: (a) fixed header + fixed checkout summary double-stacking → scrollable area shrunk to <40vh; (b) vh-based heights not accounting for mobile browser chrome (100vh > real viewport on iOS Safari) — use dvh/svh; (c) accordion content overflow-hidden clipping expanded sections; (d) bottom-pinned CTA overlapping form fields without bottom padding on the scroll container. Fix path: open src/app/(shop)/checkout/ + cart components on Chrome DevTools mobile emulation (iPhone 13, Pixel 5), reproduce step 2 overflow, identify broken container, prefer `dvh` + `min-h-0` + explicit pb-[NNpx] over `h-screen`/`100vh`. Deliverable: scroll-works at iPhone SE (375×667) through iPhone 14 Pro Max — no content clipped, bottom CTA always reachable without scroll jank. UI-only, no schema/actions changes. KEEP SAGE TASKS ATOMIC — recent failure rate 30/40 suggests scope creep; if #416 exceeds 45min, split into per-step fixes. After #416 ships: resume standing micro-polish queue (pdp grid, cart sold toast, checkout accordion completed-state checkmark)."
+      "notes": "PRIORITY: #420 Visual QA /checkout/mock-payment gate page (new from Bolt 7ae16f3). Atomic scope: start dev with PAYMENT_PROVIDER=mock, add any product to cart, checkout through to mock-payment gate. Verify on mobile (iPhone 13, 390w) and desktop (1280w): (a) gate card centered, readable on 320-1920w, no overflow; (b) test-mode banner (orange/yellow warning) visible above gate, Czech copy with diacritics intact; (c) success/failure radio + submit button fit viewport on iPhone SE (375×667) without scroll; (d) touch targets ≥44×44px; (e) if banner+gate stack vertically on mobile, no overlap with fixed header; (f) returning to /checkout after failure doesn't leave zombie state. Fix ONLY if broken — do not add features. Commit ≤5 file deltas. Atomic — no refactors, no migrations, no copy rewrites. If #420 exceeds 45min or worker exits 143, split into per-viewport sub-tasks. After #420 ships: resume standing micro-polish queue."
     },
     "GUARD": {
       "status": "paused",
@@ -46,20 +45,22 @@
         366,
         330
       ],
-      "notes": "UNCHANGED from C4793. PRIORITY: #368 SEC-2 P0 ttyd credential leak in ps — move to Cf-Access-Jwt-Assertion header validation. Then #366 SEC-1 Remote Console full-stack audit (iframe architecture jarvis-janicka.jvsatnik.cz, CSP frame-src/frame-ancestors, sandbox attrs, CF Access JWT propagation, referrer-policy, SameSite cookies, audit log integrity, xterm purge confirmation). Deliverable for #366: docs/security/jarvis-bridge-audit.md. Then #330 nginx hardening (CSP frame-src comgate.eu, rate limits, 20M cap scoped to /api/uploadthing*, X-Forwarded-* sanitization, TLS 1.2+)."
+      "notes": "UNCHANGED from C4793-4795. PRIORITY: #368 SEC-2 P0 ttyd credential leak in ps — move to Cf-Access-Jwt-Assertion header validation. Then #366 SEC-1 Remote Console full-stack audit. Then #330 nginx hardening. Deliverable for #366: docs/security/jarvis-bridge-audit.md."
     }
   },
   "hard_rules": [
     "DO NOT re-add Vinted campaign (see NEVER_ADD_VINTED_CAMPAIGN.md).",
     "NEVER push to remote without bectly's explicit request.",
-    "DO NOT re-introduce vinted.* URLs — rejectVintedHost schema refine in admin/products/actions.ts blocks this at create/update/quickCreate; all Product.images now R2-hosted (C4794 migration).",
+    "DO NOT re-introduce vinted.* URLs — rejectVintedHost schema refine in admin/products/actions.ts blocks at create/update/quickCreate; all Product.images now R2-hosted (C4794 migration).",
+    "Mock payment provider (src/lib/payments/mock.ts) MUST stay prod-guarded — NODE_ENV=production with PAYMENT_PROVIDER=mock must throw in provider factory. Do not soften this guard.",
     "Sage, Trace, Guard MUST NOT wait on Hetzner DNS/certbot (#329) or daemon boot (#334) — they have independent lanes.",
     "Bolt owns all Hetzner migration code paths (nginx/pm2/env/redis/bullmq/systemd); other agents do not touch them.",
-    "Tasks #337, #352, #353, #364, #365, #369, #370, #344, #371, #373, #374, #375, #376, #377, #378, #412, #414, #415 are DONE — do not re-raise as blockers.",
+    "Tasks #337, #352, #353, #364, #365, #369, #370, #344, #371, #373, #374, #375, #376, #377, #378, #412, #414, #415, #416, #417 are DONE — do not re-raise as blockers.",
     "Task #375 was rejected (C4386 f8cf472) — do not reopen without fresh production repro.",
-    "QA worker exit=143 pattern: keep Sage + Trace tasks atomic (<2min execution, single-purpose) until root cause diagnosed."
+    "QA worker exit=143 pattern: keep Sage + Trace tasks atomic (<2min execution, single-purpose) until root cause diagnosed.",
+    "#346 blocked until P6.3 traffic-cut completes — no Vercel-baseline visual QA possible pre-Hetzner cut."
   ],
-  "last_updated": "2026-04-24T05:50",
+  "last_updated": "2026-04-24T05:58",
   "pause": {},
-  "paused_at_bolt_cycle": 4794
+  "paused_at_bolt_cycle": 4795
 }
