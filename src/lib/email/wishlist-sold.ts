@@ -58,7 +58,7 @@ function buildSimilarCard(p: SimilarProduct, baseUrl: string): string {
 
   const imageHtml = firstImage
     ? `<img src="${escapeHtml(firstImage)}" alt="${escapeHtml(p.name)}" width="180" style="width: 100%; height: 200px; object-fit: cover; display: block; border: 0;" />`
-    : `<div style="width: 100%; height: 200px; background: ${BRAND.blush}; line-height: 200px; text-align: center; font-family: ${FONTS.serif}; font-size: 36px; color: ${BRAND.primaryLight};">&#10022;</div>`;
+    : `<div style="width: 100%; height: 200px; background: ${BRAND.blush}; line-height: 200px; text-align: center; font-family: ${FONTS.serif}; font-style: italic; font-size: 48px; color: ${BRAND.primaryLight};">J</div>`;
 
   const discount =
     p.compareAt && p.compareAt > p.price

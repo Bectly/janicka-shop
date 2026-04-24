@@ -11,7 +11,7 @@ import {
   PAYMENT_METHOD_LABELS,
   SHIPPING_METHOD_LABELS,
 } from "@/lib/constants";
-import { ArrowLeft, Clock, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Clock, AlertTriangle, CheckCircle2, Mail, PenSquare } from "lucide-react";
 import { OrderStatusSelect } from "./order-status-select";
 import { TrackingNumberForm } from "./tracking-number-form";
 import { PacketaSection } from "./packeta-section";
@@ -188,13 +188,32 @@ export default async function AdminOrderDetailPage({ params }: Props) {
               Zákazník
             </h2>
             <div className="mt-3 space-y-1 text-sm">
-              <p className="font-medium text-foreground">
+              <Link
+                href={`/admin/customers/${order.customer.id}`}
+                className="font-medium text-foreground hover:text-primary hover:underline"
+              >
                 {order.customer.firstName} {order.customer.lastName}
-              </p>
+              </Link>
               <p className="text-muted-foreground">{order.customer.email}</p>
               {order.customer.phone && (
                 <p className="text-muted-foreground">{order.customer.phone}</p>
               )}
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2 border-t pt-3">
+              <Link
+                href={`/admin/mailbox?q=${encodeURIComponent(order.customer.email)}`}
+                className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <Mail className="size-3.5" />
+                Zobrazit konverzace
+              </Link>
+              <Link
+                href={`/admin/mailbox/compose?to=${encodeURIComponent(order.customer.email)}`}
+                className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <PenSquare className="size-3.5" />
+                Napsat e-mail
+              </Link>
             </div>
           </div>
 

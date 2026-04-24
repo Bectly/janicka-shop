@@ -29,6 +29,8 @@ import {
   Ban,
   Lock,
   AlertTriangle,
+  MessagesSquare,
+  PenSquare,
 } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -263,6 +265,22 @@ export default async function CustomerDetailPage({
                 ? ` · Poslední přihlášení ${formatDate(customer.lastLoginAt)}`
                 : ""}
             </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Link
+                href={`/admin/mailbox?q=${encodeURIComponent(customer.email)}`}
+                className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <MessagesSquare className="size-3.5" />
+                Zobrazit konverzace
+              </Link>
+              <Link
+                href={`/admin/mailbox/compose?to=${encodeURIComponent(customer.email)}`}
+                className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <PenSquare className="size-3.5" />
+                Napsat e-mail
+              </Link>
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">

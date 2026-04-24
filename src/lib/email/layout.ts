@@ -1,3 +1,5 @@
+import { signUnsubscribeToken } from "@/lib/unsubscribe-token";
+
 /**
  * Shared branded email layout — Janička Shop.
  * One header + footer + card wrapper used by all transactional/marketing emails
@@ -105,7 +107,7 @@ export function renderDivider(): string {
         <td align="center" style="padding: 0;">
           <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr>
             <td style="border-top: 1px solid ${BRAND.border}; width: 80px; line-height: 1px; font-size: 0;">&nbsp;</td>
-            <td style="padding: 0 12px; line-height: 1; font-size: 14px; color: ${BRAND.primaryLight};">&#10022;</td>
+            <td style="padding: 0 12px; line-height: 1; font-family: ${FONTS.serif}; font-style: italic; font-size: 16px; color: ${BRAND.primaryLight};">J</td>
             <td style="border-top: 1px solid ${BRAND.border}; width: 80px; line-height: 1px; font-size: 0;">&nbsp;</td>
           </tr></table>
         </td>
@@ -119,6 +121,16 @@ interface LayoutOpts {
   unsubscribeUrl?: string;
   /** Override default unsubscribe explanation copy (newsletter-default if omitted). */
   unsubscribeText?: string;
+  /**
+   * Explicit gate for the unsubscribe footer block. Default behaviour mirrors
+   * pre-phase-3: rendered whenever `unsubscribeUrl` is provided. Set to `false`
+   * to suppress on transactional emails (order confirmation, shipping) where
+   * unsubscribe is legally unnecessary. Set to `true` with `recipientEmail` to
+   * have the layout build the HMAC-signed URL itself (centralised pattern).
+   */
+  showUnsubscribe?: boolean;
+  /** Recipient email used to generate an HMAC-signed unsubscribe URL when no `unsubscribeUrl` is supplied. */
+  recipientEmail?: string;
   footerNote?: string;
   showTagline?: boolean;
   lang?: string;
@@ -135,6 +147,8 @@ export function renderLayout({
   contentHtml,
   unsubscribeUrl,
   unsubscribeText,
+  showUnsubscribe,
+  recipientEmail,
   footerNote,
   showTagline = true,
   lang = "cs",
@@ -148,8 +162,14 @@ export function renderLayout({
     ? `<div style="display: none; max-height: 0; overflow: hidden; font-size: 1px; line-height: 1px; color: ${bg}; opacity: 0;">${escapeHtml(preheader)}</div>`
     : "";
 
-  const unsubscribeHtml = unsubscribeUrl
-    ? `<p style="margin: 12px 0 0; font-family: ${FONTS.sans}; font-size: 11px; color: ${BRAND.charcoalMuted}; line-height: 1.6;">${escapeHtml(unsubscribeText ?? "Tenhle email ti chodí, protože ses přihlásila k odběru novinek.")} <a href="${escapeHtml(unsubscribeUrl)}" style="color: ${BRAND.charcoalSoft}; text-decoration: underline;">Odhlásit se</a></p>`
+  const resolvedUnsubscribeUrl = unsubscribeUrl
+    ?? (showUnsubscribe && recipientEmail
+      ? `${baseUrl}/odhlasit-novinky?token=${encodeURIComponent(signUnsubscribeToken(recipientEmail))}`
+      : undefined);
+  const shouldShowUnsubscribe = showUnsubscribe !== false && !!resolvedUnsubscribeUrl;
+
+  const unsubscribeHtml = shouldShowUnsubscribe
+    ? `<p style="margin: 12px 0 0; font-family: ${FONTS.sans}; font-size: 11px; color: ${BRAND.charcoalMuted}; line-height: 1.6;">${escapeHtml(unsubscribeText ?? "Tenhle email ti chodí, protože ses přihlásila k odběru novinek.")} <a href="${escapeHtml(resolvedUnsubscribeUrl!)}" style="color: ${BRAND.charcoalSoft}; text-decoration: underline;">Odhlásit se</a></p>`
     : "";
 
   const footerNoteHtml = footerNote

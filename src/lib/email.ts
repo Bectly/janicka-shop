@@ -469,7 +469,7 @@ function buildCrossSellProductsHtml(products: CrossSellProduct[]): string {
       const productUrl = `${baseUrl}/products/${p.slug}`;
       const imageHtml = p.image
         ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" width="240" style="width: 100%; height: 220px; object-fit: cover; display: block; border: 0;" />`
-        : `<div style="width: 100%; height: 220px; background: ${BRAND.blush}; display: block; line-height: 220px; text-align: center; font-family: ${FONTS.serif}; font-size: 36px; color: ${BRAND.primaryLight};">&#10022;</div>`;
+        : `<div style="width: 100%; height: 220px; background: ${BRAND.blush}; display: block; line-height: 220px; text-align: center; font-family: ${FONTS.serif}; font-style: italic; font-size: 52px; color: ${BRAND.primaryLight};">J</div>`;
 
       const discount = p.compareAt && p.compareAt > p.price
         ? Math.round(((p.compareAt - p.price) / p.compareAt) * 100)
@@ -623,18 +623,18 @@ function buildNewsletterWelcomeHtml(email: string): string {
   const unsubscribeUrl = `${baseUrl}/odhlasit-novinky?token=${encodeURIComponent(signUnsubscribeToken(email))}`;
 
   const perks = [
-    { icon: "&#10022;", title: "Kousky s příběhem", text: "Každý jediný svého druhu. Co si vybereš, jiná už mít nebude." },
-    { icon: "&#9679;", title: "Novinky první", text: "Ranní drop ti chodí dřív, než se objeví na webu." },
-    { icon: "&#10047;", title: "Udržitelná radost", text: "Kvalitní značky za zlomek ceny, s čistým svědomím." },
-    { icon: "&#9733;", title: "Rychlé doručení", text: "Zásilkovna nebo Česká pošta — u tebe do pár dní." },
+    { numeral: "01", title: "Kousky s příběhem", text: "Každý jediný svého druhu. Co si vybereš, jiná už mít nebude." },
+    { numeral: "02", title: "Novinky první", text: "Ranní drop ti chodí dřív, než se objeví na webu." },
+    { numeral: "03", title: "Udržitelná radost", text: "Kvalitní značky za zlomek ceny, s čistým svědomím." },
+    { numeral: "04", title: "Rychlé doručení", text: "Zásilkovna nebo Česká pošta — u tebe do pár dní." },
   ];
 
   const perksHtml = perks
     .map(
       (p) => `
       <tr>
-        <td style="padding: 10px 0; vertical-align: top; width: 32px;">
-          <div style="width: 28px; height: 28px; line-height: 28px; text-align: center; background: ${BRAND.blush}; border-radius: 50%; color: ${BRAND.primary}; font-size: 14px;">${p.icon}</div>
+        <td style="padding: 10px 0; vertical-align: top; width: 36px;">
+          <div style="width: 32px; height: 32px; line-height: 32px; text-align: center; background: ${BRAND.blush}; border-radius: 50%; color: ${BRAND.primary}; font-family: ${FONTS.serif}; font-style: italic; font-size: 13px; font-weight: 600; letter-spacing: 0.02em;">${p.numeral}</div>
         </td>
         <td style="padding: 10px 0 10px 14px; vertical-align: top; font-family: ${FONTS.sans};">
           <p style="margin: 0 0 2px; font-family: ${FONTS.serif}; font-size: 16px; font-weight: 600; color: ${BRAND.charcoal};">${p.title}</p>
