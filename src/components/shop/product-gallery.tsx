@@ -64,6 +64,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [lightboxDismissY, setLightboxDismissY] = useState(0);
+  const [isLbDismissing, setIsLbDismissing] = useState(false);
   const imgContainerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{
     dragging: boolean;
@@ -240,13 +241,17 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
   const handleLbDismissStart = useCallback((e: React.TouchEvent) => {
     if (isZoomed) return;
     lbDismissRef.current = { startY: e.touches[0].clientY, dismissing: false };
+    setIsLbDismissing(false);
   }, [isZoomed]);
 
   const handleLbDismissMove = useCallback((e: React.TouchEvent) => {
     if (isZoomed) return;
     const dy = e.touches[0].clientY - lbDismissRef.current.startY;
     if (Math.abs(dy) > 15) {
-      lbDismissRef.current.dismissing = true;
+      if (!lbDismissRef.current.dismissing) {
+        lbDismissRef.current.dismissing = true;
+        setIsLbDismissing(true);
+      }
       setLightboxDismissY(dy * 0.6);
     }
   }, [isZoomed]);
@@ -254,6 +259,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
   const handleLbDismissEnd = useCallback(() => {
     if (!lbDismissRef.current.dismissing) return;
     lbDismissRef.current.dismissing = false;
+    setIsLbDismissing(false);
     if (Math.abs(lightboxDismissY) > 100) {
       closeLightbox();
     } else {
@@ -575,7 +581,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
               opacity: lightboxDismissY !== 0
                 ? Math.max(0.3, 1 - Math.abs(lightboxDismissY) / 300)
                 : undefined,
-              transition: lbDismissRef.current.dismissing
+              transition: isLbDismissing
                 ? undefined
                 : "transform 200ms ease, opacity 200ms ease",
             }}

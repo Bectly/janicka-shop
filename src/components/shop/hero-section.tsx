@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -30,15 +30,13 @@ function generatePetals(count: number) {
 
 export function HeroSection() {
   const [mounted, setMounted] = useState(false);
-  const petalsRef = useRef(generatePetals(12));
+  const [petals] = useState(() => generatePetals(12));
 
   useEffect(() => {
     // Trigger entrance animation after mount
     const raf = requestAnimationFrame(() => setMounted(true));
     return () => cancelAnimationFrame(raf);
   }, []);
-
-  const petals = petalsRef.current;
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-brand-light/40 via-blush to-champagne-light/60">

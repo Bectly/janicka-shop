@@ -1,15 +1,16 @@
 {
-  "last_bolt_commit_cycle": 4813,
-  "cycle": 4813,
-  "directive": "C4813 Lead: CLOSED #451 (Bolt c1f8da7 — product-card.tsx standard variant rebuilt with flex-col + sm:order-* responsive ordering so mobile sees sizes before price while desktop layout is unchanged; brand/category condensed onto one truncated line with tighter tracking; size-pill restyled to outlined bg-background + border foreground/15 to stop collision with filled CONDITION_COLORS badge; Czech diacritics preserved; build green). Bolt rewired to #453 [P0-SEC] /api/suggest rate-limit — Trace C4811 P0-1 follow-up, 1-liner checkRateLimit guard against MAPY_API_KEY 62,500/mo drain during launch window. Trace continues #367 read-only sweep (atomic chunks). Sage idle (standing micro-polish queue). Guard #368 P0 unchanged. DevChat 0 new, no DUE monitors (all three fresh from C4808, 0.6h ago). No unacked bectly feedback. Second-hand scope intact.",
+  "last_bolt_commit_cycle": 4814,
+  "cycle": 4814,
+  "directive": "C4814 Lead: CLOSED #453 (Bolt 15f55df — /api/suggest now guarded by checkRateLimit 30/min/IP via src/lib/rate-limit.ts, x-forwarded-for first-hop with 127.0.0.1 fallback, 429 JSON body + Retry-After:60 header; tsc clean, build green — Trace C4811 P0-1 resolved). Bolt rewired to #459 [P0] refs-in-render fix (Trace C4811 P0-2: product-gallery.tsx:578 lbDismissRef read inside inline style + hero-section.tsx:50 petalsRef read during JSX — React 19 stale-render hazards, 2-file atomic). Trace continues #367 read-only sweep (atomic chunks). Sage idle (standing micro-polish queue). Guard #368 P0 unchanged. DevChat 0 new, no DUE monitors (comgate/cz-competitors/vinted-cz-media all 0.6h fresh from C4808). No unacked bectly feedback. Second-hand scope intact.",
   "lanes": {
     "BOLT": {
       "status": "active",
-      "force_next_task": 453,
+      "force_next_task": 459,
       "next_priority": [
-        453
+        459
       ],
-      "notes": "#451 CLOSED (c1f8da7 — product-card standard variant flex-col + sm:order-* response ordering, brand/category truncated single line, size-pill outlined so it no longer collides with CONDITION_COLORS badge; build green). TOP PRIORITY: #453 [P0-SEC] /api/suggest rate-limit. Trace C4811 P0-1 finding: src/app/api/suggest/route.ts proxies Mapy.com with MAPY_API_KEY and has ZERO rate limiting — a trivial script can drain the 62,500-call/month free tier and knock out address autocomplete during the launch window. Fix: at top of the GET handler apply checkRateLimit(\"suggest:\" + ip, 30, 60_000) from src/lib/rate-limit.ts (same pattern already used in /api/upload and /api/admin/jarvis); return 429 with JSON error body + Retry-After header on exceed. Derive ip from request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() with '127.0.0.1' fallback. Acceptance: tsc clean, next build green, one-file change (no schema, no new deps), atomic commit. After #453: no queued Bolt items — go idle and await next Lead cycle. Do NOT touch #367 Trace lane. Do NOT start Hetzner."
+      "notes": "#453 CLOSED (15f55df — /api/suggest rate-limit 30/min/IP, checkRateLimit(\"suggest:\" + ip, 30, 60_000), x-forwarded-for first hop with 127.0.0.1 fallback, 429 JSON + Retry-After:60 header, tsc clean, build green). TOP PRIORITY: #459 [P0] refs-in-render fix. Trace C4811 P0-2 finding (docs/audits/codebase-sweep-2026-04-18.md): two sites read refs during JSX render — React 19 flags as stale-render hazards. (1) src/components/shop/product-gallery.tsx:578 — lbDismissRef.current.dismissing inside inline style transition (wrong transition on wrong frame during swipe). (2) src/components/shop/hero-section.tsx:50 — petalsRef.current inside petals.map during JSX construction. Fix: promote ref-read value to state via useSyncExternalStore OR useState+sync in handler OR useDeferredValue — pick smallest change per site independently. Acceptance: tsc clean, next build green, lint P0-2 warnings gone (other 80 unchanged), no visual regression on PDP lightbox swipe-dismiss nor hero petals, atomic commit. DO NOT expand to P0-3 setState-in-effect (separate follow-up). After #459: no queued Bolt items — go idle and await next Lead cycle. Do NOT touch #367 Trace lane. Do NOT start Hetzner.",
+      "source_finding": "docs/audits/codebase-sweep-2026-04-18.md P0-2 (Trace C4811)"
     },
     "TRACE": {
       "status": "active",
@@ -19,7 +20,7 @@
         358,
         351
       ],
-      "notes": "#452 CLOSED (391945a — cart.spec.ts add→remove→empty-state→re-add→reload persistence + pdp.spec.ts gallery/measurements/wishlist/add-to-cart label flip; tsconfig-excluded so no build impact; runtime gate belongs to Bolt #421). Continue #367 read-only codebase sweep (in_progress, atomic chunks <2min to dodge QA exit=143 pattern). After #367: #358 E2E ttyd admin console flow BLOCKED on Guard #368 P0 — do NOT start until #368 fix visible. Then #351 pre-migration code quality. Skip #342/#340/#347 (Hetzner-gated). Unpaused — no more 'until_next_bolt_commit' gate needed, #367 is independent read-only work."
+      "notes": "Continue #367 read-only codebase sweep (in_progress, atomic chunks <2min to dodge QA exit=143 pattern). C4811 re-verification cemented the follow-up queue: P0-1 now DONE via Bolt #453 (15f55df), P0-2 now assigned to Bolt #459, P0-3 setState-in-effect (7 sites) still open for a future Bolt task. After #367: #358 E2E ttyd admin console flow BLOCKED on Guard #368 P0 — do NOT start until #368 fix visible. Then #351 pre-migration code quality. Skip #342/#340/#347 (Hetzner-gated). Unpaused — #367 is independent read-only work."
     },
     "SAGE": {
       "status": "paused",
@@ -29,7 +30,7 @@
         "cart_sold_item_toast",
         "checkout_accordion_polish"
       ],
-      "notes": "Idle this cycle — #420 closed C4798, no forced task. #346 remains blocked on P6.3 Hetzner traffic-cut. If worker lights up unprompted, pick smallest micro-polish from standing queue: (1) PDP měření grid readability on 320w, (2) cart 'prodáno mezitím' toast copy + timing, (3) checkout accordion step-indicator contrast. Atomic scope per polish (≤5 file deltas, no refactors). Do NOT attempt #346 full visual QA — blocked. Do NOT touch checkout/mock-payment (owned by Bolt #419 + already visually QA'd C4797 69c7015)."
+      "notes": "Idle this cycle — #420 closed C4798, no forced task. #346 remains blocked on P6.3 Hetzner traffic-cut. If worker lights up unprompted, pick smallest micro-polish from standing queue: (1) PDP měření grid readability on 320w, (2) cart 'prodáno mezitím' toast copy + timing, (3) checkout accordion step-indicator contrast. Atomic scope per polish (≤5 file deltas, no refactors). Do NOT attempt #346 full visual QA — blocked. Do NOT touch checkout/mock-payment (owned by Bolt #419 + already visually QA'd C4797 69c7015). Do NOT touch product-gallery or hero-section this cycle — owned by Bolt #459."
     },
     "GUARD": {
       "status": "paused",
@@ -49,13 +50,13 @@
     "Mock payment provider (src/lib/payments/mock.ts) MUST stay prod-guarded — NODE_ENV=production with PAYMENT_PROVIDER=mock must throw in provider factory. Do not soften this guard.",
     "Sage, Trace, Guard MUST NOT wait on Hetzner DNS/certbot (#329) or daemon boot (#334) — they have independent lanes.",
     "Bolt owns all Hetzner migration code paths (nginx/pm2/env/redis/bullmq/systemd); other agents do not touch them.",
-    "Tasks #337, #352, #353, #364, #365, #369, #370, #344, #371, #373, #374, #375, #376, #377, #378, #412, #413, #414, #415, #416, #417, #420, #421, #422, #449, #450, #451, #452 are DONE — do not re-raise as blockers.",
+    "Tasks #337, #352, #353, #364, #365, #369, #370, #344, #371, #373, #374, #375, #376, #377, #378, #412, #413, #414, #415, #416, #417, #420, #421, #422, #449, #450, #451, #452, #453 are DONE — do not re-raise as blockers.",
     "Task #375 was rejected (C4386 f8cf472) — do not reopen without fresh production repro.",
     "QA worker exit=143 pattern: keep Sage + Trace tasks atomic (<2min execution, single-purpose) until root cause diagnosed.",
     "#346 blocked until P6.3 traffic-cut completes — no Vercel-baseline visual QA possible pre-Hetzner cut.",
     "#342/#340/#347 all gated on Bolt P1-P4 Hetzner app deploy + bectly pre-approval + off-peak — Trace must NOT attempt ad-hoc prod failover/perf/restore drills."
   ],
-  "last_updated": "2026-04-24T10:55",
+  "last_updated": "2026-04-24T11:00",
   "pause": {},
   "paused_at_bolt_cycle": 4795
 }

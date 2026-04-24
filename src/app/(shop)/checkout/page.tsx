@@ -191,14 +191,18 @@ function CheckoutStep({
       </button>
 
       {/* Collapsible content.
-          w-full + min-w-0 on the grid wrapper is CRITICAL: CSS `display: grid`
-          without explicit column sizing auto-fits to children's min-content,
-          so long labels ("Zásilkovna — výdejní místo" + description) push the
-          grid wider than its parent card. Parent's overflow-hidden then clips
-          the right side — user sees half-cut prices ("6" / "9" / "8" instead
-          of "69 Kč" / "99 Kč" / "89 Kč"). bectly 2026-04-24, iPhone X 375px. */}
+          ACTUAL ROOT CAUSE of "pravou část nevidím" overflow on mobile:
+          `display: grid` without explicit column sizing computes its width from
+          children's min-content. When step 0 collapses (grid-rows-[0fr]), its
+          height goes to 0 but its WIDTH is still the min-content of all form
+          fields inside (Jméno/Příjmení/Email inputs + checkbox labels) —
+          measured as ~439px. That pushes the outer step card to 441px wide,
+          and because all 4 step cards share a column, the doprava+platba
+          cards inherit the same 441px overflow. bectly 2026-04-24.
+          Fix: pin the grid's single column to `minmax(0, 1fr)` so it fills
+          parent but never exceeds it. */}
       <div
-        className={`grid w-full min-w-0 max-w-full transition-all duration-300 ease-in-out ${
+        className={`grid grid-cols-[minmax(0,1fr)] w-full min-w-0 max-w-full transition-all duration-300 ease-in-out ${
           isActive
             ? "grid-rows-[1fr] opacity-100"
             : "grid-rows-[0fr] opacity-0"
