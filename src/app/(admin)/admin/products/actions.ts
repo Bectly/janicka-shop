@@ -3,6 +3,7 @@
 import { getDb } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath, revalidateTag } from "next/cache";
+import { after } from "next/server";
 import { invalidateProductCaches } from "@/lib/redis";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -93,6 +94,7 @@ const productImageSchema = z.object({
     )
     .refine(rejectVintedHost, "Fotky hostované na Vinted nejsou povolené — musí být nahrané do našeho úložiště"),
   alt: z.string().max(200).default(""),
+  caption: z.string().max(300).optional(),
 });
 
 const imagesSchema = z.array(
@@ -106,7 +108,7 @@ function parseImages(formData: FormData): string {
   try {
     const raw = JSON.parse((formData.get("images") as string) || "[]");
     const parsed = imagesSchema.parse(raw);
-    // Normalize to {url, alt}[] format
+    // Normalize to {url, alt[, caption]}[] format
     const normalized = parsed.map((item) =>
       typeof item === "string" ? { url: item, alt: "" } : item,
     );
@@ -224,6 +226,19 @@ export async function createProduct(formData: FormData) {
   await db.priceHistory.create({
     data: { productId: product.id, price: parsed.price },
   });
+
+  // Best-effort: kick off Gemini alt-text generation for any newly-uploaded images
+  // that lack alt. Fire-and-forget so admin redirect isn't blocked by the API call.
+  if (process.env.GEMINI_API_KEY) {
+    const productId = product.id;
+    after(async () => {
+      try {
+        await backfillAltTextInternal(productId);
+      } catch {
+        /* best-effort — log already inside */
+      }
+    });
+  }
 
   revalidateTag("products", "max");
   revalidateTag("admin-products", "max");
@@ -426,6 +441,19 @@ export async function quickCreateProduct(formData: FormData) {
   await db.priceHistory.create({
     data: { productId: product.id, price: parsed.price },
   });
+
+  // Quick-add path: auto-generate alt-text for fresh uploads. Mobile admins
+  // rarely write alt manually — Gemini fills this gap so SEO/a11y survives.
+  if (process.env.GEMINI_API_KEY) {
+    const productId = product.id;
+    after(async () => {
+      try {
+        await backfillAltTextInternal(productId);
+      } catch {
+        /* best-effort — log already inside */
+      }
+    });
+  }
 
   revalidateTag("products", "max");
   revalidateTag("admin-products", "max");
@@ -829,4 +857,97 @@ export async function deleteProduct(id: string) {
   revalidatePath("/admin/products");
   revalidatePath("/products");
   revalidatePath("/");
+}
+
+/**
+ * Internal alt-text backfill — no auth check. Used both by the public
+ * server action below and by the post-create `after()` hook (where the
+ * auth/request context may already be torn down).
+ */
+async function backfillAltTextInternal(
+  id: string,
+  options: { force?: boolean } = {},
+): Promise<{
+  ok: boolean;
+  generated: number;
+  skipped: number;
+  failed: number;
+  reason?: string;
+  images?: { url: string; alt: string; caption?: string }[];
+}> {
+  if (!process.env.GEMINI_API_KEY) {
+    return { ok: false, generated: 0, skipped: 0, failed: 0, reason: "missing_gemini_key" };
+  }
+
+  const { generateAltText } = await import("@/lib/ai/gemini-alt-text");
+  const { parseProductImages } = await import("@/lib/images");
+
+  const db = await getDb();
+  const product = await db.product.findUnique({
+    where: { id },
+    include: { category: { select: { name: true } } },
+  });
+  if (!product) return { ok: false, generated: 0, skipped: 0, failed: 0, reason: "not_found" };
+
+  const images = parseProductImages(product.images);
+  let sizes: string[] = [];
+  try { sizes = JSON.parse(product.sizes); } catch { /* */ }
+
+  let generated = 0, skipped = 0, failed = 0;
+  const next = await Promise.all(
+    images.map(async (img) => {
+      if (!options.force && img.alt && img.alt.length > 0) {
+        skipped++;
+        return img;
+      }
+      const out = await generateAltText({
+        imageUrl: img.url,
+        productName: product.name,
+        brand: product.brand,
+        condition: product.condition,
+        sizes,
+        categoryName: product.category.name,
+      });
+      if (!out) {
+        failed++;
+        return img;
+      }
+      generated++;
+      return { url: img.url, alt: out.altText, caption: out.caption };
+    }),
+  );
+
+  if (generated > 0) {
+    await db.product.update({
+      where: { id },
+      data: { images: JSON.stringify(next) },
+    });
+    await invalidateProductCaches({ slug: product.slug, id });
+    revalidatePath(`/products/${product.slug}`);
+    revalidatePath("/admin/products");
+  }
+
+  return { ok: true, generated, skipped, failed, images: next };
+}
+
+/**
+ * Public server action: generate Czech alt-text + caption via Gemini Flash
+ * for product images that are missing it. Auth-gated + rate-limited.
+ * Pass { force: true } to overwrite existing alt-text.
+ */
+export async function generateProductAltText(
+  id: string,
+  options: { force?: boolean } = {},
+): Promise<{
+  ok: boolean;
+  generated: number;
+  skipped: number;
+  failed: number;
+  reason?: string;
+  images?: { url: string; alt: string; caption?: string }[];
+}> {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
+  return backfillAltTextInternal(id, options);
 }

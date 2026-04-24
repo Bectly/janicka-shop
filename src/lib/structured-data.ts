@@ -10,7 +10,7 @@ import {
   FREE_SHIPPING_THRESHOLD as FREE_SHIPPING_CZK,
   SHIPPING_PRICES,
 } from "@/lib/constants";
-import { getImageUrls } from "@/lib/images";
+import { getImageUrls, parseProductImages } from "@/lib/images";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://jvsatnik.cz";
@@ -149,6 +149,27 @@ const MEASUREMENT_LABELS: Record<string, string> = {
 export function buildProductSchema(product: ProductForSchema) {
   const productImages = getImageUrls(product.images);
 
+  // Rich ImageObject array — when alt/caption exist, we emit ImageObject (with
+  // contentUrl + description + caption) instead of a bare URL. Per Schema.org +
+  // Google AI search guidance, descriptive image metadata raises citation rate
+  // ~73% (Scout Update #3). Falls back to plain string URLs when no metadata.
+  const structuredImages = parseProductImages(product.images);
+  const hasMetadata = structuredImages.some((i) => i.alt || i.caption);
+  const imageField = hasMetadata
+    ? structuredImages.map((img) =>
+        img.alt || img.caption
+          ? {
+              "@type": "ImageObject" as const,
+              contentUrl: img.url,
+              ...(img.alt ? { description: img.alt } : {}),
+              ...(img.caption ? { caption: img.caption } : {}),
+            }
+          : img.url,
+      )
+    : productImages.length > 0
+      ? productImages
+      : undefined;
+
   // Parse colors and sizes for structured attributes
   let colors: string[] = [];
   let sizes: string[] = [];
@@ -229,7 +250,7 @@ export function buildProductSchema(product: ProductForSchema) {
     name: product.name,
     description: product.description,
     url: `${BASE_URL}/products/${product.slug}`,
-    image: productImages.length > 0 ? productImages : undefined,
+    image: imageField,
     sku: product.sku,
     brand: product.brand
       ? { "@type": "Brand", name: product.brand }

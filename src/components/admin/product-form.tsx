@@ -20,7 +20,8 @@ import { parseDefectImages } from "@/lib/defects";
 import type { ProductImage, ProductMeasurements } from "@/lib/images";
 import { uploadFiles } from "@/lib/upload-client";
 import { getSizeGroupsForCategory } from "@/lib/sizes";
-import { Save, Ruler, Video, X, Loader2, Search } from "lucide-react";
+import { generateProductAltText } from "@/app/(admin)/admin/products/actions";
+import { Save, Ruler, Video, X, Loader2, Search, Sparkles } from "lucide-react";
 
 interface Category {
   id: string;
@@ -164,7 +165,15 @@ export function ProductForm({ categories, product, action }: ProductFormProps) {
       {/* Image captions — shown when images exist */}
       {structuredImages.length > 0 && (
         <div className="space-y-2">
-          <Label>Popisky fotek (pro SEO a přístupnost)</Label>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <Label>Popisky fotek (pro SEO a přístupnost)</Label>
+            {product?.id && (
+              <AltTextGenerateButton
+                productId={product.id}
+                onResult={(images) => setStructuredImages(images)}
+              />
+            )}
+          </div>
           <div className="grid gap-2 sm:grid-cols-2">
             {structuredImages.map((img, i) => (
               <div key={`${img.url}-${i}`} className="flex items-center gap-2">
@@ -610,5 +619,71 @@ export function ProductForm({ categories, product, action }: ProductFormProps) {
         </Button>
       </div>
     </form>
+  );
+}
+
+interface AltTextGenerateButtonProps {
+  productId: string;
+  onResult: (images: ProductImage[]) => void;
+}
+
+function AltTextGenerateButton({ productId, onResult }: AltTextGenerateButtonProps) {
+  const [pending, setPending] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  async function handleClick(force: boolean) {
+    setPending(true);
+    setMsg(null);
+    try {
+      const res = await generateProductAltText(productId, { force });
+      if (!res.ok) {
+        setMsg(
+          res.reason === "missing_gemini_key"
+            ? "Chybí GEMINI_API_KEY v env"
+            : "Generování selhalo",
+        );
+      } else {
+        if (res.images) onResult(res.images);
+        setMsg(
+          `Vygenerováno ${res.generated} | přeskočeno ${res.skipped}` +
+            (res.failed > 0 ? ` | selhalo ${res.failed}` : ""),
+        );
+      }
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Chyba");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      {msg && <span className="text-xs text-muted-foreground">{msg}</span>}
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        disabled={pending}
+        onClick={() => handleClick(false)}
+        title="Doplní AI alt-text jen u fotek bez popisku"
+      >
+        {pending ? (
+          <Loader2 className="size-3.5 animate-spin" />
+        ) : (
+          <Sparkles className="size-3.5" />
+        )}
+        AI alt-text
+      </Button>
+      <Button
+        type="button"
+        size="sm"
+        variant="ghost"
+        disabled={pending}
+        onClick={() => handleClick(true)}
+        title="Přepíše všechny popisky znovu"
+      >
+        Přegenerovat
+      </Button>
+    </div>
   );
 }

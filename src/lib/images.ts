@@ -6,20 +6,23 @@
 export interface ProductImage {
   url: string;
   alt: string;
+  caption?: string;
 }
 
 /**
  * Parse product images JSON into structured format.
- * Handles both legacy string[] and new {url, alt}[] shapes.
+ * Handles legacy string[] and {url, alt[, caption]}[] shapes.
  */
 export function parseProductImages(imagesJson: string): ProductImage[] {
   try {
     const parsed = JSON.parse(imagesJson);
     if (!Array.isArray(parsed)) return [];
-    return parsed.map((item: string | { url: string; alt?: string }) => {
+    return parsed.map((item: string | { url: string; alt?: string; caption?: string }) => {
       if (typeof item === "string") return { url: item, alt: "" };
       if (item && typeof item.url === "string") {
-        return { url: item.url, alt: item.alt || "" };
+        const out: ProductImage = { url: item.url, alt: item.alt || "" };
+        if (item.caption) out.caption = item.caption;
+        return out;
       }
       return null;
     }).filter((img): img is ProductImage => img !== null);
