@@ -32,7 +32,9 @@ export default function ShopLayout({
         aria-hidden="true"
       />
       <BackToTop />
-      <CookieConsentBanner />
+      <Suspense>
+        <CookieConsentBanner />
+      </Suspense>
       <Suspense>
         <PullToRefresh />
       </Suspense>
