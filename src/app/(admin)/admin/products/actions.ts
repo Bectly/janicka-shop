@@ -73,17 +73,31 @@ function parseSeoAndNote(formData: FormData): {
   };
 }
 
+const VINTED_HOST_RE = /(?:^|\.)vinted\.(net|com)$/i;
+
+function rejectVintedHost(u: string): boolean {
+  try {
+    return !VINTED_HOST_RE.test(new URL(u).hostname);
+  } catch {
+    return false;
+  }
+}
+
 const productImageSchema = z.object({
-  url: z.string().url().refine(
-    (u) => u.startsWith("https://") || u.startsWith("http://"),
-    "Pouze HTTP/HTTPS URL",
-  ),
+  url: z
+    .string()
+    .url()
+    .refine(
+      (u) => u.startsWith("https://") || u.startsWith("http://"),
+      "Pouze HTTP/HTTPS URL",
+    )
+    .refine(rejectVintedHost, "Fotky hostované na Vinted nejsou povolené — musí být nahrané do našeho úložiště"),
   alt: z.string().max(200).default(""),
 });
 
 const imagesSchema = z.array(
   z.union([
-    z.string().url(), // legacy string[] format
+    z.string().url().refine(rejectVintedHost, "Fotky hostované na Vinted nejsou povolené — musí být nahrané do našeho úložiště"),
     productImageSchema, // new {url, alt}[] format
   ]),
 ).max(10);

@@ -165,9 +165,15 @@ async function test2MidJobKill(): Promise<TestResult> {
     { attempts: 5, backoff: { type: "fixed", delay: 500 } },
   );
 
+  // IMPORTANT: `npx tsx -e` spawns a *nested* node --eval child. A plain
+  // child.kill("SIGKILL") terminates the npx/tsx wrapper but orphans the real
+  // worker, which then keeps renewing the Redis lock forever and defeats the
+  // stalled-recovery mechanism under test. Launch detached so the whole
+  // process group shares a PGID, then kill the group.
   const child = spawn("npx", ["tsx", "-e", workerScript], {
     env: { ...process.env, REDIS_URL },
     stdio: ["ignore", "pipe", "pipe"],
+    detached: true,
   });
 
   // Wait until subprocess reports it picked the job (READY), then kill it.
@@ -181,8 +187,18 @@ async function test2MidJobKill(): Promise<TestResult> {
     });
   });
 
+  const killGroup = (): void => {
+    if (child.pid) {
+      try {
+        process.kill(-child.pid, "SIGKILL");
+      } catch {
+        try { child.kill("SIGKILL"); } catch { /* ignore */ }
+      }
+    }
+  };
+
   if (!picked) {
-    child.kill("SIGKILL");
+    killGroup();
     await q.close();
     await conn.quit();
     return {
@@ -194,8 +210,8 @@ async function test2MidJobKill(): Promise<TestResult> {
     };
   }
 
-  log("killing subprocess mid-job (SIGKILL)");
-  child.kill("SIGKILL");
+  log("killing subprocess mid-job (SIGKILL to process group)");
+  killGroup();
   await new Promise((r) => setTimeout(r, 200));
 
   // Debug: verify job is still in active state (stuck on dead worker).
