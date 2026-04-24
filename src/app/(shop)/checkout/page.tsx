@@ -137,7 +137,10 @@ function CheckoutStep({
   const isAccessible = step <= activeStep || isCompleted;
 
   return (
-    <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+    <div
+      data-checkout-step={step}
+      className="rounded-xl border bg-card shadow-sm overflow-hidden scroll-mt-20 lg:scroll-mt-24"
+    >
       {/* Header — clickable when completed (to re-edit) */}
       <button
         type="button"
@@ -241,6 +244,30 @@ export default function CheckoutPage() {
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(
     new Set(),
   );
+
+  // Auto-scroll the active step into view on mobile whenever it changes.
+  // Without this, tapping "Pokračovat" on step N leaves step N+1's form body
+  // below the fold — the sticky header (56px) + fixed summary bar (~83px on
+  // notched phones) shrink the usable viewport, and users report "není vidět
+  // celá obrazovka". Desktop keeps its natural flow (sidebar stays visible).
+  const previousActiveStep = useRef(activeStep);
+  useEffect(() => {
+    if (previousActiveStep.current === activeStep) return;
+    previousActiveStep.current = activeStep;
+    if (typeof window === "undefined") return;
+    if (window.matchMedia("(min-width: 1024px)").matches) return;
+
+    const el = document.querySelector<HTMLElement>(
+      `[data-checkout-step="${activeStep}"]`,
+    );
+    if (!el) return;
+    // Wait for the 300ms accordion grid-rows transition so we scroll to the
+    // step's settled position, not a mid-animation intermediate.
+    const t = window.setTimeout(() => {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 320);
+    return () => window.clearTimeout(t);
+  }, [activeStep]);
 
   // Form field refs for validation + summaries
   const firstNameRef = useRef<HTMLInputElement>(null);
@@ -604,6 +631,15 @@ export default function CheckoutPage() {
         </span>
         <h1 className="font-heading text-3xl font-bold text-foreground">Objednávka</h1>
       </div>
+
+      {process.env.NEXT_PUBLIC_PAYMENT_PROVIDER === "mock" && (
+        <div className="mt-4 rounded-lg border border-champagne bg-champagne-light px-4 py-3 text-sm text-champagne-dark">
+          <strong>🧪 Testovací režim</strong> — použijte kartu{" "}
+          <code className="font-mono">4111 1111 1111 1111</code> (úspěch) nebo{" "}
+          <code className="font-mono">4000 0000 0000 0002</code> (zamítnutí).
+          Žádné peníze nebudou strženy.
+        </div>
+      )}
 
       {state.error && (
         <div
@@ -1338,8 +1374,14 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        {/* Mobile bottom padding for sticky bar */}
-        <div className="h-16 lg:hidden" />
+        {/* Mobile bottom padding for sticky MobileCheckoutSummary bar.
+            Bar height = min-h-12 trigger (48px) + 1px border + env(safe-area-inset-bottom)
+            (up to ~34px on notched iPhones). 4.5rem (72px) + safe-area keeps the
+            final "Zaplatit" / "Objednat" button and helper text clear of the bar. */}
+        <div
+          aria-hidden="true"
+          className="h-[calc(4.5rem+env(safe-area-inset-bottom,_0px))] lg:hidden"
+        />
       </form>
 
       {/* Mobile sticky summary bar */}

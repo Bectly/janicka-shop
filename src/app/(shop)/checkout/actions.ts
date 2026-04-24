@@ -4,7 +4,7 @@ import { getDb } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getOrCreateVisitorId } from "@/lib/visitor";
-import { createComgatePayment } from "@/lib/payments/comgate";
+import { getPaymentProvider } from "@/lib/payments/provider";
 import { rateLimitCheckout } from "@/lib/rate-limit";
 import { sendOrderConfirmationEmail, sendAdminNewOrderEmail } from "@/lib/email";
 import { dispatchEmail } from "@/lib/email-dispatch";
@@ -612,12 +612,14 @@ export async function createOrder(
       console.error("[Checkout] Failed to mark abandoned carts as recovered:", err);
     });
 
+  const provider = getPaymentProvider();
+
   // ---------------------------------------------------------------------------
-  // CARD payment — inline flow (no server-side redirect).
-  // Client-side ComgatePaymentSection reads pendingPayment and calls
-  // POST /api/payments/comgate/create to get the iframe URL / transactionId.
+  // CARD payment — inline iframe flow (Comgate only).
+  // For mock/gopay, card falls through to the server-redirect flow below (the
+  // inline iframe is Comgate-specific; mock renders its own /checkout/mock-payment page).
   // ---------------------------------------------------------------------------
-  if (data.paymentMethod === "card") {
+  if (data.paymentMethod === "card" && provider.name === "comgate") {
     return {
       error: null,
       fieldErrors: {},
@@ -629,17 +631,20 @@ export async function createOrder(
   }
 
   // ---------------------------------------------------------------------------
-  // BANK TRANSFER — create Comgate payment server-side and redirect.
+  // BANK TRANSFER (or card on mock/gopay) — create payment server-side and redirect.
   // redirect() must be OUTSIDE try-catch to avoid catching Next.js redirect signals.
   // ---------------------------------------------------------------------------
   let paymentRedirectUrl: string;
   try {
-    const payment = await createComgatePayment({
+    const payment = await provider.createPayment({
       refId: order.orderNumber,
       priceCzk: order.total,
       email: order.customerEmail,
       label: `Janička #${order.orderNumber.slice(-8)}`,
-      method: getComgateMethod(data.paymentMethod),
+      method:
+        provider.name === "comgate"
+          ? getComgateMethod(data.paymentMethod)
+          : data.paymentMethod,
       accessToken: order.accessToken ?? undefined,
     });
 

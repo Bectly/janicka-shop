@@ -54,3 +54,19 @@ export class ComgateError extends Error {
     this.name = "ComgateError";
   }
 }
+
+/** Thrown by provider stubs (GoPay, future integrations) when method not yet wired */
+export class PaymentNotImplementedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PaymentNotImplementedError";
+  }
+}
+
+/** Provider-agnostic interface. Any provider (comgate, mock, gopay) must implement this. */
+export interface PaymentProvider {
+  name: "comgate" | "mock" | "gopay";
+  createPayment(params: CreatePaymentParams): Promise<CreatePaymentResult>;
+  getPaymentStatus(transId: string): Promise<PaymentStatusResult>;
+  refundPayment(transId: string, amountCzk?: number): Promise<void>;
+}
