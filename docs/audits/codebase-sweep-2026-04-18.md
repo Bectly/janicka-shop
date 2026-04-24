@@ -632,3 +632,68 @@ Three-round-trip pattern (create-message, findUnique-thread, update-thread) per 
 
 Lane-discipline note: **J is a functional blocker for Phase 4** — Phase 4 attachment download will return 404 for every row written while the bug ships. Recommend J runs before bectly flips `IMAP_*` env in Vercel.
 
+---
+
+## C4866 addendum — row R **integrity-guard checklist** (repeatable gates for email subsystem)
+
+Fold-in per Lead C4863: promote the 4 integrity axes that C4861 row R used one-shot into a repeatable checklist future Trace cycles can run verbatim. Each guard is a single grep/stat pattern with a numeric pass/fail threshold; all four must pass for the email subsystem to be considered clean. This freezes the C4858 + C4859 refactor so a future rush-commit can be caught at audit time.
+
+### Current status (C4866 re-run, HEAD f64a013)
+
+| # | Guard | Command | Threshold | C4866 reading |
+|---|---|---|---|---|
+| G1 | **email.ts LoC ≤ 2400** | `wc -l src/lib/email.ts` | ≤ 2400 | **2369** ✅ (−31 headroom) |
+| G2 | **DOCTYPE purge outside canonical shell** | `grep -rn '<!DOCTYPE' src/ \| grep -v 'src/lib/email/layout.ts' \| grep -v 'api/unsubscribe'` | ≤ 1 hit (the `buildContactEmailHtml` admin-notify drift) | **1** ⚠ (known drift — see G2 drift note below) |
+| G3 | **layout.ts single-source** | `grep -rln 'from "@/lib/email/layout"\|from "./layout"\|from "../email/layout"' src/` | exactly 3 consumers (email.ts, email/wishlist-sold.ts, email/similar-item.ts) | **3** ✅ |
+| G4 | **dingbat-free** (numeric HTML entities outside escape helpers) | `grep -nE '&#(x[0-9A-Fa-f]+\|[0-9]+);' src/lib/email.ts src/lib/email/layout.ts src/lib/email/wishlist-sold.ts src/lib/email/similar-item.ts \| grep -v '&#39;'` | 0 hits | **7** ❌ (6-pointed star ×5, filled circle ×1, ★ ×1, flower ×1 — per row Q C4861) |
+
+**Composite verdict**: 2/4 green (G1, G3), 1/4 amber-known-drift (G2), 1/4 red-cosmetic (G4). G4 is P2, G2 is pre-existing (contact-form admin email lives outside the branded-layout pipeline by design — it's internal ops, not customer-facing). The real gate that matters for future refactors is **G1 (LoC) + G3 (single-source)** — both firm ✅.
+
+### G2 drift note (retained, not upgraded)
+
+`src/app/(shop)/contact/actions.ts:83 buildContactEmailHtml` — hand-rolled DOCTYPE + inline-styled table for the admin notification sent to `kontakt@jvsatnik.cz` when a customer submits the contact form. ~40 LoC of HTML. **Scope call**: this email lands in Janička's own inbox, not a customer's — the branded-layout pipeline is overhead here. Recommend **LEAVE** unless Sage Phase 3 absorbs it during the renderLayout refactor. If touched, drop the full hand-rolled shell in favour of `renderLayout({title:"Nová zpráva…", showUnsubscribe:false})` + a renderInfoCard block. Not worth a standalone task.
+
+### G3 concern (watch, don't regress)
+
+Three consumers is the **cap** — the moment a fourth file lands that imports `renderLayout` / `renderProductGrid` / etc., Phase 4 DOMPurify integration becomes harder to sequence because the per-template sanitisation rule has to fork. If `mailbox/compose` (phase 3 outbound) lands, it MUST import from `layout.ts` (not from `email.ts`) to keep G3 at 3 + mailbox = 4; we accept 4 but not beyond without a Lead call.
+
+### G4 close-out path
+
+7 dingbat entities at the following exact sites (C4866 grep confirmed):
+
+```
+src/lib/email.ts:472   &#10022;  (fallback product-tile glyph — primary image missing)
+src/lib/email.ts:626   &#10022;  (promise grid — Kousky s příběhem)
+src/lib/email.ts:627   &#9679;   (promise grid — Novinky první)
+src/lib/email.ts:628   &#10047;  (promise grid — Udržitelná radost)
+src/lib/email.ts:629   &#9733;   (promise grid — Rychlé doručení)
+src/lib/email/layout.ts:108   &#10022;  (header divider)
+src/lib/email/wishlist-sold.ts:61   &#10022;  (fallback product-tile glyph)
+```
+
+Simple fix: replace `&#10022;` with the word "Janička" at typographic scale or the existing `·` (middle dot) already used in the footer, and convert the 4-item promise grid to pure-text cards (the icon column is decorative and retires cleanly to `display:none` on Outlook anyway). ~15 LoC in `email.ts` + ~3 LoC in `layout.ts` + ~2 LoC in `wishlist-sold.ts`. **Proposed follow-up: SAGE** (Phase 3 rider — do it in the same touch as showUnsubscribe boolean to keep layout.ts under one commit).
+
+### Reproduction (paste into any future Trace cycle)
+
+```bash
+cd /home/bectly/development/projects/janicka-shop
+echo "G1 email.ts LoC: $(wc -l < src/lib/email.ts) (≤ 2400 = PASS)"
+echo "G2 rogue DOCTYPE: $(grep -rln '<!DOCTYPE' src/ | grep -v email/layout.ts | grep -vc api/unsubscribe) known-drift file(s) (≤ 1 = PASS)"
+echo "G3 layout consumers: $(grep -rlE 'from "(@/lib/email/layout|\./layout|\.\./email/layout)"' src/ | wc -l) (= 3 = PASS, = 4 acceptable w/ mailbox compose, > 4 ESCALATE)"
+echo "G4 dingbats: $(grep -nE '&#(x[0-9A-Fa-f]+|[0-9]+);' src/lib/email.ts src/lib/email/layout.ts src/lib/email/wishlist-sold.ts src/lib/email/similar-item.ts | grep -v '&#39;' | wc -l) (= 0 = PASS)"
+```
+
+If any of G1/G3 flips red, the email refactor regressed — block ship and escalate to Lead. G2/G4 flipping to amber or red is cosmetic and fold into the next Sage cycle.
+
+---
+
+## C4866 PERF-VERIFY pointer (task #484)
+
+Full report: `docs/audits/cwv-2026-04-24.md` § "C4866 PERF-VERIFY re-audit". 3 gate verdicts:
+- **#481 CLS ≤ 0.1** — ✅ PASS on home (0.431 → **0.000**), cascades to PDP (0.000) + checkout (0.061).
+- **#482 PDP LCP ≤ 2.5s** — ❌ FAIL but improved (5.04s → 4.59s). `resourceLoadDelay` regressed (2710 → 3206 ms) on sampled sold PDP — suspect greyscale-overlay wrapper delays image discovery. Re-test on a live PDP URL before declaring the fix broken.
+- **#483 cookie LCP off 4/5 routes** — ❌ PARTIAL. SSR shell shipped (41b7c43) but cookie `<p>` is STILL LCP on home/listing/cart/checkout because the banner paragraph is the largest viewport element. Architectural win ≠ scoring win — option B from C4835 (collapsed heading + "Nastavení" expandable) is the residual path. ~20 LoC.
+
+New finding out of the re-audit: **`/cart` CLS regressed 0.020 → 0.423** (4.2× budget) — the #481 Suspense-min-h discipline never got applied to `src/app/(shop)/cart/page.tsx`. Recommend BOLT task "[PERF-CART-CLS] replicate #481 min-h skeletons on cart route, ~10 LoC" — **P0** if Den matek drops ship through cart.
+
+
