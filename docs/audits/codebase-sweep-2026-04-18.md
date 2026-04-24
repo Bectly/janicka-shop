@@ -1,8 +1,34 @@
 # Codebase Quality Sweep — 2026-04-18
 
-**Agent**: Trace (DevLoop C4808, re-verified C4811/C4817/C4821/C4826/C4833/C4839/C4839#2, task #367)
+**Agent**: Trace (DevLoop C4808, re-verified C4811/C4817/C4821/C4826/C4833/C4839/C4839#2/C4844, task #367)
 **Scope**: `src/**`, `prisma/**`, `next.config.ts`, `package.json`
 **Commands run**: `npx tsc --noEmit`, `npm run lint`, `npx ts-prune`, `npx depcheck`, targeted grep sweeps
+
+## C4844 re-verification addendum (2026-04-24, post-8a3e1b9) — devchat excision clean
+
+Re-ran after Bolt's task #491 devchat purge (commit `8a3e1b9`, -912 / +20 LoC across 11 files): widget + 3 API routes + `lib/devchat-widget-auth` + Prisma `DevChatMessage` model + `.devchat-bubble-pos` CSS + shop/admin layout references. `DEVCHAT_API_KEY` renamed to `LEAD_API_KEY` in the surviving `/api/dev-picks` route (Lead is the only remaining authorized caller).
+
+- **`tsc --noEmit`**: ✅ PASS.
+- **`npm run lint`**: ✅ **0 errors, 0 warnings** — MILESTONE C4829 now preserved through **7 consecutive commits** (#477, CWV audit, SEO-1, carousel, R2 preconnect, shuffle-size, devchat-excision).
+- **Dead-reference sweep** (repo-wide `grep -rn "dev-chat\|dev_chat\|devchat"` excluding node_modules/.next/pending-drops/MEMORY): **zero hits**. Widget CSS class `.devchat-bubble-pos` fully excised from `globals.css`. Prisma `model DevChatMessage` removed from `schema.prisma` (27 models remain). ✅
+- **`DEVCHAT_API_KEY` env rename**: grep across `src/`/repo → zero leftover references. New `src/app/api/dev-picks/route.ts` reads `process.env.LEAD_API_KEY` and gates both POST and GET behind Bearer match. ⚠️ **Deploy-side action required** (not a Trace fix — flag for Lead/bectly): Vercel env vars for the `janicka-shop` project must have `DEVCHAT_API_KEY` renamed to `LEAD_API_KEY` (or both set during the cutover) or `/api/dev-picks` Lead calls will 401. Verify via `vercel env ls` before next Lead pick-creation attempt.
+- **Security review of the renamed `/api/dev-picks` surface**:
+  - Bearer auth pattern unchanged (string equality on `Bearer ${LEAD_API_KEY}`). No timing-attack mitigation, but the key is a Lead-only secret (not brute-forced from client) — acceptable for internal-tool scope. ✅
+  - POST body: Zod `createPickSchema` validates slug regex `^[a-z0-9-]+$` (length 1-100), title 1-200, description ≤2000, enum pickType, options array, ISO datetime. All inputs Prisma-safe (parameterized). ✅
+  - GET: `limit` clamped `[1,100]`; `status` filter passed to Prisma where clause (parameterized). ✅
+  - No new `dangerouslySetInnerHTML` / `innerHTML` / `eval` / shell calls. No PII leaked on 401/400/409. ✅
+- **Pending DROP SQL**: `prisma/pending-drops/001_drop_devchat.sql` correctly gates the destructive change — explicit `DROP INDEX` × 3 + `DROP TABLE IF EXISTS "DevChatMessage"`. File header warns it's not auto-applied. bectly runs manually per Rules (prod Turso + dev SQLite paths documented). ✅ Good ops hygiene; recommend Lead tracks the manual-apply in a TODO until both dev+prod tables are dropped, otherwise Prisma `db push` drift will eventually surface at the next schema migration.
+- **Re-grep confirms no regressions**:
+  - `dangerouslySetInnerHTML`: **17 occurrences / 7 files**, unchanged (all via `jsonLdString()` helper). ✅
+  - `@ts-ignore` / `@ts-nocheck` / `@ts-expect-error`: **0**. ✅
+  - Hardcoded secrets grep (`sk_live|sk_test|cfk_|Bearer [A-Za-z0-9]{20,}`): 0 hits in `src/`. ✅
+- **ts-prune backlog unchanged**: P1-7e trio (`checkAvailability` / `getProducts`+`getCategories` / `cancelPacket`) + P1-7f (`updateSubscriberPreferences`) — still the only open src/ candidates. Devchat excision was net-deletion; no new orphans introduced.
+
+**Net state after C4844**: audit holds. Devchat excision is a clean, well-scoped removal — replaces a two-sided messaging surface with `/admin/jarvis` (ttyd + Cloudflare Tunnel per commit message) and correctly preserves the Lead-only `/api/dev-picks` surface. **One follow-up for bectly**: rename `DEVCHAT_API_KEY` → `LEAD_API_KEY` in Vercel env (pre-next-Lead-pick-creation) **and** apply `001_drop_devchat.sql` to dev+prod databases to resolve Prisma schema drift.
+
+No further Trace action needed until CWV sprint lands, lint regresses, or a new implementation surface appears. Task #367 remains a stable re-verification anchor.
+
+---
 
 ## C4839 re-verification #2 addendum (2026-04-24, post-f093d03) — shuffle size filter lands clean
 

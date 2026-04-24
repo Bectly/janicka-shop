@@ -5,15 +5,13 @@
   "lanes": {
     "BOLT": {
       "status": "active",
-      "force_next_task": 481,
+      "force_next_task": 492,
       "next_priority": [
-        481,
-        486,
-        488,
-        489
+        492,
+        493
       ],
-      "notes": "PICK #481 [PERF-HOME-CLS] NEXT — HARD LOCK, NO SUBSTITUTIONS. Homepage CLS 0.431→≤0.1 mobile (animate-page-enter wrapper triggers 4 shifts: Kategorie 0.278 + Populární značky + Naše sliby 0.153 + <main> 0.045). LAST perf task before #484 verify can run. This is the 2nd consecutive cycle #481 got skipped — do NOT pick #486/#488/#489 before #481. Scope: (1) min-h skeletons on direct children of src/app/(shop)/page.tsx so each section reserves its final height before RSC content hydrates (Kategorie grid, Populární značky strip, Naše sliby trio), (2) explicit width/height on brand tile <img> (fix implicit intrinsic-sizing reflow — Populární značky contributor), (3) convert animate-page-enter keyframe to transform-only (no margin/padding layout props — only translate/opacity). Accept: Lighthouse mobile CLS ≤0.1, largest-single-shift ≤0.045, Perf ≥85, tsc clean, lint 0w/0e MILESTONE preserved (9 consecutive commits as of 65bcd1c), build green. THEN #486 (add 'Nové bez visačky' condition copy to /podminky/ terms page — audit other static pages too), then #488 (lightbox hide announcement-bar + header + shuffle-button — currently only BottomNav is hidden), then #489 (PDP sold-product mobile right-side overflow). #481 MUST be its own commit (perf bundle rule — #484 needs per-task attribution). #488 + #489 separate (structural/layout). Commit format: `Cycle #NNNN: Bolt — Task #NNN: <one-line>. tsc clean, lint 0w/0e (milestone preserved), build green.`",
-      "source_finding": "Trace CWV audit C4835 docs/audits/cwv-2026-04-24.md: homepage mobile CLS 0.431 POOR (4.3x Google budget 0.1), top contributors Kategorie section 0.278 + Naše sliby 0.153."
+      "notes": "PICK #492 NEXT — trivial admin/jarvis cleanup. Current iframe embed breaks OAuth/session flows on some browsers; replace with a single 'Otevřít v novém okně' button + optional description (target_blank rel=noopener noreferrer). Scope: src/app/(admin)/admin/jarvis/page.tsx (single file). Accept: button styled per admin shadcn conventions, tsc clean, lint 0w/0e MILESTONE preserved (~14 consecutive since C4829), build green. THEN #493 Resend→SMTP migration (LARGER SCOPE — plan in single commit if clean): (1) grep src/lib/email* + src/app/api/** for Resend client usage, (2) add nodemailer + @types/nodemailer, (3) create src/lib/email/smtp.ts using SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS/SMTP_FROM env vars (vryp.cz mailserver — bectly provides creds), (4) keep Resend as env-gated fallback via EMAIL_PROVIDER=resend|smtp (default smtp), (5) update all send sites to go through unified sendMail() wrapper, (6) add .env.local.example entries, (7) Vercel env vars note in commit body for bectly to apply. Accept: all existing email flows (order confirm, shipped, review, abandoned cart, welcome, win-back) route through new wrapper, unit tests on src/lib/email pass, tsc clean, lint 0w/0e, build green. Each task ships as its own commit. Commit format: `Cycle #NNNN: Bolt — Task #NNN: <one-line>. tsc clean, lint 0w/0e (milestone preserved), build green.`",
+      "source_finding": "Bectly direct request (C4844 directive): admin JARVIS iframe is awkward — wants new-window button; email migrating from Resend to self-hosted @vryp.cz SMTP for brand consistency."
     },
     "TRACE": {
       "status": "active",
