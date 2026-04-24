@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { logEvent } from "@/lib/audit-log";
 import { sendEmailChangeVerifyEmail } from "@/lib/email";
+import { invalidateCustomerScope } from "@/lib/customer-cache";
 
 const schema = z.object({
   newEmail: z.string().trim().toLowerCase().email("Zadej platný email").max(200),
@@ -99,6 +100,8 @@ export async function requestEmailChange(
     action: "email_change_request",
     metadata: { newEmail: parsed.data.newEmail },
   });
+
+  invalidateCustomerScope(customer.id, "profile");
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://jvsatnik.cz";
   const verifyUrl = `${baseUrl}/verify-email-change?token=${encodeURIComponent(token)}`;

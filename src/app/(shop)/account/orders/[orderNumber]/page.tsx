@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { cacheLife, cacheTag } from "next/cache";
 import { connection } from "next/server";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
+import { customerTag } from "@/lib/customer-cache";
 import { formatPrice, formatDate } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, MapPin, Truck, Undo2, ExternalLink } from "lucide-react";
@@ -30,6 +32,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: `Objednávka ${orderNumber} — Janička` };
 }
 
+async function getOrderByNumber(customerId: string, orderNumber: string) {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag(customerTag(customerId, "orders"));
+
+  const db = await getDb();
+  return db.order.findUnique({
+    where: { orderNumber },
+    include: { items: true },
+  });
+}
+
 export default async function AccountOrderDetailPage({ params }: Props) {
   await connection();
   const session = await auth();
@@ -38,11 +52,7 @@ export default async function AccountOrderDetailPage({ params }: Props) {
   }
 
   const { orderNumber } = await params;
-  const db = await getDb();
-  const order = await db.order.findUnique({
-    where: { orderNumber },
-    include: { items: true },
-  });
+  const order = await getOrderByNumber(session.user.id, orderNumber);
 
   if (!order || order.customerId !== session.user.id) notFound();
 

@@ -901,4 +901,117 @@ $ git commit -m "chore(gitignore): stop tracking local SQLite dev DB binaries"
 
 **Status**: tracked as Row Y for #367 sweep. Bolt fork directive (fold under #517 step 2 or spin as new task): .gitignore patch + `git rm --cached` for 2 binaries + decision on whether to filter-repo scrub the existing `prisma/dev.db` blob from history.
 
+## C4881 re-verification addendum (2026-04-24, post-d076aaf — 3 fresh rows: Z1 attribution swap, Z2 lint streak break, Z3 admin API defense-in-depth)
+
+Lead directive (C4880 → 93fd9f1): verify C4881 deliveries without re-running #531 Phase 1b (gated on Vercel prod bake), #525 (gated on #513/#515/#516/#517), or #532 (gated on full #524b+c+d+e bake). Two code commits landed this cycle:
+
+- `c4889f7` (C4881 Bolt, labeled #524d mailbox search degrade): +539/-35 across **4 files** — `src/app/(admin)/admin/mailbox/page.tsx` (search scope trim), `src/app/(admin)/admin/mailbox/mailbox-search.tsx` (new 84-line client component), **`src/app/api/admin/email-preview/route.ts` (new 107 lines — NOT part of the labeled scope)**, **`src/lib/email.ts` (+341 lines — NOT part of the labeled scope)**.
+- `d076aaf` (C4881 Sage, labeled "Added admin-gated /api/admin/email-preview + renderEmailPreview registry covering 21 templates"): +9/-5 across **2 files** — `docs/STRUCTURE.md` (auto-regen by post-commit hook) + `.devloop/lead-control.json` (last_bolt_commit_cycle 4880 → 4881).
+
+### Gate state on HEAD `d076aaf`
+
+- **`tsc --noEmit`**: ✅ PASS (0 errors, silent).
+- **`npm run lint`**: ❌ **3 errors, 0 warnings** — **C4829 LINT MILESTONE BROKEN.** First lint regression since C4829. All three are `react-hooks/*` rules from the Next 16 / React 19 ruleset:
+  1. `src/app/(admin)/admin/customers/page.tsx:150` — `Math.floor(Date.now() / 60_000) * 60_000` as a cache-key minute-bucket → `react-hooks/purity`: *"Date.now is an impure function. Calling an impure function can produce unstable results…"*. `git blame` → **abf6cba C4880 Bolt #527 admin page use-cache sweep**. Introduced by the cache sweep itself: the `minuteBucket` constant is used as an argument to `getCustomersPageData(...)` which is marked `"use cache"` — the whole point is to make the cache key vary per minute, but the React compiler's purity rule fires because `Date.now()` is called in a component render body.
+  2. `src/app/(admin)/admin/layout.tsx:35` — `` `admin-nav-${Math.random().toString(36).slice(2, 8)}` `` → `react-hooks/purity`: *"Math.random is an impure function…"*. `git blame` → **5eb68ff C4879 Trace #524f Phase 1b instrumentation**. The `navId` is PERF_PROFILE-gated correlation-id for the admin-layout perfStart/perfEnd brackets; lint fires on the PERF_PROFILE=true branch even though it's dead code in prod.
+  3. `src/app/(admin)/admin/mailbox/mailbox-search.tsx:23` — `setValue(initialQ)` inside `useEffect(() => { setValue(initialQ); lastPushedRef.current = initialQ; }, [initialQ]);` → `react-hooks/set-state-in-effect`: *"Calling setState synchronously within an effect body causes cascading renders that can hurt performance…"*. `git blame` → **c4889f7 C4881 Bolt #524d mailbox search degrade**. The effect syncs external URL prop changes (Link-based "Vymazat" / navigation to /admin/mailbox?tab=archived) back into local state, which is a legitimate pattern but flagged by the new rule. Correct fix per React 19 docs: derive `value` from `initialQ` via `useState(initialQ)` + `useRef<string>(initialQ)` to track last-seen prop and reset state via a key prop on the component, OR accept the double-render and silence with eslint-disable-next-line + a comment citing the URL↔state sync rationale.
+
+  **Regression window:** the 25-commit streak (e2b10ea was still clean at C4860) was broken by 5eb68ff at C4879, then abf6cba at C4880 added a second error, then c4889f7 this cycle added the third. No intermediate `npm run lint` gate caught any of them because the DevLoop's tsc-only gate doesn't re-run eslint, and the C4860/C4851/C4847 addenda were the last ones to actually execute the lint sweep. **Status: P1 — clean-lint policy lapsed 3 cycles in a row.**
+
+- **`@ts-ignore` / `@ts-nocheck` / `@ts-expect-error`**: 0 in `src/` (unchanged).
+- **`dangerouslySetInnerHTML`**: 17 / 7 files — **unchanged** in HTML callers, but the new email-preview route emits its index HTML via `new NextResponse(htmlString, { headers: { 'content-type': 'text/html; charset=utf-8' } })` with a local `escapeHtml` helper over `EMAIL_PREVIEW_TEMPLATES[].label` / `.key`. Labels/keys are hardcoded in `email.ts:2688-2712`, no user input flows through; escaping is defense-in-depth. ✅
+- **Hardcoded secrets** (`sk_live|sk_test|cfk_|inline Bearer`): 0 hits in `src/`.
+- **`grep janicka-shop.vercel.app src/ prisma/`**: 0 hits.
+- **`grep NEXT_PUBLIC_BASE_URL src/ prisma/`**: 0 hits.
+
+### Row Z1 — Attribution swap (C4881 repeat of C4876 pattern)
+
+Commit attribution is **fully inverted** between the two C4881 worker commits. The Sage commit message claims: *"Added admin-gated /api/admin/email-preview endpoint + renderEmailPreview registry covering 21 templates with realistic CZ fixtures"*. The actual `d076aaf` diff contains **zero code** — only `docs/STRUCTURE.md` (auto-regenerated) and `.devloop/lead-control.json` (devloop control bump). The 107-line email-preview route, the 341-line `renderEmailPreview` function (`src/lib/email.ts:2502`), the 21-entry `EMAIL_PREVIEW_TEMPLATES` registry (`src/lib/email.ts:2688`) are all in **Bolt's c4889f7** — whose message only claims mailbox-search scope, debounce, and client-component extraction.
+
+Verified by file-scoped git log:
+```
+$ git log --all --oneline -- src/app/api/admin/email-preview/route.ts
+c4889f7 Cycle #4881: Bolt — #524d mailbox search degrade …
+$ git log --all --oneline -- src/lib/email.ts | head -3
+c4889f7 Cycle #4881: Bolt — #524d mailbox search degrade …
+e2b10ea Cycle #4859: Sage — …
+a167263 Cycle #4858: Sage — …
+```
+
+**Root cause (same as C4876):** Sage worker writes email code to the working tree but doesn't commit; next worker (Bolt) runs `git add .` before its own commit and inadvertently swallows Sage's working-tree diff into the Bolt-labeled commit. Sage's own commit runs afterwards with nothing but the STRUCTURE.md auto-regen + devloop bookkeeping left to capture. This is the **second occurrence** of the same cross-worker attribution bug in 5 cycles (C4876 Sage/Bolt swap → C4881 Sage/Bolt swap). Not a correctness issue — all code is in HEAD, all 21 templates render, admin gate works. But `git blame` and `git log` are now unreliable for the email subsystem + email-preview route: apparent "Bolt authorship" on email.ts:2502+ and email-preview/route.ts is misleading; the logic belongs to Sage's Phase 3 email QA scope (#494).
+
+**Priority:** P2 (tooling hygiene). **Recommended fix:** Session manager should flush Sage's working tree via a sage-scoped commit *before* dispatching Bolt, OR prepend `git status --porcelain` inspection + worker-scoped `git add <own-files>` to the commit step. The current `git add .` pattern is the mechanical cause.
+
+### Row Z2 — Lint streak broken (3 react-hooks errors)
+
+See gate-state detail above. Three separate errors introduced across three consecutive cycles (C4879, C4880, C4881). All three fire on `react-hooks/purity` or `react-hooks/set-state-in-effect` — rules that ship with the Next 16 / React 19 ESLint preset and were likely silent until the Next 16.2.3 bump. None block the build (`next build` still passes; tsc passes). But the policy line — "eslint 0 errors 0 warnings, kept through 25 commits at C4860" — is now broken and the addendum-cadence that caught it was a month stale.
+
+**Remediation options per site:**
+
+1. **`customers/page.tsx:150`** — two paths:
+   - (A) Hoist `Date.now()` into an argument from the caller (Server Action / page header) and pass `minuteBucket` as a prop — makes the component body pure.
+   - (B) Move the minute-bucket derivation *inside* `getCustomersPageData` which is the `"use cache"` fetcher; `cacheLife('minutes')` already does the same work transparently. The explicit minuteBucket arg is actually redundant — `"use cache"` + `cacheLife('minutes')` handles minute-window invalidation natively. Recommend (B): delete the line, drop the arg, let cacheLife do the TTL.
+2. **`admin/layout.tsx:35`** — two paths:
+   - (A) Replace `Math.random().toString(36).slice(2, 8)` with `crypto.randomUUID().slice(0, 8)` — still impure but not flagged by react-hooks/purity (the rule whitelists `crypto.*`). Small perf cost, negligible.
+   - (B) Gate the navId at the module level via a `let` counter: `let __adminNavCounter = 0; const navId = PERF_PROFILE ? \`admin-nav-${++__adminNavCounter}\` : "";`. Also impure but module-scoped mutation isn't flagged. Recommend (B).
+3. **`mailbox-search.tsx:23`** — two paths:
+   - (A) Keyed component: make the parent pass a `key={initialQ}` prop forcing remount when the URL changes, drop the effect entirely. Cleanest.
+   - (B) `eslint-disable-next-line react-hooks/set-state-in-effect` with a 1-line justification comment pointing at the URL↔state sync rationale (single-source-of-truth is the URL, local state is a debounce buffer). Minimal LoC.
+   Recommend (A) — more idiomatic, no disable comment.
+
+**Priority:** P1 (clean-lint policy violated 3 commits in a row). Single Bolt task, ~20 LoC across 3 files.
+
+### Row Z3 — Admin API defense-in-depth gap on /api/admin/email-preview
+
+The new route (`src/app/api/admin/email-preview/route.ts:69-74`) gates with:
+
+```ts
+const session = await auth();
+if (!session?.user) {
+  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+}
+```
+
+This is **incomplete** vs the project's defense-in-depth convention on sensitive admin routes. Peer routes use a two-check gate:
+
+- `src/app/api/admin/claude-upload/route.ts:17-21` → `auth()` + `if (session.user.role !== "admin")` + rate-limit `claude-upload:${session.user.id ?? ip}`.
+- `src/app/api/admin/jarvis/route.ts:217-227` → same pattern: `auth()` + role check + rate-limit.
+
+The email-preview route has neither the role check nor rate limit. In practice it's probably fine because:
+1. NextAuth v5 in this project only signs in admin users (customer sessions use a separate cookie), so `session?.user` ≈ admin in practice.
+2. `src/middleware.ts` matches `/admin/:path*` + `/account/:path*` — but NOT `/api/admin/:path*`, so route-level enforcement is the only line of defense.
+
+However the route exposes **full rendered email HTML** for 21 templates including transactional receipts, customer-facing branding, unsubscribe links, and signed unsubscribe tokens (from #494 Phase 3 HMAC). A future role expansion (e.g. a "staff" or "support" NextAuth role introduced for the mailbox/customer portal split) would silently grant preview access without an explicit policy decision. **Defense in depth requires the explicit role check here.**
+
+**Priority:** P2 (consistency + future-proof). **Recommended fix:** add `if (session.user.role !== "admin")` after the `!session?.user` check, return 403. Optionally add `await limit(\`email-preview:${session.user.id ?? ip}\`, 60, "minute")` to mirror the siblings. ~4 LoC.
+
+### Row H (existing) — updated for C4881
+
+`renderBody` (`src/lib/email/layout.ts:257`) still unused after C4881 (no Sage delta touching layout.ts this cycle). Carry-forward from C4847 / C4851 / C4860 / C4881. Sage's Phase 2 migration deliberately kept per-template body HTML inline; either wire remaining callers through `renderBody` or delete the export. Non-blocking.
+
+### Rows carried unchanged from C4860 → C4881
+
+No new evidence on the rest of the matrix this cycle. Full C4860 row table (rows A–W2, Y) remains authoritative:
+
+- **Row W2 (`experimental.optimizeCss` no-op):** unchanged — `next.config.ts` still has the flag, still a triple-defect no-op (critters not installed, App-Router unsupported, SSR-crash vector). Blocked on Bolt #517 revert. No change C4861–C4881.
+- **Row Y (`prisma/dev.db*` tracked + `.gitignore` gap):** unchanged — `prisma/dev.db` (2.6 MB) + `prisma/dev.db.bak` (1.3 MB) still tracked, `.gitignore` still has 0 prisma rules. bectly-gated pre-push (filter-repo scrub required).
+- **Rows A–V, X:** no code movement in these subsystems this cycle.
+
+### Verdict — what the C4881 commits actually delivered vs claimed
+
+| Claim | Reality | Verdict |
+|---|---|---|
+| Bolt #524d: drop bodyText + fromAddress from mailbox search OR | Confirmed — `mailbox/page.tsx:52-60` diff shows exact scope trim, comment explains rationale. | ✅ |
+| Bolt #524d: extract search input into client component with 300ms debounce | Confirmed — new `mailbox-search.tsx` (84 LoC, setTimeout-based debounce, `router.replace` for URL sync, `Vymazat` clear preserves `tab=archived`). | ✅ (but introduces lint error Z2.3) |
+| Bolt #524d: tsc clean | Confirmed. | ✅ |
+| Sage: admin-gated /api/admin/email-preview endpoint | Code is in HEAD under Bolt commit c4889f7 (attribution swap Z1); gate only checks `session?.user`, not `role === "admin"` (Z3). | ⚠️ attribution-wrong + defense-in-depth gap |
+| Sage: renderEmailPreview registry covering 21 templates with realistic CZ fixtures | Code is in HEAD under Bolt commit c4889f7; 21 entries confirmed in `EMAIL_PREVIEW_TEMPLATES` (grouped by category, labels in Czech). | ⚠️ attribution-wrong |
+| Lint streak preserved | **Broken** — 3 errors across C4879+C4880+C4881. | ❌ |
+
+### Follow-up tasks (new this cycle)
+
+- **[BOLT] [QUALITY] Fix C4881 lint regressions** — customers/page.tsx minuteBucket (delete, cacheLife handles it), admin/layout.tsx navId (module counter), mailbox-search.tsx setState-in-effect (key-based remount). ~20 LoC, 3 files, single commit. P1.
+- **[BOLT] [SEC-DEFENSE] Tighten /api/admin/email-preview gate** — add `role === "admin"` check + optional rate limit to match claude-upload / jarvis pattern. ~4 LoC, 1 file. P2.
+- **[LEAD] [TOOLING] Worker commit scoping** — C4876 + C4881 are both Sage-Bolt attribution swaps caused by `git add .` swallowing sibling worker's working-tree diff. Session manager should scope commits to own files or commit Sage before dispatching Bolt. P2 but recurring.
+- **[LEAD] [AUDIT-CADENCE]** — codebase sweep / lint re-run should be triggered on every cycle with a code commit, not only when an agent flags it. C4861–C4880 shipped 2 lint regressions unnoticed. P2.
 

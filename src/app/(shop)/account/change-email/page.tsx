@@ -1,13 +1,27 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { cacheLife, cacheTag } from "next/cache";
 import { connection } from "next/server";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
+import { customerTag } from "@/lib/customer-cache";
 import { ChangeEmailForm } from "./change-email-form";
 
 export const metadata: Metadata = {
   title: "Změna emailu — Janička",
 };
+
+async function getEmailState(customerId: string) {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag(customerTag(customerId, "profile"));
+
+  const db = await getDb();
+  return db.customer.findUnique({
+    where: { id: customerId },
+    select: { email: true, pendingEmail: true, pendingEmailExpiresAt: true },
+  });
+}
 
 export default async function ChangeEmailPage() {
   await connection();
@@ -16,11 +30,7 @@ export default async function ChangeEmailPage() {
     redirect("/login?redirect=/account/change-email");
   }
 
-  const db = await getDb();
-  const customer = await db.customer.findUnique({
-    where: { id: session.user.id },
-    select: { email: true, pendingEmail: true, pendingEmailExpiresAt: true },
-  });
+  const customer = await getEmailState(session.user.id);
   if (!customer) redirect("/login");
 
   // eslint-disable-next-line react-hooks/purity -- request-time read in RSC, not cached

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { logEvent } from "@/lib/audit-log";
+import { invalidateCustomerScope } from "@/lib/customer-cache";
 
 export async function removeFromWishlist(
   productId: string,
@@ -23,6 +24,7 @@ export async function removeFromWishlist(
     metadata: { productId },
   });
 
+  invalidateCustomerScope(session.user.id, "wishlist");
   revalidatePath("/account/oblibene");
   return { ok: true };
 }

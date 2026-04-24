@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { cacheLife, cacheTag } from "next/cache";
 import { connection } from "next/server";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
+import { customerTag } from "@/lib/customer-cache";
 import { CustomerActivityFeed } from "@/components/shop/customer-activity-feed";
 import { SettingsForm } from "./settings-form";
 
@@ -10,21 +12,19 @@ export const metadata: Metadata = {
   title: "Nastavení — Janička",
 };
 
-export default async function AccountSettingsPage() {
-  await connection();
-  const session = await auth();
-  if (!session?.user || session.user.role !== "customer") {
-    redirect("/login?redirect=/account/nastaveni");
-  }
+async function getSettingsData(customerId: string) {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag(customerTag(customerId, "settings"));
 
   const db = await getDb();
   const [customer, activity] = await Promise.all([
     db.customer.findUnique({
-      where: { id: session.user.id },
+      where: { id: customerId },
       select: { email: true, notifyMarketing: true },
     }),
     db.customerAuditLog.findMany({
-      where: { customerId: session.user.id },
+      where: { customerId },
       orderBy: { createdAt: "desc" },
       take: 20,
       select: {
@@ -36,6 +36,18 @@ export default async function AccountSettingsPage() {
       },
     }),
   ]);
+
+  return { customer, activity };
+}
+
+export default async function AccountSettingsPage() {
+  await connection();
+  const session = await auth();
+  if (!session?.user || session.user.role !== "customer") {
+    redirect("/login?redirect=/account/nastaveni");
+  }
+
+  const { customer, activity } = await getSettingsData(session.user.id);
   if (!customer) redirect("/login");
 
   return (

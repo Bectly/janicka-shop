@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { cacheLife, cacheTag } from "next/cache";
 import { connection } from "next/server";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
+import { customerTag } from "@/lib/customer-cache";
 import { formatPrice, formatDate } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ChevronRight, Package } from "lucide-react";
@@ -13,16 +15,14 @@ export const metadata: Metadata = {
   title: "Moje objednávky — Janička",
 };
 
-export default async function AccountOrdersPage() {
-  await connection();
-  const session = await auth();
-  if (!session?.user || session.user.role !== "customer") {
-    redirect("/login?redirect=/account/orders");
-  }
+async function getCustomerOrders(customerId: string) {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag(customerTag(customerId, "orders"));
 
   const db = await getDb();
-  const orders = await db.order.findMany({
-    where: { customerId: session.user.id },
+  return db.order.findMany({
+    where: { customerId },
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
@@ -33,6 +33,16 @@ export default async function AccountOrdersPage() {
       items: { select: { name: true } },
     },
   });
+}
+
+export default async function AccountOrdersPage() {
+  await connection();
+  const session = await auth();
+  if (!session?.user || session.user.role !== "customer") {
+    redirect("/login?redirect=/account/orders");
+  }
+
+  const orders = await getCustomerOrders(session.user.id);
 
   return (
     <div className="space-y-4">

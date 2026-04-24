@@ -1,28 +1,28 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { cacheLife, cacheTag } from "next/cache";
 import { connection } from "next/server";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
+import { customerTag } from "@/lib/customer-cache";
 import { AddressList, type AddressItem } from "./address-list";
 
 export const metadata: Metadata = {
   title: "Adresy — Janička",
 };
 
-export default async function AddressesPage() {
-  await connection();
-  const session = await auth();
-  if (!session?.user || session.user.role !== "customer") {
-    redirect("/login?redirect=/account/adresy");
-  }
+async function getCustomerAddresses(customerId: string): Promise<AddressItem[]> {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag(customerTag(customerId, "addresses"));
 
   const db = await getDb();
   const rows = await db.customerAddress.findMany({
-    where: { customerId: session.user.id },
+    where: { customerId },
     orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
   });
 
-  const addresses: AddressItem[] = rows.map((r) => ({
+  return rows.map((r) => ({
     id: r.id,
     label: r.label,
     firstName: r.firstName,
@@ -34,6 +34,16 @@ export default async function AddressesPage() {
     phone: r.phone,
     isDefault: r.isDefault,
   }));
+}
+
+export default async function AddressesPage() {
+  await connection();
+  const session = await auth();
+  if (!session?.user || session.user.role !== "customer") {
+    redirect("/login?redirect=/account/adresy");
+  }
+
+  const addresses = await getCustomerAddresses(session.user.id);
 
   return (
     <div className="space-y-4">

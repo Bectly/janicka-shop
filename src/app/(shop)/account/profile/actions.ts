@@ -5,6 +5,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { logEvent } from "@/lib/audit-log";
+import { invalidateCustomerScope } from "@/lib/customer-cache";
 
 const profileSchema = z.object({
   firstName: z.string().trim().min(1, "Jméno je povinné").max(80),
@@ -76,6 +77,8 @@ export async function updateProfile(
     metadata: { fields: Object.keys(parsed.data) },
   });
 
+  invalidateCustomerScope(session.user.id, "profile");
+  invalidateCustomerScope(session.user.id, "dashboard");
   revalidatePath("/account/profile");
   revalidatePath("/account");
   return { error: null, success: true };

@@ -1,9 +1,11 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { cacheLife, cacheTag } from "next/cache";
 import { connection } from "next/server";
 import { MapPin, ChevronRight } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
+import { customerTag } from "@/lib/customer-cache";
 import { ProfileForm } from "./profile-form";
 import { PasswordForm } from "./password-form";
 import type { Metadata } from "next";
@@ -12,17 +14,16 @@ export const metadata: Metadata = {
   title: "Profil — Janička",
 };
 
-export default async function AccountProfilePage() {
-  await connection();
-  const session = await auth();
-  if (!session?.user || session.user.role !== "customer") {
-    redirect("/login?redirect=/account/profile");
-  }
+async function getProfileData(customerId: string) {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag(customerTag(customerId, "profile"));
+  cacheTag(customerTag(customerId, "addresses"));
 
   const db = await getDb();
   const [customer, addressCount, defaultAddress] = await Promise.all([
     db.customer.findUnique({
-      where: { id: session.user.id },
+      where: { id: customerId },
       select: {
         email: true,
         firstName: true,
@@ -33,13 +34,24 @@ export default async function AccountProfilePage() {
         zip: true,
       },
     }),
-    db.customerAddress.count({ where: { customerId: session.user.id } }),
+    db.customerAddress.count({ where: { customerId } }),
     db.customerAddress.findFirst({
-      where: { customerId: session.user.id, isDefault: true },
+      where: { customerId, isDefault: true },
       select: { label: true, street: true, city: true, zip: true },
     }),
   ]);
 
+  return { customer, addressCount, defaultAddress };
+}
+
+export default async function AccountProfilePage() {
+  await connection();
+  const session = await auth();
+  if (!session?.user || session.user.role !== "customer") {
+    redirect("/login?redirect=/account/profile");
+  }
+
+  const { customer, addressCount, defaultAddress } = await getProfileData(session.user.id);
   if (!customer) redirect("/login");
 
   return (

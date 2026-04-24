@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { cacheLife, cacheTag } from "next/cache";
 import { connection } from "next/server";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
+import { customerTag } from "@/lib/customer-cache";
 import { WishlistGrid, type WishlistRow } from "./wishlist-grid";
 import { WishlistMergeClient } from "./merge-client";
 
@@ -10,16 +12,14 @@ export const metadata: Metadata = {
   title: "Oblíbené — Janička",
 };
 
-export default async function AccountWishlistPage() {
-  await connection();
-  const session = await auth();
-  if (!session?.user || session.user.role !== "customer") {
-    redirect("/login?redirect=/account/oblibene");
-  }
+async function getCustomerWishlist(customerId: string): Promise<WishlistRow[]> {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag(customerTag(customerId, "wishlist"));
 
   const db = await getDb();
   const rows = await db.customerWishlist.findMany({
-    where: { customerId: session.user.id },
+    where: { customerId },
     include: {
       product: {
         include: { category: { select: { name: true, slug: true } } },
@@ -28,7 +28,7 @@ export default async function AccountWishlistPage() {
     orderBy: { createdAt: "desc" },
   });
 
-  const items: WishlistRow[] = rows
+  return rows
     .filter((r) => r.product.active)
     .map((r) => ({
       id: r.product.id,
@@ -44,6 +44,16 @@ export default async function AccountWishlistPage() {
       sold: r.product.sold,
     }))
     .sort((a, b) => (a.sold === b.sold ? 0 : a.sold ? 1 : -1));
+}
+
+export default async function AccountWishlistPage() {
+  await connection();
+  const session = await auth();
+  if (!session?.user || session.user.role !== "customer") {
+    redirect("/login?redirect=/account/oblibene");
+  }
+
+  const items = await getCustomerWishlist(session.user.id);
 
   return (
     <div className="space-y-4">

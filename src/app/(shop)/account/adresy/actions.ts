@@ -5,6 +5,12 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { logEvent } from "@/lib/audit-log";
+import { invalidateCustomerScope } from "@/lib/customer-cache";
+
+function invalidateAddresses(customerId: string) {
+  invalidateCustomerScope(customerId, "addresses");
+  invalidateCustomerScope(customerId, "profile");
+}
 
 const CZ_ZIP_RE = /^\d{3} ?\d{2}$/;
 
@@ -98,6 +104,7 @@ export async function createAddress(
     metadata: { label: parsed.data.label, city: parsed.data.city },
   });
 
+  invalidateAddresses(customerId);
   revalidatePath("/account/adresy");
   return { ...INITIAL, success: true };
 }
@@ -150,6 +157,7 @@ export async function updateAddress(
     metadata: { addressId: id },
   });
 
+  invalidateAddresses(customerId);
   revalidatePath("/account/adresy");
   return { ...INITIAL, success: true };
 }
@@ -186,6 +194,7 @@ export async function deleteAddress(id: string): Promise<{ ok: boolean; error?: 
     }
   }
 
+  invalidateAddresses(customerId);
   revalidatePath("/account/adresy");
   return { ok: true };
 }
@@ -209,6 +218,7 @@ export async function setDefaultAddress(id: string): Promise<{ ok: boolean; erro
     await tx.customerAddress.update({ where: { id }, data: { isDefault: true } });
   });
 
+  invalidateAddresses(customerId);
   revalidatePath("/account/adresy");
   return { ok: true };
 }

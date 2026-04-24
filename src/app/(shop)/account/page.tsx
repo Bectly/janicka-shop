@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { cacheLife, cacheTag } from "next/cache";
 import { connection } from "next/server";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
+import { customerTag } from "@/lib/customer-cache";
 import { formatPrice, formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -14,23 +16,23 @@ export const metadata: Metadata = {
   title: "Můj účet — Janička",
 };
 
-export default async function AccountDashboardPage() {
-  await connection();
-  const session = await auth();
-  if (!session?.user || session.user.role !== "customer") {
-    redirect("/login?redirect=/account");
-  }
+async function getDashboardData(customerId: string) {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag(customerTag(customerId, "dashboard"));
+  cacheTag(customerTag(customerId, "orders"));
+  cacheTag(customerTag(customerId, "profile"));
 
   const db = await getDb();
   const customer = await db.customer.findUnique({
-    where: { id: session.user.id },
+    where: { id: customerId },
     select: { id: true, firstName: true },
   });
-  if (!customer) redirect("/login");
+  if (!customer) return null;
 
   const [recentOrders, totalCount] = await Promise.all([
     db.order.findMany({
-      where: { customerId: customer.id },
+      where: { customerId },
       orderBy: { createdAt: "desc" },
       take: 3,
       select: {
@@ -42,8 +44,22 @@ export default async function AccountDashboardPage() {
         accessToken: true,
       },
     }),
-    db.order.count({ where: { customerId: customer.id } }),
+    db.order.count({ where: { customerId } }),
   ]);
+
+  return { customer, recentOrders, totalCount };
+}
+
+export default async function AccountDashboardPage() {
+  await connection();
+  const session = await auth();
+  if (!session?.user || session.user.role !== "customer") {
+    redirect("/login?redirect=/account");
+  }
+
+  const data = await getDashboardData(session.user.id);
+  if (!data) redirect("/login");
+  const { customer, recentOrders, totalCount } = data;
 
   return (
     <div className="space-y-6">

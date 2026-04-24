@@ -5,6 +5,7 @@ import { signOut } from "@/lib/auth";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { logEvent } from "@/lib/audit-log";
+import { invalidateCustomerAll, invalidateCustomerScope } from "@/lib/customer-cache";
 
 export async function updateEmailPreferences(
   _prev: { error: string | null; success: boolean },
@@ -35,6 +36,7 @@ export async function updateEmailPreferences(
     });
   }
 
+  invalidateCustomerScope(session.user.id, "settings");
   revalidatePath("/account/nastaveni");
   return { error: null, success: true };
 }
@@ -103,6 +105,8 @@ export async function deleteAccount(
       data: { active: false, email: anonymizedEmail, firstName: null },
     });
   });
+
+  invalidateCustomerAll(customer.id);
 
   // Sign out (cookies invalidated)
   await signOut({ redirect: false });

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { logEvent } from "@/lib/audit-log";
+import { invalidateCustomerScope } from "@/lib/customer-cache";
 
 const bodySchema = z.object({
   productIds: z.array(z.string().max(128)).max(200),
@@ -62,6 +63,7 @@ export async function POST(req: Request) {
       action: "wishlist_add",
       metadata: { merged, source: "localStorage_sync" },
     });
+    invalidateCustomerScope(customerId, "wishlist");
   }
 
   return NextResponse.json({ ok: true, merged });
