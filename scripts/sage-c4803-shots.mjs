@@ -3,56 +3,73 @@ import { chromium } from 'playwright';
 const BASE = 'https://janicka-shop.vercel.app';
 const OUT = '/home/bectly/development/projects/janicka-shop/docs/visual-audits/c4803-screenshots';
 
+async function dismissCookies(page) {
+  const labels = ['Přijmout vše', 'Přijmout', 'Souhlasím', 'OK'];
+  for (const t of labels) {
+    const btn = page.getByRole('button', { name: t });
+    if (await btn.count().catch(() => 0)) {
+      try { await btn.first().click({ timeout: 2000 }); await page.waitForTimeout(500); return true; } catch {}
+    }
+  }
+  return false;
+}
+
+async function newCtx(browser, viewport) {
+  const ctx = await browser.newContext({ viewport, deviceScaleFactor: 2, locale: 'cs-CZ' });
+  await ctx.addCookies([
+    { name: 'cookie-consent', value: '1', domain: 'janicka-shop.vercel.app', path: '/' },
+  ]);
+  await ctx.addInitScript(() => {
+    try {
+      localStorage.setItem('janicka-cookie-consent', JSON.stringify({
+        essential: true, analytics: true, marketing: true, timestamp: new Date().toISOString(),
+      }));
+    } catch {}
+  });
+  return ctx;
+}
+
 async function shoot(browser, { url, name, viewport, fullPage = false }) {
-  const ctx = await browser.newContext({ viewport, deviceScaleFactor: 2 });
+  const ctx = await newCtx(browser, viewport);
   const page = await ctx.newPage();
-  console.log(`→ ${name} ${viewport.width}x${viewport.height} ${url}`);
+  console.log(`-> ${name} ${viewport.width}x${viewport.height} ${url}`);
   try {
     await page.goto(url, { waitUntil: 'networkidle', timeout: 45000 });
   } catch (e) {
     console.log(`  goto warn: ${e.message}`);
   }
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(1200);
   await page.screenshot({ path: `${OUT}/${name}.png`, fullPage });
   await ctx.close();
 }
 
 const browser = await chromium.launch({ headless: true });
 try {
-  // Homepage — mobile viewport, BOTH viewport-only (above the fold) and full
   await shoot(browser, { url: `${BASE}/`, name: 'home-mobile-viewport', viewport: { width: 375, height: 667 } });
   await shoot(browser, { url: `${BASE}/`, name: 'home-mobile-full', viewport: { width: 375, height: 667 }, fullPage: true });
-
-  // Homepage — desktop
   await shoot(browser, { url: `${BASE}/`, name: 'home-desktop-viewport', viewport: { width: 1440, height: 900 } });
-
-  // Products grid — mobile
   await shoot(browser, { url: `${BASE}/products`, name: 'products-mobile', viewport: { width: 375, height: 667 } });
-
-  // Products grid — desktop (for badge sample)
   await shoot(browser, { url: `${BASE}/products`, name: 'products-desktop', viewport: { width: 1440, height: 900 } });
 
-  // Find one product per condition by scraping the API
-  const apiCtx = await browser.newContext();
-  const apiPage = await apiCtx.newPage();
-  const samples = {};
-  for (const cond of ['new_with_tags','new_without_tags','excellent','good','visible_wear']) {
-    try {
-      const res = await apiPage.request.get(`${BASE}/api/products?condition=${cond}&limit=1`);
-      if (res.ok()) {
-        const j = await res.json();
-        const slug = j?.products?.[0]?.slug || j?.data?.[0]?.slug || j?.[0]?.slug;
-        if (slug) samples[cond] = slug;
-      }
-    } catch {}
-  }
-  console.log('Condition samples:', samples);
-  await apiCtx.close();
+  const ctx = await newCtx(browser, { width: 1440, height: 900 });
+  const page = await ctx.newPage();
+  await page.goto(`${BASE}/products`, { waitUntil: 'networkidle' });
+  const slugs = await page.$$eval('a[href^="/products/"]', as => Array.from(new Set(
+    as.map(a => a.getAttribute('href') || '').filter(h => /^\/products\/[^/?#]+$/.test(h))
+  )).slice(0, 6));
+  console.log('Discovered slugs:', slugs);
+  await ctx.close();
 
-  // PDP for each condition we found
-  for (const [cond, slug] of Object.entries(samples)) {
-    await shoot(browser, { url: `${BASE}/products/${slug}`, name: `pdp-${cond}-mobile`, viewport: { width: 375, height: 667 } });
+  for (let i = 0; i < slugs.length && i < 4; i++) {
+    await shoot(browser, { url: `${BASE}${slugs[i]}`, name: `pdp-sample-${i + 1}-mobile`, viewport: { width: 375, height: 667 } });
   }
+
+  const ctx2 = await newCtx(browser, { width: 375, height: 1500 });
+  const page2 = await ctx2.newPage();
+  await page2.goto(`${BASE}/products`, { waitUntil: 'networkidle' });
+  await page2.waitForTimeout(1000);
+  await page2.screenshot({ path: `${OUT}/products-mobile-tall.png` });
+  await ctx2.close();
 } finally {
   await browser.close();
 }

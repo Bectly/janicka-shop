@@ -10,9 +10,9 @@ export const CONDITION_LABELS: Record<string, string> = {
 /** Condition → badge color class */
 export const CONDITION_COLORS: Record<string, string> = {
   new_with_tags: "bg-sage-light text-sage-dark",
-  new_without_tags: "bg-sage text-white",
-  excellent: "bg-champagne-light text-champagne-dark",
-  good: "bg-champagne text-brand-dark",
+  new_without_tags: "bg-sage-dark text-white",
+  excellent: "bg-champagne text-brand-dark",
+  good: "bg-champagne-light text-brand-dark",
   visible_wear: "bg-blush-dark text-brand-dark",
 };
 

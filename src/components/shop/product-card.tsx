@@ -102,7 +102,7 @@ export function ProductCard({
       {condition && (
         <span
           className={cn(
-            "rounded-full px-2.5 py-0.5 text-xs font-medium shadow-sm",
+            "rounded-full px-2.5 py-0.5 text-xs font-semibold shadow-sm",
             CONDITION_COLORS[condition] ?? "bg-muted text-muted-foreground",
           )}
         >
