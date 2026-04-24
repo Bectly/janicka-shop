@@ -6,6 +6,8 @@ import { z } from "zod";
 import { rateLimitNewsletter } from "@/lib/rate-limit";
 import { sendNewsletterWelcomeEmail } from "@/lib/email";
 import { logger } from "@/lib/logger";
+import { ALL_SIZES } from "@/lib/sizes";
+import { COLOR_MAP } from "@/lib/constants";
 
 const newsletterSchema = z.object({
   email: z.string().trim().email("Zadejte platný e-mail").max(254),
@@ -167,8 +169,8 @@ export async function submitStyleQuiz(
     return { success: false, message: "Vyplňte prosím všechny otázky a platný e-mail." };
   }
 
-  const allowedSizes = new Set(ALL_SIZES);
-  const allowedColors = new Set(Object.keys(COLOR_MAP));
+  const allowedSizes: ReadonlySet<string> = new Set(ALL_SIZES);
+  const allowedColors: ReadonlySet<string> = new Set(Object.keys(COLOR_MAP));
   const sizes = parsed.data.sizes.filter((s) => allowedSizes.has(s));
   const colors = parsed.data.colors.filter((c) => allowedColors.has(c));
 
@@ -188,7 +190,7 @@ export async function submitStyleQuiz(
         email,
         active: true,
         source: "kviz-styl",
-        preferredSizes: sizes.length ? JSON.stringify(sizes) : null,
+        preferredSizes: JSON.stringify(sizes),
       },
       update: {
         active: true,
