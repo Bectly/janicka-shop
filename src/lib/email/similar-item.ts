@@ -1,10 +1,8 @@
 import { getMailer } from "@/lib/email/smtp-transport";
+import { FROM_NEWSLETTER, REPLY_TO } from "@/lib/email/addresses";
 import { getDb } from "@/lib/db";
 import { signUnsubscribeToken } from "@/lib/unsubscribe-token";
 import { logger } from "@/lib/logger";
-
-const NEWSLETTER_FROM_EMAIL =
-  process.env.NEWSLETTER_EMAIL_FROM ?? "Janička Shop <novinky@janicka-shop.cz>";
 
 function escapeHtml(str: string): string {
   return str
@@ -373,7 +371,8 @@ export async function sendSimilarItemNotifications(
           const subject = `${soldProduct.brand ? `${soldProduct.brand} ` : ""}${soldProduct.name} je pryč — ale máme tohle`;
 
           await mailer.sendMail({
-            from: NEWSLETTER_FROM_EMAIL,
+            from: FROM_NEWSLETTER,
+            replyTo: REPLY_TO,
             to: req.email,
             subject,
             html: buildSimilarItemHtml(

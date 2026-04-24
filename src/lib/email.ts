@@ -1,4 +1,11 @@
 import { getMailer } from "@/lib/email/smtp-transport";
+import {
+  FROM_ORDERS,
+  FROM_INFO,
+  FROM_NEWSLETTER,
+  FROM_SUPPORT,
+  REPLY_TO,
+} from "@/lib/email/addresses";
 import { signUnsubscribeToken } from "@/lib/unsubscribe-token";
 import { logger } from "@/lib/logger";
 import {
@@ -12,9 +19,6 @@ import {
   renderDisplayHeading,
   renderInfoCard,
 } from "@/lib/email/layout";
-
-const FROM_EMAIL = process.env.EMAIL_FROM ?? "Janička Shop <objednavky@janicka-shop.cz>";
-const NEWSLETTER_FROM_EMAIL = process.env.NEWSLETTER_EMAIL_FROM ?? "Janička Shop <novinky@janicka-shop.cz>";
 
 interface OrderItem {
   name: string;
@@ -247,7 +251,8 @@ export async function sendOrderConfirmationEmail(data: OrderEmailData): Promise<
 
   try {
     await mailer.sendMail({
-      from: FROM_EMAIL,
+      from: FROM_ORDERS,
+      replyTo: REPLY_TO,
       to: data.customerEmail,
       subject: `Potvrzení objednávky ${data.orderNumber} — Janička Shop`,
       html: buildOrderConfirmationHtml(data),
@@ -276,7 +281,8 @@ export async function sendPaymentConfirmedEmail(data: {
 
   try {
     await mailer.sendMail({
-      from: FROM_EMAIL,
+      from: FROM_ORDERS,
+      replyTo: REPLY_TO,
       to: data.customerEmail,
       subject: `Platba přijata — ${data.orderNumber} — Janička Shop`,
       html: buildPaymentConfirmedHtml(data),
@@ -413,7 +419,8 @@ export async function sendOrderStatusEmail(
 
   try {
     await mailer.sendMail({
-      from: FROM_EMAIL,
+      from: FROM_ORDERS,
+      replyTo: REPLY_TO,
       to: data.customerEmail,
       subject: `${subject} — ${data.orderNumber} — Janička Shop`,
       html: builder(data),
@@ -591,7 +598,8 @@ export async function sendShippingNotificationEmail(data: ShippingNotificationDa
 
   try {
     await mailer.sendMail({
-      from: FROM_EMAIL,
+      from: FROM_ORDERS,
+      replyTo: REPLY_TO,
       to: data.customerEmail,
       subject: `Objedn\u00e1vka odesl\u00e1na \u2014 ${data.orderNumber} \u2014 Jani\u010dka Shop`,
       html: buildShippingNotificationHtml(data),
@@ -812,7 +820,8 @@ export async function sendAdminNewOrderEmail(data: AdminOrderNotificationData): 
   const subjectPrefix = data.paid ? "Platba potvrzena" : "Nová objednávka";
   try {
     await mailer.sendMail({
-      from: FROM_EMAIL,
+      from: FROM_SUPPORT,
+      replyTo: REPLY_TO,
       to: config.email,
       subject: `${subjectPrefix} ${data.orderNumber} — ${formatPriceCzk(data.total)}`,
       html: buildAdminNewOrderHtml(data),
@@ -897,7 +906,8 @@ export async function sendAdminDeadlineAlertEmail(
 
   try {
     await mailer.sendMail({
-      from: FROM_EMAIL,
+      from: FROM_SUPPORT,
+      replyTo: REPLY_TO,
       to: adminEmail,
       subject,
       html,
@@ -952,7 +962,8 @@ export async function sendEmailChangeVerifyEmail(data: {
 
   try {
     await mailer.sendMail({
-      from: FROM_EMAIL,
+      from: FROM_INFO,
+      replyTo: REPLY_TO,
       to: data.newEmail,
       subject: "Potvrď změnu emailu — Janička Shop",
       html,
@@ -998,7 +1009,8 @@ export async function sendEmailChangeNoticeEmail(data: {
 
   try {
     await mailer.sendMail({
-      from: FROM_EMAIL,
+      from: FROM_INFO,
+      replyTo: REPLY_TO,
       to: data.oldEmail,
       subject: "Email tvého účtu byl změněn — Janička Shop",
       html,
@@ -1035,7 +1047,8 @@ export async function sendAccountDeletedEmail(data: {
 
   try {
     await mailer.sendMail({
-      from: FROM_EMAIL,
+      from: FROM_INFO,
+      replyTo: REPLY_TO,
       to: data.email,
       subject: "Tvůj účet byl smazán — Janička Shop",
       html,
@@ -1054,7 +1067,8 @@ export async function sendNewsletterWelcomeEmail(email: string): Promise<void> {
 
   try {
     await mailer.sendMail({
-      from: NEWSLETTER_FROM_EMAIL,
+      from: FROM_NEWSLETTER,
+      replyTo: REPLY_TO,
       to: email,
       subject: "Vítej v Janičce! — Janička Shop",
       html: buildNewsletterWelcomeHtml(email),
@@ -1322,7 +1336,8 @@ export async function sendAbandonedCartEmail(
 
   try {
     await mailer.sendMail({
-      from: FROM_EMAIL,
+      from: FROM_INFO,
+      replyTo: REPLY_TO,
       to: data.email,
       subject: subjects[stage],
       html,
@@ -1427,7 +1442,8 @@ export async function sendReviewRequestEmail(data: ReviewRequestEmailData): Prom
 
   try {
     await mailer.sendMail({
-      from: FROM_EMAIL,
+      from: FROM_SUPPORT,
+      replyTo: REPLY_TO,
       to: data.customerEmail,
       subject: `Jak jsi spokojená? — ${data.orderNumber} — Janička Shop`,
       html: buildReviewRequestHtml(data),
@@ -1534,7 +1550,8 @@ export async function sendDeliveryCheckEmail(data: DeliveryCheckEmailData): Prom
 
   try {
     await mailer.sendMail({
-      from: FROM_EMAIL,
+      from: FROM_SUPPORT,
+      replyTo: REPLY_TO,
       to: data.customerEmail,
       subject: `Dorazilo vše v pořádku? — ${data.orderNumber} — Janička Shop`,
       html: buildDeliveryCheckHtml(data),
@@ -1687,7 +1704,8 @@ export async function sendNewArrivalEmail(data: NewArrivalEmailData): Promise<bo
 
   try {
     await mailer.sendMail({
-      from: NEWSLETTER_FROM_EMAIL,
+      from: FROM_NEWSLETTER,
+      replyTo: REPLY_TO,
       to: data.email,
       subject,
       html: buildNewArrivalHtml(data),
@@ -1805,7 +1823,8 @@ export async function sendBrowseAbandonmentEmail(
 
   try {
     await mailer.sendMail({
-      from: NEWSLETTER_FROM_EMAIL,
+      from: FROM_NEWSLETTER,
+      replyTo: REPLY_TO,
       to: data.email,
       subject,
       html: buildBrowseAbandonmentHtml(data),
@@ -1895,7 +1914,8 @@ export async function sendCrossSellFollowUpEmail(
 
   try {
     await mailer.sendMail({
-      from: NEWSLETTER_FROM_EMAIL,
+      from: FROM_NEWSLETTER,
+      replyTo: REPLY_TO,
       to: data.customerEmail,
       subject: "Nové kousky ve tvém stylu \u{1F495} — Janička Shop",
       html: buildCrossSellFollowUpHtml(data),
@@ -1983,7 +2003,8 @@ export async function sendWinBackEmail(
 
   try {
     await mailer.sendMail({
-      from: NEWSLETTER_FROM_EMAIL,
+      from: FROM_NEWSLETTER,
+      replyTo: REPLY_TO,
       to: data.customerEmail,
       subject: "Nové kousky čekají \u{1F44B} — Janička Shop",
       html: buildWinBackHtml(data),
@@ -2130,7 +2151,8 @@ export async function sendCampaignEmail(
 
   try {
     await mailer.sendMail({
-      from: NEWSLETTER_FROM_EMAIL,
+      from: FROM_NEWSLETTER,
+      replyTo: REPLY_TO,
       to: recipientEmail,
       subject: data.subject,
       html: buildCampaignHtml(data, recipientEmail),
@@ -2502,7 +2524,8 @@ export async function sendMothersDayEmail(
 
   try {
     await mailer.sendMail({
-      from: NEWSLETTER_FROM_EMAIL,
+      from: FROM_NEWSLETTER,
+      replyTo: REPLY_TO,
       to: recipientEmail,
       subject: MOTHERS_DAY_SUBJECTS[emailNumber][segment],
       html: MOTHERS_DAY_BUILDERS[emailNumber](products, recipientEmail),
@@ -2785,7 +2808,8 @@ export async function sendCustomsCampaignEmail(
 
   try {
     await mailer.sendMail({
-      from: NEWSLETTER_FROM_EMAIL,
+      from: FROM_NEWSLETTER,
+      replyTo: REPLY_TO,
       to: recipientEmail,
       subject: CUSTOMS_SUBJECTS[emailNumber],
       html: CUSTOMS_BUILDERS[emailNumber](products, recipientEmail),

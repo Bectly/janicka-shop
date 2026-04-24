@@ -50,15 +50,16 @@ export async function submitContactForm(
 
   try {
     const { getMailer } = await import("@/lib/email/smtp-transport");
+    const { FROM_SUPPORT } = await import("@/lib/email/addresses");
     const mailer = getMailer();
     if (!mailer) {
-      return { success: false, error: "E-mailová služba není dostupná. Kontaktujte nás prosím přímo na info@janicka.cz." };
+      return { success: false, error: "E-mailová služba není dostupná. Kontaktujte nás prosím přímo na podpora@jvsatnik.cz." };
     }
 
-    const shopEmail = process.env.CONTACT_EMAIL ?? "info@janicka.cz";
+    const shopEmail = process.env.CONTACT_EMAIL ?? "podpora@jvsatnik.cz";
 
     await mailer.sendMail({
-      from: process.env.EMAIL_FROM ?? "Janička Shop <objednavky@janicka-shop.cz>",
+      from: FROM_SUPPORT,
       to: shopEmail,
       replyTo: email,
       subject: `Kontaktní formulář: ${subjectLabel}`,

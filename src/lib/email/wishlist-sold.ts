@@ -1,4 +1,5 @@
 import { getMailer } from "@/lib/email/smtp-transport";
+import { FROM_NEWSLETTER, REPLY_TO } from "@/lib/email/addresses";
 import { getDb } from "@/lib/db";
 import { signUnsubscribeToken } from "@/lib/unsubscribe-token";
 import { logger } from "@/lib/logger";
@@ -13,9 +14,6 @@ import {
   renderEyebrow,
   renderDisplayHeading,
 } from "@/lib/email/layout";
-
-const NEWSLETTER_FROM_EMAIL =
-  process.env.NEWSLETTER_EMAIL_FROM ?? "Janička Shop <novinky@janicka-shop.cz>";
 
 const CONDITION_LABELS: Record<string, string> = {
   new_with_tags: "Nové s visačkou",
@@ -226,7 +224,8 @@ export async function sendWishlistSoldNotifications(
       for (const sub of subscribers) {
         try {
           await mailer.sendMail({
-            from: NEWSLETTER_FROM_EMAIL,
+            from: FROM_NEWSLETTER,
+            replyTo: REPLY_TO,
             to: sub.email,
             subject,
             html: buildWishlistSoldHtml(

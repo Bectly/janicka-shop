@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
 import { getMailer } from "@/lib/email/smtp-transport";
+import { FROM_NEWSLETTER, REPLY_TO } from "@/lib/email/addresses";
 import { getDb } from "@/lib/db";
 import { buildSimilarItemsArrivedHtml } from "@/lib/email/similar-item";
 import { logger } from "@/lib/logger";
-
-const FROM_EMAIL =
-  process.env.NEWSLETTER_EMAIL_FROM ?? "Janička Shop <novinky@janicka-shop.cz>";
 
 /**
  * Similar items arrived cron — processes ProductNotifyRequest records.
@@ -132,7 +130,8 @@ export async function GET(request: Request) {
 
         // 3. Send email
         await mailer.sendMail({
-          from: FROM_EMAIL,
+          from: FROM_NEWSLETTER,
+          replyTo: REPLY_TO,
           to: req.email,
           subject: "Právě přidáno: kousky, které by se ti mohly líbit",
           html: buildSimilarItemsArrivedHtml(topProducts, req.email),

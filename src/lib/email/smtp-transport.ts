@@ -32,6 +32,3 @@ export function getMailer(): Transporter | null {
   });
   return cached;
 }
-
-export const FROM_DEFAULT =
-  process.env.SMTP_FROM ?? "Janička <noreply@vryp.cz>";
