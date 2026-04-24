@@ -1015,3 +1015,126 @@ No new evidence on the rest of the matrix this cycle. Full C4860 row table (rows
 - **[LEAD] [TOOLING] Worker commit scoping** — C4876 + C4881 are both Sage-Bolt attribution swaps caused by `git add .` swallowing sibling worker's working-tree diff. Session manager should scope commits to own files or commit Sage before dispatching Bolt. P2 but recurring.
 - **[LEAD] [AUDIT-CADENCE]** — codebase sweep / lint re-run should be triggered on every cycle with a code commit, not only when an agent flags it. C4861–C4880 shipped 2 lint regressions unnoticed. P2.
 
+## C4885 re-verification addendum (2026-04-25, post-5086ce2, Bolt #534 email-preview live-send + Sage C4885 i18n purge + CONDITION_LABELS unification)
+
+Lead directive (C4884 9ab0233 → C4885 f2b56bc): close #537 (admin-gate + rate-limit on /api/admin/email-preview send branch), absorb #534 (smoke-send-real harness over all 21 templates, blocked on missing SMTP_*), fold-in C4882–C4885 commit deltas, re-run gate suite on HEAD `5086ce2`. Four commits landed since C4881 cf4d4b8:
+
+- `1e195de` (#533, C4884 Bolt): 17 admin + 6 /account `loading.tsx` skeletons + Link prefetch sweep; new shared libs `src/components/admin/admin-skeletons.tsx` (229 LoC, 7 variants) + `src/app/(shop)/account/account-skeletons.tsx` (80 LoC, 4 variants).
+- `9d9361e` (#536, C4884 Sage): mobile quick-add audit doc only — no `src/` delta.
+- `12778c7` (#534, C4885 Bolt): `/api/admin/email-preview` gained `?send=1&to=` (admin-gated, IP rate-limited 10/60s, per-template-group `From` map, JSON `messageId/accepted/rejected` response); `scripts/smoke-send-real.ts` rewritten for all 21 templates → **closes Z3 (defense-in-depth) for the send branch only** — see row S below.
+- `5086ce2` (#494 Phase 3, C4885 Sage): 6 `\uXXXX`-escaped Czech strings purged from `email.ts` (shipping subject + condition labels); 4 duplicate `CONDITION_LABELS` tables collapsed onto canonical `@/lib/constants` (verified 1 source-of-truth at `src/lib/constants.ts:2`, 6 import sites: `email.ts`×4 call-sites + `email/similar-item.ts` + `email/wishlist-sold.ts`, **0 inline copies remaining**).
+
+### Gate state on HEAD `5086ce2`
+
+- **`tsc --noEmit`**: ✅ PASS (0 errors, silent — exit 0).
+- **`npm run lint`**: ❌ **3 errors, 0 warnings** — same C4881-introduced trio, **5 consecutive cycles unfixed** (Bolt has shipped 4 commits across C4882–C4885 without picking up Z2 even though Lead named it explicitly in C4881):
+  - `src/app/(admin)/admin/customers/page.tsx:150` — `Date.now()` in render (`react-hooks/purity`).
+  - `src/app/(admin)/admin/layout.tsx:35` — `Math.random()` in render inside `AdminAuthGate` (`react-hooks/purity`).
+  - `src/app/(admin)/admin/mailbox/mailbox-search.tsx:23` — `setState` synchronously in `useEffect` (`react-hooks/set-state-in-effect`).
+- **`@ts-ignore` / `@ts-nocheck` / `@ts-expect-error`**: 0 in `src/` (unchanged).
+- **`: any` / `as any`** in `src/`: 9 occurrences across 7 files (db.ts, images.ts, analytics-section.tsx, invoice/{credit-note,invoice}.ts, app/not-found.tsx, products/[slug]/not-found.tsx) — all pre-existing, no new C4882–C4885 introductions.
+- **`dangerouslySetInnerHTML`**: 16 / 8 files, all via `jsonLdString()` helper (`<` escaped) — 0 new vectors introduced by skeletons / email-preview / Phase 3.
+- **Hardcoded secrets** (`sk_live|sk_test|cfk_|inline Bearer`): 0 hits in `src/` (audit doc itself trips the pattern — false positive).
+- **`grep janicka-shop.vercel.app src/ prisma/`**: 0 hits (unchanged).
+
+### Row R (carry-forward) — email.ts LoC has REGRESSED
+
+| Axis | Target | C4860 actual | C4885 actual | Verdict |
+|---|---|---|---|---|
+| LoC ≤ 2400 (email.ts) | ≤ 2400 | 2369 (Phase 2 win) | **2695** (Δ +326 vs C4860, +95 over target) | ❌ regression |
+
+Cause: C4881 d076aaf (Bolt under Sage attribution) added `EMAIL_PREVIEW_TEMPLATES` registry + `renderEmailPreview` switch-statement (~21 cases × 7-9 LoC each = ~190 LoC) inline at `email.ts:2477-2695` instead of extracting to `src/lib/email/preview.ts`. C4885 12778c7 added smoke-send orchestration in `route.ts` rather than touching email.ts (good). The regression is pure C4881 debt that survived two re-attribution cycles.
+
+**Recommendation (P2 BOLT, ~5 min):** move `EMAIL_PREVIEW_TEMPLATES` array (~30 LoC) + `renderEmailPreview` switch (~190 LoC) + `EmailPreviewResult` type → new file `src/lib/email/preview.ts`; re-export from `email.ts` index for back-compat or update `route.ts` import. Restores email.ts to ~2475 LoC (still over 2400 by 75 — final cleanup is the 5 unused fixture-data exports below).
+
+### Row S (NEW C4885) — `/api/admin/email-preview` defense-in-depth status
+
+Per C4881 Z3 finding, the route gated on `session?.user` only (no `role === "admin"` check), and the GET-preview branch had no rate limit. C4885 12778c7 status:
+
+| Branch | Auth check | Rate limit | Verdict |
+|---|---|---|---|
+| `?send=1&to=…` (smoke send) | `session?.user` (route.ts:107-110) — same | `checkRateLimit('email-preview-send:${ip}', 10, 60_000)` (route.ts:128-135) | ✅ rate-limit added; auth still missing role-tightening |
+| `?template=…` (HTML preview) | `session?.user` only | none | ⚠️ unchanged from Z3 |
+| `?mode=source` / `?mode=subject` | `session?.user` only | none | ⚠️ unchanged from Z3 |
+| no-arg index page | `session?.user` only | none | ⚠️ unchanged from Z3 |
+
+Practical risk remains low (NextAuth credentials in this project only sign in `admin` table rows — see `src/lib/auth.ts:33-45`), so `session?.user` is effectively `session.user.role === "admin"` until a "staff" role exists. **Lead's C4885 close of #537 is correct for the spam-cannon vector** (rate-limited send is the actual harm surface). The role-tightening Z3 carry-forward should be folded into a future "auth roles" task, not blocked behind email-preview specifically.
+
+### Row T (NEW C4885) — uncommitted `@next/bundle-analyzer` wiring
+
+Working tree shows uncommitted changes (`git status` at HEAD `5086ce2`):
+
+```
+ M docs/STRUCTURE.md
+ M next.config.ts        # +6 lines: bundleAnalyzer import + withBundleAnalyzer(nextConfig)
+ M package.json          # +1 line: "analyze" script + @next/bundle-analyzer devDep
+ M package-lock.json     # lock entry for @next/bundle-analyzer ^16.2.4
+```
+
+Origin: #535 bundle-analyzer baseline prep (mentioned in Lead C4885 priority order, position 2 after #538 mobile P0). Diff is clean, additive, and behind `ANALYZE=true` env gate so production builds are unaffected. **Risk:** if the next worker uses `git add .` or `git commit -a`, this delta gets attributed to whatever cycle commits next (recurring W2-class attribution-swap problem, see C4881 row Z1 + C4876 incidents). **Recommendation:** Lead should either commit it as a standalone Bolt #535-prep commit before dispatching #538, or instruct workers to `git add` only their own files.
+
+### Row U (NEW C4885) — Sage 5086ce2 i18n + CONDITION_LABELS unification verification
+
+Four-axis verification of the C4885 Sage commit against the brief ("purge \uXXXX escapes + unify CONDITION_LABELS"):
+
+| Axis | Result | Verdict |
+|---|---|---|
+| `\uXXXX`-escaped Czech in `src/lib/email*.ts` | `grep -P '\\u[0-9A-Fa-f]{4}' src/lib/email.ts src/lib/email/*.ts` → 0 hits | ✅ |
+| Single source-of-truth for `CONDITION_LABELS` | `grep -rn 'CONDITION_LABELS' src/lib/` → 1 declaration (`constants.ts:2`) + 8 read sites (4 in email.ts at L483/1514/1702/1861, 1 in similar-item.ts:58, 1 in wishlist-sold.ts:65), 0 duplicate `Record<string,string>` definitions for condition labels | ✅ |
+| tsc clean on touched files | full `tsc --noEmit` exit 0 | ✅ |
+| eslint clean on touched files | `email.ts` / `email/similar-item.ts` / `email/wishlist-sold.ts` / `constants.ts` not in the 3-error list | ✅ |
+
+No new dead exports introduced (5086ce2 is purely refactor + import substitution).
+
+### Row V (NEW C4885) — ts-prune deltas
+
+C4885 dead-export census (full src/ run, framework hooks excluded):
+
+- **NEW dead exports** introduced by C4881 d076aaf still living in C4885 HEAD:
+  - `src/lib/email.ts:452` `ShippingNotificationData` — type used internally only.
+  - `src/lib/email.ts:1599` `BrowseAbandonmentEmailData` — type used internally only.
+  - `src/lib/email.ts:1692` `CrossSellFollowUpData` — type used internally only.
+  - `src/lib/email.ts:1775` `WinBackEmailData` — type used internally only.
+  - `src/lib/email.ts:2477` `EmailPreviewResult` — type re-exported through nothing; `route.ts` doesn't import the type.
+  - `src/lib/email.ts:696` `resolveAdminNotificationConfig` — exported but used only inside email.ts.
+- **Pre-existing P1-7e carry-forward (C4833 → C4885, 52+ cycles unresolved):**
+  - `src/lib/products-cache.ts:74` `getProducts` — exported, 0 importers.
+  - `src/lib/products-cache.ts:82` `getCategories` — exported, 0 importers.
+- **NEW from C4884 #530 cache sweep:** `src/lib/customer-cache.ts` exports `CUSTOMER_CACHE_SCOPES` and `CustomerCacheScope` (both flagged "used in module" — fine, false positive — keep).
+
+**Recommendation:** fold all 6 email.ts dead exports into Row P (P1 BOLT ts-prune close-out). Total cleanup if both rows P + new V land: ~10 LoC removed + 5 type bodies de-exported (no behaviour change).
+
+### Re-formalised follow-up queue (post-C4885)
+
+| # | Priority | Agent | Scope | LoC | Status |
+|---|----------|-------|-------|-----|--------|
+| Z2 | **P1** | BOLT | Fix the 3 lint errors (5 cycles unfixed): customers/page.tsx delete `minuteBucket` (cacheLife handles cache-key stability), admin/layout.tsx swap `Math.random()` for module-level counter, mailbox-search.tsx remove `setValue(initialQ)` effect (use `key={initialQ}` remount instead). | ~20 | OPEN — **escalate** |
+| R-fix | P2 | BOLT | Extract `EMAIL_PREVIEW_TEMPLATES` + `renderEmailPreview` from email.ts → `src/lib/email/preview.ts`; restores email.ts to ≤ 2475 LoC. | ~220 (move) | OPEN (NEW C4885) |
+| V | P2 | BOLT | De-export 6 unused email.ts symbols (5 `*Data` types + `resolveAdminNotificationConfig` + `EmailPreviewResult`); resolves Row P P1-7f equivalent for email.ts. | ~10 | OPEN (NEW C4885) |
+| T | P2 | LEAD | Commit uncommitted bundle-analyzer wiring (next.config.ts + package.json + lock) as standalone #535-prep commit BEFORE dispatching #538, to prevent attribution swap. | 0 | OPEN (NEW C4885) |
+| Z3 | P2 | BOLT | Tighten `/api/admin/email-preview` GET branches with explicit `role === "admin"` + optional shared rate-limit (currently only send branch is rate-limited). | ~6 | OPEN (carry from C4881) — defer to "auth roles" task |
+| N | P2 | BOLT | Drop `renderBody` export from `src/lib/email/layout.ts:257` (still 0 consumers). | ~5 | OPEN (carry C4847 → C4885) |
+| O | P2 | BOLT | Resend → SMTP comment drift across 14 sites. | ~14 | OPEN (carry C4847 → C4885) |
+| P | P1 | BOLT | ts-prune close-out — `getProducts`/`getCategories` at products-cache.ts:74,82. | ~70 | OPEN (carry C4833 → C4885, 52+ cycles) |
+| W2 | P1 | BOLT | Revert `experimental.optimizeCss` from next.config.ts (triple-defect no-op + SSR-crash vector). | ~3 | OPEN (carry C4860 → C4885) |
+| Y | bectly-gate | — | `prisma/dev.db*` tracked + `.gitignore` gap. Pre-push filter-repo scrub. | — | bectly-gated |
+| M | P2 | BOLT | DOMPurify on Phase 4 mailbox HTML render (deferred until Phase 4 ingest). | — | gated on Phase 4 |
+| #538 | P0 | BOLT | Mobile quick-add unblockers (sidebar collapse + capture=environment + dropzone copy). Sage audit at docs/audits/admin-mobile-quickadd-2026-04-25.md, Lead-priority-1 for next cycle. | — | OPEN (Lead-flagged C4885) |
+| #531 | P1 | TRACE | Phase 1b PERF_PROFILE bake on Vercel prod (5th stalled cycle, bectly-gate per Lead C4884). | — | bectly-gated |
+| #525 | P1 | TRACE | Phase 4 re-Lighthouse, gated on #517 + #524b/c/d/e all in HEAD + 24h Vercel flag bake. Now unblocked since #524 bundle is 5/5 done — only blocked on Z2 lint fix and a fresh bake. | — | OPEN (re-runnable next cycle) |
+
+### Verdict — what the C4882–C4885 commits actually delivered vs claimed
+
+| Claim | Reality | Verdict |
+|---|---|---|
+| C4884 Bolt #533: 17 admin + 6 account loading.tsx + shared skeleton libs + nav prefetch | Confirmed — 23 new `loading.tsx` files + `admin-skeletons.tsx` (229 LoC, 7 variants) + `account-skeletons.tsx` (80 LoC, 4 variants) + `prefetch` props on sidebar + account-nav. tsc clean. | ✅ |
+| C4884 Sage #536: mobile quick-add audit doc | Confirmed — `docs/audits/admin-mobile-quickadd-2026-04-25.md` exists. | ✅ |
+| C4885 Bolt #534: ?send=1&to= admin-gated + rate-limited + per-group From + JSON response | Confirmed — `route.ts:105-189`. Auth + rate-limit + From-mapping + JSON envelope all match commit message. SMTP unconfigured locally is genuine infra blocker (correctly returns 503 at route.ts:143-148). | ✅ |
+| C4885 Sage 5086ce2: 6 \uXXXX purged + 4 CONDITION_LABELS unified | Confirmed via Row U axes. | ✅ |
+| Lint streak preserved | **Still broken — 5 consecutive cycles** with 3 errors. | ❌ |
+| email.ts ≤ 2400 LoC (Row R Phase 2 acceptance) | **Regressed: 2369 → 2695** post C4881 inline registry. | ❌ |
+
+### Audit cadence note (carry from C4881 row Z4)
+
+C4885 is the first cycle since C4881 cf4d4b8 with a Trace audit re-run. Three intervening cycles (C4882–C4884) shipped 5 code commits with the same 3 lint errors and Row R regression unnoticed. Lead C4884 supervision commit was empty-body (no Trace dispatch this cycle). Recommend Lead either: (a) dispatch Trace every cycle that lands a Bolt or Sage commit, or (b) add a CI lint gate so the regression flips Bolt-cycle status to ❌ at commit time rather than waiting for the next sweep.
+
