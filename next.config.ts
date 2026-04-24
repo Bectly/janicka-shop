@@ -5,6 +5,12 @@ const isDev = process.env.NODE_ENV === "development";
 const nextConfig: NextConfig = {
   output: "standalone",
   cacheComponents: true,
+  // #517 PERF-CSS-BLOCK: inline critical CSS (via beasties) so the 32KB
+  // framework chunk stops render-blocking on mobile. Non-critical rules ship
+  // async after first paint. Needed package is auto-picked-up by Next 16.
+  experimental: {
+    optimizeCss: true,
+  },
   // Disable Next.js auto trailing-slash normalization so Czech→English aliases
   // collapse to a single 301 hop instead of "/produkty/" → "/produkty" → "/products".
   // Trailing slashes on other routes are normalized by the catch-all in redirects().
