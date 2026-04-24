@@ -12,7 +12,6 @@
  * about.
  */
 
-import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
 import { Search, X } from "lucide-react";

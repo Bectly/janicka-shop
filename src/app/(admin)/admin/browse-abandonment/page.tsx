@@ -1,7 +1,7 @@
 import { getDb } from "@/lib/db";
 import { formatPrice, formatDate } from "@/lib/format";
 import { connection } from "next/server";
-import { Eye, Mail, Check, Clock } from "lucide-react";
+import { Eye, Check, Clock } from "lucide-react";
 import { Suspense } from "react";
 import { Pagination, PaginationSkeleton } from "@/components/shop/pagination";
 import Link from "next/link";

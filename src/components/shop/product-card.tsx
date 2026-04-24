@@ -6,7 +6,7 @@ import { getImageUrls } from "@/lib/images";
 import { cn } from "@/lib/utils";
 import { WishlistButton } from "./wishlist-button";
 import { QuickViewButton } from "./quick-view-modal";
-import { Flame, Truck } from "lucide-react";
+import { Truck } from "lucide-react";
 
 const BLUR_DATA_URL =
   "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNlNWUwZGIiLz48L3N2Zz4=";
