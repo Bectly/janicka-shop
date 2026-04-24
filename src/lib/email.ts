@@ -198,7 +198,7 @@ function buildOrderConfirmationHtml(data: OrderEmailData): string {
       ${renderButton({ href: orderUrl, label: "Zobrazit objednávku", variant: "primary" })}
     </div>
     <p style="margin: 14px 0 0; font-family: ${FONTS.sans}; font-size: 12px; color: ${BRAND.charcoalMuted}; text-align: center; line-height: 1.6;">
-      Dotaz? Odpověz rovnou na tenhle email nebo piš na <a href="mailto:info@janicka.cz" style="color: ${BRAND.charcoalSoft};">info@janicka.cz</a>.
+      Dotaz? Odpověz rovnou na tenhle email nebo piš na <a href="mailto:podpora@jvsatnik.cz" style="color: ${BRAND.charcoalSoft};">podpora@jvsatnik.cz</a>.
     </p>`;
 
   return renderLayout({
@@ -383,7 +383,7 @@ function buildOrderCancelledHtml(data: StatusEmailData): string {
     heading: `Zrušeno, ${escapeHtml(firstName)}.`,
     bodyHtml: `
       <p style="margin: 0;">Objednávka <strong style="color: ${BRAND.charcoal};">${escapeHtml(data.orderNumber)}</strong> byla zrušena.</p>
-      <p style="margin: 14px 0 0; font-size: 14px;">Kdybys měla dotaz k refundaci nebo cokoli jiného, piš mi na <a href="mailto:info@janicka.cz" style="color: ${BRAND.primary};">info@janicka.cz</a>.</p>`,
+      <p style="margin: 14px 0 0; font-size: 14px;">Kdybys měla dotaz k refundaci nebo cokoli jiného, piš mi na <a href="mailto:podpora@jvsatnik.cz" style="color: ${BRAND.primary};">podpora@jvsatnik.cz</a>.</p>`,
     preheader: `Objednávka ${data.orderNumber} byla zrušena.`,
   }, data);
 }
@@ -657,7 +657,7 @@ function buildNewsletterWelcomeHtml(email: string): string {
       ${renderButton({ href: `${baseUrl}/products?sort=newest`, label: "Prohlédnout novinky", variant: "primary" })}
     </div>
     <p style="margin: 14px 0 0; font-family: ${FONTS.sans}; font-size: 12px; color: ${BRAND.charcoalMuted}; text-align: center; line-height: 1.6;">
-      Piš mi kdykoli na <a href="mailto:info@janicka.cz" style="color: ${BRAND.charcoalSoft};">info@janicka.cz</a>. Odpovídám osobně.
+      Piš mi kdykoli na <a href="mailto:podpora@jvsatnik.cz" style="color: ${BRAND.charcoalSoft};">podpora@jvsatnik.cz</a>. Odpovídám osobně.
     </p>`;
 
   return renderLayout({
@@ -984,7 +984,7 @@ export async function sendEmailChangeNoticeEmail(data: {
       Pokud jsi to byla ty, nemusíš dělat nic.
     </p>
     ${renderInfoCard(
-      `<p style="margin: 0; font-family: ${FONTS.sans}; font-size: 14px; color: ${BRAND.charcoal}; line-height: 1.6;"><strong style="color: ${BRAND.danger};">Nebyla jsi to ty?</strong> Ozvi se mi okamžitě na <a href="mailto:info@janicka.cz" style="color: ${BRAND.danger}; font-weight: 600;">info@janicka.cz</a>. Změnu vrátím a účet zabezpečím.</p>`,
+      `<p style="margin: 0; font-family: ${FONTS.sans}; font-size: 14px; color: ${BRAND.charcoal}; line-height: 1.6;"><strong style="color: ${BRAND.danger};">Nebyla jsi to ty?</strong> Ozvi se mi okamžitě na <a href="mailto:podpora@jvsatnik.cz" style="color: ${BRAND.danger}; font-weight: 600;">podpora@jvsatnik.cz</a>. Změnu vrátím a účet zabezpečím.</p>`,
       "warning",
     )}`;
   const html = renderLayout({
@@ -1015,7 +1015,7 @@ export async function sendAccountDeletedEmail(data: {
   const firstName = (data.firstName || "").trim();
   const content = `
     ${renderEyebrow("Účet smazán")}
-    ${renderDisplayHeading(firstName ? `Mějsce si, ${escapeHtml(firstName)}.` : "Tvůj účet byl smazán.")}
+    ${renderDisplayHeading(firstName ? `Měj se, ${escapeHtml(firstName)}.` : "Tvůj účet byl smazán.")}
     <p style="margin: 0 0 14px; font-family: ${FONTS.sans}; font-size: 15px; line-height: 1.7; color: ${BRAND.charcoalSoft};">
       Tvoje osobní údaje jsem právě anonymizovala. Historii objednávek uchovávám 10 let podle zákona o účetnictví &mdash; ale už bez tvých osobních údajů.
     </p>

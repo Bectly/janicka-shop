@@ -275,7 +275,7 @@ export function renderLayout({
                 <a href="${baseUrl}/kontakt" style="color: ${BRAND.charcoalSoft}; text-decoration: underline;">kontakt</a>
               </p>
               <p style="margin: 0 0 6px; font-family: ${FONTS.sans}; font-size: 12px; color: ${BRAND.charcoalSoft}; line-height: 1.7;">
-                <a href="mailto:info@janicka.cz" style="color: ${BRAND.charcoalSoft}; text-decoration: none;">info@janicka.cz</a>
+                <a href="mailto:podpora@jvsatnik.cz" style="color: ${BRAND.charcoalSoft}; text-decoration: none;">podpora@jvsatnik.cz</a>
               </p>
               <p style="margin: 0; font-family: ${FONTS.sans}; font-size: 11px; color: ${BRAND.charcoalMuted}; line-height: 1.6;">
                 <a href="${baseUrl}/podminky" style="color: ${BRAND.charcoalMuted}; text-decoration: underline;">Obchodní podmínky</a> &middot;
