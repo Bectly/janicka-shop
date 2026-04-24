@@ -100,7 +100,7 @@ async function CategoriesSection() {
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="flex items-end justify-between">
         <div>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase mb-3">
+          <span className="mb-3 flex w-fit items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase">
             <LayoutGrid className="size-3" aria-hidden="true" /> Kategorie
           </span>
           <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
@@ -137,7 +137,7 @@ async function NewProductsSection() {
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="flex items-end justify-between">
         <div>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase mb-3">
+          <span className="mb-3 flex w-fit items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase">
             <span className="size-1.5 rounded-full bg-brand animate-pulse" aria-hidden="true" /> Nové
           </span>
           <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
@@ -203,7 +203,7 @@ async function FeaturedProductsSection() {
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="flex items-end justify-between">
         <div>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-champagne/50 px-3 py-1 text-xs font-semibold tracking-wider text-champagne-dark uppercase mb-3">
+          <span className="mb-3 flex w-fit items-center gap-1.5 rounded-full bg-champagne/50 px-3 py-1 text-xs font-semibold tracking-wider text-champagne-dark uppercase">
             <Star className="size-3" aria-hidden="true" /> Výběr
           </span>
           <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
@@ -284,7 +284,7 @@ async function SaleProductsSection() {
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="flex items-end justify-between">
           <div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase mb-3">
+            <span className="mb-3 flex w-fit items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase">
               <Tag className="size-3" aria-hidden="true" /> Akce
             </span>
             <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
@@ -365,7 +365,7 @@ async function PopularBrandsSection() {
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="text-center">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase mb-4">
+        <span className="mx-auto mb-4 flex w-fit items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase">
           <Heart className="size-3" aria-hidden="true" /> Značky
         </span>
         <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
@@ -423,7 +423,7 @@ async function FeaturedCollectionsSection() {
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="flex items-end justify-between">
         <div>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-sage-light/60 px-3 py-1 text-xs font-semibold tracking-wider text-sage-dark uppercase mb-3">
+          <span className="mb-3 flex w-fit items-center gap-1.5 rounded-full bg-sage-light/60 px-3 py-1 text-xs font-semibold tracking-wider text-sage-dark uppercase">
             <Layers className="size-3" aria-hidden="true" /> Kolekce
           </span>
           <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
@@ -644,7 +644,7 @@ export default async function HomePage() {
           </div>
           <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-lg text-center">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase mb-4">
+              <span className="mx-auto mb-4 flex w-fit items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase">
                 <Mail className="size-3" aria-hidden="true" /> Newsletter
               </span>
               <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">

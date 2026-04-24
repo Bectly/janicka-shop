@@ -172,7 +172,7 @@ async function RelatedProductsSection({
     return (
       <section className="mt-16">
         <div className="mb-6">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-sage-light/60 px-3 py-1 text-xs font-semibold tracking-wider text-sage-dark uppercase mb-3">
+          <span className="mb-3 flex w-fit items-center gap-1.5 rounded-full bg-sage-light/60 px-3 py-1 text-xs font-semibold tracking-wider text-sage-dark uppercase">
             <span aria-hidden="true">◈</span> Podobné
           </span>
           <h2 className="font-heading text-xl font-bold text-foreground">
@@ -211,7 +211,7 @@ async function RelatedProductsSection({
   return (
     <section className="mt-16">
       <div className="mb-6">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-champagne/50 px-3 py-1 text-xs font-semibold tracking-wider text-champagne-dark uppercase mb-3">
+        <span className="mb-3 flex w-fit items-center gap-1.5 rounded-full bg-champagne/50 px-3 py-1 text-xs font-semibold tracking-wider text-champagne-dark uppercase">
           <span aria-hidden="true">★</span> Výběr
         </span>
         <h2 className="font-heading text-xl font-bold text-foreground">
