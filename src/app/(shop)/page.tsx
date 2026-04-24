@@ -80,9 +80,10 @@ async function CategoriesSection() {
   "use cache";
   cacheLife("hours");
   cacheTag("products");
+  let categories;
   try {
     const db = await getDb();
-    const categories = await db.category.findMany({
+    categories = await db.category.findMany({
       orderBy: { sortOrder: "asc" },
       include: {
         _count: {
@@ -90,38 +91,38 @@ async function CategoriesSection() {
         },
       },
     });
-
-    return (
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="flex items-end justify-between">
-          <div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase mb-3">
-              <LayoutGrid className="size-3" aria-hidden="true" /> Kategorie
-            </span>
-            <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
-              Kategorie
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Najděte přesně to, co hledáte
-            </p>
-          </div>
-        </div>
-        <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-          {categories.map((cat) => (
-            <CategoryCard
-              key={cat.id}
-              name={cat.name}
-              slug={cat.slug}
-              description={cat.description}
-              productCount={cat._count.products}
-            />
-          ))}
-        </div>
-      </section>
-    );
   } catch {
     return null;
   }
+
+  return (
+    <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      <div className="flex items-end justify-between">
+        <div>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase mb-3">
+            <LayoutGrid className="size-3" aria-hidden="true" /> Kategorie
+          </span>
+          <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
+            Kategorie
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Najděte přesně to, co hledáte
+          </p>
+        </div>
+      </div>
+      <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        {categories.map((cat) => (
+          <CategoryCard
+            key={cat.id}
+            name={cat.name}
+            slug={cat.slug}
+            description={cat.description}
+            productCount={cat._count.products}
+          />
+        ))}
+      </div>
+    </section>
+  );
 }
 
 async function NewProductsSection() {
@@ -255,9 +256,11 @@ async function SaleProductsSection() {
   "use cache";
   cacheLife("hours");
   cacheTag("products");
+  let saleProducts;
+  let lowestPricesMap;
   try {
     const db = await getDb();
-    const saleProducts = await db.product.findMany({
+    saleProducts = await db.product.findMany({
       where: {
         active: true,
         sold: false,
@@ -270,73 +273,74 @@ async function SaleProductsSection() {
 
     if (saleProducts.length === 0) return null;
 
-    const lowestPricesMap = await getLowestPrices30d(saleProducts.map((p) => p.id));
-
-    return (
-      <section className="bg-brand/[0.04]">
-        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <div className="flex items-end justify-between">
-            <div>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase mb-3">
-                <Tag className="size-3" aria-hidden="true" /> Akce
-              </span>
-              <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
-                Výprodej
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Skvělé kousky za ještě lepší ceny
-              </p>
-            </div>
-            <Link
-              href="/products?sale=true"
-              className="hidden text-sm font-medium text-primary hover:underline sm:block"
-            >
-              Zobrazit vše &rarr;
-            </Link>
-          </div>
-          <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
-            {saleProducts.map((product, i) => (
-              <div key={product.id} className={i === 0 || i === 5 ? "col-span-2" : undefined}>
-                <ProductCard
-                  id={product.id}
-                  name={product.name}
-                  slug={product.slug}
-                  price={product.price}
-                  compareAt={product.compareAt}
-                  images={product.images}
-                  categoryName={product.category.name}
-                  brand={product.brand}
-                  condition={product.condition}
-                  sizes={product.sizes}
-                  colors={product.colors}
-                  stock={product.stock}
-                  isReserved={false}
-                  lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
-                  variant={i === 0 || i === 5 ? "featured" : "standard"}
-                />
-              </div>
-            ))}
-          </div>
-          <div className="mt-8 text-center sm:hidden">
-            <Button
-              variant="outline"
-              render={<Link href="/products?sale=true" />}
-            >
-              Zobrazit celý výprodej
-            </Button>
-          </div>
-        </div>
-      </section>
-    );
+    lowestPricesMap = await getLowestPrices30d(saleProducts.map((p) => p.id));
   } catch {
     return null;
   }
+
+  return (
+    <section className="bg-brand/[0.04]">
+      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="flex items-end justify-between">
+          <div>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase mb-3">
+              <Tag className="size-3" aria-hidden="true" /> Akce
+            </span>
+            <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
+              Výprodej
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Skvělé kousky za ještě lepší ceny
+            </p>
+          </div>
+          <Link
+            href="/products?sale=true"
+            className="hidden text-sm font-medium text-primary hover:underline sm:block"
+          >
+            Zobrazit vše &rarr;
+          </Link>
+        </div>
+        <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
+          {saleProducts.map((product, i) => (
+            <div key={product.id} className={i === 0 || i === 5 ? "col-span-2" : undefined}>
+              <ProductCard
+                id={product.id}
+                name={product.name}
+                slug={product.slug}
+                price={product.price}
+                compareAt={product.compareAt}
+                images={product.images}
+                categoryName={product.category.name}
+                brand={product.brand}
+                condition={product.condition}
+                sizes={product.sizes}
+                colors={product.colors}
+                stock={product.stock}
+                isReserved={false}
+                lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
+                variant={i === 0 || i === 5 ? "featured" : "standard"}
+              />
+            </div>
+          ))}
+        </div>
+        <div className="mt-8 text-center sm:hidden">
+          <Button
+            variant="outline"
+            render={<Link href="/products?sale=true" />}
+          >
+            Zobrazit celý výprodej
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
 }
 
 async function PopularBrandsSection() {
   "use cache";
   cacheLife("hours");
   cacheTag("products");
+  let popularBrands: [string, number][];
   try {
     const db = await getDb();
     const brandProducts = await db.product.groupBy({
@@ -347,54 +351,55 @@ async function PopularBrandsSection() {
       take: 15,
     });
 
-    const popularBrands: [string, number][] = brandProducts
+    popularBrands = brandProducts
       .filter((g) => g.brand && g.brand.length > 0)
       .slice(0, 12)
       .map((g) => [g.brand!, g._count.id]);
-
-    if (popularBrands.length === 0) return null;
-
-    return (
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase mb-4">
-            <Heart className="size-3" aria-hidden="true" /> Značky
-          </span>
-          <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
-            Populární značky
-          </h2>
-          <p className="mt-3 text-sm text-muted-foreground">
-            Oblíbené značky v naší nabídce
-          </p>
-        </div>
-        <div className="mt-8 flex flex-wrap justify-center gap-2.5">
-          {popularBrands.map(([brand, count]) => (
-            <Link
-              key={brand}
-              href={`/products?brand=${encodeURIComponent(brand)}`}
-              className="group inline-flex min-h-[44px] items-center gap-1.5 rounded-full border border-border/60 bg-gradient-to-br from-card to-blush-light px-4 py-3 text-sm font-medium text-foreground/80 shadow-sm transition-all duration-200 hover:border-brand/30 hover:from-blush hover:to-brand-light/20 hover:text-primary hover:shadow-[0_4px_14px_-4px_oklch(0.55_0.20_350_/_0.15)]"
-            >
-              {brand}
-              <span className="text-[11px] text-muted-foreground/60 transition-colors group-hover:text-primary/50">
-                {count}
-              </span>
-            </Link>
-          ))}
-        </div>
-      </section>
-    );
   } catch {
     return null;
   }
+
+  if (popularBrands.length === 0) return null;
+
+  return (
+    <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      <div className="text-center">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase mb-4">
+          <Heart className="size-3" aria-hidden="true" /> Značky
+        </span>
+        <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
+          Populární značky
+        </h2>
+        <p className="mt-3 text-sm text-muted-foreground">
+          Oblíbené značky v naší nabídce
+        </p>
+      </div>
+      <div className="mt-8 flex flex-wrap justify-center gap-2.5">
+        {popularBrands.map(([brand, count]) => (
+          <Link
+            key={brand}
+            href={`/products?brand=${encodeURIComponent(brand)}`}
+            className="group inline-flex min-h-[44px] items-center gap-1.5 rounded-full border border-border/60 bg-gradient-to-br from-card to-blush-light px-4 py-3 text-sm font-medium text-foreground/80 shadow-sm transition-all duration-200 hover:border-brand/30 hover:from-blush hover:to-brand-light/20 hover:text-primary hover:shadow-[0_4px_14px_-4px_oklch(0.55_0.20_350_/_0.15)]"
+          >
+            {brand}
+            <span className="text-[11px] text-muted-foreground/60 transition-colors group-hover:text-primary/50">
+              {count}
+            </span>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 async function FeaturedCollectionsSection() {
   "use cache";
   cacheLife("hours");
   cacheTag("products");
+  let featuredCollections;
   try {
     const db = await getDb();
-    const featuredCollections = await db.collection.findMany({
+    featuredCollections = await db.collection.findMany({
       where: {
         active: true,
         featured: true,
@@ -407,60 +412,61 @@ async function FeaturedCollectionsSection() {
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
       take: 6,
     });
-
-    if (featuredCollections.length === 0) return null;
-
-    return (
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="flex items-end justify-between">
-          <div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-sage-light/60 px-3 py-1 text-xs font-semibold tracking-wider text-sage-dark uppercase mb-3">
-              <Layers className="size-3" aria-hidden="true" /> Kolekce
-            </span>
-            <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
-              Kolekce
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Kurátorské výběry podle stylu a sezóny
-            </p>
-          </div>
-          <Link
-            href="/collections"
-            className="hidden text-sm font-medium text-primary hover:underline sm:block"
-          >
-            Všechny kolekce &rarr;
-          </Link>
-        </div>
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {featuredCollections.map((collection, i) => (
-            <CollectionCard
-              key={collection.id}
-              slug={collection.slug}
-              title={collection.title}
-              description={collection.description}
-              image={collection.image}
-              priority={i < 2}
-              index={i}
-              wide={i === 0 && featuredCollections.length > 2}
-            />
-          ))}
-        </div>
-        <div className="mt-6 text-center sm:hidden">
-          <Button variant="outline" render={<Link href="/collections" />}>
-            Všechny kolekce
-          </Button>
-        </div>
-      </section>
-    );
   } catch {
     return null;
   }
+
+  if (featuredCollections.length === 0) return null;
+
+  return (
+    <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      <div className="flex items-end justify-between">
+        <div>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-sage-light/60 px-3 py-1 text-xs font-semibold tracking-wider text-sage-dark uppercase mb-3">
+            <Layers className="size-3" aria-hidden="true" /> Kolekce
+          </span>
+          <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
+            Kolekce
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Kurátorské výběry podle stylu a sezóny
+          </p>
+        </div>
+        <Link
+          href="/collections"
+          className="hidden text-sm font-medium text-primary hover:underline sm:block"
+        >
+          Všechny kolekce &rarr;
+        </Link>
+      </div>
+      <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {featuredCollections.map((collection, i) => (
+          <CollectionCard
+            key={collection.id}
+            slug={collection.slug}
+            title={collection.title}
+            description={collection.description}
+            image={collection.image}
+            priority={i < 2}
+            index={i}
+            wide={i === 0 && featuredCollections.length > 2}
+          />
+        ))}
+      </div>
+      <div className="mt-6 text-center sm:hidden">
+        <Button variant="outline" render={<Link href="/collections" />}>
+          Všechny kolekce
+        </Button>
+      </div>
+    </section>
+  );
 }
 
 async function RecentlySoldSection() {
   "use cache";
   cacheLife("hours");
   cacheTag("products");
+  let soldFeedProducts;
   try {
     const db = await getDb();
     const recentlySold = await db.product.findMany({
@@ -478,7 +484,7 @@ async function RecentlySoldSection() {
       orderBy: { updatedAt: "desc" },
     });
 
-    const soldFeedProducts = recentlySold.map((p) => ({
+    soldFeedProducts = recentlySold.map((p) => ({
       name: p.name,
       slug: p.slug,
       price: p.price,
@@ -487,11 +493,11 @@ async function RecentlySoldSection() {
       brand: p.brand,
       updatedAt: p.updatedAt,
     }));
-
-    return <RecentlySoldFeed products={soldFeedProducts} />;
   } catch {
     return null;
   }
+
+  return <RecentlySoldFeed products={soldFeedProducts} />;
 }
 
 async function JsonLdSection() {

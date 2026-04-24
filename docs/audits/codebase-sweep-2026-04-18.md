@@ -4,6 +4,30 @@
 **Scope**: `src/**`, `prisma/**`, `next.config.ts`, `package.json`
 **Commands run**: `npx tsc --noEmit`, `npm run lint`, `npx ts-prune`, `npx depcheck`, targeted grep sweeps
 
+## C4817 re-verification addendum (2026-04-24)
+
+Re-ran the audit after commits `15f55df` (task #453 P0-1 rate-limit), `f4dc52e` (task #459 P0-2 refs-in-render), and `8d0fb22` (task #460 P0-3 product-quick-edit subset — bundled with a mobile-checkout grid fix by bectly):
+
+- **`tsc --noEmit`**: ✅ still PASS.
+- **`npm run lint`**: **76 problems (57 errors, 19 warnings)** — down from 80 (62 err / 18 warn) at C4811. Net −5 errors, +1 warning.
+- **P0-1 `/api/suggest`**: ✅ **CLOSED** — `src/app/api/suggest/route.ts` now calls `checkRateLimit(\`suggest:\${ip}\`, 30, 60_000)` with 429 + `Retry-After: 60`. Task #453 done (follow-up A).
+- **P0-2 refs-in-render**: ✅ **CLOSED** — `hero-section.tsx` uses `useState(() => generatePetals(12))` initializer; `product-gallery.tsx` mirrors `lbDismissRef.current.dismissing` into `isLbDismissing` state for the inline style transition. Task #459 done (follow-up B). Neither site appears in lint output.
+- **P0-3 setState-in-effect**: ⚠️ **PARTIALLY CLOSED** — task #460 (commit 8d0fb22) cleared all 3 sites in `product-quick-edit.tsx` (lines 33/36/142). Two other sites were also silently resolved by unrelated refactors: `account/change-email/page.tsx:29` (converted to server component with `Date.now()` in expression, no more `useEffect`) and `account/orders/[orderNumber]/page.tsx:60`. Remaining **6 sites**:
+  - `src/app/pick-logo/pick-logo-client.tsx:68` — admin-only tool.
+  - `src/components/shop/cart-button.tsx:27` — hydration flag.
+  - `src/components/shop/checkout/express-checkout-buttons.tsx:32` — platform detection.
+  - `src/components/shop/cookie-consent.tsx:45` — localStorage read.
+  - `src/components/shop/mobile-nav.tsx:51` — route-change drawer close.
+  - `src/components/shop/product-gallery.tsx:236` — **NEW** from #459 refactor; syncs video element pause state on slide change. Legit external-DOM sync pattern.
+
+  Per audit recommendation (line 170) these are idiomatic hydration/route/DOM-sync patterns. Lead decision C4817 is to close the remaining 4 non-product-quick-edit sites with `// eslint-disable-next-line react-hooks/set-state-in-effect` rather than file a follow-up task. `product-gallery.tsx:236` should get the same treatment (video pause is external-system sync, not cascading render — exactly what eslint docs call out as legit).
+- **P1-1 `no-jsx-in-try-catch`**: still **44 errors in `src/app/(shop)/page.tsx`** — confirmed single-file scope, 5 `"use cache"` sections at lines 79/254/336/391/460. Task #461 open (follow-up C).
+- **No regressions** elsewhere: `: any`/`as any` still 7; `@ts-ignore` still 0; `dangerouslySetInnerHTML` still 5 (all `jsonLdString`); no new hardcoded secrets; `console.*` unchanged at 15 across 2 files (logger sink + orphan test).
+
+**Net state after C4817**: A ✅, B ✅, C open (Bolt #461 next), D/E/F still open, G closed (with #422).
+
+---
+
 ## C4811 re-verification addendum (2026-04-24)
 
 Re-ran the audit after commits `d17d169` (task #422 logger migration), `f7c16c1` (task #449 homepage reorder), and `0696288` (task #450 cart restore):
