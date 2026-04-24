@@ -1,5 +1,5 @@
 {
-  "last_bolt_commit_cycle": 4791,
+  "last_bolt_commit_cycle": 4794,
   "cycle": 4793,
   "directive": "C4793 Lead: R2 triad closeout. #414 shipped 405ac5a (env-check boot warning via instrumentation.ts + audit-r2-image-urls.ts read-only scan, build green) → marked completed. Closed stale #1 as superseded by narrower-scoped #413. Pipeline hinge: Trace #413 calibrates R2 prod integrity (Turso Product.images LIKE '%undefined/%' + live /api/upload probe). If rows>0 → Bolt data-repair task; if both clean → R2 triad closed, Trace moves to #367/#358/#351 audit stack. Bolt HOLD this cycle pending #413 outcome. Blocker 2229 ack: #334 already marked done in DB (advisory stale — preview DNS still NXDOMAIN but task isn't blocking). Guard #368 > #366 unchanged. No DUE monitors. QA worker exit=143 pattern concerning — keep Trace tasks atomic (<2min) until infra stabilizes.",
   "lanes": {
