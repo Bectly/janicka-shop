@@ -591,14 +591,14 @@ export default async function HomePage() {
 
       {/* Featured products — streams independently */}
       <ScrollReveal>
-        <Suspense fallback={null}>
+        <Suspense fallback={<div className="min-h-[1800px]" aria-hidden="true" />}>
           <FeaturedProductsSection />
         </Suspense>
       </ScrollReveal>
 
       {/* Sale products — streams independently */}
       <ScrollReveal>
-        <Suspense fallback={null}>
+        <Suspense fallback={<div className="min-h-[1800px]" aria-hidden="true" />}>
           <SaleProductsSection />
         </Suspense>
       </ScrollReveal>
@@ -612,7 +612,7 @@ export default async function HomePage() {
 
       {/* Collections — streams independently */}
       <ScrollReveal>
-        <Suspense fallback={null}>
+        <Suspense fallback={<div className="min-h-[1900px]" aria-hidden="true" />}>
           <FeaturedCollectionsSection />
         </Suspense>
       </ScrollReveal>
@@ -624,7 +624,7 @@ export default async function HomePage() {
 
       {/* Recently sold — streams independently */}
       <ScrollReveal>
-        <Suspense fallback={null}>
+        <Suspense fallback={<div className="min-h-[240px]" aria-hidden="true" />}>
           <RecentlySoldSection />
         </Suspense>
       </ScrollReveal>
