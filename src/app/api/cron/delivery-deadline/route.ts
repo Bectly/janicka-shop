@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { sendAdminDeadlineAlertEmail, type DeadlineAlertOrder } from "@/lib/email";
+import { requireCronSecret } from "@/lib/cron-auth";
 import { logger } from "@/lib/logger";
 
 /**
@@ -15,11 +16,8 @@ import { logger } from "@/lib/logger";
  * - expectedDeliveryDate is within 5 days OR already past
  */
 export async function GET(request: Request) {
-  const authHeader = request.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const unauthorized = requireCronSecret(request);
+  if (unauthorized) return unauthorized;
 
   const db = await getDb();
   const now = new Date();

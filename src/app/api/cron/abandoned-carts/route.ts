@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { sendAbandonedCartEmail } from "@/lib/email";
+import { requireCronSecret } from "@/lib/cron-auth";
 import { logger } from "@/lib/logger";
 
 /**
@@ -15,14 +16,8 @@ import { logger } from "@/lib/logger";
  *   Expire:  after 7 days
  */
 export async function GET(request: Request) {
-  // Verify cron secret — prevents unauthorized access.
-  // Fail closed: if CRON_SECRET is not configured, deny all requests rather
-  // than leaving the endpoint open to unauthenticated callers.
-  const authHeader = request.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const unauthorized = requireCronSecret(request);
+  if (unauthorized) return unauthorized;
 
   const db = await getDb();
   const now = new Date();

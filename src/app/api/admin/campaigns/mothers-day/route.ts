@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { runMothersDayCampaign } from "@/lib/campaigns/mothers-day";
 import type { MothersDayEmailNumber } from "@/lib/email";
+import { requireCronSecret } from "@/lib/cron-auth";
 import { logger } from "@/lib/logger";
 
 /**
@@ -19,11 +20,8 @@ import { logger } from "@/lib/logger";
  *   #3 Urgency — 2026-05-09 09:00 CET
  */
 export async function POST(request: Request) {
-  const authHeader = request.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const unauthorized = requireCronSecret(request);
+  if (unauthorized) return unauthorized;
 
   let payload: unknown;
   try {

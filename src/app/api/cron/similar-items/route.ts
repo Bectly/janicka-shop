@@ -3,6 +3,7 @@ import { getMailer } from "@/lib/email/smtp-transport";
 import { FROM_NEWSLETTER, REPLY_TO } from "@/lib/email/addresses";
 import { getDb } from "@/lib/db";
 import { buildSimilarItemsArrivedHtml } from "@/lib/email/similar-item";
+import { requireCronSecret } from "@/lib/cron-auth";
 import { logger } from "@/lib/logger";
 
 /**
@@ -16,11 +17,8 @@ import { logger } from "@/lib/logger";
  * Batch limit: 30 requests per run.
  */
 export async function GET(request: Request) {
-  const authHeader = request.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const unauthorized = requireCronSecret(request);
+  if (unauthorized) return unauthorized;
 
   const mailer = getMailer();
   if (!mailer) {
