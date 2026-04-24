@@ -45,7 +45,6 @@ export async function hasWidgetCookie(): Promise<boolean> {
 }
 
 export const WIDGET_COOKIE_NAME = COOKIE_NAME;
-export const WIDGET_COOKIE_MAX_AGE = MAX_AGE_SECONDS;
 
 export function checkWidgetPassword(password: string): boolean {
   const expected = process.env.DEVCHAT_PASSWORD ?? "janicka123";

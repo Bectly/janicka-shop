@@ -35,12 +35,3 @@ export function getPersistedReferralCode(): string | null {
     return null;
   }
 }
-
-/** Clear persisted referral code (after successful redemption). */
-export function clearPersistedReferralCode() {
-  try {
-    sessionStorage.removeItem(STORAGE_KEY);
-  } catch {
-    // ignore
-  }
-}
