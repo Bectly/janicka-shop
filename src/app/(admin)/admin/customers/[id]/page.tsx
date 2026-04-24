@@ -124,6 +124,7 @@ export default async function CustomerDetailPage({
 
   if (!customer) notFound();
 
+  // eslint-disable-next-line react-hooks/purity -- request-time read in RSC, not cached
   const now = Date.now();
   const isLocked =
     !!customer.lockedUntil && customer.lockedUntil.getTime() > now;

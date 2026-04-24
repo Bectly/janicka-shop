@@ -56,8 +56,10 @@ export default async function AccountOrderDetailPage({ params }: Props) {
   const withdrawalDeadline = deliveredAt
     ? new Date(deliveredAt.getTime() + 14 * 24 * 60 * 60 * 1000)
     : null;
+  // eslint-disable-next-line react-hooks/purity -- request-time read in RSC, not cached
+  const now = Date.now();
   const withdrawalOpen =
-    withdrawalDeadline !== null && withdrawalDeadline.getTime() > Date.now();
+    withdrawalDeadline !== null && withdrawalDeadline.getTime() > now;
 
   const packetaTrackingUrl =
     order.packetId || order.trackingNumber

@@ -139,6 +139,7 @@ export default async function AdminCustomersPage({
     .slice(0, 20)
     .map(([t]) => t);
 
+  // eslint-disable-next-line react-hooks/purity -- request-time read in RSC, not cached
   const now = Date.now();
   const customersWithStats = customers.map((customer) => {
     const validOrders = customer.orders.filter(

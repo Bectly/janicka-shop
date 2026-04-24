@@ -23,10 +23,12 @@ export default async function ChangeEmailPage() {
   });
   if (!customer) redirect("/login");
 
+  // eslint-disable-next-line react-hooks/purity -- request-time read in RSC, not cached
+  const now = Date.now();
   const hasPending =
     !!customer.pendingEmail &&
     !!customer.pendingEmailExpiresAt &&
-    customer.pendingEmailExpiresAt.getTime() > Date.now();
+    customer.pendingEmailExpiresAt.getTime() > now;
 
   return (
     <div className="space-y-6">

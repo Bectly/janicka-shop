@@ -39,6 +39,7 @@ async function AdminAuthGate({
   }
 
   // Sidebar badge: count of orders created in the last 24h
+  // eslint-disable-next-line react-hooks/purity -- request-time read in RSC, not cached
   const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const [ordersLast24h, settings] = await Promise.all([
     db.order.count({ where: { createdAt: { gte: yesterday } } }),
