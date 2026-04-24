@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import { getDb } from "@/lib/db";
 import { rateLimitLogin, recordLoginFailure } from "@/lib/rate-limit";
 import { authConfig } from "@/lib/auth-config";
+import { logger } from "@/lib/logger";
 
 const DUMMY_HASH = "$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWX.Z";
 
@@ -26,7 +27,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         try {
           db = await getDb();
         } catch (err) {
-          console.error("[auth] DB connection failed:", err);
+          logger.error("[auth] DB connection failed:", err);
           throw err;
         }
 
@@ -70,7 +71,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         try {
           db = await getDb();
         } catch (err) {
-          console.error("[auth] DB connection failed:", err);
+          logger.error("[auth] DB connection failed:", err);
           throw err;
         }
 

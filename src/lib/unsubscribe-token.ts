@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from "crypto";
+import { logger } from "@/lib/logger";
 
 function getSecret(): string | null {
   return process.env.UNSUBSCRIBE_HMAC_SECRET || null;
@@ -8,7 +9,7 @@ let warned = false;
 function warnOnce() {
   if (warned) return;
   warned = true;
-  console.error("[unsubscribe-token] UNSUBSCRIBE_HMAC_SECRET not set — unsubscribe links disabled until env var configured.");
+  logger.error("[unsubscribe-token] UNSUBSCRIBE_HMAC_SECRET not set — unsubscribe links disabled until env var configured.");
 }
 
 export function signUnsubscribeToken(email: string): string {

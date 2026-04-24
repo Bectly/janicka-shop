@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { verifyUnsubscribeToken } from "@/lib/unsubscribe-token";
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/unsubscribe/browse-abandonment?token=...
@@ -53,7 +54,7 @@ export async function GET(request: Request) {
       headers: { "Content-Type": "text/html; charset=utf-8" },
     });
   } catch (error) {
-    console.error("[Unsubscribe] Browse abandonment opt-out failed for", normalizedEmail, error);
+    logger.error("[Unsubscribe] Browse abandonment opt-out failed for", normalizedEmail, error);
     return new NextResponse(buildHtml(false), {
       status: 500,
       headers: { "Content-Type": "text/html; charset=utf-8" },

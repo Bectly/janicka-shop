@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { AlertCircle, ArrowLeft, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { logger } from "@/lib/logger";
 
 export default function CheckoutError({
   error,
@@ -13,7 +14,7 @@ export default function CheckoutError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("[Checkout] Unhandled error:", error);
+    logger.error("[Checkout] Unhandled error:", error);
   }, [error]);
 
   return (

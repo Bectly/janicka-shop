@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { sendDeliveryCheckEmail } from "@/lib/email";
+import { logger } from "@/lib/logger";
 
 /**
  * Delivery check-in email processor.
@@ -80,7 +81,7 @@ export async function GET(request: Request) {
       }
     }
   } catch (error) {
-    console.error("[Cron:delivery-check] Error:", error);
+    logger.error("[Cron:delivery-check] Error:", error);
     return NextResponse.json(
       { error: "Internal error", sent, failed },
       { status: 500 },

@@ -2,6 +2,7 @@
 
 import { getDb } from "@/lib/db";
 import { z } from "zod";
+import { logger } from "@/lib/logger";
 
 const trackSchema = z.object({
   email: z.string().trim().email().max(254),
@@ -76,7 +77,7 @@ export async function trackBrowseView(
 
     return { tracked: true };
   } catch (error) {
-    console.error("[BrowseAbandonment] Failed to track:", error);
+    logger.error("[BrowseAbandonment] Failed to track:", error);
     return { tracked: false };
   }
 }

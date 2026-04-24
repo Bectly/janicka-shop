@@ -8,6 +8,7 @@ import {
   CONDITION_LABELS,
 } from "@/lib/constants";
 
+import { logger } from "@/lib/logger";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://janicka-shop.vercel.app";
@@ -180,7 +181,7 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("[Google Merchant Feed] Failed to generate feed:", error);
+    logger.error("[Google Merchant Feed] Failed to generate feed:", error);
     return new NextResponse(
       '<?xml version="1.0" encoding="utf-8"?>\n<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0"><channel></channel></rss>',
       {

@@ -12,6 +12,7 @@
  */
 
 import { loadComgateCheckout, VERSION_2 } from "@comgate/checkout-js";
+import { logger } from "@/lib/logger";
 
 export interface ComgatePaymentCallbacks {
   onPaid: (data: unknown) => void;
@@ -58,7 +59,7 @@ export async function initComgateApplePay(
   try {
     const checkout = await getCheckout();
     if (!checkout?.core || !checkout?.applepay) {
-      console.warn("[Comgate SDK] Apple Pay module not loaded");
+      logger.warn("[Comgate SDK] Apple Pay module not loaded");
       return false;
     }
 
@@ -82,7 +83,7 @@ export async function initComgateApplePay(
     }
     return canPay;
   } catch (e) {
-    console.error("[Comgate SDK] Apple Pay init error:", e);
+    logger.error("[Comgate SDK] Apple Pay init error:", e);
     return false;
   }
 }
@@ -98,7 +99,7 @@ export async function initComgateGooglePay(
   try {
     const checkout = await getCheckout();
     if (!checkout?.core || !checkout?.googlepay) {
-      console.warn("[Comgate SDK] Google Pay module not loaded");
+      logger.warn("[Comgate SDK] Google Pay module not loaded");
       return false;
     }
 
@@ -119,7 +120,7 @@ export async function initComgateGooglePay(
     }
     return canPay;
   } catch (e) {
-    console.error("[Comgate SDK] Google Pay init error:", e);
+    logger.error("[Comgate SDK] Google Pay init error:", e);
     return false;
   }
 }

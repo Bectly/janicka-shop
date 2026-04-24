@@ -2,6 +2,7 @@
 
 import { getDb } from "@/lib/db";
 import { z } from "zod";
+import { logger } from "@/lib/logger";
 
 export interface WishlistProduct {
   id: string;
@@ -89,7 +90,7 @@ export async function subscribeWishlistNotifications(input: {
     }
     return { ok: true, count };
   } catch (err) {
-    console.error("[Wishlist] Subscribe failed:", err);
+    logger.error("[Wishlist] Subscribe failed:", err);
     return { ok: false, count: 0 };
   }
 }

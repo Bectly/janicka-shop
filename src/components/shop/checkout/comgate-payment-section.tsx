@@ -29,6 +29,7 @@ import {
   initComgateGooglePay,
 } from "@/lib/payments/comgate-sdk";
 
+import { logger } from "@/lib/logger";
 interface Props {
   orderNumber: string;
   accessToken: string;
@@ -76,7 +77,7 @@ export function ComgatePaymentSection({ orderNumber, accessToken, onSuccess }: P
   }, []);
 
   const handlePaymentError = useCallback((err: unknown) => {
-    console.error("[ComgatePaymentSection] Payment error:", err);
+    logger.error("[ComgatePaymentSection] Payment error:", err);
     setError("Při platbě nastala chyba. Zkuste to prosím znovu.");
     setPhase("error");
   }, []);

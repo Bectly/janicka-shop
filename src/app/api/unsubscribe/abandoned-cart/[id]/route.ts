@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
+import { logger } from "@/lib/logger";
 
 /**
  * GDPR-compliant unsubscribe endpoint for abandoned cart recovery emails.
@@ -43,7 +44,7 @@ export async function GET(
 
     return buildUnsubscribePage(true);
   } catch (error) {
-    console.error("[Unsubscribe] Failed to process unsubscribe:", error);
+    logger.error("[Unsubscribe] Failed to process unsubscribe:", error);
     return buildUnsubscribePage(false);
   }
 }

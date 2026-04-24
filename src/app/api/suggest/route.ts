@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 const MAPY_API_URL = "https://api.mapy.com/v1/suggest";
 const MAPY_TIMEOUT_MS = 5_000;
@@ -16,7 +17,7 @@ export async function GET(req: NextRequest) {
 
   const apiKey = process.env.MAPY_API_KEY;
   if (!apiKey) {
-    console.error("[Suggest] Missing MAPY_API_KEY environment variable");
+    logger.error("[Suggest] Missing MAPY_API_KEY environment variable");
     return NextResponse.json({ items: [] }, { status: 500 });
   }
 
@@ -34,7 +35,7 @@ export async function GET(req: NextRequest) {
     });
 
     if (!res.ok) {
-      console.error(`[Suggest] Mapy.com API error: ${res.status}`);
+      logger.error(`[Suggest] Mapy.com API error: ${res.status}`);
       return NextResponse.json({ items: [] }, { status: 502 });
     }
 
@@ -64,10 +65,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ items });
   } catch (e) {
     if (e instanceof DOMException && e.name === "TimeoutError") {
-      console.error("[Suggest] Mapy.com API timeout");
+      logger.error("[Suggest] Mapy.com API timeout");
       return NextResponse.json({ items: [] }, { status: 504 });
     }
-    console.error("[Suggest] Mapy.com API error:", e);
+    logger.error("[Suggest] Mapy.com API error:", e);
     return NextResponse.json({ items: [] }, { status: 500 });
   }
 }

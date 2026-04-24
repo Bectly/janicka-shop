@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { getDb } from "@/lib/db";
+import { logger } from "@/lib/logger";
 
 export type AuditAction =
   | "login"
@@ -93,7 +94,7 @@ export async function logEvent(input: LogEventInput): Promise<void> {
       },
     });
   } catch (err) {
-    console.error("[audit-log]", err);
+    logger.error("[audit-log]", err);
   }
 }
 
@@ -112,6 +113,6 @@ export async function logEventByEmail(
     if (!customer) return;
     await logEvent({ customerId: customer.id, action, metadata });
   } catch (err) {
-    console.error("[audit-log]", err);
+    logger.error("[audit-log]", err);
   }
 }

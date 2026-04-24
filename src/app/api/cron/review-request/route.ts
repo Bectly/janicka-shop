@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { sendReviewRequestEmail } from "@/lib/email";
+import { logger } from "@/lib/logger";
 
 /**
  * Review request email processor.
@@ -74,7 +75,7 @@ export async function GET(request: Request) {
       }
     }
   } catch (error) {
-    console.error("[Cron:review-request] Error:", error);
+    logger.error("[Cron:review-request] Error:", error);
     return NextResponse.json(
       { error: "Internal error", sent, failed },
       { status: 500 },

@@ -61,6 +61,7 @@ import {
 } from "@/lib/constants";
 import { MobileCheckoutSummary } from "@/components/shop/mobile-checkout-summary";
 import { CUSTOMER_EMAIL_KEY } from "@/components/shop/browse-abandonment-tracker";
+import { logger } from "@/lib/logger";
 
 const emptySubscribe = () => () => {};
 
@@ -488,7 +489,7 @@ export default function CheckoutPage() {
         }
         discountFetchedForRef.current = referralCode;
       } catch (e) {
-        console.error("[Checkout] Discount validation failed:", e);
+        logger.error("[Checkout] Discount validation failed:", e);
         // Gracefully skip — checkout proceeds without discounts
       }
     });

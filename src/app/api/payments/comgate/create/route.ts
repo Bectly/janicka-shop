@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getDb } from "@/lib/db";
 import { createComgatePayment } from "@/lib/payments/comgate";
 import { ComgateError } from "@/lib/payments/types";
+import { logger } from "@/lib/logger";
 
 
 /**
@@ -119,7 +120,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (e) {
     if (e instanceof ComgateError) {
-      console.error(
+      logger.error(
         `[Comgate create] API error ${e.code}: ${e.message} for order ${orderNumber}`
       );
       return NextResponse.json(
@@ -130,7 +131,7 @@ export async function POST(req: NextRequest) {
         { status: 502 }
       );
     }
-    console.error(`[Comgate create] Unexpected error for order ${orderNumber}:`, e);
+    logger.error(`[Comgate create] Unexpected error for order ${orderNumber}:`, e);
     return NextResponse.json(
       { error: "Nepodařilo se vytvořit platbu. Zkuste to prosím znovu." },
       { status: 500 }

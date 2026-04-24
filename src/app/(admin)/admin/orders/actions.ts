@@ -9,6 +9,7 @@ import { dispatchEmail } from "@/lib/email-dispatch";
 import { rateLimitAdmin } from "@/lib/rate-limit";
 import { generateInvoicePdf, type InvoiceData } from "@/lib/invoice/generate-invoice";
 import { createPacket, getPacketLabel, getPacketLabelsBatch } from "@/lib/shipping/packeta";
+import { logger } from "@/lib/logger";
 
 const VALID_STATUSES = [
   "pending",
@@ -129,7 +130,7 @@ export async function updateOrderStatus(orderId: string, status: string) {
   if (status === "shipped") {
     // Enhanced shipping email with cross-sell product recommendations
     sendShippingEmailWithCrossSell(db, orderId).catch((err) => {
-      console.error("[Email] Failed to send shipping notification:", err);
+      logger.error("[Email] Failed to send shipping notification:", err);
     });
   } else {
     db.order
@@ -160,11 +161,11 @@ export async function updateOrderStatus(orderId: string, status: string) {
           },
           (p) => sendOrderStatusEmail(p.status as string, p as never),
         ).catch((err: unknown) => {
-          console.error(`[Email] Order status dispatch failed:`, err);
+          logger.error(`[Email] Order status dispatch failed:`, err);
         });
       })
       .catch((err) => {
-        console.error(`[Email] Failed to fetch order for status email:`, err);
+        logger.error(`[Email] Failed to fetch order for status email:`, err);
       });
   }
 

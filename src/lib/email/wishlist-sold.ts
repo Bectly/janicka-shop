@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 import { getDb } from "@/lib/db";
 import { signUnsubscribeToken } from "@/lib/unsubscribe-token";
+import { logger } from "@/lib/logger";
 
 let cachedResend: Resend | null | undefined;
 
@@ -194,7 +195,7 @@ export async function sendWishlistSoldNotifications(
 ): Promise<void> {
   const resend = getResendClient();
   if (!resend) {
-    console.warn(
+    logger.warn(
       "[Email] RESEND_API_KEY not set — skipping wishlist sold notifications",
     );
     return;
@@ -275,7 +276,7 @@ export async function sendWishlistSoldNotifications(
           });
           notifiedIds.push(sub.id);
         } catch (err) {
-          console.error(
+          logger.error(
             `[Email] Failed to send wishlist sold email to ${sub.email}:`,
             err,
           );
@@ -289,7 +290,7 @@ export async function sendWishlistSoldNotifications(
         });
       }
     } catch (err) {
-      console.error(
+      logger.error(
         `[Email] Wishlist sold notification failed for product ${soldProduct.id}:`,
         err,
       );

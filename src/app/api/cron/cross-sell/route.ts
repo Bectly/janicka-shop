@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { sendCrossSellFollowUpEmail } from "@/lib/email";
 import { getImageUrls } from "@/lib/images";
+import { logger } from "@/lib/logger";
 
 /**
  * Cross-sell follow-up email processor (T+14 days after order creation).
@@ -185,7 +186,7 @@ export async function GET(request: Request) {
       }
     }
   } catch (error) {
-    console.error("[Cron:cross-sell] Error:", error);
+    logger.error("[Cron:cross-sell] Error:", error);
     return NextResponse.json(
       { error: "Internal error", sent, skipped, failed },
       { status: 500 },

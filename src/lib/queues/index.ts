@@ -1,6 +1,7 @@
 import { Queue, type JobsOptions } from "bullmq";
 import IORedis from "ioredis";
 import { QUEUE_NAMES, getRedisUrl, type QueueName } from "./connection";
+import { logger } from "@/lib/logger";
 
 /**
  * BullMQ queue registry.
@@ -114,7 +115,7 @@ export async function enqueueEmail(
     await emailQueue().add(data.type, data, opts);
     return true;
   } catch (err) {
-    console.warn("[queues] enqueueEmail failed:", err instanceof Error ? err.message : err);
+    logger.warn("[queues] enqueueEmail failed:", err instanceof Error ? err.message : err);
     return false;
   }
 }
@@ -128,7 +129,7 @@ export async function enqueueInvoice(
     await invoiceQueue().add("generate", data, opts);
     return true;
   } catch (err) {
-    console.warn("[queues] enqueueInvoice failed:", err instanceof Error ? err.message : err);
+    logger.warn("[queues] enqueueInvoice failed:", err instanceof Error ? err.message : err);
     return false;
   }
 }
@@ -142,7 +143,7 @@ export async function enqueuePacketaLabel(
     await packetaQueue().add("create-and-label", data, opts);
     return true;
   } catch (err) {
-    console.warn("[queues] enqueuePacketaLabel failed:", err instanceof Error ? err.message : err);
+    logger.warn("[queues] enqueuePacketaLabel failed:", err instanceof Error ? err.message : err);
     return false;
   }
 }

@@ -6,6 +6,7 @@ import {
 } from "./comgate";
 import { mockProvider } from "./mock";
 import { gopayProvider } from "./gopay";
+import { logger } from "@/lib/logger";
 
 /**
  * Provider factory. Reads PAYMENT_PROVIDER env var (defaults to "comgate").
@@ -41,7 +42,7 @@ export function getPaymentProvider(): PaymentProvider {
     case "comgate":
       return comgateProvider;
     default:
-      console.warn(
+      logger.warn(
         `[Payments] Unknown PAYMENT_PROVIDER="${selected}", falling back to comgate`,
       );
       return comgateProvider;

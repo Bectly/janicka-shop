@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { sendBrowseAbandonmentEmail } from "@/lib/email";
+import { logger } from "@/lib/logger";
 
 /**
  * Browse abandonment email processor.
@@ -149,7 +150,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ ok: true, sent, expired, skipped });
   } catch (error) {
-    console.error("[Cron] Browse abandonment processing failed:", error);
+    logger.error("[Cron] Browse abandonment processing failed:", error);
     return NextResponse.json({ error: "Processing failed" }, { status: 500 });
   }
 }

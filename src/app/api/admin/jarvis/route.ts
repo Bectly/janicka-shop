@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { z } from "zod";
+import { logger } from "@/lib/logger";
 
 const commandSchema = z.object({
   command: z.string().min(1).max(500),
@@ -272,7 +273,7 @@ export async function POST(request: Request) {
         },
       });
     } catch (err) {
-      console.error("[jarvis] failed to write audit log", err);
+      logger.error("[jarvis] failed to write audit log", err);
     }
     return NextResponse.json(reply);
   }
@@ -307,7 +308,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (err) {
-    console.error("[jarvis] failed to write audit log", err);
+    logger.error("[jarvis] failed to write audit log", err);
   }
 
   return NextResponse.json(reply);

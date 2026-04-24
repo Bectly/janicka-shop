@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { sendWinBackEmail } from "@/lib/email";
 import { getImageUrls } from "@/lib/images";
+import { logger } from "@/lib/logger";
 
 /**
  * Win-back email processor for lapsed customers.
@@ -174,7 +175,7 @@ export async function GET(request: Request) {
       }
     }
   } catch (error) {
-    console.error("[Cron:win-back] Error:", error);
+    logger.error("[Cron:win-back] Error:", error);
     return NextResponse.json(
       { error: "Internal error", sent, skipped, failed },
       { status: 500 },

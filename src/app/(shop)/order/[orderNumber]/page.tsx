@@ -14,6 +14,7 @@ import { QrPaymentCode } from "@/components/shop/qr-payment-code";
 import { PaymentStatusPoller } from "@/components/shop/payment-status-poller";
 import { CreateAccountCard } from "@/components/shop/create-account-card";
 import { ReferralCard } from "@/components/shop/referral-card";
+import { logger } from "@/lib/logger";
 
 interface Props {
   params: Promise<{ orderNumber: string }>;
@@ -77,7 +78,7 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
     try {
       qrPayment = await generateOrderQrPayment(order.orderNumber, order.total);
     } catch (e) {
-      console.warn(`[Order] QR payment generation failed for ${order.orderNumber}:`, e);
+      logger.warn(`[Order] QR payment generation failed for ${order.orderNumber}:`, e);
     }
   }
 

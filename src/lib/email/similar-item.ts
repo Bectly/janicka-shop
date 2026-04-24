@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 import { getDb } from "@/lib/db";
 import { signUnsubscribeToken } from "@/lib/unsubscribe-token";
+import { logger } from "@/lib/logger";
 
 let cachedResend: Resend | null | undefined;
 
@@ -307,7 +308,7 @@ export async function sendSimilarItemNotifications(
 ): Promise<void> {
   const resend = getResendClient();
   if (!resend) {
-    console.warn(
+    logger.warn(
       "[Email] RESEND_API_KEY not set — skipping similar item notifications",
     );
     return;
@@ -393,7 +394,7 @@ export async function sendSimilarItemNotifications(
 
           requestIds.push(req.id);
         } catch (err) {
-          console.error(
+          logger.error(
             `[Email] Failed to send similar item notification to ${req.email}:`,
             err,
           );
@@ -408,7 +409,7 @@ export async function sendSimilarItemNotifications(
         });
       }
     } catch (err) {
-      console.error(
+      logger.error(
         `[Email] Similar item notification failed for product ${soldProduct.id}:`,
         err,
       );

@@ -8,6 +8,7 @@ import {
   CONDITION_LABELS,
 } from "@/lib/constants";
 
+import { logger } from "@/lib/logger";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://janicka-shop.vercel.app";
@@ -161,7 +162,7 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("[Pinterest Feed] Failed to generate feed:", error);
+    logger.error("[Pinterest Feed] Failed to generate feed:", error);
     return new NextResponse("", {
       status: 500,
       headers: { "Content-Type": "text/tab-separated-values; charset=utf-8" },

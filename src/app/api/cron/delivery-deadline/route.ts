@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { sendAdminDeadlineAlertEmail, type DeadlineAlertOrder } from "@/lib/email";
+import { logger } from "@/lib/logger";
 
 /**
  * Delivery deadline alert processor.
@@ -67,7 +68,7 @@ export async function GET(request: Request) {
       urgent: alertOrders.filter((o) => o.daysRemaining >= 0 && o.daysRemaining <= 5).length,
     });
   } catch (error) {
-    console.error("[Cron:delivery-deadline] Error:", error);
+    logger.error("[Cron:delivery-deadline] Error:", error);
     return NextResponse.json(
       { error: "Internal error" },
       { status: 500 },

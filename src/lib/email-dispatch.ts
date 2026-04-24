@@ -1,11 +1,12 @@
 import { enqueueEmail, type EmailJobType } from "@/lib/queues";
+import { logger } from "@/lib/logger";
 
 /**
  * P4.2: Offload email sends from Server Actions onto BullMQ.
  *
  * Usage:
  *   dispatchEmail("order-confirmation", payload, sendOrderConfirmationEmail)
- *     .catch((e) => console.error("[Checkout] Email dispatch failed:", e));
+ *     .catch((e) => logger.error("[Checkout] Email dispatch failed:", e));
  *
  * Behaviour:
  *   - Production (REDIS_URL set): enqueues onto emailQueue — returns in ~5ms
@@ -25,7 +26,7 @@ export async function dispatchEmail<T extends Record<string, unknown>>(
     const queued = await enqueueEmail({ type, payload });
     if (queued) return;
   } catch (err) {
-    console.warn(
+    logger.warn(
       `[email-dispatch] enqueue failed for type=${type}, falling back to inline send:`,
       err instanceof Error ? err.message : err,
     );
@@ -34,7 +35,7 @@ export async function dispatchEmail<T extends Record<string, unknown>>(
   try {
     await inlineFallback(payload);
   } catch (err) {
-    console.error(
+    logger.error(
       `[email-dispatch] inline fallback failed for type=${type}:`,
       err instanceof Error ? err.message : err,
     );

@@ -32,6 +32,7 @@ import {
   getCheckoutDiscounts,
 } from "@/lib/referral";
 
+import { logger } from "@/lib/logger";
 const checkoutSchema = z
   .object({
     email: z.string().email("Zadejte platný email").max(254),
@@ -413,7 +414,7 @@ export async function createOrder(
             if (e instanceof UnavailableError) throw e;
             // Corrupted sizes JSON in DB — reject order rather than silently
             // accepting an unvalidated client value. Admin must fix the product.
-            console.error(`[Checkout] Corrupted sizes JSON for product ${dbProduct.id}: ${dbProduct.sizes}`);
+            logger.error(`[Checkout] Corrupted sizes JSON for product ${dbProduct.id}: ${dbProduct.sizes}`);
             throw new UnavailableError(
               `Produkt „${dbProduct.name}" má poškozená data. Kontaktujte nás prosím.`
             );
@@ -427,7 +428,7 @@ export async function createOrder(
             }
           } catch (e) {
             if (e instanceof UnavailableError) throw e;
-            console.error(`[Checkout] Corrupted colors JSON for product ${dbProduct.id}: ${dbProduct.colors}`);
+            logger.error(`[Checkout] Corrupted colors JSON for product ${dbProduct.id}: ${dbProduct.colors}`);
             throw new UnavailableError(
               `Produkt „${dbProduct.name}" má poškozená data. Kontaktujte nás prosím.`
             );
@@ -503,17 +504,17 @@ export async function createOrder(
 
   // Generate a referral code for this order (fire-and-forget)
   createReferralCode(order.orderNumber, order.customerEmail).catch((e) =>
-    console.error("[Checkout] Referral code generation failed:", e),
+    logger.error("[Checkout] Referral code generation failed:", e),
   );
 
   // Notify subscribers about similar items when their watched category sells (fire-and-forget)
   sendSimilarItemNotifications(order.soldProducts).catch((e) =>
-    console.error("[Checkout] Similar notify:", e),
+    logger.error("[Checkout] Similar notify:", e),
   );
 
   // Notify wishlist subscribers that their saved item just sold (fire-and-forget)
   sendWishlistSoldNotifications(order.soldProducts).catch((e) =>
-    console.error("[Checkout] Wishlist sold notify:", e),
+    logger.error("[Checkout] Wishlist sold notify:", e),
   );
 
   // P4.2: Enqueue order confirmation email on BullMQ (fire-and-forget).
@@ -529,7 +530,7 @@ export async function createOrder(
         const dbPrice = order.dbPrices.get(item.productId);
         const dbName = order.dbNames.get(item.productId);
         if (dbPrice === undefined || dbName === undefined) {
-          console.error(`[Checkout] Missing DB data for product ${item.productId} in email`);
+          logger.error(`[Checkout] Missing DB data for product ${item.productId} in email`);
         }
         return { name: dbName ?? item.name, price: dbPrice ?? item.price, size: item.size, color: item.color };
       }),
@@ -550,7 +551,7 @@ export async function createOrder(
     },
     sendOrderConfirmationEmail,
   ).catch((err: unknown) => {
-    console.error(`[Checkout] Order confirmation dispatch failed for ${order.orderNumber}:`, err);
+    logger.error(`[Checkout] Order confirmation dispatch failed for ${order.orderNumber}:`, err);
   });
 
   // Notify admin about new order — COD only fires here (confirmed money).
@@ -575,7 +576,7 @@ export async function createOrder(
       },
       sendAdminNewOrderEmail,
     ).catch((err: unknown) => {
-      console.error(`[Checkout] Admin notification dispatch failed for ${order.orderNumber}:`, err);
+      logger.error(`[Checkout] Admin notification dispatch failed for ${order.orderNumber}:`, err);
     });
   }
 
@@ -587,7 +588,7 @@ export async function createOrder(
         data: { status: "recovered", recoveredOrderId: order.id },
       })
       .catch((err: unknown) => {
-        console.error("[Checkout] Failed to mark abandoned carts as recovered:", err);
+        logger.error("[Checkout] Failed to mark abandoned carts as recovered:", err);
       });
 
     // Log to Heureka for "Ověřeno zákazníky" review questionnaire (fire-and-forget)
@@ -596,7 +597,7 @@ export async function createOrder(
       order.orderNumber,
       order.productSkus,
     ).catch((err) => {
-      console.error(`[Checkout] Heureka ORDER_INFO failed for ${order.orderNumber}:`, err);
+      logger.error(`[Checkout] Heureka ORDER_INFO failed for ${order.orderNumber}:`, err);
     });
 
     redirect(`/order/${order.orderNumber}?token=${order.accessToken}`);
@@ -609,7 +610,7 @@ export async function createOrder(
       data: { status: "recovered", recoveredOrderId: order.id },
     })
     .catch((err: unknown) => {
-      console.error("[Checkout] Failed to mark abandoned carts as recovered:", err);
+      logger.error("[Checkout] Failed to mark abandoned carts as recovered:", err);
     });
 
   const provider = getPaymentProvider();
@@ -669,12 +670,12 @@ export async function createOrder(
         });
       });
     } catch (rollbackErr) {
-      console.error(
+      logger.error(
         "[Checkout] Failed to rollback order after payment failure:",
         rollbackErr
       );
     }
-    console.error("[Checkout] Comgate payment creation failed:", e);
+    logger.error("[Checkout] Comgate payment creation failed:", e);
     return {
       error:
         "Nepodařilo se vytvořit platbu. Zkuste to prosím znovu nebo zvolte platbu na dobírku.",
@@ -789,6 +790,6 @@ export async function captureAbandonedCart(input: {
     }
   } catch (err) {
     // Never block checkout flow — log and move on
-    console.error("[AbandonedCart] Capture failed:", err);
+    logger.error("[AbandonedCart] Capture failed:", err);
   }
 }

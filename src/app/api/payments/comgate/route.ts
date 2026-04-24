@@ -5,6 +5,7 @@ import { getComgatePaymentStatus } from "@/lib/payments/comgate";
 import { ComgateError } from "@/lib/payments/types";
 import { processPaymentStatus } from "@/lib/payments/process-status";
 import { revalidatePath } from "next/cache";
+import { logger } from "@/lib/logger";
 
 /**
  * Comgate webhook notification handler.
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
       });
 
       if (!orderByRef) {
-        console.error(
+        logger.error(
           `[Comgate webhook] No order found for transId=${transId}, refId=${paymentStatus.refId}`,
         );
         // Return 200 so Comgate doesn't retry — order might have been deleted
@@ -98,7 +99,7 @@ export async function POST(request: NextRequest) {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
     });
   } catch (error) {
-    console.error(`[Comgate webhook] Error processing transId=${transId}:`, error);
+    logger.error(`[Comgate webhook] Error processing transId=${transId}:`, error);
 
     // ComgateError = permanent API error (bad transId, etc.) → return 200 so Comgate won't retry
     if (error instanceof ComgateError) {

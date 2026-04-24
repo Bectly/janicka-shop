@@ -1,4 +1,5 @@
 import type { Redis as RedisType } from "ioredis";
+import { logger } from "@/lib/logger";
 
 /**
  * Redis singleton with graceful fallback.
@@ -59,20 +60,20 @@ async function createClient(): Promise<RedisType | null> {
 
     client.on("error", (err) => {
       if (!globalForRedis.redisWarnedDown) {
-        console.warn("[redis] connection error — falling back to DB:", err.message);
+        logger.warn("[redis] connection error — falling back to DB:", err.message);
         globalForRedis.redisWarnedDown = true;
       }
     });
     client.on("ready", () => {
       if (globalForRedis.redisWarnedDown) {
-        console.info("[redis] reconnected");
+        logger.info("[redis] reconnected");
         globalForRedis.redisWarnedDown = false;
       }
     });
 
     return client;
   } catch (err) {
-    console.warn("[redis] init failed:", err instanceof Error ? err.message : err);
+    logger.warn("[redis] init failed:", err instanceof Error ? err.message : err);
     return null;
   }
 }

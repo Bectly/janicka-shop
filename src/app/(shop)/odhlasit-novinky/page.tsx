@@ -6,6 +6,7 @@ import { verifyUnsubscribeToken } from "@/lib/unsubscribe-token";
 import { PreferenceCenter } from "./preference-center";
 import { BellOff } from "lucide-react";
 import type { Metadata } from "next";
+import { logger } from "@/lib/logger";
 
 export const metadata: Metadata = {
   title: "Odhlásit se z odběru novinek | Janička Shop",
@@ -51,7 +52,7 @@ export default async function UnsubscribeNewsletterPage({ searchParams }: Props)
     // If subscriber not found or already inactive — still show success (idempotent)
     success = true;
   } catch (error) {
-    console.error("[Newsletter] Unsubscribe failed for", email, error);
+    logger.error("[Newsletter] Unsubscribe failed for", email, error);
     success = false;
   }
 

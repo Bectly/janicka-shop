@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { XCircle, Clock, ArrowRight, AlertCircle } from "lucide-react";
 import { PaymentStatusPoller } from "@/components/shop/payment-status-poller";
 import type { Metadata } from "next";
+import { logger } from "@/lib/logger";
 
 export const metadata: Metadata = {
   title: "Stav platby",
@@ -80,7 +81,7 @@ export default async function PaymentReturnPage({ searchParams }: Props) {
               total: fullOrder.total,
               accessToken: fullOrder.accessToken ?? "",
             }).catch((err) => {
-              console.error(`[Payment] Failed to send confirmation email for ${fullOrder.orderNumber}:`, err);
+              logger.error(`[Payment] Failed to send confirmation email for ${fullOrder.orderNumber}:`, err);
             });
           }
         }

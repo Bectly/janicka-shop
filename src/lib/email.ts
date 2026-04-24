@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { signUnsubscribeToken } from "@/lib/unsubscribe-token";
+import { logger } from "@/lib/logger";
 
 let cachedResend: Resend | null | undefined;
 
@@ -291,7 +292,7 @@ function escapeHtml(str: string): string {
 export async function sendOrderConfirmationEmail(data: OrderEmailData): Promise<void> {
   const resend = getResendClient();
   if (!resend) {
-    console.warn("[Email] RESEND_API_KEY not set — skipping order confirmation email");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping order confirmation email");
     return;
   }
 
@@ -303,7 +304,7 @@ export async function sendOrderConfirmationEmail(data: OrderEmailData): Promise<
       html: buildOrderConfirmationHtml(data),
     });
   } catch (error) {
-    console.error(`[Email] Failed to send order confirmation for ${data.orderNumber}:`, error);
+    logger.error(`[Email] Failed to send order confirmation for ${data.orderNumber}:`, error);
   }
 }
 
@@ -320,7 +321,7 @@ export async function sendPaymentConfirmedEmail(data: {
 }): Promise<void> {
   const resend = getResendClient();
   if (!resend) {
-    console.warn("[Email] RESEND_API_KEY not set — skipping payment confirmed email");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping payment confirmed email");
     return;
   }
 
@@ -332,7 +333,7 @@ export async function sendPaymentConfirmedEmail(data: {
       html: buildPaymentConfirmedHtml(data),
     });
   } catch (error) {
-    console.error(`[Email] Failed to send payment confirmed email for ${data.orderNumber}:`, error);
+    logger.error(`[Email] Failed to send payment confirmed email for ${data.orderNumber}:`, error);
   }
 }
 
@@ -491,7 +492,7 @@ export async function sendOrderStatusEmail(
 
   const resend = getResendClient();
   if (!resend) {
-    console.warn(`[Email] RESEND_API_KEY not set — skipping ${newStatus} email`);
+    logger.warn(`[Email] RESEND_API_KEY not set — skipping ${newStatus} email`);
     return;
   }
 
@@ -503,7 +504,7 @@ export async function sendOrderStatusEmail(
       html: builder(data),
     });
   } catch (error) {
-    console.error(`[Email] Failed to send ${newStatus} email for ${data.orderNumber}:`, error);
+    logger.error(`[Email] Failed to send ${newStatus} email for ${data.orderNumber}:`, error);
   }
 }
 
@@ -678,7 +679,7 @@ function buildShippingNotificationHtml(data: ShippingNotificationData): string {
 export async function sendShippingNotificationEmail(data: ShippingNotificationData): Promise<boolean> {
   const resend = getResendClient();
   if (!resend) {
-    console.warn("[Email] RESEND_API_KEY not set — skipping shipping notification email");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping shipping notification email");
     return false;
   }
 
@@ -691,7 +692,7 @@ export async function sendShippingNotificationEmail(data: ShippingNotificationDa
     });
     return true;
   } catch (error) {
-    console.error(`[Email] Failed to send shipping notification for ${data.orderNumber}:`, error);
+    logger.error(`[Email] Failed to send shipping notification for ${data.orderNumber}:`, error);
     return false;
   }
 }
@@ -885,7 +886,7 @@ function buildAdminNewOrderHtml(data: AdminOrderNotificationData): string {
 export async function sendAdminNewOrderEmail(data: AdminOrderNotificationData): Promise<void> {
   const resend = getResendClient();
   if (!resend) {
-    console.warn("[Email] RESEND_API_KEY not set — skipping admin order notification");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping admin order notification");
     return;
   }
 
@@ -894,7 +895,7 @@ export async function sendAdminNewOrderEmail(data: AdminOrderNotificationData): 
     return;
   }
   if (!config.email) {
-    console.warn("[Email] No admin notification email configured — skipping admin order notification");
+    logger.warn("[Email] No admin notification email configured — skipping admin order notification");
     return;
   }
 
@@ -907,7 +908,7 @@ export async function sendAdminNewOrderEmail(data: AdminOrderNotificationData): 
       html: buildAdminNewOrderHtml(data),
     });
   } catch (error) {
-    console.error(`[Email] Failed to send admin notification for ${data.orderNumber}:`, error);
+    logger.error(`[Email] Failed to send admin notification for ${data.orderNumber}:`, error);
   }
 }
 
@@ -993,7 +994,7 @@ export async function sendAdminDeadlineAlertEmail(
     });
     return true;
   } catch (error) {
-    console.error("[Email] Failed to send deadline alert:", error);
+    logger.error("[Email] Failed to send deadline alert:", error);
     return false;
   }
 }
@@ -1009,7 +1010,7 @@ export async function sendEmailChangeVerifyEmail(data: {
 }): Promise<void> {
   const resend = getResendClient();
   if (!resend) {
-    console.warn("[Email] RESEND_API_KEY not set — skipping email-change verify");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping email-change verify");
     return;
   }
   const safeName = escapeHtml(data.firstName || "");
@@ -1033,7 +1034,7 @@ export async function sendEmailChangeVerifyEmail(data: {
       html,
     });
   } catch (error) {
-    console.error(`[Email] Failed to send email-change verify to ${data.newEmail}:`, error);
+    logger.error(`[Email] Failed to send email-change verify to ${data.newEmail}:`, error);
   }
 }
 
@@ -1068,7 +1069,7 @@ export async function sendEmailChangeNoticeEmail(data: {
       html,
     });
   } catch (error) {
-    console.error(`[Email] Failed to send email-change notice to ${data.oldEmail}:`, error);
+    logger.error(`[Email] Failed to send email-change notice to ${data.oldEmail}:`, error);
   }
 }
 
@@ -1097,14 +1098,14 @@ export async function sendAccountDeletedEmail(data: {
       html,
     });
   } catch (error) {
-    console.error(`[Email] Failed to send account-deleted email to ${data.email}:`, error);
+    logger.error(`[Email] Failed to send account-deleted email to ${data.email}:`, error);
   }
 }
 
 export async function sendNewsletterWelcomeEmail(email: string): Promise<void> {
   const resend = getResendClient();
   if (!resend) {
-    console.warn("[Email] RESEND_API_KEY not set — skipping newsletter welcome email");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping newsletter welcome email");
     return;
   }
 
@@ -1116,7 +1117,7 @@ export async function sendNewsletterWelcomeEmail(email: string): Promise<void> {
       html: buildNewsletterWelcomeHtml(email),
     });
   } catch (error) {
-    console.error(`[Email] Failed to send newsletter welcome email to ${email}:`, error);
+    logger.error(`[Email] Failed to send newsletter welcome email to ${email}:`, error);
   }
 }
 
@@ -1353,7 +1354,7 @@ export async function sendAbandonedCartEmail(
 ): Promise<boolean> {
   const resend = getResendClient();
   if (!resend) {
-    console.warn("[Email] RESEND_API_KEY not set — skipping abandoned cart email");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping abandoned cart email");
     return false;
   }
 
@@ -1385,7 +1386,7 @@ export async function sendAbandonedCartEmail(
     });
     return true;
   } catch (error) {
-    console.error(`[Email] Failed to send abandoned cart email #${stage} to ${data.email}:`, error);
+    logger.error(`[Email] Failed to send abandoned cart email #${stage} to ${data.email}:`, error);
     return false;
   }
 }
@@ -1477,7 +1478,7 @@ function buildReviewRequestHtml(data: ReviewRequestEmailData): string {
 export async function sendReviewRequestEmail(data: ReviewRequestEmailData): Promise<boolean> {
   const resend = getResendClient();
   if (!resend) {
-    console.warn("[Email] RESEND_API_KEY not set — skipping review request email");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping review request email");
     return false;
   }
 
@@ -1490,7 +1491,7 @@ export async function sendReviewRequestEmail(data: ReviewRequestEmailData): Prom
     });
     return true;
   } catch (error) {
-    console.error(`[Email] Failed to send review request email for ${data.orderNumber}:`, error);
+    logger.error(`[Email] Failed to send review request email for ${data.orderNumber}:`, error);
     return false;
   }
 }
@@ -1584,7 +1585,7 @@ function buildDeliveryCheckHtml(data: DeliveryCheckEmailData): string {
 export async function sendDeliveryCheckEmail(data: DeliveryCheckEmailData): Promise<boolean> {
   const resend = getResendClient();
   if (!resend) {
-    console.warn("[Email] RESEND_API_KEY not set — skipping delivery check email");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping delivery check email");
     return false;
   }
 
@@ -1597,7 +1598,7 @@ export async function sendDeliveryCheckEmail(data: DeliveryCheckEmailData): Prom
     });
     return true;
   } catch (error) {
-    console.error(`[Email] Failed to send delivery check email for ${data.orderNumber}:`, error);
+    logger.error(`[Email] Failed to send delivery check email for ${data.orderNumber}:`, error);
     return false;
   }
 }
@@ -1732,7 +1733,7 @@ function buildNewArrivalHtml(data: NewArrivalEmailData): string {
 export async function sendNewArrivalEmail(data: NewArrivalEmailData): Promise<boolean> {
   const resend = getResendClient();
   if (!resend) {
-    console.warn("[Email] RESEND_API_KEY not set — skipping new arrival email");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping new arrival email");
     return false;
   }
 
@@ -1750,7 +1751,7 @@ export async function sendNewArrivalEmail(data: NewArrivalEmailData): Promise<bo
     });
     return true;
   } catch (error) {
-    console.error(`[Email] Failed to send new arrival email to ${data.email}:`, error);
+    logger.error(`[Email] Failed to send new arrival email to ${data.email}:`, error);
     return false;
   }
 }
@@ -1851,7 +1852,7 @@ export async function sendBrowseAbandonmentEmail(
 ): Promise<boolean> {
   const resend = getResendClient();
   if (!resend) {
-    console.warn("[Email] RESEND_API_KEY not set — skipping browse abandonment email");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping browse abandonment email");
     return false;
   }
 
@@ -1868,7 +1869,7 @@ export async function sendBrowseAbandonmentEmail(
     });
     return true;
   } catch (error) {
-    console.error(`[Email] Failed to send browse abandonment email to ${data.email}:`, error);
+    logger.error(`[Email] Failed to send browse abandonment email to ${data.email}:`, error);
     return false;
   }
 }
@@ -1945,7 +1946,7 @@ export async function sendCrossSellFollowUpEmail(
 ): Promise<boolean> {
   const resend = getResendClient();
   if (!resend) {
-    console.warn("[Email] RESEND_API_KEY not set — skipping cross-sell follow-up email");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping cross-sell follow-up email");
     return false;
   }
 
@@ -1958,7 +1959,7 @@ export async function sendCrossSellFollowUpEmail(
     });
     return true;
   } catch (error) {
-    console.error(`[Email] Failed to send cross-sell follow-up to ${data.customerEmail}:`, error);
+    logger.error(`[Email] Failed to send cross-sell follow-up to ${data.customerEmail}:`, error);
     return false;
   }
 }
@@ -2033,7 +2034,7 @@ export async function sendWinBackEmail(
 ): Promise<boolean> {
   const resend = getResendClient();
   if (!resend) {
-    console.warn("[Email] RESEND_API_KEY not set — skipping win-back email");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping win-back email");
     return false;
   }
 
@@ -2046,7 +2047,7 @@ export async function sendWinBackEmail(
     });
     return true;
   } catch (error) {
-    console.error(`[Email] Failed to send win-back email to ${data.customerEmail}:`, error);
+    logger.error(`[Email] Failed to send win-back email to ${data.customerEmail}:`, error);
     return false;
   }
 }
@@ -2180,7 +2181,7 @@ export async function sendCampaignEmail(
 ): Promise<boolean> {
   const resend = getResendClient();
   if (!resend) {
-    console.warn("[Email] RESEND_API_KEY not set — skipping campaign email");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping campaign email");
     return false;
   }
 
@@ -2193,7 +2194,7 @@ export async function sendCampaignEmail(
     });
     return true;
   } catch (error) {
-    console.error(`[Email] Failed to send campaign email to ${recipientEmail}:`, error);
+    logger.error(`[Email] Failed to send campaign email to ${recipientEmail}:`, error);
     return false;
   }
 }
@@ -2552,7 +2553,7 @@ export async function sendMothersDayEmail(
 ): Promise<boolean> {
   const resend = getResendClient();
   if (!resend) {
-    console.warn("[Email] RESEND_API_KEY not set — skipping Mother's Day campaign");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping Mother's Day campaign");
     return false;
   }
 
@@ -2565,7 +2566,7 @@ export async function sendMothersDayEmail(
     });
     return true;
   } catch (error) {
-    console.error(`[Email] Failed to send Mother's Day email ${emailNumber} to ${recipientEmail}:`, error);
+    logger.error(`[Email] Failed to send Mother's Day email ${emailNumber} to ${recipientEmail}:`, error);
     return false;
   }
 }
@@ -2835,7 +2836,7 @@ export async function sendCustomsCampaignEmail(
 ): Promise<boolean> {
   const resend = getResendClient();
   if (!resend) {
-    console.warn("[Email] RESEND_API_KEY not set — skipping customs campaign");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping customs campaign");
     return false;
   }
 
@@ -2848,7 +2849,7 @@ export async function sendCustomsCampaignEmail(
     });
     return true;
   } catch (error) {
-    console.error(`[Email] Failed to send customs email ${emailNumber} to ${recipientEmail}:`, error);
+    logger.error(`[Email] Failed to send customs email ${emailNumber} to ${recipientEmail}:`, error);
     return false;
   }
 }

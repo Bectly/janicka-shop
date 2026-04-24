@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { z } from "zod";
 import { rateLimitNewsletter } from "@/lib/rate-limit";
 import { sendNewsletterWelcomeEmail } from "@/lib/email";
+import { logger } from "@/lib/logger";
 
 const newsletterSchema = z.object({
   email: z.string().trim().email("Zadejte platný e-mail").max(254),
@@ -53,7 +54,7 @@ export async function subscribeNewsletter(
     // Send welcome email only for new subscribers (fire-and-forget)
     if (isNew) {
       sendNewsletterWelcomeEmail(email).catch((err) => {
-        console.error(`[Newsletter] Welcome email failed for ${email}:`, err);
+        logger.error(`[Newsletter] Welcome email failed for ${email}:`, err);
       });
     }
 

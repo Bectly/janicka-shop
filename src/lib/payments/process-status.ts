@@ -3,6 +3,7 @@ import { sendPaymentConfirmedEmail, sendAdminNewOrderEmail } from "@/lib/email";
 import { dispatchEmail } from "@/lib/email-dispatch";
 import { logOrderToHeureka } from "@/lib/heureka";
 import type { ComgatePaymentStatus } from "./types";
+import { logger } from "@/lib/logger";
 
 /**
  * Map provider payment status to order status update.
@@ -47,7 +48,7 @@ export async function processPaymentStatus(
               },
               sendPaymentConfirmedEmail,
             ).catch((err) => {
-              console.error(
+              logger.error(
                 `[${providerLabel}] Payment confirmation dispatch failed for ${order.orderNumber}:`,
                 err,
               );
@@ -73,7 +74,7 @@ export async function processPaymentStatus(
               },
               sendAdminNewOrderEmail,
             ).catch((err) => {
-              console.error(
+              logger.error(
                 `[${providerLabel}] Admin notification dispatch failed for ${order.orderNumber}:`,
                 err,
               );
@@ -84,7 +85,7 @@ export async function processPaymentStatus(
               order.orderNumber,
               order.items.map((i) => i.product.sku),
             ).catch((err) => {
-              console.error(
+              logger.error(
                 `[${providerLabel}] Heureka ORDER_INFO failed for ${order.orderNumber}:`,
                 err,
               );
@@ -120,7 +121,7 @@ export async function processPaymentStatus(
     case "PENDING":
       break;
     default: {
-      console.warn(
+      logger.warn(
         `[${providerLabel}] Unknown payment status "${status}" for order ${orderId}`,
       );
       break;

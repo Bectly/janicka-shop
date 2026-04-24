@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { PrismaClient } from "@prisma/client";
+import { logger } from "@/lib/logger";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://janicka-shop.vercel.app";
@@ -103,7 +104,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     return [...staticPages, ...categoryPages, ...collectionPages, ...activeProductPages, ...soldProductPages];
   } catch {
-    console.error("[Sitemap] DB query failed, returning static pages only");
+    logger.error("[Sitemap] DB query failed, returning static pages only");
     return staticPages;
   } finally {
     // Explicitly disconnect to resolve Prisma engine's internal promises

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { runMothersDayCampaign } from "@/lib/campaigns/mothers-day";
 import type { MothersDayEmailNumber } from "@/lib/email";
+import { logger } from "@/lib/logger";
 
 /**
  * Cron HTTP wrapper for the Mother's Day 3-email campaign.
@@ -58,7 +59,7 @@ export async function POST(request: Request) {
       failedCount: result.failedCount,
     });
   } catch (error) {
-    console.error(`[api/admin/campaigns/mothers-day] #${emailNumber} crashed:`, error);
+    logger.error(`[api/admin/campaigns/mothers-day] #${emailNumber} crashed:`, error);
     return NextResponse.json(
       { ok: false, error: "Internal error during campaign dispatch." },
       { status: 500 },

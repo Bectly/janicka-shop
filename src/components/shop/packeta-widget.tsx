@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Script from "next/script";
 import { MapPin, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { logger } from "@/lib/logger";
 
 /** Packeta pickup point returned by widget callback */
 export interface PacketaPoint {
@@ -68,7 +69,7 @@ export function PacketaWidget({
         }
       );
     } catch (e) {
-      console.error("[PacketaWidget] Widget pick failed:", e);
+      logger.error("[PacketaWidget] Widget pick failed:", e);
       setWidgetError(true);
     }
   }, [onPointSelected]);

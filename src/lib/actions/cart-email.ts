@@ -3,6 +3,7 @@
 import { getDb } from "@/lib/db";
 import { getOrCreateVisitorId } from "@/lib/visitor";
 import { z } from "zod";
+import { logger } from "@/lib/logger";
 
 const cartEmailSchema = z.object({
   email: z.string().email().max(254),
@@ -81,6 +82,6 @@ export async function captureCartEmail(input: {
       });
     }
   } catch (err) {
-    console.error("[CartEmail] Capture failed:", err);
+    logger.error("[CartEmail] Capture failed:", err);
   }
 }

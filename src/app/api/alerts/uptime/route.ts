@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { sendTelegramAdminMessage } from "@/lib/telegram";
+import { logger } from "@/lib/logger";
 
 /**
  * UptimeRobot → Telegram alert webhook (#344).
@@ -82,7 +83,7 @@ export async function POST(request: Request) {
   const result = await sendTelegramAdminMessage(text);
 
   if (!result.sent) {
-    console.error("[api/alerts/uptime] telegram delivery failed:", result);
+    logger.error("[api/alerts/uptime] telegram delivery failed:", result);
     return NextResponse.json(
       { ok: false, delivered: false, reason: result.skipped ?? result.error ?? "unknown" },
       { status: result.skipped === "missing-env" ? 503 : 502 },

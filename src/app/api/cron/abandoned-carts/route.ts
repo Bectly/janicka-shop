@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { sendAbandonedCartEmail } from "@/lib/email";
+import { logger } from "@/lib/logger";
 
 /**
  * Abandoned cart recovery email processor.
@@ -168,7 +169,7 @@ export async function GET(request: Request) {
       processed: readyForEmail1.length + readyForEmail2.length + readyForEmail3.length,
     });
   } catch (error) {
-    console.error("[Cron] Abandoned cart processing failed:", error);
+    logger.error("[Cron] Abandoned cart processing failed:", error);
     return NextResponse.json({ error: "Processing failed" }, { status: 500 });
   }
 }

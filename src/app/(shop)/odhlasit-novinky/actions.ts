@@ -1,6 +1,7 @@
 "use server";
 
 import { getDb } from "@/lib/db";
+import { logger } from "@/lib/logger";
 
 /**
  * Re-subscribe a previously unsubscribed email with an optional preference filter.
@@ -50,7 +51,7 @@ export async function updateNewsletterPreference(
 
     return { ok: true };
   } catch (error) {
-    console.error("[Newsletter] Preference update failed for", email, error);
+    logger.error("[Newsletter] Preference update failed for", email, error);
     return { ok: false, error: "Něco se nepovedlo." };
   }
 }

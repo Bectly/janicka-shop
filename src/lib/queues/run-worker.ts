@@ -4,6 +4,7 @@ import { QUEUE_NAMES, getRedisUrl, type QueueName } from "./connection";
 import { processEmailJob } from "./worker-email";
 import { processInvoiceJob } from "./worker-invoice";
 import { processPacketaJob } from "./worker-packeta";
+import { logger } from "@/lib/logger";
 
 type WorkerKind = "email" | "invoice" | "packeta";
 
@@ -43,29 +44,29 @@ export async function runWorker(kind: WorkerKind): Promise<void> {
   const worker = new Worker(name, processor, options);
 
   worker.on("ready", () => {
-    console.info(`[worker:${kind}] ready (queue=${name}, concurrency=${concurrency})`);
+    logger.info(`[worker:${kind}] ready (queue=${name}, concurrency=${concurrency})`);
   });
   worker.on("completed", (job) => {
-    console.info(`[worker:${kind}] completed job ${job.id} (${job.name})`);
+    logger.info(`[worker:${kind}] completed job ${job.id} (${job.name})`);
   });
   worker.on("failed", (job, err) => {
-    console.error(
+    logger.error(
       `[worker:${kind}] failed job ${job?.id ?? "?"} (${job?.name ?? "?"}): ${err.message}`,
     );
   });
   worker.on("error", (err) => {
-    console.error(`[worker:${kind}] error:`, err.message);
+    logger.error(`[worker:${kind}] error:`, err.message);
   });
 
   const shutdown = async (signal: string): Promise<void> => {
-    console.info(`[worker:${kind}] received ${signal} — draining…`);
+    logger.info(`[worker:${kind}] received ${signal} — draining…`);
     try {
       await worker.close();
       await connection.quit();
-      console.info(`[worker:${kind}] clean shutdown`);
+      logger.info(`[worker:${kind}] clean shutdown`);
       process.exit(0);
     } catch (err) {
-      console.error(`[worker:${kind}] shutdown error:`, err);
+      logger.error(`[worker:${kind}] shutdown error:`, err);
       process.exit(1);
     }
   };

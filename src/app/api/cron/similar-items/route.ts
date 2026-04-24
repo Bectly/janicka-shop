@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { getDb } from "@/lib/db";
 import { buildSimilarItemsArrivedHtml } from "@/lib/email/similar-item";
+import { logger } from "@/lib/logger";
 
 let cachedResend: Resend | null | undefined;
 
@@ -154,7 +155,7 @@ export async function GET(request: Request) {
 
         sent++;
       } catch (err) {
-        console.error(
+        logger.error(
           `[Cron:similar-items] Failed for request ${req.id} (${req.email}):`,
           err,
         );
@@ -162,7 +163,7 @@ export async function GET(request: Request) {
       }
     }
   } catch (error) {
-    console.error("[Cron:similar-items] Error:", error);
+    logger.error("[Cron:similar-items] Error:", error);
     return NextResponse.json(
       { error: "Internal error", sent, skipped, failed },
       { status: 500 },

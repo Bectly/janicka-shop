@@ -3,6 +3,7 @@ import { getDb } from "@/lib/db";
 import { sendNewArrivalEmail } from "@/lib/email";
 import type { NewArrivalEmailData } from "@/lib/email";
 import { getImageUrls } from "@/lib/images";
+import { logger } from "@/lib/logger";
 
 /**
  * New arrival notification email processor.
@@ -200,7 +201,7 @@ export async function GET(request: Request) {
       }
     }
   } catch (error) {
-    console.error("[Cron:new-arrivals] Error:", error);
+    logger.error("[Cron:new-arrivals] Error:", error);
     return NextResponse.json(
       { error: "Internal error", sent, skipped, failed },
       { status: 500 },

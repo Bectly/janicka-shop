@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
 
 const MINUTE = 60 * 1000;
 
@@ -52,7 +53,7 @@ export async function submitContactForm(
     const { Resend } = await import("resend");
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) {
-      console.warn("[contact] RESEND_API_KEY not configured — message not sent");
+      logger.warn("[contact] RESEND_API_KEY not configured — message not sent");
       return { success: false, error: "E-mailová služba není dostupná. Kontaktujte nás prosím přímo na info@janicka.cz." };
     }
 
@@ -67,7 +68,7 @@ export async function submitContactForm(
       html: buildContactEmailHtml({ name, email, subject: subjectLabel, message }),
     });
   } catch (err) {
-    console.error("[contact] Failed to send email:", err);
+    logger.error("[contact] Failed to send email:", err);
     return { success: false, error: "Nepodařilo se odeslat zprávu. Zkuste to prosím později." };
   }
 

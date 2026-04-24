@@ -43,12 +43,12 @@ export async function logOrderToHeureka(
 
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      console.error(
+      logger.error(
         `[Heureka] ORDER_INFO failed: ${res.status} ${res.statusText} — ${text}`,
       );
     }
   } catch (err) {
     // Network error — log and move on, never block order flow
-    console.error("[Heureka] ORDER_INFO request failed:", err);
+    logger.error("[Heureka] ORDER_INFO request failed:", err);
   }
 }

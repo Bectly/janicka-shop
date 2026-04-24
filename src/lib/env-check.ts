@@ -1,12 +1,14 @@
 /**
  * Boot-time env sanity check for R2 (Cloudflare images).
  *
- * Logs a single console.warn when any required R2 env var is missing/empty.
+ * Logs a single logger.warn when any required R2 env var is missing/empty.
  * Warn-only (never throws) so a misconfigured preview deploy stays visible
  * in Vercel function logs without breaking the build or runtime.
  *
  * Wired in via src/instrumentation.ts so it runs once per server boot.
  */
+
+import { logger } from "@/lib/logger";
 
 type R2Var = {
   name: string;
@@ -33,7 +35,7 @@ export function checkR2Env(): void {
   const missing = required.filter((v) => isBlank(v.value)).map((v) => v.name);
   if (missing.length === 0) return;
 
-  console.warn(
+  logger.warn(
     `[env-check] R2 config incomplete — uploads/deletes will fail or produce malformed URLs. Missing: ${missing.join(", ")}`
   );
 }
