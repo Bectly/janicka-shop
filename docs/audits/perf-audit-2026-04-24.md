@@ -1,0 +1,218 @@
+# Perf Audit — 2026-04-24 — Task #524
+
+**Scope:** full-app section-switch latency (admin + shop). Triggered by bectly report 2026-04-24:
+> "v administraci i v eshopu všechno trvá brutálně dlouho při změně sekce. Stránky se přepínají rychle, ale přepínání sekcí trvá fakt strašně moc dlouho."
+
+Phase 1 — static analysis only. Runtime p50/p95/p99 measurement requires a live Vercel dyno + DevTools harness (deferred to Phase 1b, see "Instrumentation gap" below). Findings below are ranked by blast radius × confidence, so Bolt can start on the highest-leverage fixes without waiting on the benchmark pass.
+
+---
+
+## TL;DR root cause (highest confidence)
+
+**Every admin section switch runs 4 uncached Prisma queries from `/admin/layout.tsx` before the page body even starts fetching.** Layout is the *parent* of every `/admin/*` route, so this cost stacks onto each page's own uncached queries. On Turso edge (eu-west-1 HTTP driver, ~150–300 ms RTT per round-trip), the layout alone is 300–600 ms before any page work. Admin pages themselves add another 1–4 uncached queries each. Cumulative wall-clock for a cold "switch to Objednávky" is easily **2–4 s** on serverless cold-start, **800 ms–1.5 s** on warm.
+
+Fix with highest leverage: cache the layout badge queries + mark every admin page a cache boundary. `cacheComponents: true` is already enabled in `next.config.ts:11` — the primitives exist, they are simply never invoked on the admin side.
+
+---
+
+## Ranked findings
+
+| # | Severity | Finding | Surface | Blast radius | Fix effort |
+|---|----------|---------|---------|--------------|------------|
+| 1 | P0 | Admin layout runs 4 uncached Prisma queries per nav via `await connection()` | `src/app/(admin)/admin/layout.tsx:20-56` | EVERY admin route switch | S |
+| 2 | P0 | Zero admin pages use `"use cache"` despite `cacheComponents: true` enabled globally | 19 admin `page.tsx` files | EVERY admin route | M |
+| 3 | P1 | `Order` model has no `@@index([createdAt])` — layout's `order.count where createdAt>=yesterday` + orders-list `orderBy: createdAt desc` both full-scan | `prisma/schema.prisma:202-205` | Admin dashboard + orders + layout badge | S (migration) |
+| 4 | P1 | `await connection()` appears in **62 files** — forces full-dynamic rendering everywhere | grep `await connection\(\)` | Every admin + most shop pages | M (case-by-case removal) |
+| 5 | P1 | Mailbox list uses correlated nested OR subquery on unindexed `bodyText` | `src/app/(admin)/admin/mailbox/page.tsx:48-66` | Admin mailbox search (degrades with msg volume) | S |
+| 6 | P2 | Admin orders list fetches 200 rows + joins customer + `_count` per nav, uncached | `src/app/(admin)/admin/orders/page.tsx:45-64` | /admin/orders switch | S |
+| 7 | P2 | Sidebar `<Link>` uses default prefetch but RSC payload is dynamic (see #4), so prefetch warms nothing cacheable | `src/components/admin/sidebar.tsx:33-52` | All admin nav | S (after #1/#2 land) |
+| 8 | P2 | `getDb()` singleton is process-global but Vercel cold-starts each new lambda — no persistent pool | `src/lib/db.ts:34-48` | First request per lambda instance (cold-start tail latency) | M (warm-up route or `prisma warm`) |
+| 9 | P3 | `experimental.optimizeCss: true` is a triple-defect no-op (per commit f27c117 analysis) — not a perf win, just noise in next.config | `next.config.ts:12` | Framework chunk delivery | S (rollback) |
+| 10 | P3 | Shop-side `"use cache"` coverage is 6 files, but covers the hot paths (homepage, products list, PDP). Not a regression vector for the user's complaint, keep as-is. | `src/app/(shop)/**` | Shop nav | N/A |
+
+---
+
+## P0 detail — #1 Admin layout queries
+
+`src/app/(admin)/admin/layout.tsx:20-56`:
+
+```tsx
+await connection();                          // forces request-time dynamic
+const session = await auth();                // ~1 NextAuth DB roundtrip
+const admin = await db.admin.findUnique({...}); // Prisma #1
+const [ordersLast24h, settings, mailboxUnread] = await Promise.all([
+  db.order.count({ where: { createdAt: { gte: yesterday } } }),    // Prisma #2 (no index on createdAt!)
+  db.shopSettings.findUnique({ where: { id: "singleton" }, ... }),  // Prisma #3
+  db.emailThread.aggregate({ ..., _sum: { unreadCount: true } }),   // Prisma #4
+]);
+```
+
+Per admin nav, serverless → Turso eu-west-1:
+- Auth lookup: 1 RTT (if NextAuth goes through Prisma, which it does via `@/lib/auth`)
+- Admin findUnique: 1 RTT
+- Parallel trio: 1 RTT (max of the three, since `Promise.all`)
+- **Total: 3 sequential RTTs** minimum before the page component even begins. At 200 ms/RTT → **600 ms baseline overhead per nav**. Cold-start lambda adds another 500–1500 ms on top.
+
+**Fix (Bolt atomic commit #1):** extract the badge trio into a cached helper:
+
+```tsx
+import { unstable_cache } from "next/cache";
+// or — since cacheComponents is on — use the stable "use cache" + cacheLife/cacheTag
+
+async function getAdminBadges() {
+  "use cache";
+  cacheLife("minutes"); // 60s default, revalidate every minute
+  cacheTag("admin-badges");
+
+  const db = await getDb();
+  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const [ordersLast24h, settings, mailboxUnread] = await Promise.all([
+    db.order.count({ where: { createdAt: { gte: yesterday } } }),
+    db.shopSettings.findUnique({ where: { id: "singleton" }, select: { soundNotifications: true } }),
+    db.emailThread.aggregate({ where: { archived: false, trashed: false }, _sum: { unreadCount: true } })
+      .then((r) => r._sum.unreadCount ?? 0).catch(() => 0),
+  ]);
+  return { ordersLast24h, settings, mailboxUnread };
+}
+```
+
+Invalidate on writes via `revalidateTag("admin-badges")` inside:
+- order create/update server actions
+- shop settings update
+- mailbox IMAP sync worker (on new unread)
+
+Expected delta: **600 ms → <50 ms** (cache hit) per nav.
+
+**Must preserve:** `await connection()` + `auth()` ordering — these are the auth gate and cannot be cached at the user level. But they CAN be moved into a smaller `Suspense` boundary so only the auth check blocks; the badges stream in independently.
+
+## P0 detail — #2 No admin-side `"use cache"`
+
+Count of `"use cache"` directives in `src/`: **6 files**, all shop-side:
+- `src/app/(shop)/page.tsx`
+- `src/app/(shop)/products/page.tsx`
+- `src/app/(shop)/products/[slug]/page.tsx`
+- `src/app/(shop)/products/products-client.tsx`
+- `src/lib/products-cache.ts`
+- `src/app/(admin)/admin/dashboard/analytics-data.ts` ← lone admin exception
+
+Admin page.tsx files that do data fetching and should be cached (with short TTL + cacheTag-based invalidation, since admins expect near-real-time):
+- `/admin/products` — product list with filter/pagination — tag `products` + `categories`
+- `/admin/orders` — order list — tag `orders`
+- `/admin/customers` — customer list — tag `customers`
+- `/admin/categories` — category list — tag `categories`
+- `/admin/collections` — collection list — tag `collections`
+- `/admin/subscribers` — newsletter subscribers — tag `subscribers`
+- `/admin/returns` — return list — tag `returns`
+- `/admin/referrals` — referral list — tag `referrals`
+- `/admin/abandoned-carts` — tag `abandoned-carts`
+- `/admin/browse-abandonment` — tag `browse-abandonment`
+- `/admin/mailbox` — tag `email-threads` (short TTL, 30s)
+- `/admin/settings` — tag `shop-settings`
+
+Each gets `"use cache"` at the data-fetching function level + `cacheTag(...)` + `cacheLife("minutes")`, and every server action that writes to the corresponding model calls `revalidateTag(...)`. This is a repetitive, mechanical change — ideal Bolt batching.
+
+## P1 detail — #3 Missing `Order.createdAt` index
+
+`prisma/schema.prisma:202-205`:
+```prisma
+@@index([customerId])
+@@index([status])
+@@index([orderNumber])
+```
+
+No `@@index([createdAt])`. But the two hottest queries both sort/filter by it:
+- `admin/layout.tsx:44` — `order.count where createdAt >= yesterday`
+- `admin/orders/page.tsx:47` — `orderBy: { createdAt: "desc" }, take: 200`
+
+On Turso/libSQL (SQLite), this forces a full scan of the Order table. At 1k orders → negligible. At 20k+ (target by Q3) → noticeable. **Add now, before it bites.**
+
+Also add composite index for the common admin filtered-list pattern:
+```prisma
+@@index([createdAt])
+@@index([status, createdAt])
+```
+
+Migration cost: near-zero, no data transformation, just index creation.
+
+## P1 detail — #5 Mailbox nested OR search
+
+`src/app/(admin)/admin/mailbox/page.tsx:48-66`:
+
+```ts
+const where = q ? {
+  AND: [baseWhere, {
+    OR: [
+      { subject: { contains: q } },
+      { participants: { contains: q.toLowerCase() } },
+      { messages: { some: { OR: [{ bodyText: { contains: q } }, ...] } } },  // ← correlated subquery
+    ],
+  }],
+} : baseWhere;
+```
+
+The `messages: { some: { OR: [...] } }` clause compiles to a correlated EXISTS subquery over EmailMessage with no index on `bodyText` (text column, would need FTS). For each thread, SQLite must scan its messages. With 100 threads × 20 msgs = 2000 rows scanned per search.
+
+**Fix options (rank by effort):**
+1. **Cheap:** drop the bodyText search, keep subject + participants + fromName (all indexed or small). User can't search email bodies but gets instant results.
+2. **Medium:** add FTS5 virtual table on EmailMessage.bodyText. Requires raw SQL in a migration.
+3. **Right:** debounce the search input client-side (200–400 ms) so the hit doesn't fire on every keystroke.
+
+Recommend #1 + #3 for launch, #2 deferred.
+
+---
+
+## Shop-side findings
+
+User said "v administraci i v eshopu" — but static analysis shows the shop is already well-cached:
+- Homepage, `/products`, `/products/[slug]` all use `"use cache"` + `products-cache.ts`.
+- Cart + checkout are client-heavy (Zustand) — no server round-trip per section.
+
+**The shop complaint is most likely about:**
+- **Account area** (`/account/orders`, `/account/oblibene`, `/account/profile`, `/account/nastaveni`, `/account/adresy`) — these all use `await connection()` and have **zero `"use cache"`**. Each section switch = fresh Turso roundtrip. Customer-specific data, so caching needs `cacheTag("customer:${customerId}")` pattern + invalidate on customer write.
+- **Checkout step transitions** — mostly client-rendered, shouldn't show the pathology. Verify in Phase 1b.
+
+Add `/account/layout.tsx` check as P0.5 follow-up — same pattern as admin layout, bets are it also fetches customer badges uncached.
+
+---
+
+## Instrumentation gap (Phase 1b)
+
+Static analysis caught the architectural cause. To close the audit with numbers, Phase 1b needs:
+
+1. **Vercel function logs** — add `console.time("admin-layout-render")` bracket around the layout trio for one day, ship to Vercel, read timings from dashboard. Alternatively use Vercel Speed Insights (already pulled in for CWV per earlier cycles).
+2. **Chrome DevTools trace** — record admin nav sequence (dashboard → products → orders → customers → mailbox), export trace JSON, note LCP + TTI per nav. Run cold cache + warm cache.
+3. **Prisma query log** — temporarily enable `log: ["query"]` on the PrismaClient; count queries per admin route switch.
+
+These are quick to wire but need a Vercel deploy + live data, so they belong in a separate atomic commit after #1/#2 fixes land, so we have before+after numbers.
+
+---
+
+## Subtask decomposition for Lead
+
+Recommend splitting task #524 into:
+
+- **#524a — P0 admin layout cache** (Bolt, 1 commit): wrap badge trio in `"use cache"` helper, add `revalidateTag` calls in order/shopSettings/mailbox write paths. Acceptance: layout Prisma queries per nav drops from 4 to 0 on cache hit.
+- **#524b — P0 admin page cache sweep** (Bolt, ~12 commits, one per page): add `"use cache"` + cacheTag to each admin data-fetching page. Acceptance: cold-cache repeat-nav identical-filter returns in <100 ms.
+- **#524c — P1 Prisma Order.createdAt index** (Bolt, 1 commit + migration): add `@@index([createdAt])` + `@@index([status, createdAt])`, run migration, verify `EXPLAIN QUERY PLAN` uses it.
+- **#524d — P1 mailbox search degrade** (Bolt, 1 commit): drop bodyText from nested OR search, add 300ms debounce on input.
+- **#524e — P0.5 /account layout + page cache sweep** (Bolt, ~5 commits): mirror admin treatment for customer-facing account section.
+- **#524f — Phase 1b instrumentation** (Trace, 1 commit): wire query log + Vercel timings, publish before+after tables in this doc.
+- **#524g — Phase 4 verification** (Trace, 1 commit): re-run Phase 1b methodology after all fixes land; target p50 <300ms section switch, p95 <800ms.
+
+Each atomic Bolt commit MUST include wall-clock delta in message body (per task #524 acceptance criteria). For #524a/b/e, capture with `console.time` before commit; for #524c capture `EXPLAIN QUERY PLAN` before+after.
+
+---
+
+## Not blockers (noted for completeness)
+
+- `next.config.ts:12` `experimental.optimizeCss: true` — Lead already flagged rollback in f27c117, separate ticket.
+- `getDb()` singleton — fine on a single dyno, fine on Vercel (each lambda has its own instance, no shared pool needed for serverless).
+- WAL mode pragma at `src/lib/db.ts:27` — local-only, no prod impact.
+- Image optimization — already using AVIF+WebP via `next/image` per `next.config.ts:19-35`, not the bottleneck per user's "stránky se přepínají rychle" observation (first paint is fine, subsequent sections are slow = server data, not assets).
+
+---
+
+**Next actions (ordered):**
+1. Lead reviews subtask split, creates #524a-g in devloop_tasks.
+2. Bolt picks up #524a (single high-leverage commit, ~20 LoC).
+3. Trace wires #524f instrumentation in parallel so measurements are ready when fixes land.
