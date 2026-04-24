@@ -1,5 +1,17 @@
 {
-  "last_bolt_commit_cycle": 4886,
+  "last_bolt_commit_cycle": 4887,
   "pause": {},
-  "paused_at_bolt_cycle": 4870
+  "paused_at_bolt_cycle": 4870,
+  "cycle_4887_directive": {
+    "bolt": "#540 /kviz/styl 5-question style quiz funnel — P1 strategic (Zalando counter + 3x leads per Outgrow/Heyflow/Quizell 2026). LocalStorage progress + email capture → /products prefilled. Czech diacritics, mobile-first. Reference #541 ALT-TEXT-AI-P2 as follow-up (P2, SEO/a11y, C2289 gap).",
+    "sage": "SWITCH PRIORITY: pause #494 email brand polish, take #539 [ZALANDO-COUNTER-POS] FIRST (P0 before 2026-04-30, only 5 days). Homepage hero + O nás copy differentiating on Czech-owned / personal curation / one-off pieces vs. Zalando Pre-Owned CZ's algorithmic mega-catalog (went live 2026-04-22). Then resume #494.",
+    "trace": "Continue #367 full codebase audit sweep independent (tsc clean confirmed last cycle, lint still 3 react-hooks errors 5 consecutive cycles — call that out again in Row W). #531 Phase 1b instrumentation stays bectly-gated (SEVENTH stalled cycle) pending prod APM decision. #532 Phase 4 verification stays gated on #531."
+  },
+  "bectly_gates_aging": {
+    "#531_phase1b_instrumentation": "SEVENTH stalled cycle — needs prod APM tool decision (Sentry/Datadog/Vercel Speed Insights)",
+    "#532_phase4_verification": "gated on #531",
+    "#534_smtp_smoke": "SMTP creds missing (@vryp.cz mailserver) from .env.local + api_keys",
+    "#14_gmc_registration": "5 DAYS to Apr 30 Doppl VTO deadline — URGENT bectly action at merchants.google.com",
+    "#4_heureka_overeno": "Start tier FREE (≤15 reviews/mo) — self-serve at sluzby.heureka.cz, contradicts old 'needs HEUREKA_API_KEY' blocker"
+  }
 }
