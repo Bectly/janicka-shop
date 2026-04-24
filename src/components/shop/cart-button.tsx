@@ -24,6 +24,7 @@ export function CartButton() {
       return;
     }
     if (count > prevCount.current) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- external sync: bounce animation trigger on Zustand cart count change, hydration-guarded via hasHydrated ref
       setBouncing(true);
       const timer = setTimeout(() => setBouncing(false), 500);
       prevCount.current = count;

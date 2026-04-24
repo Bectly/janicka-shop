@@ -65,6 +65,7 @@ function shuffle<T>(arr: T[]): T[] {
 export function PickLogoClient() {
   const [remaining, setRemaining] = useState(ALL_LOGOS);
   const [shuffled, setShuffled] = useState(false);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot client-only shuffle (admin-only tool); guarded by `shuffled` flag so runs exactly once post-hydration
   useEffect(() => { if (!shuffled) { setRemaining(shuffle(ALL_LOGOS)); setShuffled(true); } }, [shuffled]);
   const [nextRound, setNextRound] = useState<typeof ALL_LOGOS>([]);
   const [round, setRound] = useState(1);

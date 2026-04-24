@@ -48,6 +48,7 @@ export function MobileNav({ categoryCounts, sessionRole }: MobileNavProps) {
   // Base UI Dialog, or when the user navigates via browser back/forward).
   const searchParamsStr = searchParams.toString();
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- route-change drawer close: syncs UI with external navigation (browser back/forward, programmatic routing) that bypasses onClick handlers
     setOpen(false);
   }, [pathname, searchParamsStr]);
 

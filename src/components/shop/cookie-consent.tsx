@@ -42,6 +42,7 @@ export function CookieConsentBanner() {
 
   useEffect(() => {
     // Check localStorage only after hydration — safe from mismatch
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage read post-hydration; SSR cannot access storage so must flip to true after mount
     if (!getSavedConsent()) setVisible(true);
   }, []);
 

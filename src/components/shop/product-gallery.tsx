@@ -233,6 +233,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
     if (!isVideoActive) {
       videoRef.current.pause();
       videoRef.current.currentTime = 0;
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- external DOM sync: pauses <video> element on slide change and mirrors the pause state into React
       setVideoPlaying(false);
     }
   }, [isVideoActive, hasVideo]);

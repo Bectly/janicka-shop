@@ -29,6 +29,7 @@ export function ExpressCheckoutButtons({ onSelect }: Props) {
 
   useEffect(() => {
     if (!COMGATE_CONFIGURED) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- platform detection: reads window.ApplePaySession / Payment Request API post-mount, cannot run in render
       setSupports({ apple: false, google: false });
       return;
     }
