@@ -131,7 +131,7 @@ export function ComgatePaymentSection({ orderNumber, accessToken, onSuccess }: P
       setError(msg);
       setPhase("error");
     }
-  }, [orderNumber, handlePaymentSuccess, handlePaymentCancelled, handlePaymentError]);
+  }, [orderNumber, accessToken, handlePaymentSuccess, handlePaymentCancelled, handlePaymentError]);
 
   // On mount: fetch transactionId for card, also try to init Apple/Google Pay
   useEffect(() => {
