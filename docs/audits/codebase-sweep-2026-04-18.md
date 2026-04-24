@@ -1,6 +1,6 @@
 # Codebase Quality Sweep — 2026-04-18
 
-**Agent**: Trace (DevLoop C4808, re-verified C4811/C4817/C4821/C4826/C4833/C4839/C4839#2/C4844/C4847, task #367)
+**Agent**: Trace (DevLoop C4808, re-verified C4811/C4817/C4821/C4826/C4833/C4839/C4839#2/C4844/C4847/C4851, task #367)
 **Scope**: `src/**`, `prisma/**`, `next.config.ts`, `package.json`
 **Commands run**: `npx tsc --noEmit`, `npm run lint`, `npx ts-prune`, `npx depcheck`, targeted grep sweeps
 
@@ -423,3 +423,103 @@ npx ts-prune                           # unused exports
 npx depcheck --skip-missing            # unused deps
 # grep sweeps (see audit body for patterns)
 ```
+
+---
+
+## C4851 re-verification addendum (2026-04-24, post-29a9911, mailbox + getBaseUrl sweep)
+
+4 commits landed on top of C4848 HEAD `a48e58f` since the last sweep: `767966d` (redeploy — FROM @vryp.cz → @jvsatnik.cz, code-level no-op), `fafa947` (#496 Phase 1 admin mailbox — EmailThread/Message/Attachment Prisma models, IMAP pull lib, cron route, /admin/mailbox UI, sidebar badge), `29a9911` (#497 getBaseUrl canonicalization — 24 baseUrl consts in email.ts + 16 other src/ files now call `getBaseUrl()` from layout.ts; `NEXT_PUBLIC_BASE_URL:903` typo fixed; `https://janicka-shop.vercel.app` fallback gone repo-wide).
+
+- **`tsc --noEmit`**: ✅ PASS.
+- **`npm run lint`**: ✅ **0 errors, 0 warnings** — C4829 MILESTONE now preserved through **21 consecutive commits**.
+- **`grep janicka-shop.vercel.app src/ prisma/`**: **0 hits**. C4847 P1-new stale-fallback finding fully retired. ✅
+- **`grep NEXT_PUBLIC_BASE_URL src/ prisma/`**: **0 hits**. C4847 P1-new typo finding fully retired. ✅
+- **`getBaseUrl` sole definition**: `src/lib/email/layout.ts:48` (reads `NEXT_PUBLIC_APP_URL`, falls back to `https://jvsatnik.cz`). 30 call-sites in `email.ts` + 16 other src files consume it. Central kill-switch via `NEXT_PUBLIC_APP_URL` env confirmed. ✅
+- **`@ts-ignore` / `@ts-nocheck` / `@ts-expect-error`**: **0** in `src/` (unchanged). ✅
+- **`dangerouslySetInnerHTML`**: 17 occurrences / 7 files, unchanged (all via `jsonLdString()` helper). ✅
+- **Secrets grep** (`sk_live`/`sk_test`/`cfk_`/inline Bearer): 0 in `src/`. ✅
+
+### New surface: `src/lib/email/imap-sync.ts` (280 LoC, fafa947)
+
+Feature-flagged IMAP inbox puller — no-ops with `ok:false, error:imap_disabled` when `IMAP_HOST`/`IMAP_USER`/`IMAP_PASSWORD` missing (safe for current prod — env unset pending bectly mailhosting pick). Cron at `/api/cron/email-sync` gated on `CRON_SECRET` Bearer match. Dedup via `EmailMessage.messageId @unique`. Threading via `inReplyTo` then `references` chain lookup. RSC thread view marks unread=0 on load. All mutating server actions in `mailbox/actions.ts` gated by `requireAdmin()` (NextAuth session check).
+
+Security posture:
+- **Auth**: cron Bearer check ✅; server actions `requireAdmin()` ✅; thread view is under `(admin)` route group ✅.
+- **Prisma queries**: all parameterized via Prisma client (no `$queryRaw`). ✅
+- **Attachment filename**: sanitized via `[^a-zA-Z0-9._-]/g → -` + 120-char cap before R2 upload. ✅ Path-traversal safe.
+- **Subject**: capped at 500 chars. `contentType` capped 120 chars. Defensive against oversized headers. ✅
+- **`bodyHtml` rendering**: `admin/mailbox/[threadId]/page.tsx:229-234` renders the raw IMAP `bodyHtml` into an **iframe with `sandbox=""` and `srcDoc={bodyHtml}`**. Empty sandbox blocks scripts/forms/same-origin/top-nav (XSS mitigated). **Remote `<img>` / `<link>` still fetch** — P2 privacy concern below.
+
+### P1-10 (NEW) — `imap-sync.ts::persistParsedMessage` stores a fabricated `r2Key` that doesn't match R2 reality
+
+`src/lib/email/imap-sync.ts:178-187`:
+
+```ts
+const key = `mailbox/${checksum}-${safeName}`;
+await uploadToR2(buf, safeName, att.contentType ?? "application/octet-stream", "mailbox");
+attachmentsData.push({ ...; r2Key: key, ... });
+```
+
+But `uploadToR2` (src/lib/r2.ts:19-43) **ignores any external key** and builds its own: `${folder}/${randomUUID()}-${safeName}` — and **returns** the public URL. The returned URL is discarded. So `EmailAttachment.r2Key` stored in DB is `mailbox/<sha256>-<name>` while the actual object in R2 lives at `mailbox/<uuid>-<name>`. When Phase 4 adds signed download, `getSignedUrl({ Key: r2Key })` will 404 on every row.
+
+The `checksumSha256` column IS still correct (hash of the buffer, useful for dedup / integrity), so the finding is specifically about the key field.
+
+**Proposed fix**: extend `uploadToR2` to return `{ key, publicUrl }` (or accept optional explicit key parameter), have imap-sync capture and persist the authoritative key. ~15 LoC across r2.ts + imap-sync.ts + any other uploadToR2 consumer that wants the key. Blocks Phase 4 attachment download; **must land before** bectly provisions IMAP or data will be unrecoverable. **Proposed follow-up: BOLT task** — "fix EmailAttachment.r2Key drift — uploadToR2 must return canonical key".
+
+### P1-11 (NEW) — redundant thread.participants re-read in `persistParsedMessage`
+
+`src/lib/email/imap-sync.ts:218-236`:
+
+```ts
+await db.emailMessage.create({ ... });
+await db.emailThread.update({
+  where: { id: threadId },
+  data: {
+    ...,
+    participants: JSON.stringify(dedupStrings([
+      ...JSON.parse((await db.emailThread.findUnique({ where: { id: threadId }, select: { participants: true } }))?.participants ?? "[]"),
+      ...participants,
+    ])),
+  },
+});
+```
+
+Three-round-trip pattern (create-message, findUnique-thread, update-thread) per inbound email. For a 50-msg batch that's 150 sequential Prisma calls where 100 should be combinable. Low priority since cron runs every 5 min + batchLimit=50, but also vulnerable to race (two concurrent syncs could lose a participant entry). **Proposed fix**: hoist the existing `thread` record earlier (we already know its id — select `participants` in the initial lookup or at creation time); or use an atomic SQL that appends to a JSON array. ~10 LoC. **Proposed follow-up: BOLT task — fold into P1-10 or defer to Phase 3.**
+
+### P1-12 (NEW) — cron auth uses non-constant-time string compare (pre-existing pattern, not a regression)
+
+`src/app/api/cron/email-sync/route.ts:14` uses `authHeader !== `Bearer ${cronSecret}`` — `!==` on strings is not timing-safe. The same pattern is in 10 other cron/admin routes (similar-items, delivery-deadline, win-back, cross-sell, browse-abandonment, delivery-check, new-arrivals, review-request, abandoned-carts, mothers-day). For Vercel cron the exposure is low (remote attacker would need to send millions of requests against network-level latency), but a `crypto.timingSafeEqual` helper + a `src/lib/cron-auth.ts` would collapse the 11 duplicated auth blocks into one. **Proposed follow-up: BOLT task (P1, codebase-wide)** — "extract `requireCronSecret(req)` helper with constant-time compare; migrate 11 cron routes". ~40 LoC.
+
+### P2-7 (NEW) — admin thread iframe `sandbox=""` blocks script but still fetches remote images (tracker pixel leak)
+
+`src/app/(admin)/admin/mailbox/[threadId]/page.tsx:229-234` uses `<iframe sandbox="" srcDoc={bodyHtml}>`. Empty sandbox is strict for scripts/forms/same-origin/nav, but the browser will still resolve `<img src="...">`, `<link rel="stylesheet">`, and `url(...)` in inline CSS — every spam/marketing email sender learns that a Janička admin opened the message and at what IP. Also a GDPR/ePrivacy angle (admin acts as data-controller on opening). Mitigations: strip remote `<img>` before storage with DOMPurify (already on Phase 4 TODO), or route images through a same-origin proxy that only opens on explicit "Load images" click. **Proposed follow-up: fold into Phase 4 DOMPurify step** — add `ALLOWED_URI_REGEXP` = data: / cid: only, else click-to-load.
+
+### ts-prune on new surface
+
+- `src/lib/email/layout.ts::renderBody` (line 250) — still unused (C4847 P2-new carried forward). Either wire in Sage Phase 2 or drop.
+- `src/lib/email/imap-sync.ts` — single exported function `syncImapInbox`; only consumer is the cron route. ✅ No orphans introduced.
+- `src/app/(admin)/admin/mailbox/actions.ts` — 6 server actions, all consumed by thread page or list page. ✅ No orphans.
+
+### depcheck on new deps
+
+`fafa947` added `imapflow`, `mailparser`, `@types/mailparser`. All three used only in `imap-sync.ts`. No stale `resend` / `@resend/*` residue (dep was dropped in `6e2b580`). ✅
+
+### Other C4847 findings — status carry-forward
+
+- **P1-new "stale vercel fallback x25"** — ✅ **CLOSED** by #497 (29a9911). 0 hits repo-wide.
+- **P1-new "`NEXT_PUBLIC_BASE_URL` typo at email.ts:903"** — ✅ **CLOSED** by #497 (29a9911). 0 hits repo-wide.
+- **P1-new "#495 shipped mid-block (lane-discipline)"** — supervision note, no code artifact; unchanged.
+- **P2-new "`renderBody` dead export"** — ⏳ open (see above).
+- **P2-new "Resend comment drift ×14"** — ⏳ open (no touch in this window).
+
+### Recommended follow-up tasks (Lead delta vs. C4847)
+
+| # | Priority | Agent | Scope | LoC |
+|---|----------|-------|-------|-----|
+| J | P1 | BOLT | `EmailAttachment.r2Key` drift — `uploadToR2` returns `{ key, publicUrl }`; imap-sync persists authoritative key | ~15 |
+| K | P1 | BOLT | Extract `requireCronSecret(req)` w/ `timingSafeEqual`; migrate 11 cron routes | ~40 |
+| L | P1 | BOLT | imap-sync participants update — hoist read or use atomic JSON append | ~10 |
+| M | P2 | BOLT | Phase 4 DOMPurify config: strip remote `<img>` / block `http(s):` in `href` / allow `data:` + `cid:` only | part of Phase 4 |
+
+Lane-discipline note: **J is a functional blocker for Phase 4** — Phase 4 attachment download will return 404 for every row written while the bug ships. Recommend J runs before bectly flips `IMAP_*` env in Vercel.
+
