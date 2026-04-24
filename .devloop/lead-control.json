@@ -1,5 +1,5 @@
 {
-  "last_bolt_commit_cycle": 4826,
+  "last_bolt_commit_cycle": 4827,
   "cycle": 4826,
   "directive": "C4826 Lead: CLOSED #472 (Bolt 9a892fe — deleted dead LETTER_TO_EU constant L111-125 in src/lib/sizes.ts; EU_TO_LETTER reverse map + ClothingLetterSize/ClothingEuSize types retained; post-commit grep `LETTER_TO_EU` across src/ returns empty; lint 7 warnings unchanged, 0 errors, tsc+build green). Created #473 [P1-7b] ts-prune getVisitorId — atomic dead-function removal in src/lib/visitor.ts L6-L18 (grep-verified zero callers across src/ C4826; the split was done during Next.js 16 migration but the read-only RSC variant was never wired up; getOrCreateVisitorId is the live half). Bolt force_next=#473. Trace continues #367 + still-queued per-site classification of 7 unused-vars. Sage/Guard unchanged. No DUE monitors (all fresh since C4808). Lint state post-C4826: 0 errors, 7 warnings.",
   "lanes": {

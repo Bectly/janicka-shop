@@ -1,8 +1,29 @@
 # Codebase Quality Sweep — 2026-04-18
 
-**Agent**: Trace (DevLoop C4808, re-verified C4811, task #367)
+**Agent**: Trace (DevLoop C4808, re-verified C4811/C4817/C4821/C4826, task #367)
 **Scope**: `src/**`, `prisma/**`, `next.config.ts`, `package.json`
 **Commands run**: `npx tsc --noEmit`, `npm run lint`, `npx ts-prune`, `npx depcheck`, targeted grep sweeps
+
+## C4826 re-verification addendum (2026-04-24) — P1 cleanup burn-down
+
+Re-ran gates after Bolt cleared tasks #468-#472 across commits `a8123c0` (7 dead imports), `cc5022d` (eslint config `^_` ignore), `e78a2b1` (useCallback deps), `3257854` (uploadthing.ts → upload-client.ts rename, 3 import sites), `9a892fe` (LETTER_TO_EU prune):
+
+- **`tsc --noEmit`**: ✅ PASS.
+- **`npm run lint`**: **7 problems (0 errors, 7 warnings)** — down from 20 at C4821. Net −13 warnings across 5 commits.
+- **P1-3 unused imports** (#468): ✅ CLOSED for shop surface — `Mail`/`X`/`Link`/`Flame`/`vi` cleared. Remaining 7 warnings are all single-identifier `_`-ignorable vars not yet underscored: `totalValue` (abandoned-carts page), `shippingPre` (checkout actions), `clearPersistedReferralCode` (checkout page), `WIDGET_COOKIE_MAX_AGE` (dev-chat widget-login route), `stock` (product-card, product-list-item), `REFERRAL_MIN_ORDER_CZK` (referral.ts). All non-behavioral; next Bolt sweep trivial.
+- **P1-4 uploadthing.ts rename** (#471): ✅ CLOSED — `src/lib/upload-client.ts` in place; product-form/image-upload/quick-add-form import sites updated.
+- **P1-7 ts-prune partial** (#472): ✅ CLOSED for `LETTER_TO_EU` (14 LoC gone). `EU_TO_LETTER` + `ClothingLetterSize`/`ClothingEuSize` retained per grep (still referenced).
+- **#473 in-flight** (Bolt): `getVisitorId` removal in `src/lib/visitor.ts` — verified: **file already contains only `getOrCreateVisitorId`** (L10) + `VISITOR_COOKIE`/`VISITOR_MAX_AGE` consts + `RESERVATION_MINUTES`/`RESERVATION_MS`. Either prior cleanup already removed it, or ts-prune was reporting a stale symbol. Grep for `getVisitorId` across `src/`: **zero hits**. Recommend Lead close #473 as already-done (no source edit required; confirm ts-prune re-run is clean).
+- **eslint config hardening** (#469): `^_` ignore pattern now covers args/vars/caughtErrors — future underscore-stubs auto-silenced.
+- **No regressions**: `@ts-ignore` still 0; `: any`/`as any` unchanged at 7; `dangerouslySetInnerHTML` still 5 (all `jsonLdString`); no hardcoded secrets; `console.*` unchanged.
+
+**Net state after C4826**: All P0 + P1-1/2/4/6/7(LETTER_TO_EU) closed. Remaining open items are P1-3 leftovers (7 trivial underscore-renames) and the last ts-prune candidates (`deleteFromR2`, `normalizeSizesForCategory`, `ShoeSize`/`BraSize`/`OneSize` types). All hygiene-tier; safe to bundle as a final sweep task.
+
+**Recommended next follow-up for Lead**: one small BOLT task — underscore-rename the 7 unused locals (or delete if definitively dead per scope review) + grep-verify + prune the remaining ts-prune candidates in one commit. Expected outcome: lint 7 → 0 warnings, full cleanup complete.
+
+Task #367 remains complete in original scope. Re-verification cycles are now tracking Bolt's P1 burn-down.
+
+---
 
 ## C4821 closing addendum (2026-04-24) — all P0/P1 closed
 
