@@ -10,7 +10,7 @@ import {
   useTransition,
 } from "react";
 import { useSearchParams } from "next/navigation";
-import { getPersistedReferralCode, clearPersistedReferralCode } from "@/components/shop/referral-tracker";
+import { getPersistedReferralCode } from "@/components/shop/referral-tracker";
 import Image from "next/image";
 import Link from "next/link";
 import {

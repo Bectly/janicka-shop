@@ -2,7 +2,6 @@ import { getDb } from "@/lib/db";
 import {
   REFERRAL_CREDIT_CZK,
   REFERRAL_DISCOUNT_CZK,
-  REFERRAL_MIN_ORDER_CZK,
   REFERRAL_CODE_EXPIRY_DAYS,
   STORE_CREDIT_EXPIRY_DAYS,
 } from "@/lib/constants";

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import {
-  WIDGET_COOKIE_MAX_AGE,
   WIDGET_COOKIE_NAME,
   checkWidgetPassword,
   hasWidgetCookie,
