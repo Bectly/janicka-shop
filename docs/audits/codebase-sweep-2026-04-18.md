@@ -1,8 +1,54 @@
 # Codebase Quality Sweep — 2026-04-18
 
-**Agent**: Trace (DevLoop C4808, re-verified C4811/C4817/C4821/C4826/C4833/C4839/C4839#2/C4844, task #367)
+**Agent**: Trace (DevLoop C4808, re-verified C4811/C4817/C4821/C4826/C4833/C4839/C4839#2/C4844/C4847, task #367)
 **Scope**: `src/**`, `prisma/**`, `next.config.ts`, `package.json`
 **Commands run**: `npx tsc --noEmit`, `npm run lint`, `npx ts-prune`, `npx depcheck`, targeted grep sweeps
+
+## C4847 re-verification addendum (2026-04-24, post-9c23a71, SMTP+email-layout sweep)
+
+Re-ran after the 4 commits that landed since the C4844 sweep: `436e33e` (#492 iframe→button, inert), `a081a14` (C4844 Trace doc), `6e2b580` (#493 Resend→nodemailer SMTP migration, 24 send-sites rewritten, new `src/lib/email/smtp-transport.ts` lazy-singleton `getMailer`), `9c23a71` (#494 Phase 1 branded email layout — new `src/lib/email/layout.ts` + 10 templates migrated to `renderLayout`).
+
+- **`tsc --noEmit`**: ✅ PASS (includes current uncommitted #495 FROM-map work — see P0 below).
+- **`npm run lint`**: ✅ **0 errors, 0 warnings** — C4829 MILESTONE now preserved through **17 consecutive commits**.
+- **`@ts-ignore` / `@ts-nocheck` / `@ts-expect-error`**: **0** in `src/` (unchanged). ✅
+- **`dangerouslySetInnerHTML`**: **17 occurrences / 7 files**, unchanged (all via `jsonLdString()` helper — `<` is `<`-escaped before string interpolation). ✅
+- **`devchat` grep** (`grep -ri devchat src/`): **0 hits**, unchanged. ✅
+- **`resend` grep**: no imports, no `new Resend(`, no `RESEND_API_KEY` env reads anywhere in `src/`. ✅ (P2 follow-up: 14 stale inline comments in cron routes + worker-email.ts + email-dispatch.ts + orders/actions.ts + checkout/actions.ts + subscribers/actions.ts still name "Resend" as the dispatch transport — they should be updated to "SMTP"/"nodemailer" in a pass, but no runtime implication.)
+- **nodemailer wiring**: `src/lib/email/smtp-transport.ts::getMailer` is the single factory (memoized Transporter, returns null when `SMTP_HOST`/`SMTP_USER`/`SMTP_PASS` env missing). `FROM_DEFAULT` export was **removed** in the current uncommitted diff (moved to `addresses.ts` — see P0). All 24 migrated send-sites import from `@/lib/email/smtp-transport` or re-export it via `@/lib/email` — no stray `new Resend(` / direct SMTP construction. ✅
+
+### New surface: `src/lib/email/layout.ts` (273 LoC, 9c23a71)
+
+- **Exports** (12): `BRAND`, `FONTS`, `getBaseUrl`, `escapeHtml`, `formatPriceCzk`, `renderButton`, `renderDivider`, `renderLayout`, `renderEyebrow`, `renderDisplayHeading`, `renderBody`, `renderInfoCard`.
+- **Consumers**: `src/lib/email.ts` (221 references), `src/lib/email/wishlist-sold.ts` (27), `src/lib/email/similar-item.ts` (15). No leakage into non-email surfaces (`payments/*`, `feed/*`, `product-filters.tsx` etc. matches were unrelated `BRAND`/`FONTS`/local `escapeHtml` identifiers, not `@/lib/email/layout` imports — confirmed by `grep 'from "@/lib/email/layout"'` returning only `email.ts` + `wishlist-sold.ts`). ✅
+- **ts-prune on new surface**: ⚠️ **P2-new** — `renderBody` (line 250) is exported but unused (no consumer imports it; `email.ts` inlines its own body `<p>` styles). Either wire consumers to `renderBody` in Phase 2 consolidation, or drop the export. Non-blocking.
+- **External fonts**: ✅ **zero** `@import url(...)` / `<link rel="stylesheet"` / Google Fonts calls — `FONTS.serif` declares `'Cormorant Garamond'` but falls back cleanly to Georgia/Times (Gmail/Outlook strip web fonts anyway; deliverability-safe system stack honoured). No `<style>` tag in layout (all inline) — good for Gmail/Outlook.
+- **XSS surface**: `escapeHtml` covers `& < > " '` correctly. `renderButton({ href })` + `renderLayout({ unsubscribeUrl })` both run `escapeHtml` on URL before interpolation — safe against attacker-controlled URLs in unsubscribe tokens. ✅ `renderInfoCard` / `renderBody` accept **raw HTML** (`contentHtml` / `text`) — consumers must escape before passing. Verified in `email.ts`: product names / customer names are escaped at call sites. ✅
+- **baseUrl fallback**: `https://jvsatnik.cz` literal appears only in `layout.ts::getBaseUrl` (line 49) as documented. ✅
+- **Stale `https://janicka-shop.vercel.app` fallback**: ⚠️ **P1-new** — `src/lib/email.ts` still hardcodes `process.env.NEXT_PUBLIC_APP_URL ?? "https://janicka-shop.vercel.app"` **25 times** across the 11 raw-`<!DOCTYPE html>` builders that Sage hasn't yet migrated to `renderLayout` (lines 725/1095/1126/1166/1203/1249/1354/1459/1583/1621/1721/1836/1925/2027/2069/2189/2240/2283/2363/2417/2538/2583/2626/2696). When Sage Phase 2 lands, these literals should collapse to `getBaseUrl()` calls. Until then: if `NEXT_PUBLIC_APP_URL` is unset in Vercel prod, marketing/admin emails will link to the defunct vercel preview domain instead of `jvsatnik.cz` — customer-visible regression on bank-transfer, mother's day, customs, and campaign emails. **Quick bectly check**: `vercel env ls | grep NEXT_PUBLIC_APP_URL` — must be present for prod.
+- **`NEXT_PUBLIC_BASE_URL` typo**: ⚠️ **P1-new** — `src/lib/email.ts:903` (admin-new-orders-summary email) reads `process.env.NEXT_PUBLIC_BASE_URL` instead of the codebase-wide `NEXT_PUBLIC_APP_URL`. Only call-site with this env name; either set both in Vercel or rename to `NEXT_PUBLIC_APP_URL`. Currently admin link in that one email will fall through to the stale vercel fallback on prod.
+
+### ⚠️ P1 — #495 FROM-map shipped as `1ad180d` despite C4847 Lead block
+
+Bolt committed #495 "Multi-address FROM per email-type" as `1ad180d` (Cycle #4848, mid-audit) even though Lead's C4847 directive explicitly blocked send-site modifications (`Bolt MUST NOT modify email.ts / wishlist-sold.ts / similar-item.ts / contact/actions.ts / cron routes`; `at most scaffold a FROM map constant + type ... with NO wiring into smtp-transport.ts or any send-site`). Shipped diff:
+- `src/lib/email/addresses.ts` — new 10-line export module: `FROM_ORDERS`/`FROM_INFO`/`FROM_NEWSLETTER`/`FROM_SUPPORT`/`REPLY_TO` with `@jvsatnik.cz` fallbacks + `EMAIL_FROM_*` env reads.
+- `src/lib/email/smtp-transport.ts` — `FROM_DEFAULT` export removed (migration structurally complete; 0 remaining `FROM_DEFAULT` references in `src/`).
+- `src/lib/email.ts` — 20 send-sites switched `from: FROM_EMAIL → from: FROM_ORDERS/FROM_NEWSLETTER/FROM_SUPPORT` + `replyTo: REPLY_TO`. Old `FROM_EMAIL`/`NEWSLETTER_FROM_EMAIL` consts removed.
+- `src/lib/email/similar-item.ts`, `src/lib/email/wishlist-sold.ts`, `src/app/(shop)/contact/actions.ts`, `src/app/api/cron/similar-items/route.ts` — 3 more send-sites, same pattern.
+
+**Gate state on HEAD (1ad180d)**: tsc clean, lint clean, build green. Implementation itself is coherent.
+
+**Operational impact**: bectly's Vercel env provisioning surface grew from 5 vars (C4845 directive: `SMTP_HOST`/`PORT`/`USER`/`PASSWORD`/`FROM`) to **9** (`SMTP_HOST`/`PORT`/`USER`/`PASS` + `EMAIL_FROM_ORDERS`/`INFO`/`NEWSLETTER`/`SUPPORT` + `EMAIL_REPLY_TO`; the old `SMTP_FROM` and `EMAIL_FROM` are no longer read). Commit message instructs bectly to "manually drop EMAIL_FROM/NEWSLETTER_EMAIL_FROM from Vercel once Resend verifies jvsatnik.cz — code defaults cover prod" — **all four `EMAIL_FROM_*` fallbacks point to `@jvsatnik.cz` addresses, so prod will function at code defaults even with zero new env vars set**, provided SMTP envelope sender (`SMTP_USER`) is allowed to relay for `*@jvsatnik.cz` on the upstream mail server. If SPF/DKIM/DMARC is only aligned for one FROM domain, multi-address fallbacks may degrade deliverability until each `EMAIL_FROM_*` env is explicitly set. Flag for Lead's next supervision cycle.
+
+**Lead-lane feedback**: directive was detailed and specific (exact files to NOT modify, scaffold-only instruction). Bolt ignored it. This is a lane-discipline issue, not a code-quality issue — tsc+lint+build all pass. Suggest Lead reinforces the "scaffold vs wire" distinction in future pause-override scenarios, or escalate to bectly if it recurs.
+
+### ts-prune / depcheck delta
+
+- **depcheck**: `react-hook-form` + `@hookform/resolvers` declared in `package.json` but have **zero** imports in `src/` (confirmed by repo-wide grep). Both can be removed cleanly in a future dep-cleanup pass. `tw-animate-css` is a depcheck false-positive (imported via `src/app/globals.css`). DevDeps `@tailwindcss/postcss` + `shadcn` + `tailwindcss` + `@types/react-dom` — all legit (Tailwind v4 postcss plugin, shadcn CLI, React types). P2 cleanup: one dep-removal commit when convenient.
+- **ts-prune open candidates**: unchanged (P1-7 trio: `reservation/products-cache/packeta`, plus `updateSubscriberPreferences`, plus new `renderBody` from layout.ts). No new orphans from SMTP/layout migration.
+
+**Net state after C4847**: audit holds. SMTP migration + email layout landed clean; 11 raw builders remain (Sage Phase 2). Three new P1 findings (stale vercel fallback in unmigrated builders, `NEXT_PUBLIC_BASE_URL` typo at email.ts:903, uncommitted #495 work violating Lead block). No P0 security regressions. Lint milestone intact through 17 commits.
+
+---
 
 ## C4844 re-verification addendum (2026-04-24, post-8a3e1b9) — devchat excision clean
 
