@@ -86,7 +86,7 @@ export function renderButton({ href, label, variant = "primary", align = "center
       : { bg: BRAND.primary, color: BRAND.white, border: BRAND.primary };
 
   return `
-    <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="${align}" style="margin: 0 ${align === "center" ? "auto" : "0"};">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="${align}" class="j-btn" style="margin: 0 ${align === "center" ? "auto" : "0"};">
       <tr>
         <td align="center" style="border-radius: 999px; background: ${styles.bg}; border: 1.5px solid ${styles.border};">
           <a href="${escapeHtml(href)}" style="display: inline-block; padding: 13px 32px; font-family: ${FONTS.sans}; font-size: 14px; font-weight: 600; color: ${styles.color}; text-decoration: none; letter-spacing: 0.04em; text-transform: uppercase; border-radius: 999px; mso-padding-alt: 0;">
@@ -166,9 +166,43 @@ export function renderLayout({
   <meta name="color-scheme" content="light only" />
   <meta name="supported-color-schemes" content="light" />
   <title>Janička Shop</title>
+  <!--[if !mso]><!-->
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />
+  <!--<![endif]-->
+  <style type="text/css">
+    /* Gmail / Apple Mail / Outlook.com — ignored by Outlook desktop (falls back to fluid tables). */
+    body { margin: 0 !important; padding: 0 !important; }
+    table { border-collapse: collapse !important; }
+    img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; display: block; }
+    a { text-decoration: none; }
+    a[x-apple-data-detectors] { color: inherit !important; text-decoration: none !important; font-size: inherit !important; font-family: inherit !important; font-weight: inherit !important; line-height: inherit !important; }
+    .j-container { width: 100% !important; max-width: 600px !important; }
+    @media only screen and (max-width: 520px) {
+      .j-card { padding: 28px 22px !important; border-radius: 16px !important; }
+      .j-header { padding: 18px 14px 16px !important; }
+      .j-h1 { font-size: 26px !important; line-height: 1.18 !important; }
+      .j-body { font-size: 14px !important; }
+      .j-eyebrow { font-size: 10px !important; }
+      .j-btn a { padding: 14px 24px !important; font-size: 13px !important; }
+      .j-stack { display: block !important; width: 100% !important; padding: 0 0 18px !important; border-left: none !important; border-top: 1px solid ${BRAND.borderSoft} !important; margin-top: 14px !important; }
+      .j-stack-first { padding: 0 0 14px !important; border-left: none !important; border-top: none !important; }
+      .j-grid-cell { display: block !important; width: 100% !important; padding: 6px 0 !important; }
+      .j-product-img { height: auto !important; min-height: 200px !important; }
+      .j-total-label { font-size: 18px !important; }
+      .j-total-amount { font-size: 20px !important; }
+      .j-footer-pad { padding: 20px 12px !important; }
+    }
+    /* Dark-mode fix: keep branded light palette on clients that auto-invert. */
+    @media (prefers-color-scheme: dark) {
+      .j-card { background: ${BRAND.white} !important; color: ${BRAND.charcoal} !important; }
+      .j-text { color: ${BRAND.charcoalSoft} !important; }
+      .j-heading { color: ${BRAND.charcoal} !important; }
+    }
+  </style>
   <!--[if mso]>
   <style type="text/css">
     body, table, td, p, a { font-family: Georgia, 'Times New Roman', serif !important; }
+    .j-card { border: 1px solid ${BRAND.borderSoft} !important; }
   </style>
   <![endif]-->
 </head>
@@ -179,11 +213,11 @@ export function renderLayout({
       <td align="center" style="padding: 24px 12px 48px;">
 
         <!-- Container -->
-        <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="max-width: 600px; width: 100%;">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" class="j-container" style="max-width: 600px; width: 100%;">
 
           <!-- Header -->
           <tr>
-            <td align="center" style="padding: 24px 16px 20px;">
+            <td align="center" class="j-header" style="padding: 24px 16px 20px;">
               <a href="${baseUrl}" style="text-decoration: none; display: inline-block;">
                 <img src="${logoUrl}" alt="Janička Shop" width="140" style="display: block; margin: 0 auto; height: auto; max-height: 56px; width: auto; max-width: 180px; border: 0; outline: none;" />
               </a>
@@ -193,7 +227,7 @@ export function renderLayout({
 
           <!-- Content card -->
           <tr>
-            <td style="background: ${BRAND.white}; border-radius: 20px; padding: 40px 32px; box-shadow: 0 1px 2px rgba(58, 48, 52, 0.04), 0 8px 24px rgba(184, 64, 122, 0.06); border: 1px solid ${BRAND.borderSoft};">
+            <td class="j-card" style="background: ${BRAND.white}; border-radius: 20px; padding: 40px 32px; box-shadow: 0 1px 2px rgba(58, 48, 52, 0.04), 0 8px 24px rgba(184, 64, 122, 0.06); border: 1px solid ${BRAND.borderSoft};">
               ${contentHtml}
             </td>
           </tr>
@@ -213,7 +247,7 @@ export function renderLayout({
 
           <!-- Footer -->
           <tr>
-            <td align="center" style="padding: 8px 16px 24px;">
+            <td align="center" class="j-footer-pad" style="padding: 8px 16px 24px;">
               ${footerNoteHtml}
               <p style="margin: 0 0 6px; font-family: ${FONTS.sans}; font-size: 12px; color: ${BRAND.charcoalSoft}; line-height: 1.7;">
                 Pečlivě vybraný second hand &middot;
@@ -245,17 +279,17 @@ export function renderLayout({
  * headings in cards (used e.g. for "Objednávka", "Doručení").
  */
 export function renderEyebrow(text: string): string {
-  return `<p style="margin: 0 0 6px; font-family: ${FONTS.sans}; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: ${BRAND.primary};">${escapeHtml(text)}</p>`;
+  return `<p class="j-eyebrow" style="margin: 0 0 6px; font-family: ${FONTS.sans}; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: ${BRAND.primary};">${escapeHtml(text)}</p>`;
 }
 
 /** Serif display heading — used once at top of card. */
 export function renderDisplayHeading(text: string): string {
-  return `<h1 style="margin: 0 0 16px; font-family: ${FONTS.serif}; font-size: 30px; font-weight: 600; line-height: 1.15; letter-spacing: -0.01em; color: ${BRAND.charcoal};">${escapeHtml(text)}</h1>`;
+  return `<h1 class="j-h1 j-heading" style="margin: 0 0 16px; font-family: ${FONTS.serif}; font-size: 30px; font-weight: 600; line-height: 1.15; letter-spacing: -0.01em; color: ${BRAND.charcoal};">${escapeHtml(text)}</h1>`;
 }
 
 /** Body paragraph — default copy style. */
 export function renderBody(text: string): string {
-  return `<p style="margin: 0 0 14px; font-family: ${FONTS.sans}; font-size: 15px; line-height: 1.7; color: ${BRAND.charcoalSoft};">${text}</p>`;
+  return `<p class="j-body j-text" style="margin: 0 0 14px; font-family: ${FONTS.sans}; font-size: 15px; line-height: 1.7; color: ${BRAND.charcoalSoft};">${text}</p>`;
 }
 
 interface ProductRowItem {
@@ -334,8 +368,8 @@ export function renderProductGrid(items: ProductGridItem[], columns: 2 | 3 = 2):
 
   const cells = items.map((p) => {
     const imageHtml = p.image
-      ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" style="display: block; width: 100%; height: 220px; object-fit: cover; border-radius: 12px; border: 1px solid ${BRAND.borderSoft};" />`
-      : `<div style="width: 100%; height: 220px; background: ${BRAND.blushSoft}; border-radius: 12px; border: 1px solid ${BRAND.borderSoft};"></div>`;
+      ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" class="j-product-img" style="display: block; width: 100%; height: 220px; object-fit: cover; border-radius: 12px; border: 1px solid ${BRAND.borderSoft};" />`
+      : `<div class="j-product-img" style="width: 100%; height: 220px; background: ${BRAND.blushSoft}; border-radius: 12px; border: 1px solid ${BRAND.borderSoft};"></div>`;
 
     const priceHtml = p.compareAt && p.compareAt > p.price
       ? `<span style="font-family: ${FONTS.sans}; font-size: 12px; color: ${BRAND.charcoalMuted}; text-decoration: line-through; margin-right: 6px;">${formatPriceCzk(p.compareAt)}</span><strong style="font-family: ${FONTS.sans}; font-size: 15px; color: ${BRAND.primary};">${formatPriceCzk(p.price)}</strong>`
@@ -354,7 +388,7 @@ export function renderProductGrid(items: ProductGridItem[], columns: 2 | 3 = 2):
       : "";
 
     return `
-      <td valign="top" align="left" style="width: ${widthPct}; padding: 8px;">
+      <td valign="top" align="left" class="j-grid-cell" style="width: ${widthPct}; padding: 8px;">
         <a href="${escapeHtml(p.url)}" style="text-decoration: none; color: inherit; display: block;">
           ${imageHtml}
           ${brandHtml}
@@ -370,7 +404,7 @@ export function renderProductGrid(items: ProductGridItem[], columns: 2 | 3 = 2):
   for (let i = 0; i < cells.length; i += columns) {
     const slice = cells.slice(i, i + columns);
     while (slice.length < columns) {
-      slice.push(`<td style="width: ${widthPct}; padding: 8px;">&nbsp;</td>`);
+      slice.push(`<td class="j-grid-cell" style="width: ${widthPct}; padding: 8px;">&nbsp;</td>`);
     }
     rows.push(`<tr>${slice.join("")}</tr>`);
   }

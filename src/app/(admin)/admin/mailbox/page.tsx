@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { connection } from "next/server";
-import { Mail, Paperclip } from "lucide-react";
+import { Mail, Paperclip, PenSquare, Search } from "lucide-react";
 import type { Metadata } from "next";
+import type { Prisma } from "@prisma/client";
 import { getDb } from "@/lib/db";
 import { formatRelativeTime } from "@/lib/format";
 
@@ -30,18 +31,44 @@ function truncate(text: string | null | undefined, max = 140): string {
 export default async function AdminMailboxPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; q?: string }>;
 }) {
   const params = await searchParams;
   const tab = params.tab === "archived" ? "archived" : "inbox";
+  const q = (params.q ?? "").trim();
 
   await connection();
   const db = await getDb();
 
-  const where =
+  const baseWhere: Prisma.EmailThreadWhereInput =
     tab === "archived"
       ? { archived: true, trashed: false }
       : { archived: false, trashed: false };
+
+  const where: Prisma.EmailThreadWhereInput = q
+    ? {
+        AND: [
+          baseWhere,
+          {
+            OR: [
+              { subject: { contains: q } },
+              { participants: { contains: q.toLowerCase() } },
+              {
+                messages: {
+                  some: {
+                    OR: [
+                      { bodyText: { contains: q } },
+                      { fromAddress: { contains: q.toLowerCase() } },
+                      { fromName: { contains: q } },
+                    ],
+                  },
+                },
+              },
+            ],
+          },
+        ],
+      }
+    : baseWhere;
 
   const [threads, totalUnread] = await Promise.all([
     db.emailThread.findMany({
@@ -72,7 +99,7 @@ export default async function AdminMailboxPage({
 
   return (
     <>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="font-heading text-2xl font-bold text-foreground">
             Schránka
@@ -83,7 +110,42 @@ export default async function AdminMailboxPage({
               : `${threads.length} konverzací`}
           </p>
         </div>
+        <Link
+          href="/admin/mailbox/compose"
+          className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+        >
+          <PenSquare className="size-4" />
+          Nová zpráva
+        </Link>
       </div>
+
+      <form
+        method="GET"
+        action="/admin/mailbox"
+        className="mt-4 flex items-center gap-2"
+      >
+        {tab === "archived" ? (
+          <input type="hidden" name="tab" value="archived" />
+        ) : null}
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="search"
+            name="q"
+            defaultValue={q}
+            placeholder="Hledat v konverzacích (předmět, odesílatel, text)…"
+            className="w-full rounded-lg border bg-background py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+          />
+        </div>
+        {q ? (
+          <Link
+            href={tab === "archived" ? "/admin/mailbox?tab=archived" : "/admin/mailbox"}
+            className="rounded-lg border px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            Vymazat
+          </Link>
+        ) : null}
+      </form>
 
       <div className="mt-4 flex gap-1 border-b">
         <Link
@@ -115,9 +177,11 @@ export default async function AdminMailboxPage({
             {tab === "archived" ? "Nic v archivu" : "Žádné e-maily"}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            {tab === "archived"
-              ? "Archivované konverzace se zobrazí tady."
-              : "Příchozí e-maily z @jvsatnik.cz se zobrazí po nastavení IMAP serveru a spuštění sync cronu."}
+            {q
+              ? "Žádná konverzace nevyhovuje hledání."
+              : tab === "archived"
+                ? "Archivované konverzace se zobrazí tady."
+                : "Příchozí e-maily z @jvsatnik.cz se zobrazí po nastavení IMAP serveru a spuštění sync cronu."}
           </p>
         </div>
       ) : (

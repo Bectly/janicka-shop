@@ -5,6 +5,7 @@ import { ArrowLeft, Paperclip, Star } from "lucide-react";
 import type { Metadata } from "next";
 import { getDb } from "@/lib/db";
 import { formatDate } from "@/lib/format";
+import { MailboxReplyForm } from "@/components/admin/mailbox-reply-form";
 import {
   archiveThreadAction,
   flagThreadAction,
@@ -208,9 +209,16 @@ export default async function AdminThreadPage({
         })}
       </div>
 
-      <div className="mt-6 rounded-xl border border-dashed bg-card/50 p-6 text-center text-sm text-muted-foreground">
-        Odpovídání a psaní nové zprávy přijde v další iteraci (Phase 3).
-      </div>
+      {(() => {
+        const lastInbound = [...thread.messages]
+          .reverse()
+          .find((m) => m.direction === "inbound");
+        const replyTo = lastInbound?.fromAddress
+          ?? thread.messages[thread.messages.length - 1]?.fromAddress
+          ?? "";
+        if (!replyTo) return null;
+        return <MailboxReplyForm threadId={thread.id} replyTo={replyTo} />;
+      })()}
     </>
   );
 }
