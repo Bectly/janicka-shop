@@ -1,16 +1,7 @@
-import { Resend } from "resend";
+import { getMailer } from "@/lib/email/smtp-transport";
 import { getDb } from "@/lib/db";
 import { signUnsubscribeToken } from "@/lib/unsubscribe-token";
 import { logger } from "@/lib/logger";
-
-let cachedResend: Resend | null | undefined;
-
-function getResendClient(): Resend | null {
-  if (cachedResend !== undefined) return cachedResend;
-  const key = process.env.RESEND_API_KEY;
-  cachedResend = key ? new Resend(key) : null;
-  return cachedResend;
-}
 
 const NEWSLETTER_FROM_EMAIL =
   process.env.NEWSLETTER_EMAIL_FROM ?? "Janička Shop <novinky@janicka-shop.cz>";
@@ -193,10 +184,10 @@ function buildWishlistSoldHtml(
 export async function sendWishlistSoldNotifications(
   soldProducts: SoldProduct[],
 ): Promise<void> {
-  const resend = getResendClient();
-  if (!resend) {
+  const mailer = getMailer();
+  if (!mailer) {
     logger.warn(
-      "[Email] RESEND_API_KEY not set — skipping wishlist sold notifications",
+      "[Email] SMTP not configured — skipping wishlist sold notifications",
     );
     return;
   }
@@ -264,7 +255,7 @@ export async function sendWishlistSoldNotifications(
       const notifiedIds: string[] = [];
       for (const sub of subscribers) {
         try {
-          await resend.emails.send({
+          await mailer.sendMail({
             from: NEWSLETTER_FROM_EMAIL,
             to: sub.email,
             subject,

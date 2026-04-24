@@ -15,15 +15,15 @@
     },
     "TRACE": {
       "status": "active",
-      "force_next_task": 367,
+      "force_next_task": 484,
       "next_priority": [
-        367,
         484,
+        367,
         358,
         351
       ],
-      "notes": "CONTINUE #367 atomic re-verification cadence — NEXT TARGET: bundle 41b7c43 (cookie-banner SSR shell) + 65bcd1c (homepage/PDP chip alignment) — 2 commits since last sweep d33c638. Checklist: (1) npx tsc --noEmit clean on HEAD, (2) npm run lint 0w/0e (milestone now 9 consecutive commits: C4829 → 65bcd1c), (3) @ts-ignore count unchanged (0), (4) dangerouslySetInnerHTML count unchanged (17 across 7 files, all jsonLdString()-escaped), (5) hardcoded-secret spot-check on 41b7c43 server-wrapper + 65bcd1c page.tsx diff, (6) GDPR-pre-consent grep on 41b7c43: `grep -rn 'consent\\|gtag\\|fbq\\|analytics' src/components/shop/cookie-banner*` and `src/components/analytics*` — verify no script/tag fires BEFORE consent persisted. Chip alignment diff (65bcd1c) is pure CSS string replace across 10 sites — expected zero structural/security impact, quick visual-semantic check only. Append result as C4842 re-verification entry in docs/audits/codebase-sweep-2026-04-18.md. Keep chunks <2min to dodge QA exit=143 pattern. P1-7e trio (reservation/products-cache/packeta.cancel) + P1-7f (updateSubscriberPreferences actions.ts:77) verdicts parked — do NOT implement without Lead directive. #484 [PERF-VERIFY] REMAINS GATED — do NOT start until #481 committed AND Vercel HEAD deploy propagated (wait 5min after final Bolt commit + curl -I https://janicka-shop.vercel.app | grep x-vercel-id to verify new build hash). Replay EXACT 10 Lighthouse 13.1 runs (5 routes × mobile+desktop, prod, cold, 3 medians, same CLI flags as C4835). Output docs/audits/cwv-2026-04-24-followup.md per-route LCP/CLS/INP/TBT before→after delta + LCP element selector (must show cookie-banner gone from LCP + homepage CLS ≤0.1) + verdict. Skip #358 (BLOCKED Guard #368), #351 (older). Skip #342/#340/#347 (Hetzner-gated).",
-      "source_finding": "2 commits since C4840 d33c638 sweep: 41b7c43 cookie SSR shell + 65bcd1c chip alignment CSS."
+      "notes": "PICK #484 [PERF-VERIFY] NEXT — FULLY UNBLOCKED. All three CWV fixes are in HEAD: 74f3c55 (#481 homepage CLS Suspense min-h fallbacks), 41b7c43 (#483 cookie SSR shell), 42d60d5 (#482 PDP LCP gallery priority + redirect chain). Pre-flight: wait 5min after 8a3e1b9 (last commit), then `curl -I https://janicka-shop.vercel.app | grep x-vercel-id` to confirm new build hash. Execute: replay EXACT 10 Lighthouse 13.1 runs as C4835 baseline (5 routes × mobile+desktop, prod, cold-cache, 3 medians, same CLI flags). Routes: /, /produkty, /produkty/<any-live-slug>, /kosik, /pokladna. Output docs/audits/cwv-2026-04-24-followup.md with per-route LCP/CLS/INP/TBT before→after deltas + LCP element selector (must show: cookie-banner GONE from LCP on 4/5 routes, homepage CLS ≤0.1, PDP mobile LCP ≤2.5s) + per-task attribution (#481/#482/#483) + overall verdict. If any target missed, note exact gap and suggest follow-up task. THEN #367 codebase quality sweep re-verification — 6 commits to batch-sweep since d33c638: 41b7c43, 65bcd1c, 74f3c55, 09b7bcd, 7398e07, 51f82ec, 109fe1e, 8a3e1b9. Checklist: (1) npx tsc --noEmit clean on HEAD, (2) npm run lint 0w/0e (milestone ~14 consecutive), (3) @ts-ignore count unchanged (0), (4) dangerouslySetInnerHTML count unchanged, (5) GDPR-pre-consent grep on cookie-banner* unchanged, (6) devchat grep stays clean (`grep -ri devchat src/` should return 0 after 8a3e1b9). Append C4844 sweep entry in docs/audits/codebase-sweep-2026-04-18.md. Keep chunks <2min to dodge QA exit=143. Skip #358 (BLOCKED Guard #368), #351 (older), #342/#340/#347 (Hetzner-gated).",
+      "source_finding": "All C4842/C4843/C4844 CWV fixes landed + 5 additional commits since d33c638 sweep. #484 gate conditions all met as of 8a3e1b9."
     },
     "SAGE": {
       "status": "paused",
@@ -33,7 +33,7 @@
         "cart_sold_item_toast",
         "checkout_accordion_polish"
       ],
-      "notes": "Idle — QA worker exit=143 pattern persists. If worker lights up unprompted, atomic micro-polish (≤5 file deltas, no refactors): (1) PDP měření grid 320w readability, (2) cart 'prodáno mezitím' toast copy/timing, (3) checkout accordion step-indicator contrast. DO NOT touch any file owned by Bolt #481/#486/#488/#489 (src/app/(shop)/page.tsx section containers, src/app/(shop)/podminky/page.tsx, product-lightbox*, announcement-bar*, header*, shuffle-button*, PDP sold-product mobile layout). DO NOT touch cookie-banner* (#483 41b7c43 locked). DO NOT touch product-gallery.tsx / next.config.ts / layout.tsx (#482 42d60d5 + #483 41b7c43 locked). DO NOT touch homepage section heading/chip CSS (#485 65bcd1c just landed — 10 sites use the new pattern). DO NOT touch checkout/mock-payment (#419 closed C4797). Earlier do-not-touch list (C4831) still in effect for files owned by #465-477."
+      "notes": "Idle — QA worker exit=143 pattern persists + no open Sage tasks. If worker lights up unprompted, atomic micro-polish (≤5 file deltas, no refactors): (1) PDP měření grid 320w readability, (2) cart 'prodáno mezitím' toast copy/timing, (3) checkout accordion step-indicator contrast. DO NOT touch files owned by recent Bolt/Sage commits: src/app/(shop)/page.tsx section containers (#481 74f3c55), src/app/(shop)/podminky/page.tsx (#486 09b7bcd), product-lightbox* / announcement-bar* / header* / shuffle-button* / globals.css body.lightbox-open (#488 7398e07), PDP sold-product mobile outer grid + image wrapper + info column (#489 109fe1e), cookie-banner* (#483 41b7c43), product-gallery.tsx / next.config.ts / layout.tsx (#482 42d60d5 + #483 41b7c43), homepage section heading/chip CSS (#485 65bcd1c), generate-invoice.ts / generate-credit-note.ts hasVelMarker logic (#490 51f82ec), src/app/(admin)/admin/jarvis/page.tsx (Bolt #492 active), src/lib/email/* (Bolt #493 active), everything formerly devchat (removed C4844 8a3e1b9 — do NOT resurrect). DO NOT touch checkout/mock-payment (#419 closed C4797). Earlier do-not-touch list (C4831) still in effect for files owned by #465-477."
     },
     "GUARD": {
       "status": "paused",
@@ -53,7 +53,7 @@
     "Mock payment provider (src/lib/payments/mock.ts) MUST stay prod-guarded — NODE_ENV=production with PAYMENT_PROVIDER=mock must throw in provider factory. Do not soften this guard.",
     "Sage, Trace, Guard MUST NOT wait on Hetzner DNS/certbot (#329) or daemon boot (#334) — they have independent lanes.",
     "Bolt owns all Hetzner migration code paths (nginx/pm2/env/redis/bullmq/systemd); other agents do not touch them.",
-    "Tasks #337, #352, #353, #364, #365, #369, #370, #344, #371, #373, #374, #375, #376, #377, #378, #412, #413, #414, #415, #416, #417, #420, #421, #422, #449, #450, #451, #452, #453, #459, #460, #461, #465, #466, #467, #468, #469, #470, #471, #472, #473, #474, #475, #476, #477, #478, #479, #480, #482, #483, #485 are DONE — do not re-raise as blockers.",
+    "Tasks #337, #352, #353, #364, #365, #369, #370, #344, #371, #373, #374, #375, #376, #377, #378, #412, #413, #414, #415, #416, #417, #420, #421, #422, #449, #450, #451, #452, #453, #459, #460, #461, #465, #466, #467, #468, #469, #470, #471, #472, #473, #474, #475, #476, #477, #478, #479, #480, #481, #482, #483, #485, #486, #488, #489, #490, #491 are DONE — do not re-raise as blockers.",
     "Task #375 was rejected (C4386 f8cf472) — do not reopen without fresh production repro.",
     "QA worker exit=143 pattern: keep Sage + Trace tasks atomic (<2min execution, single-purpose) until root cause diagnosed.",
     "#346 blocked until P6.3 traffic-cut completes — no Vercel-baseline visual QA possible pre-Hetzner cut.",
@@ -63,7 +63,12 @@
     "#469 Bolt fix: argsIgnorePattern/varsIgnorePattern for ^_ prefix is a RULE CONFIGURATION extension (documented TS-ESLint convention), NOT a rule disable. Scope must be strict: only affects @typescript-eslint/no-unused-vars, only adds the two pattern options, only ^_ prefix. Do NOT blanket-disable the rule. Do NOT add per-file overrides.",
     "Lint 0w/0e MILESTONE (C4829 first clean state, preserved through 65bcd1c = 9 consecutive commits): every Bolt commit going forward MUST verify `npm run lint` returns 0 warnings 0 errors before claiming done. Regressing this milestone is a hard fail — fix-forward in same commit, do not ship.",
     "#481 perf task ships as its OWN commit (not bundled) so #484 Trace verify can attribute deltas per-task. Commit format: 'Cycle #NNNN: Bolt — Task #NNN: <one-line>. tsc clean, lint 0w/0e (milestone preserved), build green.'.",
-    "#481 HARD LOCK: skipped in C4841 (Bolt shipped #483 instead) and C4842 (Bolt shipped #485 instead). Next Bolt dispatch MUST commit #481 — no substitutions, no bundling with #486/#488/#489 regardless of diff size or CSS-only claim.",
+    "#491 devchat removal is FINAL — DROP SQL at prisma/pending-drops/001_drop_devchat.sql awaits bectly manual apply; do NOT re-introduce DevChatMessage model, widget, /api/dev-chat* routes, lib/devchat-widget-auth, CSS .devchat-bubble-pos, or shop/admin layout devchat refs. DEVCHAT_API_KEY env is renamed to LEAD_API_KEY (kept for /api/admin/dev-picks auth).",
+    "#490 invoice (vel. X) dedup via hasVelMarker regex in generate-invoice.ts:208 + generate-credit-note.ts:219 is DONE — do NOT revert; preserve behavior for products without size marker in name (suffix still appends).",
+    "#489 PDP sold-product mobile overflow DONE (109fe1e) — grid-cols-1 min-w-0 overflow-hidden on outer grid + image wrapper + info column. Do NOT revert to grid-cols-2 on mobile or remove min-w-0 from info column.",
+    "#488 lightbox overlay-breakers DONE (7398e07) — data-hide-on-lightbox attr on 4 components + generalized body.lightbox-open CSS !important rule in globals.css. Future overlay-breakers: add the attr — do NOT duplicate CSS rules.",
+    "#486 'Nové bez visačky' condition copy added to /podminky DONE (09b7bcd) — matches CONDITION_ORDER bullet list.",
+    "#481 homepage CLS DONE (74f3c55) — min-h fallbacks on 4 Suspense streaming sections (FeaturedProducts 1800, SaleProducts 1800, FeaturedCollections 1900, RecentlySold 240) extending 09b7bcd trio (NewProducts 500 + Categories 740 + PopularBrands 340). Do NOT remove min-h reservations. page-enter keyframe stays opacity-only (no translate → no wrapper-induced shift).",
     "#482 PERF-PDP-LCP DONE (42d60d5) — do NOT re-add gallery priority to subsequent slides, do NOT duplicate R2 preconnect in layout.tsx, do NOT revert skipTrailingSlashRedirect.",
     "#483 PERF-COOKIE-LCP DONE (41b7c43) — do NOT revert SSR shell wrapper, do NOT remove Suspense boundary in (shop)/layout.tsx, do NOT unpass initialVisible prop; GDPR flow must remain intact (no scripts fire pre-consent).",
     "#484 PERF-VERIFY: GATED — Trace MUST NOT start until #481 in HEAD AND Vercel deploy of HEAD has propagated (wait 5min after final Bolt commit, verify via `curl -I https://janicka-shop.vercel.app | grep x-vercel-id`). Premature run wastes the audit + provides misleading deltas.",
@@ -71,7 +76,7 @@
     "#486 are PURELY cosmetic/copy tasks — Bolt may bundle with other copy tasks IF diff stays <10 files AND all changes are textual/CSS only (no structural React/TS changes).",
     "#488/#489 are structural UI tasks — each ships as its OWN commit (lightbox overlay surgery + PDP sold-product layout fix are distinct concerns)."
   ],
-  "last_updated": "2026-04-24T15:22",
+  "last_updated": "2026-04-24T15:37",
   "pause": {},
   "paused_at_bolt_cycle": 4795
 }

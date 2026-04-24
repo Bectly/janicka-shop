@@ -1,16 +1,7 @@
-import { Resend } from "resend";
+import { getMailer } from "@/lib/email/smtp-transport";
 import { getDb } from "@/lib/db";
 import { signUnsubscribeToken } from "@/lib/unsubscribe-token";
 import { logger } from "@/lib/logger";
-
-let cachedResend: Resend | null | undefined;
-
-function getResendClient(): Resend | null {
-  if (cachedResend !== undefined) return cachedResend;
-  const key = process.env.RESEND_API_KEY;
-  cachedResend = key ? new Resend(key) : null;
-  return cachedResend;
-}
 
 const NEWSLETTER_FROM_EMAIL =
   process.env.NEWSLETTER_EMAIL_FROM ?? "Janička Shop <novinky@janicka-shop.cz>";
@@ -306,10 +297,10 @@ export function buildSimilarItemsArrivedHtml(
 export async function sendSimilarItemNotifications(
   soldProducts: SoldProduct[],
 ): Promise<void> {
-  const resend = getResendClient();
-  if (!resend) {
+  const mailer = getMailer();
+  if (!mailer) {
     logger.warn(
-      "[Email] RESEND_API_KEY not set — skipping similar item notifications",
+      "[Email] SMTP not configured — skipping similar item notifications",
     );
     return;
   }
@@ -381,7 +372,7 @@ export async function sendSimilarItemNotifications(
         try {
           const subject = `${soldProduct.brand ? `${soldProduct.brand} ` : ""}${soldProduct.name} je pryč — ale máme tohle`;
 
-          await resend.emails.send({
+          await mailer.sendMail({
             from: NEWSLETTER_FROM_EMAIL,
             to: req.email,
             subject,

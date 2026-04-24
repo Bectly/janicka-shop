@@ -1,17 +1,8 @@
 import { NextResponse } from "next/server";
-import { Resend } from "resend";
+import { getMailer } from "@/lib/email/smtp-transport";
 import { getDb } from "@/lib/db";
 import { buildSimilarItemsArrivedHtml } from "@/lib/email/similar-item";
 import { logger } from "@/lib/logger";
-
-let cachedResend: Resend | null | undefined;
-
-function getResendClient(): Resend | null {
-  if (cachedResend !== undefined) return cachedResend;
-  const key = process.env.RESEND_API_KEY;
-  cachedResend = key ? new Resend(key) : null;
-  return cachedResend;
-}
 
 const FROM_EMAIL =
   process.env.NEWSLETTER_EMAIL_FROM ?? "Janička Shop <novinky@janicka-shop.cz>";
@@ -33,12 +24,12 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const resend = getResendClient();
-  if (!resend) {
+  const mailer = getMailer();
+  if (!mailer) {
     return NextResponse.json({
       ok: true,
       sent: 0,
-      reason: "RESEND_API_KEY not set",
+      reason: "SMTP not configured",
     });
   }
 
@@ -140,7 +131,7 @@ export async function GET(request: Request) {
         const topProducts = finalProducts.slice(0, 3);
 
         // 3. Send email
-        await resend.emails.send({
+        await mailer.sendMail({
           from: FROM_EMAIL,
           to: req.email,
           subject: "Právě přidáno: kousky, které by se ti mohly líbit",

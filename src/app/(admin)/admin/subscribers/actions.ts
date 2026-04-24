@@ -542,7 +542,7 @@ export async function sendMothersDayTestEmail(
   const ok = await sendMothersDayEmail(emailNumber, segment, products, recipient);
   return ok
     ? { success: true, recipient }
-    : { success: false, error: "Test-email se nepodařilo odeslat. Zkontroluj Resend." };
+    : { success: false, error: "Test-email se nepodařilo odeslat. Zkontroluj SMTP konfiguraci." };
 }
 
 /** Preview a customs duty campaign email. */
@@ -581,5 +581,5 @@ export async function sendCustomsTestEmail(
   const ok = await sendCustomsCampaignEmail(emailNumber, products, recipient);
   return ok
     ? { success: true, recipient }
-    : { success: false, error: "Test-email se nepodařilo odeslat. Zkontroluj Resend." };
+    : { success: false, error: "Test-email se nepodařilo odeslat. Zkontroluj SMTP konfiguraci." };
 }

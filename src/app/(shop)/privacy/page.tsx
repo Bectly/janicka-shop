@@ -173,11 +173,6 @@ export default function PrivacyPage() {
               doručení zásilek (sídlo v&nbsp;ČR)
             </li>
             <li>
-              <strong className="text-foreground">Resend, Inc.</strong> —
-              odesílání transakčních e-mailů (sídlo v&nbsp;USA, standardní
-              smluvní doložky EU)
-            </li>
-            <li>
               <strong className="text-foreground">Cloudflare, Inc.</strong> —
               ukládání fotografií a&nbsp;videí produktů (sídlo v&nbsp;USA,
               standardní smluvní doložky EU, data uložena v&nbsp;EU)

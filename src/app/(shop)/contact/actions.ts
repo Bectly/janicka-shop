@@ -48,19 +48,16 @@ export async function submitContactForm(
   const { name, email, subject, message } = parsed.data;
   const subjectLabel = SUBJECT_LABELS[subject] ?? subject;
 
-  // Send email via Resend
   try {
-    const { Resend } = await import("resend");
-    const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) {
-      logger.warn("[contact] RESEND_API_KEY not configured — message not sent");
+    const { getMailer } = await import("@/lib/email/smtp-transport");
+    const mailer = getMailer();
+    if (!mailer) {
       return { success: false, error: "E-mailová služba není dostupná. Kontaktujte nás prosím přímo na info@janicka.cz." };
     }
 
-    const resend = new Resend(apiKey);
     const shopEmail = process.env.CONTACT_EMAIL ?? "info@janicka.cz";
 
-    await resend.emails.send({
+    await mailer.sendMail({
       from: process.env.EMAIL_FROM ?? "Janička Shop <objednavky@janicka-shop.cz>",
       to: shopEmail,
       replyTo: email,

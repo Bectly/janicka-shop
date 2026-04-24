@@ -1,15 +1,6 @@
-import { Resend } from "resend";
+import { getMailer } from "@/lib/email/smtp-transport";
 import { signUnsubscribeToken } from "@/lib/unsubscribe-token";
 import { logger } from "@/lib/logger";
-
-let cachedResend: Resend | null | undefined;
-
-function getResendClient(): Resend | null {
-  if (cachedResend !== undefined) return cachedResend;
-  const key = process.env.RESEND_API_KEY;
-  cachedResend = key ? new Resend(key) : null;
-  return cachedResend;
-}
 
 const FROM_EMAIL = process.env.EMAIL_FROM ?? "Janička Shop <objednavky@janicka-shop.cz>";
 const NEWSLETTER_FROM_EMAIL = process.env.NEWSLETTER_EMAIL_FROM ?? "Janička Shop <novinky@janicka-shop.cz>";
@@ -290,14 +281,14 @@ function escapeHtml(str: string): string {
  * Non-blocking: logs errors instead of throwing (email failure should never block checkout).
  */
 export async function sendOrderConfirmationEmail(data: OrderEmailData): Promise<void> {
-  const resend = getResendClient();
-  if (!resend) {
-    logger.warn("[Email] RESEND_API_KEY not set — skipping order confirmation email");
+  const mailer = getMailer();
+  if (!mailer) {
+    logger.warn("[Email] SMTP not configured — skipping order confirmation email");
     return;
   }
 
   try {
-    await resend.emails.send({
+    await mailer.sendMail({
       from: FROM_EMAIL,
       to: data.customerEmail,
       subject: `Potvrzení objednávky ${data.orderNumber} — Janička Shop`,
@@ -319,14 +310,14 @@ export async function sendPaymentConfirmedEmail(data: {
   total: number;
   accessToken: string;
 }): Promise<void> {
-  const resend = getResendClient();
-  if (!resend) {
-    logger.warn("[Email] RESEND_API_KEY not set — skipping payment confirmed email");
+  const mailer = getMailer();
+  if (!mailer) {
+    logger.warn("[Email] SMTP not configured — skipping payment confirmed email");
     return;
   }
 
   try {
-    await resend.emails.send({
+    await mailer.sendMail({
       from: FROM_EMAIL,
       to: data.customerEmail,
       subject: `Platba přijata — ${data.orderNumber} — Janička Shop`,
@@ -490,14 +481,14 @@ export async function sendOrderStatusEmail(
   const subject = STATUS_EMAIL_SUBJECTS[newStatus];
   if (!builder || !subject) return; // no email for this status (e.g. pending, paid — handled separately)
 
-  const resend = getResendClient();
-  if (!resend) {
-    logger.warn(`[Email] RESEND_API_KEY not set — skipping ${newStatus} email`);
+  const mailer = getMailer();
+  if (!mailer) {
+    logger.warn(`[Email] SMTP not configured — skipping ${newStatus} email`);
     return;
   }
 
   try {
-    await resend.emails.send({
+    await mailer.sendMail({
       from: FROM_EMAIL,
       to: data.customerEmail,
       subject: `${subject} — ${data.orderNumber} — Janička Shop`,
@@ -677,14 +668,14 @@ function buildShippingNotificationHtml(data: ShippingNotificationData): string {
  * Returns true on success, false on failure.
  */
 export async function sendShippingNotificationEmail(data: ShippingNotificationData): Promise<boolean> {
-  const resend = getResendClient();
-  if (!resend) {
-    logger.warn("[Email] RESEND_API_KEY not set — skipping shipping notification email");
+  const mailer = getMailer();
+  if (!mailer) {
+    logger.warn("[Email] SMTP not configured — skipping shipping notification email");
     return false;
   }
 
   try {
-    await resend.emails.send({
+    await mailer.sendMail({
       from: FROM_EMAIL,
       to: data.customerEmail,
       subject: `Objedn\u00e1vka odesl\u00e1na \u2014 ${data.orderNumber} \u2014 Jani\u010dka Shop`,
@@ -884,9 +875,9 @@ function buildAdminNewOrderHtml(data: AdminOrderNotificationData): string {
  * Non-blocking: logs errors instead of throwing.
  */
 export async function sendAdminNewOrderEmail(data: AdminOrderNotificationData): Promise<void> {
-  const resend = getResendClient();
-  if (!resend) {
-    logger.warn("[Email] RESEND_API_KEY not set — skipping admin order notification");
+  const mailer = getMailer();
+  if (!mailer) {
+    logger.warn("[Email] SMTP not configured — skipping admin order notification");
     return;
   }
 
@@ -901,7 +892,7 @@ export async function sendAdminNewOrderEmail(data: AdminOrderNotificationData): 
 
   const subjectPrefix = data.paid ? "Platba potvrzena" : "Nová objednávka";
   try {
-    await resend.emails.send({
+    await mailer.sendMail({
       from: FROM_EMAIL,
       to: config.email,
       subject: `${subjectPrefix} ${data.orderNumber} — ${formatPriceCzk(data.total)}`,
@@ -928,8 +919,8 @@ export interface DeadlineAlertOrder {
 export async function sendAdminDeadlineAlertEmail(
   orders: DeadlineAlertOrder[],
 ): Promise<boolean> {
-  const resend = getResendClient();
-  if (!resend) return false;
+  const mailer = getMailer();
+  if (!mailer) return false;
 
   const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL;
   if (!adminEmail) return false;
@@ -986,7 +977,7 @@ export async function sendAdminDeadlineAlertEmail(
     </div>`;
 
   try {
-    await resend.emails.send({
+    await mailer.sendMail({
       from: FROM_EMAIL,
       to: adminEmail,
       subject,
@@ -1008,9 +999,9 @@ export async function sendEmailChangeVerifyEmail(data: {
   firstName: string;
   verifyUrl: string;
 }): Promise<void> {
-  const resend = getResendClient();
-  if (!resend) {
-    logger.warn("[Email] RESEND_API_KEY not set — skipping email-change verify");
+  const mailer = getMailer();
+  if (!mailer) {
+    logger.warn("[Email] SMTP not configured — skipping email-change verify");
     return;
   }
   const safeName = escapeHtml(data.firstName || "");
@@ -1027,7 +1018,7 @@ export async function sendEmailChangeVerifyEmail(data: {
 </body></html>`;
 
   try {
-    await resend.emails.send({
+    await mailer.sendMail({
       from: FROM_EMAIL,
       to: data.newEmail,
       subject: "Potvrď změnu emailu — Janička Shop",
@@ -1047,8 +1038,8 @@ export async function sendEmailChangeNoticeEmail(data: {
   newEmail: string;
   firstName: string;
 }): Promise<void> {
-  const resend = getResendClient();
-  if (!resend) return;
+  const mailer = getMailer();
+  if (!mailer) return;
   const safeName = escapeHtml(data.firstName || "");
   const safeNew = escapeHtml(data.newEmail);
   const html = `<!DOCTYPE html><html lang="cs"><head><meta charset="utf-8"/></head>
@@ -1062,7 +1053,7 @@ export async function sendEmailChangeNoticeEmail(data: {
 </body></html>`;
 
   try {
-    await resend.emails.send({
+    await mailer.sendMail({
       from: FROM_EMAIL,
       to: data.oldEmail,
       subject: "Email tvého účtu byl změněn — Janička Shop",
@@ -1078,8 +1069,8 @@ export async function sendAccountDeletedEmail(data: {
   email: string;
   firstName: string;
 }): Promise<void> {
-  const resend = getResendClient();
-  if (!resend) return;
+  const mailer = getMailer();
+  if (!mailer) return;
   const safeName = escapeHtml(data.firstName || "");
   const html = `<!DOCTYPE html><html lang="cs"><head><meta charset="utf-8"/></head>
 <body style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#faf8f5;padding:24px;color:#1a1a1a;">
@@ -1091,7 +1082,7 @@ export async function sendAccountDeletedEmail(data: {
 </body></html>`;
 
   try {
-    await resend.emails.send({
+    await mailer.sendMail({
       from: FROM_EMAIL,
       to: data.email,
       subject: "Tvůj účet byl smazán — Janička Shop",
@@ -1103,14 +1094,14 @@ export async function sendAccountDeletedEmail(data: {
 }
 
 export async function sendNewsletterWelcomeEmail(email: string): Promise<void> {
-  const resend = getResendClient();
-  if (!resend) {
-    logger.warn("[Email] RESEND_API_KEY not set — skipping newsletter welcome email");
+  const mailer = getMailer();
+  if (!mailer) {
+    logger.warn("[Email] SMTP not configured — skipping newsletter welcome email");
     return;
   }
 
   try {
-    await resend.emails.send({
+    await mailer.sendMail({
       from: NEWSLETTER_FROM_EMAIL,
       to: email,
       subject: "Vítej v Janičce! — Janička Shop",
@@ -1352,9 +1343,9 @@ export async function sendAbandonedCartEmail(
   data: AbandonedCartEmailData,
   soldProductIds?: string[]
 ): Promise<boolean> {
-  const resend = getResendClient();
-  if (!resend) {
-    logger.warn("[Email] RESEND_API_KEY not set — skipping abandoned cart email");
+  const mailer = getMailer();
+  if (!mailer) {
+    logger.warn("[Email] SMTP not configured — skipping abandoned cart email");
     return false;
   }
 
@@ -1378,7 +1369,7 @@ export async function sendAbandonedCartEmail(
   }
 
   try {
-    await resend.emails.send({
+    await mailer.sendMail({
       from: FROM_EMAIL,
       to: data.email,
       subject: subjects[stage],
@@ -1476,14 +1467,14 @@ function buildReviewRequestHtml(data: ReviewRequestEmailData): string {
  * Non-blocking: logs errors instead of throwing.
  */
 export async function sendReviewRequestEmail(data: ReviewRequestEmailData): Promise<boolean> {
-  const resend = getResendClient();
-  if (!resend) {
-    logger.warn("[Email] RESEND_API_KEY not set — skipping review request email");
+  const mailer = getMailer();
+  if (!mailer) {
+    logger.warn("[Email] SMTP not configured — skipping review request email");
     return false;
   }
 
   try {
-    await resend.emails.send({
+    await mailer.sendMail({
       from: FROM_EMAIL,
       to: data.customerEmail,
       subject: `Jak jsi spokojená? — ${data.orderNumber} — Janička Shop`,
@@ -1583,14 +1574,14 @@ function buildDeliveryCheckHtml(data: DeliveryCheckEmailData): string {
  * Non-blocking: logs errors instead of throwing.
  */
 export async function sendDeliveryCheckEmail(data: DeliveryCheckEmailData): Promise<boolean> {
-  const resend = getResendClient();
-  if (!resend) {
-    logger.warn("[Email] RESEND_API_KEY not set — skipping delivery check email");
+  const mailer = getMailer();
+  if (!mailer) {
+    logger.warn("[Email] SMTP not configured — skipping delivery check email");
     return false;
   }
 
   try {
-    await resend.emails.send({
+    await mailer.sendMail({
       from: FROM_EMAIL,
       to: data.customerEmail,
       subject: `Dorazilo vše v pořádku? — ${data.orderNumber} — Janička Shop`,
@@ -1731,9 +1722,9 @@ function buildNewArrivalHtml(data: NewArrivalEmailData): string {
  * Returns true on success, false on failure.
  */
 export async function sendNewArrivalEmail(data: NewArrivalEmailData): Promise<boolean> {
-  const resend = getResendClient();
-  if (!resend) {
-    logger.warn("[Email] RESEND_API_KEY not set — skipping new arrival email");
+  const mailer = getMailer();
+  if (!mailer) {
+    logger.warn("[Email] SMTP not configured — skipping new arrival email");
     return false;
   }
 
@@ -1743,7 +1734,7 @@ export async function sendNewArrivalEmail(data: NewArrivalEmailData): Promise<bo
     : `${count} nových kousků pro tebe! — Janička Shop`;
 
   try {
-    await resend.emails.send({
+    await mailer.sendMail({
       from: NEWSLETTER_FROM_EMAIL,
       to: data.email,
       subject,
@@ -1850,9 +1841,9 @@ function buildBrowseAbandonmentHtml(data: BrowseAbandonmentEmailData): string {
 export async function sendBrowseAbandonmentEmail(
   data: BrowseAbandonmentEmailData,
 ): Promise<boolean> {
-  const resend = getResendClient();
-  if (!resend) {
-    logger.warn("[Email] RESEND_API_KEY not set — skipping browse abandonment email");
+  const mailer = getMailer();
+  if (!mailer) {
+    logger.warn("[Email] SMTP not configured — skipping browse abandonment email");
     return false;
   }
 
@@ -1861,7 +1852,7 @@ export async function sendBrowseAbandonmentEmail(
   const subject = `Ještě tam je —${brandPart} ${data.productName}${sizePart} — Janička Shop`;
 
   try {
-    await resend.emails.send({
+    await mailer.sendMail({
       from: NEWSLETTER_FROM_EMAIL,
       to: data.email,
       subject,
@@ -1944,14 +1935,14 @@ function buildCrossSellFollowUpHtml(data: CrossSellFollowUpData): string {
 export async function sendCrossSellFollowUpEmail(
   data: CrossSellFollowUpData,
 ): Promise<boolean> {
-  const resend = getResendClient();
-  if (!resend) {
-    logger.warn("[Email] RESEND_API_KEY not set — skipping cross-sell follow-up email");
+  const mailer = getMailer();
+  if (!mailer) {
+    logger.warn("[Email] SMTP not configured — skipping cross-sell follow-up email");
     return false;
   }
 
   try {
-    await resend.emails.send({
+    await mailer.sendMail({
       from: NEWSLETTER_FROM_EMAIL,
       to: data.customerEmail,
       subject: "Nové kousky ve tvém stylu \u{1F495} — Janička Shop",
@@ -2032,14 +2023,14 @@ function buildWinBackHtml(data: WinBackEmailData): string {
 export async function sendWinBackEmail(
   data: WinBackEmailData,
 ): Promise<boolean> {
-  const resend = getResendClient();
-  if (!resend) {
-    logger.warn("[Email] RESEND_API_KEY not set — skipping win-back email");
+  const mailer = getMailer();
+  if (!mailer) {
+    logger.warn("[Email] SMTP not configured — skipping win-back email");
     return false;
   }
 
   try {
-    await resend.emails.send({
+    await mailer.sendMail({
       from: NEWSLETTER_FROM_EMAIL,
       to: data.customerEmail,
       subject: "Nové kousky čekají \u{1F44B} — Janička Shop",
@@ -2179,14 +2170,14 @@ export async function sendCampaignEmail(
   data: CampaignEmailData,
   recipientEmail: string,
 ): Promise<boolean> {
-  const resend = getResendClient();
-  if (!resend) {
-    logger.warn("[Email] RESEND_API_KEY not set — skipping campaign email");
+  const mailer = getMailer();
+  if (!mailer) {
+    logger.warn("[Email] SMTP not configured — skipping campaign email");
     return false;
   }
 
   try {
-    await resend.emails.send({
+    await mailer.sendMail({
       from: NEWSLETTER_FROM_EMAIL,
       to: recipientEmail,
       subject: data.subject,
@@ -2208,7 +2199,7 @@ export function renderCampaignEmailPreview(
 
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
-// Den matek 2026 — 3-email Resend campaign (Task #103)
+// Den matek 2026 — 3-email campaign (Task #103)
 // ---------------------------------------------------------------------------
 
 export type MothersDayEmailNumber = 1 | 2 | 3;
@@ -2551,14 +2542,14 @@ export async function sendMothersDayEmail(
   products: CampaignProduct[],
   recipientEmail: string,
 ): Promise<boolean> {
-  const resend = getResendClient();
-  if (!resend) {
-    logger.warn("[Email] RESEND_API_KEY not set — skipping Mother's Day campaign");
+  const mailer = getMailer();
+  if (!mailer) {
+    logger.warn("[Email] SMTP not configured — skipping Mother's Day campaign");
     return false;
   }
 
   try {
-    await resend.emails.send({
+    await mailer.sendMail({
       from: NEWSLETTER_FROM_EMAIL,
       to: recipientEmail,
       subject: MOTHERS_DAY_SUBJECTS[emailNumber][segment],
@@ -2834,14 +2825,14 @@ export async function sendCustomsCampaignEmail(
   products: CampaignProduct[],
   recipientEmail: string,
 ): Promise<boolean> {
-  const resend = getResendClient();
-  if (!resend) {
-    logger.warn("[Email] RESEND_API_KEY not set — skipping customs campaign");
+  const mailer = getMailer();
+  if (!mailer) {
+    logger.warn("[Email] SMTP not configured — skipping customs campaign");
     return false;
   }
 
   try {
-    await resend.emails.send({
+    await mailer.sendMail({
       from: NEWSLETTER_FROM_EMAIL,
       to: recipientEmail,
       subject: CUSTOMS_SUBJECTS[emailNumber],
