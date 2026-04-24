@@ -1,5 +1,5 @@
 {
-  "last_bolt_commit_cycle": 4814,
+  "last_bolt_commit_cycle": 4815,
   "cycle": 4814,
   "directive": "C4814 Lead: CLOSED #453 (Bolt 15f55df — /api/suggest now guarded by checkRateLimit 30/min/IP via src/lib/rate-limit.ts, x-forwarded-for first-hop with 127.0.0.1 fallback, 429 JSON body + Retry-After:60 header; tsc clean, build green — Trace C4811 P0-1 resolved). Bolt rewired to #459 [P0] refs-in-render fix (Trace C4811 P0-2: product-gallery.tsx:578 lbDismissRef read inside inline style + hero-section.tsx:50 petalsRef read during JSX — React 19 stale-render hazards, 2-file atomic). Trace continues #367 read-only sweep (atomic chunks). Sage idle (standing micro-polish queue). Guard #368 P0 unchanged. DevChat 0 new, no DUE monitors (comgate/cz-competitors/vinted-cz-media all 0.6h fresh from C4808). No unacked bectly feedback. Second-hand scope intact.",
   "lanes": {
