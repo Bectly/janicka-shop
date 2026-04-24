@@ -18,6 +18,9 @@ import {
   renderEyebrow,
   renderDisplayHeading,
   renderInfoCard,
+  renderProductRowList,
+  renderProductGrid,
+  renderTagPill,
 } from "@/lib/email/layout";
 
 interface OrderItem {
@@ -730,71 +733,50 @@ function buildAdminNewOrderHtml(data: AdminOrderNotificationData): string {
   const adminUrl = data.orderId
     ? `${baseUrl}/admin/orders/${data.orderId}`
     : `${baseUrl}/admin/orders`;
-  const headline = data.paid ? "Platba potvrzena" : "Nová objednávka!";
+  const headline = data.paid ? "Platba potvrzena" : "Nová objednávka";
 
   const itemsHtml = data.items
-    .map(
-      (item) => `
-        <tr>
-          <td style="padding: 6px 0; font-size: 14px; color: #333;">${escapeHtml(item.name)}</td>
-          <td style="padding: 6px 0; font-size: 14px; color: #333; text-align: right; white-space: nowrap;">${formatPriceCzk(item.price)}</td>
-        </tr>`
-    )
+    .map((item) => `
+      <tr>
+        <td style="padding: 8px 0; border-top: 1px solid ${BRAND.borderSoft}; font-family: ${FONTS.serif}; font-size: 15px; color: ${BRAND.charcoal};">${escapeHtml(item.name)}</td>
+        <td style="padding: 8px 0; border-top: 1px solid ${BRAND.borderSoft}; text-align: right; white-space: nowrap; font-family: ${FONTS.sans}; font-size: 14px; color: ${BRAND.charcoal};">${formatPriceCzk(item.price)}</td>
+      </tr>`)
     .join("");
 
-  return `<!DOCTYPE html>
-<html lang="cs">
-<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/></head>
-<body style="margin: 0; padding: 0; background-color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333;">
-  <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
-    <div style="text-align: center; padding: 16px 0;">
-      <h1 style="margin: 0; font-size: 20px; color: #1a1a1a;">${headline}</h1>
-    </div>
-    <div style="background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
-      <table style="width: 100%; border-collapse: collapse;">
-        <tr>
-          <td style="padding: 4px 0; font-size: 13px; color: #666;">Objednávka</td>
-          <td style="padding: 4px 0; font-size: 13px; font-weight: 600; color: #1a1a1a; text-align: right;">${escapeHtml(data.orderNumber)}</td>
-        </tr>
-        <tr>
-          <td style="padding: 4px 0; font-size: 13px; color: #666;">Zákazník</td>
-          <td style="padding: 4px 0; font-size: 13px; color: #1a1a1a; text-align: right;">${escapeHtml(data.customerName)}</td>
-        </tr>
-        <tr>
-          <td style="padding: 4px 0; font-size: 13px; color: #666;">Email</td>
-          <td style="padding: 4px 0; font-size: 13px; color: #1a1a1a; text-align: right;">${escapeHtml(data.customerEmail)}</td>
-        </tr>
-        <tr>
-          <td style="padding: 4px 0; font-size: 13px; color: #666;">Platba</td>
-          <td style="padding: 4px 0; font-size: 13px; color: #1a1a1a; text-align: right;">${PAYMENT_LABELS[data.paymentMethod] ?? data.paymentMethod}</td>
-        </tr>
-        <tr>
-          <td style="padding: 4px 0; font-size: 13px; color: #666;">Doprava</td>
-          <td style="padding: 4px 0; font-size: 13px; color: #1a1a1a; text-align: right;">${SHIPPING_LABELS[data.shippingMethod] ?? data.shippingMethod}</td>
-        </tr>
-      </table>
+  const summaryRow = (label: string, value: string) => `
+    <tr>
+      <td style="padding: 5px 0; font-family: ${FONTS.sans}; font-size: 13px; color: ${BRAND.charcoalSoft};">${escapeHtml(label)}</td>
+      <td style="padding: 5px 0; font-family: ${FONTS.sans}; font-size: 13px; color: ${BRAND.charcoal}; text-align: right;">${value}</td>
+    </tr>`;
 
-      <hr style="border: none; border-top: 1px solid #eee; margin: 16px 0;" />
+  const content = `
+    ${renderEyebrow(headline)}
+    ${renderDisplayHeading(`Objednávka ${escapeHtml(data.orderNumber)}`)}
 
-      <table style="width: 100%; border-collapse: collapse;">
-        ${itemsHtml}
-      </table>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin: 8px 0 14px;">
+      ${summaryRow("Zákazník", escapeHtml(data.customerName))}
+      ${summaryRow("Email", `<a href="mailto:${escapeHtml(data.customerEmail)}" style="color: ${BRAND.primary}; text-decoration: none;">${escapeHtml(data.customerEmail)}</a>`)}
+      ${summaryRow("Platba", escapeHtml(PAYMENT_LABELS[data.paymentMethod] ?? data.paymentMethod))}
+      ${summaryRow("Doprava", escapeHtml(SHIPPING_LABELS[data.shippingMethod] ?? data.shippingMethod))}
+    </table>
 
-      <hr style="border: none; border-top: 1px solid #eee; margin: 16px 0;" />
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin: 4px 0;">
+      ${itemsHtml}
+    </table>
 
-      <p style="margin: 0; font-size: 18px; font-weight: 700; color: #1a1a1a; text-align: right;">
-        Celkem: ${formatPriceCzk(data.total)}
-      </p>
+    <p style="margin: 18px 0 0; text-align: right; font-family: ${FONTS.serif}; font-size: 22px; font-weight: 600; color: ${BRAND.charcoal};">
+      Celkem: <span style="color: ${BRAND.primary};">${formatPriceCzk(data.total)}</span>
+    </p>
 
-      <div style="text-align: center; margin-top: 20px;">
-        <a href="${adminUrl}" style="display: inline-block; background: #1a1a1a; color: #fff; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
-          Zobrazit v adminu
-        </a>
-      </div>
-    </div>
-  </div>
-</body>
-</html>`;
+    <div style="margin: 28px 0 4px;">
+      ${renderButton({ href: adminUrl, label: "Otevřít v adminu", variant: "dark" })}
+    </div>`;
+
+  return renderLayout({
+    preheader: `${headline} ${data.orderNumber} — ${formatPriceCzk(data.total)}`,
+    contentHtml: content,
+    showTagline: false,
+  });
 }
 
 /**
@@ -869,40 +851,50 @@ export async function sendAdminDeadlineAlertEmail(
     .map((o) => {
       const urgency =
         o.daysRemaining < 0
-          ? `<span style="color:#dc2626;font-weight:600">Po termínu (${Math.abs(o.daysRemaining)} dní)</span>`
+          ? `<span style="color:${BRAND.danger};font-weight:600">Po termínu (${Math.abs(o.daysRemaining)} dní)</span>`
           : o.daysRemaining === 0
-            ? `<span style="color:#d97706;font-weight:600">Dnes!</span>`
-            : `<span style="color:#d97706">Zbývá ${o.daysRemaining} dní</span>`;
+            ? `<span style="color:${BRAND.warning};font-weight:600">Dnes</span>`
+            : `<span style="color:${BRAND.warning}">Zbývá ${o.daysRemaining} dní</span>`;
       return `<tr>
-        <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb">${o.orderNumber}</td>
-        <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb">${o.customerName}</td>
-        <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb">${formatPriceCzk(o.total)}</td>
-        <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb">${formatDate(o.expectedDeliveryDate)}</td>
-        <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb">${urgency}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid ${BRAND.borderSoft};font-family:${FONTS.sans};font-size:13px;color:${BRAND.charcoal};">${escapeHtml(o.orderNumber)}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid ${BRAND.borderSoft};font-family:${FONTS.sans};font-size:13px;color:${BRAND.charcoal};">${escapeHtml(o.customerName)}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid ${BRAND.borderSoft};font-family:${FONTS.sans};font-size:13px;color:${BRAND.charcoal};">${formatPriceCzk(o.total)}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid ${BRAND.borderSoft};font-family:${FONTS.sans};font-size:13px;color:${BRAND.charcoalSoft};">${formatDate(o.expectedDeliveryDate)}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid ${BRAND.borderSoft};font-family:${FONTS.sans};font-size:13px;">${urgency}</td>
       </tr>`;
     })
     .join("");
 
-  const html = `
-    <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
-      <h2 style="color:#1f2937">Upozornění na termín doručení</h2>
-      <p style="color:#6b7280">Podle českého zákona musí být objednávky doručeny do 30 dní od uzavření smlouvy.</p>
-      <table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:16px">
-        <thead>
-          <tr style="background:#f9fafb">
-            <th style="padding:8px 12px;text-align:left;border-bottom:2px solid #e5e7eb">Objednávka</th>
-            <th style="padding:8px 12px;text-align:left;border-bottom:2px solid #e5e7eb">Zákazník</th>
-            <th style="padding:8px 12px;text-align:left;border-bottom:2px solid #e5e7eb">Celkem</th>
-            <th style="padding:8px 12px;text-align:left;border-bottom:2px solid #e5e7eb">Termín</th>
-            <th style="padding:8px 12px;text-align:left;border-bottom:2px solid #e5e7eb">Stav</th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-      <p style="margin-top:16px;color:#6b7280;font-size:13px">
-        Zkontrolujte tyto objednávky v <a href="${getBaseUrl()}/admin/orders">admin panelu</a>.
-      </p>
+  const baseUrl = getBaseUrl();
+  const content = `
+    ${renderEyebrow("Termín doručení")}
+    ${renderDisplayHeading("Upozornění na termín doručení")}
+    <p style="margin: 0 0 16px; font-family: ${FONTS.sans}; font-size: 14px; line-height: 1.6; color: ${BRAND.charcoalSoft};">
+      Podle českého zákona musí být objednávky doručeny do 30 dní od uzavření smlouvy.
+    </p>
+
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin: 12px 0;">
+      <thead>
+        <tr style="background: ${BRAND.blushSoft};">
+          <th style="padding: 10px 12px; text-align: left; font-family: ${FONTS.sans}; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: ${BRAND.primary}; border-bottom: 2px solid ${BRAND.border};">Objednávka</th>
+          <th style="padding: 10px 12px; text-align: left; font-family: ${FONTS.sans}; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: ${BRAND.primary}; border-bottom: 2px solid ${BRAND.border};">Zákazník</th>
+          <th style="padding: 10px 12px; text-align: left; font-family: ${FONTS.sans}; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: ${BRAND.primary}; border-bottom: 2px solid ${BRAND.border};">Celkem</th>
+          <th style="padding: 10px 12px; text-align: left; font-family: ${FONTS.sans}; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: ${BRAND.primary}; border-bottom: 2px solid ${BRAND.border};">Termín</th>
+          <th style="padding: 10px 12px; text-align: left; font-family: ${FONTS.sans}; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: ${BRAND.primary}; border-bottom: 2px solid ${BRAND.border};">Stav</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+
+    <div style="margin: 28px 0 4px;">
+      ${renderButton({ href: `${baseUrl}/admin/orders`, label: "Otevřít admin objednávek", variant: "dark" })}
     </div>`;
+
+  const html = renderLayout({
+    preheader: subject,
+    contentHtml: content,
+    showTagline: false,
+  });
 
   try {
     await mailer.sendMail({
@@ -1101,71 +1093,42 @@ interface AbandonedCartEmailData {
   cartId: string;
 }
 
-function buildCartItemsHtml(items: AbandonedCartItem[]): string {
+function cartItemsToRows(items: AbandonedCartItem[]) {
   const baseUrl = getBaseUrl();
-  return items
-    .map((item) => {
-      const productUrl = item.slug ? `${baseUrl}/products/${item.slug}` : baseUrl;
-      const imageHtml = item.image
-        ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #f0f0f0;" />`
-        : `<div style="width: 80px; height: 80px; background: #f5f5f5; border-radius: 8px;"></div>`;
-      const detailParts = [item.size, item.color].filter(Boolean).join(" · ");
-      return `
-        <tr>
-          <td style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; vertical-align: top; width: 80px;">
-            <a href="${productUrl}">${imageHtml}</a>
-          </td>
-          <td style="padding: 12px 0 12px 12px; border-bottom: 1px solid #f0f0f0; vertical-align: top;">
-            <a href="${productUrl}" style="color: #1a1a1a; text-decoration: none; font-weight: 500; font-size: 14px;">${escapeHtml(item.name)}</a>
-            ${detailParts ? `<br/><span style="color: #666; font-size: 13px;">${escapeHtml(detailParts)}</span>` : ""}
-          </td>
-          <td style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; text-align: right; vertical-align: top; white-space: nowrap; font-weight: 500;">
-            ${formatPriceCzk(item.price)}
-          </td>
-        </tr>`;
-    })
-    .join("");
+  return items.map((item) => {
+    const meta = [item.size, item.color].filter(Boolean).join(" · ");
+    return {
+      name: item.name,
+      url: item.slug ? `${baseUrl}/products/${item.slug}` : baseUrl,
+      image: item.image ?? null,
+      meta: meta || null,
+      price: item.price,
+    };
+  });
+}
+
+function abandonedCartUnsubscribeUrl(cartId: string): string {
+  return `${getBaseUrl()}/api/unsubscribe/abandoned-cart/${encodeURIComponent(cartId)}`;
 }
 
 function buildAbandonedCartEmailWrapper(
-  content: string,
+  preheader: string,
+  contentHtml: string,
   ctaText: string,
   ctaUrl: string,
   cartId: string,
 ): string {
-  const baseUrl = getBaseUrl();
-  const unsubscribeUrl = `${baseUrl}/api/unsubscribe/abandoned-cart/${encodeURIComponent(cartId)}`;
-  return `<!DOCTYPE html>
-<html lang="cs">
-<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/></head>
-<body style="margin: 0; padding: 0; background-color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333;">
-  <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
-
-    <div style="text-align: center; padding: 24px 0;">
-      <a href="${baseUrl}" style="display: inline-block;"><img src="${baseUrl}/logo/logo-email.png" alt="Janička Shop" style="height: 40px; width: auto; border: 0;" /></a>
-      <p style="margin: 4px 0 0; font-size: 13px; color: #999;">Second hand móda pro tebe</p>
-    </div>
-
-    <div style="background: #fff; border-radius: 12px; padding: 32px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
-      ${content}
-
-      <div style="text-align: center; margin-top: 28px;">
-        <a href="${ctaUrl}" style="display: inline-block; background: #1a1a1a; color: #fff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 15px; font-weight: 600;">
-          ${escapeHtml(ctaText)}
-        </a>
-      </div>
-    </div>
-
-    <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
-      <p style="margin: 0;">Janička Shop — Second hand móda</p>
-      <p style="margin: 4px 0 0;">
-        Nechceš dostávat tyto emaily?
-        <a href="${unsubscribeUrl}" style="color: #999; text-decoration: underline;">Odhlásit se</a>
-      </p>
-    </div>
-  </div>
-</body>
-</html>`;
+  const finalContent = `
+    ${contentHtml}
+    <div style="margin: 32px 0 4px;">
+      ${renderButton({ href: ctaUrl, label: ctaText, variant: "primary" })}
+    </div>`;
+  return renderLayout({
+    preheader,
+    contentHtml: finalContent,
+    unsubscribeUrl: abandonedCartUnsubscribeUrl(cartId),
+    unsubscribeText: "Tenhle email ti chodí, protože jsi v košíku nechala kousek.",
+  });
 }
 
 /**
@@ -1174,30 +1137,29 @@ function buildAbandonedCartEmailWrapper(
  */
 function buildAbandonedCartEmail1(data: AbandonedCartEmailData): string {
   const baseUrl = getBaseUrl();
-  const greeting = data.customerName ? escapeHtml(data.customerName) : "Ahoj";
+  const firstName = data.customerName?.trim().split(" ")[0];
+
+  const content = `
+    ${renderEyebrow("Tvůj košík")}
+    ${renderDisplayHeading(firstName ? `${escapeHtml(firstName)}, nezapomněla jsi?` : "Nezapomněla jsi na svůj kousek?")}
+    <p style="margin: 0 0 18px; font-family: ${FONTS.sans}; font-size: 15px; line-height: 1.7; color: ${BRAND.charcoalSoft};">
+      Máš v košíku pár pečlivě vybraných kousků. Každý z nich je u mě jen jednou &mdash; jakmile si ho někdo odnese, je pryč.
+    </p>
+
+    ${renderInfoCard(
+      `<p style="margin: 0; font-family: ${FONTS.sans}; font-size: 13px; color: ${BRAND.charcoal}; line-height: 1.6;"><strong style="color: ${BRAND.primary};">Unikát.</strong> Každý kus je jediný svého druhu &mdash; rezervaci košíku nemůžu garantovat.</p>`,
+      "champagne",
+    )}
+
+    ${renderProductRowList(cartItemsToRows(data.items))}
+
+    <p style="margin: 18px 0 0; text-align: right; font-family: ${FONTS.serif}; font-size: 19px; font-weight: 600; color: ${BRAND.charcoal};">
+      Celkem: <span style="color: ${BRAND.primary};">${formatPriceCzk(data.cartTotal)}</span>
+    </p>`;
 
   return buildAbandonedCartEmailWrapper(
-    `
-      <h2 style="margin: 0 0 8px; font-size: 20px; color: #1a1a1a;">Zapomněla jsi na svůj kousek?</h2>
-      <p style="margin: 0 0 16px; color: #666; font-size: 15px; line-height: 1.6;">
-        ${greeting}, všimly jsme si, že máš v košíku pár krásných kousků. Každý z nich je unikát — jakmile ho někdo koupí, je pryč.
-      </p>
-
-      <div style="background: #fffbeb; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px;">
-        <p style="margin: 0; color: #92400e; font-size: 14px;">
-          Tento kousek je unikát — kdokoliv ho může koupit.
-        </p>
-      </div>
-
-      <table style="width: 100%; border-collapse: collapse;">
-        ${buildCartItemsHtml(data.items)}
-      </table>
-
-      <div style="text-align: right; margin-top: 12px;">
-        <p style="margin: 0; font-size: 16px; font-weight: 700; color: #1a1a1a;">
-          Celkem: ${formatPriceCzk(data.cartTotal)}
-        </p>
-      </div>`,
+    "Tvůj košík u Janičky na tebe stále čeká.",
+    content,
     "Dokončit objednávku",
     `${baseUrl}/cart?restore=${encodeURIComponent(data.cartId)}`,
     data.cartId,
@@ -1211,39 +1173,45 @@ function buildAbandonedCartEmail1(data: AbandonedCartEmailData): string {
  */
 function buildAbandonedCartEmail2(data: AbandonedCartEmailData, soldProductIds: string[]): string {
   const baseUrl = getBaseUrl();
-  const greeting = data.customerName ? escapeHtml(data.customerName) : "Ahoj";
+  const firstName = data.customerName?.trim().split(" ")[0];
   const soldIdSet = new Set(soldProductIds);
   const soldItems = data.items.filter((i) => soldIdSet.has(i.productId));
   const availableItems = data.items.filter((i) => !soldIdSet.has(i.productId));
 
-  let soldNotice = "";
-  if (soldItems.length > 0) {
-    soldNotice = `
-      <div style="background: #fef2f2; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px;">
-        <p style="margin: 0; color: #991b1b; font-size: 14px;">
-          Bohužel, ${soldItems.map((i) => `<strong>${escapeHtml(i.name)}</strong>`).join(", ")} už ${soldItems.length === 1 ? "našel" : "našly"} novou majitelku.
-          ${availableItems.length > 0 ? "Ale ostatní kousky stále čekají!" : ""}
-        </p>
-      </div>`;
-  }
+  const soldNotice = soldItems.length > 0
+    ? renderInfoCard(
+        `<p style="margin: 0; font-family: ${FONTS.sans}; font-size: 13px; color: ${BRAND.charcoal}; line-height: 1.6;"><strong style="color: ${BRAND.danger};">Bohužel.</strong> ${soldItems.map((i) => `<em style="color: ${BRAND.charcoal};">${escapeHtml(i.name)}</em>`).join(", ")} už ${soldItems.length === 1 ? "našel" : "našly"} novou majitelku.${availableItems.length > 0 ? " Ostatní ale na tebe pořád čekají." : ""}</p>`,
+        "warning",
+      )
+    : "";
 
   const itemsHtml = availableItems.length > 0
-    ? `<table style="width: 100%; border-collapse: collapse;">${buildCartItemsHtml(availableItems)}</table>`
+    ? renderProductRowList(cartItemsToRows(availableItems))
     : "";
 
   const ctaText = availableItems.length > 0 ? "Dokončit objednávku" : "Prohlédnout podobné kousky";
-  const ctaUrl = availableItems.length > 0 ? `${baseUrl}/cart?restore=${encodeURIComponent(data.cartId)}` : `${baseUrl}/products?sort=newest`;
+  const ctaUrl = availableItems.length > 0
+    ? `${baseUrl}/cart?restore=${encodeURIComponent(data.cartId)}`
+    : `${baseUrl}/products?sort=newest`;
+
+  const totalLine = availableItems.length > 0
+    ? `<p style="margin: 18px 0 0; text-align: right; font-family: ${FONTS.serif}; font-size: 19px; font-weight: 600; color: ${BRAND.charcoal};">Celkem: <span style="color: ${BRAND.primary};">${formatPriceCzk(availableItems.reduce((sum, i) => sum + i.price, 0))}</span></p>`
+    : "";
+
+  const content = `
+    ${renderEyebrow("Druhá připomínka")}
+    ${renderDisplayHeading(firstName ? `${escapeHtml(firstName)}, ještě tu jsou.` : "Tvůj košík tu pořád je.")}
+    <p style="margin: 0 0 18px; font-family: ${FONTS.sans}; font-size: 15px; line-height: 1.7; color: ${BRAND.charcoalSoft};">
+      U second handu nikdy nevíš, jak dlouho to vydrží &mdash; každý kus existuje pouze jednou. Pokud ti padly do oka, neváhej.
+    </p>
+
+    ${soldNotice}
+    ${itemsHtml}
+    ${totalLine}`;
 
   return buildAbandonedCartEmailWrapper(
-    `
-      <h2 style="margin: 0 0 8px; font-size: 20px; color: #1a1a1a;">Stále na tebe čeká...</h2>
-      <p style="margin: 0 0 16px; color: #666; font-size: 15px; line-height: 1.6;">
-        ${greeting}, tvůj košík se tu na tebe stále drží. U second handu ale nikdy nevíš — každý kousek je tu jen jednou.
-      </p>
-
-      ${soldNotice}
-      ${itemsHtml}
-      ${availableItems.length > 0 ? `<div style="text-align: right; margin-top: 12px;"><p style="margin: 0; font-size: 16px; font-weight: 700; color: #1a1a1a;">Celkem: ${formatPriceCzk(availableItems.reduce((sum, i) => sum + i.price, 0))}</p></div>` : ""}`,
+    "U Janičky tě pořád čeká pár kousků z košíku.",
+    content,
     ctaText,
     ctaUrl,
     data.cartId,
@@ -1257,40 +1225,45 @@ function buildAbandonedCartEmail2(data: AbandonedCartEmailData, soldProductIds: 
  */
 function buildAbandonedCartEmail3(data: AbandonedCartEmailData, soldProductIds: string[]): string {
   const baseUrl = getBaseUrl();
-  const greeting = data.customerName ? escapeHtml(data.customerName) : "Ahoj";
+  const firstName = data.customerName?.trim().split(" ")[0];
   const soldIdSet = new Set(soldProductIds);
   const soldItems = data.items.filter((i) => soldIdSet.has(i.productId));
   const availableItems = data.items.filter((i) => !soldIdSet.has(i.productId));
 
-  let soldNotice = "";
-  if (soldItems.length > 0) {
-    soldNotice = `
-      <div style="background: #fef2f2; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px;">
-        <p style="margin: 0; color: #991b1b; font-size: 14px;">
-          ${soldItems.map((i) => `<strong>${escapeHtml(i.name)}</strong>`).join(", ")} — ${soldItems.length === 1 ? "bohužel prodáno" : "bohužel prodány"}.
-          <a href="${baseUrl}/products?sort=newest" style="color: #991b1b; text-decoration: underline;">Podívej se na podobné kousky &rarr;</a>
-        </p>
-      </div>`;
-  }
+  const soldNotice = soldItems.length > 0
+    ? renderInfoCard(
+        `<p style="margin: 0; font-family: ${FONTS.sans}; font-size: 13px; color: ${BRAND.charcoal}; line-height: 1.6;">${soldItems.map((i) => `<em style="color: ${BRAND.charcoal};">${escapeHtml(i.name)}</em>`).join(", ")} &mdash; ${soldItems.length === 1 ? "bohužel prodáno" : "bohužel prodány"}. <a href="${baseUrl}/products?sort=newest" style="color: ${BRAND.primary}; text-decoration: underline; font-weight: 600;">Podobné kousky &rarr;</a></p>`,
+        "warning",
+      )
+    : "";
 
   const itemsHtml = availableItems.length > 0
-    ? `<table style="width: 100%; border-collapse: collapse;">${buildCartItemsHtml(availableItems)}</table>`
+    ? renderProductRowList(cartItemsToRows(availableItems))
     : "";
 
   const ctaText = availableItems.length > 0 ? "Naposledy — dokončit objednávku" : "Prohlédnout novinky";
-  const ctaUrl = availableItems.length > 0 ? `${baseUrl}/cart?restore=${encodeURIComponent(data.cartId)}` : `${baseUrl}/products?sort=newest`;
+  const ctaUrl = availableItems.length > 0
+    ? `${baseUrl}/cart?restore=${encodeURIComponent(data.cartId)}`
+    : `${baseUrl}/products?sort=newest`;
+
+  const totalLine = availableItems.length > 0
+    ? `<p style="margin: 18px 0 0; text-align: right; font-family: ${FONTS.serif}; font-size: 19px; font-weight: 600; color: ${BRAND.charcoal};">Celkem: <span style="color: ${BRAND.primary};">${formatPriceCzk(availableItems.reduce((sum, i) => sum + i.price, 0))}</span></p>`
+    : "";
+
+  const content = `
+    ${renderEyebrow("Poslední připomínka")}
+    ${renderDisplayHeading(firstName ? `${escapeHtml(firstName)}, naposledy.` : "Naposledy.")}
+    <p style="margin: 0 0 18px; font-family: ${FONTS.sans}; font-size: 15px; line-height: 1.7; color: ${BRAND.charcoalSoft};">
+      Tohle je poslední upozornění &mdash; pak tvůj košík tiše zmizí. ${availableItems.length > 0 ? "Kousky jsou pořád na tebe, ale u second handu nikdy nevíš." : ""}
+    </p>
+
+    ${soldNotice}
+    ${itemsHtml}
+    ${totalLine}`;
 
   return buildAbandonedCartEmailWrapper(
-    `
-      <h2 style="margin: 0 0 8px; font-size: 20px; color: #1a1a1a;">Poslední upozornění</h2>
-      <p style="margin: 0 0 16px; color: #666; font-size: 15px; line-height: 1.6;">
-        ${greeting}, tohle je poslední připomenutí — pak tvůj košík vyprší.
-        ${availableItems.length > 0 ? "Tyto kousky jsou stále dostupné, ale u second handu nikdy nevíš, jak dlouho vydrží." : ""}
-      </p>
-
-      ${soldNotice}
-      ${itemsHtml}
-      ${availableItems.length > 0 ? `<div style="text-align: right; margin-top: 12px;"><p style="margin: 0; font-size: 16px; font-weight: 700; color: #1a1a1a;">Celkem: ${formatPriceCzk(availableItems.reduce((sum, i) => sum + i.price, 0))}</p></div>` : ""}`,
+    "Poslední připomínka — tvůj košík brzy vyprší.",
+    content,
     ctaText,
     ctaUrl,
     data.cartId,
@@ -1365,68 +1338,47 @@ function buildReviewRequestHtml(data: ReviewRequestEmailData): string {
   const baseUrl = getBaseUrl();
   const orderUrl = `${baseUrl}/order/${data.orderNumber}?token=${data.accessToken}`;
   const shopUrl = `${baseUrl}/products?sort=newest`;
+  const firstName = data.customerName?.trim().split(" ")[0] || data.customerName;
 
   const itemsList = data.items
     .map((item) => {
       const detail = [item.size, item.color].filter(Boolean).join(" · ");
-      return `<li style="padding: 4px 0; color: #333;">${escapeHtml(item.name)}${detail ? ` <span style="color: #666; font-size: 13px;">(${escapeHtml(detail)})</span>` : ""}</li>`;
+      return `<li style="padding: 6px 0; font-family: ${FONTS.sans}; font-size: 14px; color: ${BRAND.charcoal}; line-height: 1.5;"><span style="font-family: ${FONTS.serif}; font-weight: 600;">${escapeHtml(item.name)}</span>${detail ? `<span style="color: ${BRAND.charcoalSoft}; font-size: 13px;"> &middot; ${escapeHtml(detail)}</span>` : ""}</li>`;
     })
     .join("");
 
-  return `<!DOCTYPE html>
-<html lang="cs">
-<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/></head>
-<body style="margin: 0; padding: 0; background-color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333;">
-  <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
+  const content = `
+    ${renderEyebrow(`Objednávka ${data.orderNumber}`)}
+    ${renderDisplayHeading(firstName ? `${escapeHtml(firstName)}, jak ti padly?` : "Jak ti padly?")}
+    <p style="margin: 0 0 16px; font-family: ${FONTS.sans}; font-size: 15px; line-height: 1.7; color: ${BRAND.charcoalSoft};">
+      Je to týden, co máš svoji objednávku doma. Hrozně mě zajímá, jestli ti všechno padne přesně tak, jak jsi doufala &mdash; a kdyby něco nesedělo, ráda to s tebou vyřeším.
+    </p>
 
-    <div style="text-align: center; padding: 24px 0;">
-      <a href="${baseUrl}" style="display: inline-block;"><img src="${baseUrl}/logo/logo-email.png" alt="Janička Shop" style="height: 40px; width: auto; border: 0;" /></a>
-      <p style="margin: 4px 0 0; font-size: 13px; color: #999;">Second hand móda pro tebe</p>
+    ${renderInfoCard(
+      `<div style="font-family: ${FONTS.sans}; font-size: 13px; color: ${BRAND.charcoalSoft};">
+        <p style="margin: 0 0 8px; font-family: ${FONTS.sans}; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: ${BRAND.primary};">Tvoje kousky</p>
+        <ul style="margin: 0; padding: 0 0 0 18px;">${itemsList}</ul>
+      </div>`,
+      "blush",
+    )}
+
+    <p style="margin: 18px 0 24px; font-family: ${FONTS.sans}; font-size: 14px; line-height: 1.7; color: ${BRAND.charcoalSoft}; text-align: center;">
+      Tvoje hodnocení mi pomůže vybírat ještě lépe &mdash; a další holky díky tobě uvidí, jak to u mě chodí doopravdy.
+    </p>
+
+    <div style="margin: 20px 0 8px;">
+      ${renderButton({ href: orderUrl, label: "Napsat hodnocení", variant: "primary" })}
     </div>
 
-    <div style="background: #fff; border-radius: 12px; padding: 32px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+    <p style="margin: 20px 0 0; text-align: center; font-family: ${FONTS.sans}; font-size: 13px;">
+      <a href="${shopUrl}" style="color: ${BRAND.charcoalSoft}; text-decoration: underline;">Nebo se podívej na novinky &rarr;</a>
+    </p>`;
 
-      <div style="text-align: center;">
-        <div style="width: 64px; height: 64px; background: #fdf4ff; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
-          <span style="font-size: 32px; line-height: 64px;">&#11088;</span>
-        </div>
-        <h2 style="margin: 0 0 8px; font-size: 20px; color: #1a1a1a;">Jak jsi spokojená?</h2>
-        <p style="margin: 0 0 16px; color: #666; font-size: 15px; line-height: 1.6;">
-          ${escapeHtml(data.customerName)}, tvoje objednávka <strong style="color: #1a1a1a;">${escapeHtml(data.orderNumber)}</strong> je u tebe už týden. Rádi bychom věděli, jak jsi spokojená!
-        </p>
-      </div>
-
-      <div style="background: #fdf4ff; border-radius: 8px; padding: 16px 20px; margin: 16px 0;">
-        <p style="margin: 0 0 8px; font-weight: 600; color: #1a1a1a; font-size: 14px;">Tvoje kousky:</p>
-        <ul style="margin: 0; padding: 0 0 0 20px; font-size: 14px; line-height: 1.6;">
-          ${itemsList}
-        </ul>
-      </div>
-
-      <p style="margin: 16px 0 0; color: #666; font-size: 14px; line-height: 1.6; text-align: center;">
-        Tvůj názor nám pomáhá zlepšovat služby a pomůže dalším zákaznicím s rozhodováním.
-      </p>
-
-      <div style="text-align: center; margin-top: 24px;">
-        <a href="${orderUrl}" style="display: inline-block; background: #1a1a1a; color: #fff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
-          Zobrazit objednávku
-        </a>
-      </div>
-
-      <div style="text-align: center; margin-top: 16px;">
-        <a href="${shopUrl}" style="color: #666; font-size: 13px; text-decoration: underline;">
-          Prohlédnout novinky
-        </a>
-      </div>
-    </div>
-
-    <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
-      <p style="margin: 0;">Janička Shop — Second hand móda</p>
-      <p style="margin: 4px 0 0;">Tento email jsi dostala, protože jsi u nás nakoupila.</p>
-    </div>
-  </div>
-</body>
-</html>`;
+  return renderLayout({
+    preheader: `Jak ti padla objednávka ${data.orderNumber}? Tvůj názor mi pomáhá.`,
+    contentHtml: content,
+    footerNote: "Tenhle email ti chodí, protože jsi u mě nakoupila.",
+  });
 }
 
 /**
@@ -1471,68 +1423,47 @@ function buildDeliveryCheckHtml(data: DeliveryCheckEmailData): string {
   const baseUrl = getBaseUrl();
   const orderUrl = `${baseUrl}/order/${data.orderNumber}?token=${data.accessToken}`;
   const returnsUrl = `${baseUrl}/returns`;
+  const firstName = data.customerName?.trim().split(" ")[0] || data.customerName;
 
   const itemsList = data.items
     .map((item) => {
       const detail = [item.size, item.color].filter(Boolean).join(" · ");
-      return `<li style="padding: 4px 0; color: #333;">${escapeHtml(item.name)}${detail ? ` <span style="color: #666; font-size: 13px;">(${escapeHtml(detail)})</span>` : ""}</li>`;
+      return `<li style="padding: 6px 0; font-family: ${FONTS.sans}; font-size: 14px; color: ${BRAND.charcoal}; line-height: 1.5;"><span style="font-family: ${FONTS.serif}; font-weight: 600;">${escapeHtml(item.name)}</span>${detail ? `<span style="color: ${BRAND.charcoalSoft}; font-size: 13px;"> &middot; ${escapeHtml(detail)}</span>` : ""}</li>`;
     })
     .join("");
 
-  return `<!DOCTYPE html>
-<html lang="cs">
-<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/></head>
-<body style="margin: 0; padding: 0; background-color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333;">
-  <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
+  const content = `
+    ${renderEyebrow(`Objednávka ${data.orderNumber}`)}
+    ${renderDisplayHeading(firstName ? `${escapeHtml(firstName)}, dorazilo to v pořádku?` : "Dorazilo to v pořádku?")}
+    <p style="margin: 0 0 16px; font-family: ${FONTS.sans}; font-size: 15px; line-height: 1.7; color: ${BRAND.charcoalSoft};">
+      Tvůj balíček by už měl být u tebe. Chci se jen ujistit, že je všechno tak, jak má být &mdash; balení, kousky, velikosti.
+    </p>
 
-    <div style="text-align: center; padding: 24px 0;">
-      <a href="${baseUrl}" style="display: inline-block;"><img src="${baseUrl}/logo/logo-email.png" alt="Janička Shop" style="height: 40px; width: auto; border: 0;" /></a>
-      <p style="margin: 4px 0 0; font-size: 13px; color: #999;">Second hand móda pro tebe</p>
+    ${renderInfoCard(
+      `<div style="font-family: ${FONTS.sans}; font-size: 13px; color: ${BRAND.charcoalSoft};">
+        <p style="margin: 0 0 8px; font-family: ${FONTS.sans}; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: ${BRAND.primary};">V balíčku</p>
+        <ul style="margin: 0; padding: 0 0 0 18px;">${itemsList}</ul>
+      </div>`,
+      "blush",
+    )}
+
+    <p style="margin: 18px 0 24px; font-family: ${FONTS.sans}; font-size: 14px; line-height: 1.7; color: ${BRAND.charcoalSoft}; text-align: center;">
+      Kdyby něco nesedělo &mdash; třeba velikost, vada, nebo se balíček vůbec nedostavil &mdash; dej mi vědět. Vyřeším to s tebou hned.
+    </p>
+
+    <div style="margin: 20px 0 8px;">
+      ${renderButton({ href: returnsUrl, label: "Mám problém s objednávkou", variant: "primary" })}
     </div>
 
-    <div style="background: #fff; border-radius: 12px; padding: 32px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+    <p style="margin: 20px 0 0; text-align: center; font-family: ${FONTS.sans}; font-size: 13px;">
+      <a href="${orderUrl}" style="color: ${BRAND.charcoalSoft}; text-decoration: underline;">Detail objednávky &rarr;</a>
+    </p>`;
 
-      <div style="text-align: center;">
-        <div style="width: 64px; height: 64px; background: #f0fdf4; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
-          <span style="font-size: 32px; line-height: 64px;">&#128230;</span>
-        </div>
-        <h2 style="margin: 0 0 8px; font-size: 20px; color: #1a1a1a;">Dorazilo vše v pořádku?</h2>
-        <p style="margin: 0 0 16px; color: #666; font-size: 15px; line-height: 1.6;">
-          ${escapeHtml(data.customerName)}, tvůj balíček z objednávky <strong style="color: #1a1a1a;">${escapeHtml(data.orderNumber)}</strong> by už měl být u tebe. Chceme se ujistit, že je vše v pořádku.
-        </p>
-      </div>
-
-      <div style="background: #f0fdf4; border-radius: 8px; padding: 16px 20px; margin: 16px 0;">
-        <p style="margin: 0 0 8px; font-weight: 600; color: #1a1a1a; font-size: 14px;">Tvoje kousky:</p>
-        <ul style="margin: 0; padding: 0 0 0 20px; font-size: 14px; line-height: 1.6;">
-          ${itemsList}
-        </ul>
-      </div>
-
-      <p style="margin: 16px 0 0; color: #666; font-size: 14px; line-height: 1.6; text-align: center;">
-        Pokud je cokoliv špatně nebo zásilka nedorazila, dej nám vědět — rádi to vyřešíme.
-      </p>
-
-      <div style="text-align: center; margin-top: 24px;">
-        <a href="${returnsUrl}" style="display: inline-block; background: #1a1a1a; color: #fff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
-          Nahlásit problém
-        </a>
-      </div>
-
-      <div style="text-align: center; margin-top: 12px;">
-        <a href="${orderUrl}" style="color: #666; font-size: 13px; text-decoration: underline;">
-          Zobrazit objednávku
-        </a>
-      </div>
-    </div>
-
-    <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
-      <p style="margin: 0;">Janička Shop — Second hand móda</p>
-      <p style="margin: 4px 0 0;">Tento email jsi dostala, protože jsi u nás nakoupila.</p>
-    </div>
-  </div>
-</body>
-</html>`;
+  return renderLayout({
+    preheader: `Tvůj balíček by měl být u tebe — všechno v pořádku?`,
+    contentHtml: content,
+    footerNote: "Tenhle email ti chodí, protože jsi u mě nakoupila.",
+  });
 }
 
 /**
@@ -1592,98 +1523,57 @@ const CONDITION_LABELS_EMAIL: Record<string, string> = {
   visible_wear: "Viditelné opotřebení",
 };
 
-function buildNewArrivalProductsHtml(products: NewArrivalProduct[]): string {
+function newArrivalsToGridItems(products: NewArrivalProduct[]) {
   const baseUrl = getBaseUrl();
-
-  return products
-    .map((p) => {
-      const productUrl = `${baseUrl}/products/${p.slug}`;
-      const imageHtml = p.image
-        ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" style="width: 120px; height: 150px; object-fit: cover; border-radius: 8px; border: 1px solid #f0f0f0;" />`
-        : `<div style="width: 120px; height: 150px; background: #f5f5f5; border-radius: 8px; display: flex; align-items: center; justify-content: center;"><span style="font-size: 32px;">&#128087;</span></div>`;
-
-      const discount = p.compareAt && p.compareAt > p.price
-        ? Math.round(((p.compareAt - p.price) / p.compareAt) * 100)
-        : null;
-
-      const priceHtml = discount
-        ? `<span style="text-decoration: line-through; color: #999; font-size: 12px;">${formatPriceCzk(p.compareAt!)}</span> <strong style="color: #dc2626;">${formatPriceCzk(p.price)}</strong> <span style="background: #dc2626; color: #fff; font-size: 11px; padding: 1px 5px; border-radius: 4px;">-${discount}%</span>`
-        : `<strong style="color: #1a1a1a;">${formatPriceCzk(p.price)}</strong>`;
-
-      const conditionLabel = CONDITION_LABELS_EMAIL[p.condition] ?? p.condition;
-      const sizesText = p.sizes.length > 0 ? p.sizes.join(", ") : null;
-
-      return `
-        <tr>
-          <td style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; vertical-align: top; width: 120px;">
-            <a href="${productUrl}" style="text-decoration: none;">${imageHtml}</a>
-          </td>
-          <td style="padding: 12px 0 12px 16px; border-bottom: 1px solid #f0f0f0; vertical-align: top;">
-            <a href="${productUrl}" style="color: #1a1a1a; text-decoration: none; font-weight: 600; font-size: 14px; line-height: 1.3;">${escapeHtml(p.name)}</a>
-            ${p.brand ? `<br/><span style="color: #888; font-size: 12px;">${escapeHtml(p.brand)}</span>` : ""}
-            <br/><span style="color: #666; font-size: 12px;">${escapeHtml(conditionLabel)}</span>
-            ${sizesText ? `<br/><span style="color: #666; font-size: 12px;">Vel.: ${escapeHtml(sizesText)}</span>` : ""}
-            <div style="margin-top: 6px;">${priceHtml}</div>
-          </td>
-        </tr>`;
-    })
-    .join("");
+  return products.map((p) => {
+    const conditionLabel = CONDITION_LABELS_EMAIL[p.condition] ?? p.condition;
+    const sizes = p.sizes.length > 0 ? `Vel. ${p.sizes.join(", ")}` : null;
+    const meta = [conditionLabel, sizes].filter(Boolean).join(" · ");
+    return {
+      name: p.name,
+      brand: p.brand,
+      meta,
+      url: `${baseUrl}/products/${p.slug}`,
+      image: p.image,
+      price: p.price,
+      compareAt: p.compareAt,
+      caption: "Unikát · 1 ks",
+    };
+  });
 }
 
 function buildNewArrivalHtml(data: NewArrivalEmailData): string {
   const baseUrl = getBaseUrl();
   const shopUrl = `${baseUrl}/products?sort=newest`;
-  const greeting = data.firstName
-    ? `${escapeHtml(data.firstName)}, máme`
-    : "Máme";
+  const firstName = data.firstName?.trim();
+  const count = data.products.length;
+  const heading = firstName
+    ? `${escapeHtml(firstName)}, něco nového pro tebe.`
+    : count === 1
+      ? "Nový kousek, který bys mohla milovat."
+      : "Nové kousky, které bys mohla milovat.";
 
-  return `<!DOCTYPE html>
-<html lang="cs">
-<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/></head>
-<body style="margin: 0; padding: 0; background-color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333;">
-  <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
+  const content = `
+    ${renderEyebrow("Novinky")}
+    ${renderDisplayHeading(heading)}
+    <p style="margin: 0 0 18px; font-family: ${FONTS.sans}; font-size: 15px; line-height: 1.7; color: ${BRAND.charcoalSoft};">
+      Vybrala jsem ${count === 1 ? "jeden kousek" : `${count} kousků`}, ${count === 1 ? "který by se ti mohl líbit" : "které by se ti mohly líbit"}. Každý existuje jen jednou &mdash; když ti padne do oka, neváhej.
+    </p>
 
-    <div style="text-align: center; padding: 24px 0;">
-      <a href="${baseUrl}" style="display: inline-block;"><img src="${baseUrl}/logo/logo-email.png" alt="Janička Shop" style="height: 40px; width: auto; border: 0;" /></a>
-      <p style="margin: 4px 0 0; font-size: 13px; color: #999;">Second hand móda pro tebe</p>
-    </div>
+    ${renderProductGrid(newArrivalsToGridItems(data.products), 2)}
 
-    <div style="background: #fff; border-radius: 12px; padding: 32px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+    <div style="margin: 28px 0 4px;">
+      ${renderButton({ href: shopUrl, label: "Prohlédnout všechny novinky", variant: "outline" })}
+    </div>`;
 
-      <div style="text-align: center;">
-        <div style="width: 64px; height: 64px; background: #fce7f3; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
-          <span style="font-size: 32px; line-height: 64px;">&#10024;</span>
-        </div>
-        <h2 style="margin: 0 0 8px; font-size: 20px; color: #1a1a1a;">Nové kousky pro tebe!</h2>
-        <p style="margin: 0 0 20px; color: #666; font-size: 15px; line-height: 1.6;">
-          ${greeting} pro tebe nové kousky, které by se ti mohly líbit. Každý je unikát — když ti padne do oka, neváhej!
-        </p>
-      </div>
-
-      <table style="width: 100%; border-collapse: collapse;">
-        ${buildNewArrivalProductsHtml(data.products)}
-      </table>
-
-      <div style="text-align: center; margin-top: 24px;">
-        <a href="${shopUrl}" style="display: inline-block; background: #1a1a1a; color: #fff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
-          Zobrazit všechny novinky
-        </a>
-      </div>
-
-      <p style="margin: 20px 0 0; color: #999; font-size: 12px; text-align: center; line-height: 1.5;">
-        Tento email jsi dostala, protože jsi přihlášená k odběru novinek z Janička Shop.
-      </p>
-    </div>
-
-    <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
-      <p style="margin: 0;">Janička Shop — Second hand móda</p>
-      <p style="margin: 4px 0 0;">
-        <a href="${baseUrl}/odhlasit-novinky?token=${encodeURIComponent(signUnsubscribeToken(data.email))}" style="color: #999; text-decoration: underline;">Odhlásit se z odběru</a>
-      </p>
-    </div>
-  </div>
-</body>
-</html>`;
+  return renderLayout({
+    preheader: count === 1
+      ? "Mám pro tebe jeden nový kousek."
+      : `Mám pro tebe ${count} nových kousků.`,
+    contentHtml: content,
+    unsubscribeUrl: `${baseUrl}/odhlasit-novinky?token=${encodeURIComponent(signUnsubscribeToken(data.email))}`,
+    unsubscribeText: "Tenhle email ti chodí, protože odebíráš novinky z Janičky.",
+  });
 }
 
 /**
@@ -1738,69 +1628,43 @@ function buildBrowseAbandonmentHtml(data: BrowseAbandonmentEmailData): string {
 
   const brandLine = data.productBrand ? ` od ${escapeHtml(data.productBrand)}` : "";
   const sizeLine = data.productSize ? ` (vel. ${escapeHtml(data.productSize)})` : "";
-  const priceFormatted = new Intl.NumberFormat("cs-CZ", { maximumFractionDigits: 0 }).format(data.productPrice);
 
   const imageBlock = data.productImage
     ? `<a href="${productUrl}" style="display: block; text-decoration: none;">
-        <img src="${escapeHtml(data.productImage)}" alt="${escapeHtml(data.productName)}" style="width: 100%; max-width: 400px; height: auto; border-radius: 12px; display: block; margin: 0 auto;" />
+        <img src="${escapeHtml(data.productImage)}" alt="${escapeHtml(data.productName)}" style="width: 100%; max-width: 440px; height: auto; border-radius: 14px; border: 1px solid ${BRAND.borderSoft}; display: block; margin: 0 auto;" />
       </a>`
     : "";
 
-  return `<!DOCTYPE html>
-<html lang="cs">
-<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/></head>
-<body style="margin: 0; padding: 0; background-color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333;">
-  <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
+  const content = `
+    ${renderEyebrow("Pořád čeká — pro jednu")}
+    ${renderDisplayHeading("Padla ti do oka, ale neví, jestli si pro ni přijdeš.")}
+    <p style="margin: 0 0 18px; font-family: ${FONTS.sans}; font-size: 15px; line-height: 1.7; color: ${BRAND.charcoalSoft};">
+      Prohlížela jsi si <strong style="color: ${BRAND.charcoal}; font-family: ${FONTS.serif}; font-weight: 600;">${escapeHtml(data.productName)}</strong>${brandLine}${sizeLine}. Tenhle kousek je u mě jen jednou &mdash; jak ho někdo koupí, je pryč.
+    </p>
 
-    <div style="text-align: center; padding: 24px 0;">
-      <a href="${baseUrl}" style="display: inline-block;"><img src="${baseUrl}/logo/logo-email.png" alt="Janička Shop" style="height: 40px; width: auto; border: 0;" /></a>
-      <p style="margin: 4px 0 0; font-size: 13px; color: #999;">Second hand móda pro tebe</p>
+    ${imageBlock}
+
+    <p style="margin: 22px 0 4px; text-align: center; font-family: ${FONTS.serif}; font-size: 26px; font-weight: 600; color: ${BRAND.primary};">
+      ${formatPriceCzk(data.productPrice)}
+    </p>
+    <p style="margin: 0 0 20px; text-align: center;">
+      ${renderTagPill("Unikát · 1 ks", "primary")}
+    </p>
+
+    <div style="margin: 28px 0 4px;">
+      ${renderButton({ href: productUrl, label: "Vrátit se ke kousku", variant: "primary" })}
     </div>
 
-    <div style="background: #fff; border-radius: 12px; padding: 32px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+    <p style="margin: 18px 0 0; text-align: center; font-family: ${FONTS.sans}; font-size: 13px;">
+      <a href="${shopUrl}" style="color: ${BRAND.charcoalSoft}; text-decoration: underline;">Nebo se podívej na další kousky &rarr;</a>
+    </p>`;
 
-      <div style="text-align: center;">
-        <div style="width: 64px; height: 64px; background: #fdf4ff; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
-          <span style="font-size: 32px; line-height: 64px;">&#128140;</span>
-        </div>
-        <h2 style="margin: 0 0 8px; font-size: 20px; color: #1a1a1a;">Pořád čeká — ale jenom pro jednu</h2>
-        <p style="margin: 0 0 20px; color: #666; font-size: 15px; line-height: 1.6;">
-          Prohlížela jsi si <strong style="color: #1a1a1a;">${escapeHtml(data.productName)}</strong>${brandLine}${sizeLine}. Tento kousek je unikát — existuje jen jeden. Kdokoliv ho může koupit dřív než ty.
-        </p>
-      </div>
-
-      ${imageBlock}
-
-      <div style="text-align: center; margin: 20px 0 8px;">
-        <p style="margin: 0; font-size: 22px; font-weight: 700; color: #1a1a1a;">${priceFormatted} Kč</p>
-      </div>
-
-      <div style="text-align: center; margin-top: 24px;">
-        <a href="${productUrl}" style="display: inline-block; background: #1a1a1a; color: #fff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 15px; font-weight: 600;">
-          Koupit teď
-        </a>
-      </div>
-
-      <div style="text-align: center; margin-top: 16px;">
-        <a href="${shopUrl}" style="color: #666; font-size: 13px; text-decoration: underline;">
-          Prohlédnout další kousky
-        </a>
-      </div>
-
-      <p style="margin: 24px 0 0; color: #999; font-size: 12px; text-align: center; line-height: 1.5;">
-        Tento email jsi dostala, protože jsi prohlížela náš eshop. Každý kousek je unikát — chceme, abys nepřišla o ten svůj.
-      </p>
-    </div>
-
-    <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
-      <p style="margin: 0;">Janička Shop — Second hand móda</p>
-      <p style="margin: 4px 0 0;">
-        <a href="${baseUrl}/api/unsubscribe/browse-abandonment?token=${encodeURIComponent(signUnsubscribeToken(data.email))}" style="color: #999; text-decoration: underline;">Odhlásit se z odběru</a>
-      </p>
-    </div>
-  </div>
-</body>
-</html>`;
+  return renderLayout({
+    preheader: `${data.productName} u mě pořád čeká — ale jen na jednu z vás.`,
+    contentHtml: content,
+    unsubscribeUrl: `${baseUrl}/api/unsubscribe/browse-abandonment?token=${encodeURIComponent(signUnsubscribeToken(data.email))}`,
+    unsubscribeText: "Tenhle email ti chodí, protože jsi si u mě prohlížela kousky.",
+  });
 }
 
 /**
@@ -1847,55 +1711,47 @@ export interface CrossSellFollowUpData {
   products: CrossSellProduct[];
 }
 
+function crossSellsToGridItems(products: CrossSellProduct[]) {
+  const baseUrl = getBaseUrl();
+  return products.map((p) => {
+    const conditionLabel = CONDITION_LABELS_EMAIL[p.condition] ?? p.condition;
+    const sizes = p.sizes.length > 0 ? `Vel. ${p.sizes.join(", ")}` : null;
+    const meta = [conditionLabel, sizes].filter(Boolean).join(" · ");
+    return {
+      name: p.name,
+      brand: p.brand,
+      meta,
+      url: `${baseUrl}/products/${p.slug}`,
+      image: p.image,
+      price: p.price,
+      compareAt: p.compareAt,
+    };
+  });
+}
+
 function buildCrossSellFollowUpHtml(data: CrossSellFollowUpData): string {
   const baseUrl = getBaseUrl();
+  const firstName = data.customerName?.trim().split(" ")[0] || data.customerName;
 
-  const crossSellHtml = buildCrossSellProductsHtml(data.products);
+  const content = `
+    ${renderEyebrow("Nové kousky pro tebe")}
+    ${renderDisplayHeading(firstName ? `${escapeHtml(firstName)}, vybrala jsem ti něco.` : "Vybrala jsem ti pár novinek.")}
+    <p style="margin: 0 0 18px; font-family: ${FONTS.sans}; font-size: 15px; line-height: 1.7; color: ${BRAND.charcoalSoft};">
+      Od tvého posledního nákupu mi přibyly kousky, které ti podle stylu a velikosti můžou sednout. Každý je jen jeden &mdash; jako vždy.
+    </p>
 
-  return `<!DOCTYPE html>
-<html lang="cs">
-<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/></head>
-<body style="margin: 0; padding: 0; background-color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333;">
-  <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
+    ${renderProductGrid(crossSellsToGridItems(data.products), 2)}
 
-    <div style="text-align: center; padding: 24px 0;">
-      <a href="${baseUrl}" style="text-decoration: none;">
-        <h1 style="margin: 0; font-size: 24px; color: #1a1a1a;">Jani&ccaron;ka Shop</h1>
-      </a>
-    </div>
+    <div style="margin: 28px 0 4px;">
+      ${renderButton({ href: `${baseUrl}/products?sort=newest`, label: "Prohlédnout všechny novinky", variant: "outline" })}
+    </div>`;
 
-    <div style="background: #fff; border-radius: 12px; padding: 32px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
-
-      <div style="text-align: center;">
-        <div style="width: 64px; height: 64px; background: #fce7f3; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
-          <span style="font-size: 32px; line-height: 64px;">&#128149;</span>
-        </div>
-        <h2 style="margin: 0 0 8px; font-size: 20px; color: #1a1a1a;">Nov&eacute; kousky ve tv&eacute;m stylu</h2>
-        <p style="margin: 0; color: #666; font-size: 14px; line-height: 1.5;">
-          ${escapeHtml(data.customerName)}, od tv&eacute;ho posledn&iacute;ho n&aacute;kupu p&rcaron;ibyly nov&eacute; kousky,
-          kter&eacute; by se ti mohly l&iacute;bit.
-        </p>
-      </div>
-
-      ${crossSellHtml}
-
-      <div style="text-align: center; margin-top: 24px;">
-        <a href="${baseUrl}/products?sort=newest" style="display: inline-block; background: #1a1a1a; color: #fff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
-          Prohl&eacute;dnout v&scaron;echny novinky
-        </a>
-      </div>
-
-    </div>
-
-    <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
-      <p style="margin: 0;">Jani&ccaron;ka Shop &mdash; Second hand m&oacute;da</p>
-      <p style="margin: 8px 0 0;">
-        <a href="${baseUrl}/odhlasit-novinky?token=${encodeURIComponent(signUnsubscribeToken(data.customerEmail))}" style="color: #999; text-decoration: underline;">Odhl&aacute;sit se z odb&ecaron;ru</a>
-      </p>
-    </div>
-  </div>
-</body>
-</html>`;
+  return renderLayout({
+    preheader: "Mám pro tebe pár nových kousků ve tvém stylu.",
+    contentHtml: content,
+    unsubscribeUrl: `${baseUrl}/odhlasit-novinky?token=${encodeURIComponent(signUnsubscribeToken(data.customerEmail))}`,
+    unsubscribeText: "Tenhle email ti chodí, protože jsi u mě nakoupila.",
+  });
 }
 
 /**
@@ -1917,7 +1773,7 @@ export async function sendCrossSellFollowUpEmail(
       from: FROM_NEWSLETTER,
       replyTo: REPLY_TO,
       to: data.customerEmail,
-      subject: "Nové kousky ve tvém stylu \u{1F495} — Janička Shop",
+      subject: "Nové kousky ve tvém stylu — Janička Shop",
       html: buildCrossSellFollowUpHtml(data),
     });
     return true;
@@ -1939,53 +1795,27 @@ export interface WinBackEmailData {
 
 function buildWinBackHtml(data: WinBackEmailData): string {
   const baseUrl = getBaseUrl();
+  const firstName = data.customerName?.trim().split(" ")[0] || data.customerName;
 
-  const productsHtml = buildCrossSellProductsHtml(data.products);
+  const content = `
+    ${renderEyebrow("Dlouho jsme se neviděly")}
+    ${renderDisplayHeading(firstName ? `${escapeHtml(firstName)}, chybíš mi tu.` : "Chybíš mi tu.")}
+    <p style="margin: 0 0 18px; font-family: ${FONTS.sans}; font-size: 15px; line-height: 1.7; color: ${BRAND.charcoalSoft};">
+      Už je to chvíli, co jsi naposledy nakupovala. Zatím mi přibyla spousta nových unikátních kousků &mdash; možná je mezi nimi něco přesně pro tebe.
+    </p>
 
-  return `<!DOCTYPE html>
-<html lang="cs">
-<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/></head>
-<body style="margin: 0; padding: 0; background-color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333;">
-  <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
+    ${renderProductGrid(crossSellsToGridItems(data.products), 2)}
 
-    <div style="text-align: center; padding: 24px 0;">
-      <a href="${baseUrl}" style="text-decoration: none;">
-        <h1 style="margin: 0; font-size: 24px; color: #1a1a1a;">Jani&ccaron;ka Shop</h1>
-      </a>
-    </div>
+    <div style="margin: 28px 0 4px;">
+      ${renderButton({ href: `${baseUrl}/products?sort=newest`, label: "Podívat se na novinky", variant: "primary" })}
+    </div>`;
 
-    <div style="background: #fff; border-radius: 12px; padding: 32px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
-
-      <div style="text-align: center;">
-        <div style="width: 64px; height: 64px; background: #fef3c7; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
-          <span style="font-size: 32px; line-height: 64px;">&#128075;</span>
-        </div>
-        <h2 style="margin: 0 0 8px; font-size: 20px; color: #1a1a1a;">Chyb&iacute;&scaron; n&aacute;m!</h2>
-        <p style="margin: 0; color: #666; font-size: 14px; line-height: 1.5;">
-          ${escapeHtml(data.customerName)}, u&zcaron; je to chv&iacute;li, co jsi u n&aacute;s nakupovala.
-          Mezit&iacute;m p&rcaron;ibyly nov&eacute; unik&aacute;tn&iacute; kousky &mdash; ka&zcaron;d&yacute; jen jeden.
-        </p>
-      </div>
-
-      ${productsHtml}
-
-      <div style="text-align: center; margin-top: 24px;">
-        <a href="${baseUrl}/products?sort=newest" style="display: inline-block; background: #1a1a1a; color: #fff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
-          Prohl&eacute;dnout novinky
-        </a>
-      </div>
-
-    </div>
-
-    <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
-      <p style="margin: 0;">Jani&ccaron;ka Shop &mdash; Second hand m&oacute;da</p>
-      <p style="margin: 8px 0 0;">
-        <a href="${baseUrl}/odhlasit-novinky?token=${encodeURIComponent(signUnsubscribeToken(data.customerEmail))}" style="color: #999; text-decoration: underline;">Odhl&aacute;sit se z odb&ecaron;ru</a>
-      </p>
-    </div>
-  </div>
-</body>
-</html>`;
+  return renderLayout({
+    preheader: "Přibyly mi nové unikátní kousky — třeba je mezi nimi ten tvůj.",
+    contentHtml: content,
+    unsubscribeUrl: `${baseUrl}/odhlasit-novinky?token=${encodeURIComponent(signUnsubscribeToken(data.customerEmail))}`,
+    unsubscribeText: "Tenhle email ti chodí, protože jsi u mě dřív nakoupila.",
+  });
 }
 
 /**
@@ -2006,7 +1836,7 @@ export async function sendWinBackEmail(
       from: FROM_NEWSLETTER,
       replyTo: REPLY_TO,
       to: data.customerEmail,
-      subject: "Nové kousky čekají \u{1F44B} — Janička Shop",
+      subject: "Nové kousky čekají — Janička Shop",
       html: buildWinBackHtml(data),
     });
     return true;
@@ -2040,46 +1870,21 @@ export interface CampaignEmailData {
   ctaUrl: string;
 }
 
-function buildCampaignProductGridHtml(products: CampaignProduct[]): string {
+function campaignsToGridItems(products: CampaignProduct[], caption?: string) {
   const baseUrl = getBaseUrl();
-
-  // 2-column grid using nested tables for email client compatibility
-  const cells = products.map((p) => {
-    const productUrl = `${baseUrl}/products/${p.slug}`;
-    const imageHtml = p.image
-      ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; border: 1px solid #f0f0f0;" />`
-      : `<div style="width: 100%; height: 200px; background: #f5f5f5; border-radius: 8px; display: flex; align-items: center; justify-content: center;"><span style="font-size: 32px;">&#128087;</span></div>`;
-
-    const discount = p.compareAt && p.compareAt > p.price
-      ? Math.round(((p.compareAt - p.price) / p.compareAt) * 100)
-      : null;
-
-    const priceHtml = discount
-      ? `<span style="text-decoration: line-through; color: #999; font-size: 12px;">${formatPriceCzk(p.compareAt!)}</span><br/><strong style="color: #dc2626;">${formatPriceCzk(p.price)}</strong> <span style="background: #dc2626; color: #fff; font-size: 11px; padding: 1px 5px; border-radius: 4px;">-${discount}%</span>`
-      : `<strong style="color: #1a1a1a;">${formatPriceCzk(p.price)}</strong>`;
-
+  return products.map((p) => {
     const conditionLabel = CONDITION_LABELS_EMAIL[p.condition] ?? p.condition;
-
-    return `
-      <td style="width: 50%; padding: 8px; vertical-align: top;">
-        <a href="${productUrl}" style="text-decoration: none; color: inherit; display: block;">
-          ${imageHtml}
-          <p style="margin: 8px 0 2px; font-size: 13px; font-weight: 600; color: #1a1a1a; line-height: 1.3;">${escapeHtml(p.name)}</p>
-          ${p.brand ? `<p style="margin: 0 0 2px; font-size: 12px; color: #888;">${escapeHtml(p.brand)}</p>` : ""}
-          <p style="margin: 0 0 4px; font-size: 11px; color: #666;">${escapeHtml(conditionLabel)}</p>
-          <div>${priceHtml}</div>
-        </a>
-      </td>`;
+    return {
+      name: p.name,
+      brand: p.brand,
+      meta: conditionLabel,
+      url: `${baseUrl}/products/${p.slug}`,
+      image: p.image,
+      price: p.price,
+      compareAt: p.compareAt,
+      caption: caption ?? null,
+    };
   });
-
-  // Pair cells into rows of 2
-  const rows: string[] = [];
-  for (let i = 0; i < cells.length; i += 2) {
-    const cell2 = cells[i + 1] ?? '<td style="width: 50%; padding: 8px;"></td>';
-    rows.push(`<tr>${cells[i]}${cell2}</tr>`);
-  }
-
-  return `<table style="width: 100%; border-collapse: collapse; margin-top: 16px;">${rows.join("")}</table>`;
 }
 
 function buildCampaignHtml(data: CampaignEmailData, recipientEmail: string): string {
@@ -2087,52 +1892,28 @@ function buildCampaignHtml(data: CampaignEmailData, recipientEmail: string): str
   const unsubscribeUrl = `${baseUrl}/odhlasit-novinky?token=${encodeURIComponent(signUnsubscribeToken(recipientEmail))}`;
 
   const productsHtml = data.products.length > 0
-    ? buildCampaignProductGridHtml(data.products)
+    ? renderProductGrid(campaignsToGridItems(data.products), 2)
     : "";
 
-  return `<!DOCTYPE html>
-<html lang="cs">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  ${data.previewText ? `<span style="display: none; max-height: 0; overflow: hidden; mso-hide: all;">${escapeHtml(data.previewText)}</span>` : ""}
-</head>
-<body style="margin: 0; padding: 0; background-color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333;">
-  <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
-
-    <div style="text-align: center; padding: 24px 0;">
-      <a href="${baseUrl}" style="display: inline-block;"><img src="${baseUrl}/logo/logo-email.png" alt="Janička Shop" style="height: 40px; width: auto; border: 0;" /></a>
-      <p style="margin: 4px 0 0; font-size: 13px; color: #999;">Second hand móda pro tebe</p>
+  const content = `
+    ${renderEyebrow("Z Janičky")}
+    ${renderDisplayHeading(data.heading)}
+    <div style="font-family: ${FONTS.sans}; font-size: 15px; line-height: 1.7; color: ${BRAND.charcoalSoft};">
+      ${data.bodyHtml}
     </div>
 
-    <div style="background: #fff; border-radius: 12px; padding: 32px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+    ${productsHtml}
 
-      <div style="text-align: center;">
-        <h2 style="margin: 0 0 12px; font-size: 22px; color: #1a1a1a;">${escapeHtml(data.heading)}</h2>
-        <div style="color: #555; font-size: 15px; line-height: 1.6;">
-          ${data.bodyHtml}
-        </div>
-      </div>
+    <div style="margin: 28px 0 4px;">
+      ${renderButton({ href: data.ctaUrl, label: data.ctaText, variant: "primary" })}
+    </div>`;
 
-      ${productsHtml}
-
-      <div style="text-align: center; margin-top: 28px;">
-        <a href="${escapeHtml(data.ctaUrl)}" style="display: inline-block; background: #1a1a1a; color: #fff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 15px; font-weight: 600;">
-          ${escapeHtml(data.ctaText)}
-        </a>
-      </div>
-
-    </div>
-
-    <div style="text-align: center; padding: 24px 0; font-size: 12px; color: #999;">
-      <p style="margin: 0;">Janička Shop — Second hand móda</p>
-      <p style="margin: 8px 0 0;">
-        <a href="${unsubscribeUrl}" style="color: #999; text-decoration: underline;">Odhlásit se z odběru</a>
-      </p>
-    </div>
-  </div>
-</body>
-</html>`;
+  return renderLayout({
+    preheader: data.previewText,
+    contentHtml: content,
+    unsubscribeUrl,
+    unsubscribeText: "Tenhle email ti chodí, protože odebíráš novinky z Janičky.",
+  });
 }
 
 /**
@@ -2181,7 +1962,7 @@ export type MothersDaySegment = "warm" | "cold";
 
 const MOTHERS_DAY_SUBJECTS: Record<MothersDayEmailNumber, Record<MothersDaySegment, string>> = {
   1: {
-    warm: "Najdi mámě kousek, který nemá nikdo jiný 🌷",
+    warm: "Najdi mámě kousek, který nemá nikdo jiný",
     cold: "Daruj originál místo masové výroby — každý kousek unikát",
   },
   2: {
@@ -2189,8 +1970,8 @@ const MOTHERS_DAY_SUBJECTS: Record<MothersDayEmailNumber, Record<MothersDaySegme
     cold: "Mámě zbývá pár dní — co ji opravdu potěší?",
   },
   3: {
-    warm: "Poslední šance: odeslání do 3 dnů 📦",
-    cold: "Poslední šance: odeslání do 3 dnů 📦",
+    warm: "Poslední šance — odešlu do 3 dnů",
+    cold: "Poslední šance — odešlu do 3 dnů",
   },
 };
 
@@ -2200,96 +1981,19 @@ const MOTHERS_DAY_PREVIEWS: Record<MothersDayEmailNumber, string> = {
   3: "Doprava zdarma nad 1 500 Kč. Stihni to pro mámu.",
 };
 
-function buildMothersDayProductGridHtml(
-  products: CampaignProduct[],
-  columns: 2 | 3 = 2,
-): string {
-  const baseUrl = getBaseUrl();
-
-  const cells = products.map((p) => {
-    const productUrl = `${baseUrl}/products/${p.slug}`;
-    const imageHtml = p.image
-      ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; border: 1px solid #f0f0f0;" />`
-      : `<div style="width: 100%; height: 200px; background: #f5f5f5; border-radius: 8px; display: flex; align-items: center; justify-content: center;"><span style="font-size: 32px;">👗</span></div>`;
-
-    const discount = p.compareAt && p.compareAt > p.price
-      ? Math.round(((p.compareAt - p.price) / p.compareAt) * 100)
-      : null;
-
-    const priceHtml = discount
-      ? `<span style="text-decoration: line-through; color: #999; font-size: 12px;">${formatPriceCzk(p.compareAt!)}</span><br/><strong style="color: #dc2626;">${formatPriceCzk(p.price)}</strong> <span style="background: #dc2626; color: #fff; font-size: 11px; padding: 1px 5px; border-radius: 4px;">-${discount}%</span>`
-      : `<strong style="color: #1a1a1a;">${formatPriceCzk(p.price)}</strong>`;
-
-    const conditionLabel = CONDITION_LABELS_EMAIL[p.condition] ?? p.condition;
-    const width = columns === 3 ? "33.33%" : "50%";
-
-    return `
-      <td style="width: ${width}; padding: 8px; vertical-align: top;">
-        <a href="${productUrl}" style="text-decoration: none; color: inherit; display: block;">
-          ${imageHtml}
-          <p style="margin: 8px 0 2px; font-size: 13px; font-weight: 600; color: #1a1a1a; line-height: 1.3;">${escapeHtml(p.name)}</p>
-          ${p.brand ? `<p style="margin: 0 0 2px; font-size: 12px; color: #888;">${escapeHtml(p.brand)}</p>` : ""}
-          <p style="margin: 0 0 2px; font-size: 11px; color: #666;">${escapeHtml(conditionLabel)}</p>
-          <p style="margin: 0; font-size: 11px; color: #d946ef;">Unikát — pouze 1 ks</p>
-          <div style="margin-top: 4px;">${priceHtml}</div>
-        </a>
-      </td>`;
-  });
-
-  const colCount = columns;
-  const rows: string[] = [];
-  for (let i = 0; i < cells.length; i += colCount) {
-    const rowCells = cells.slice(i, i + colCount);
-    while (rowCells.length < colCount) {
-      const w = colCount === 3 ? "33.33%" : "50%";
-      rowCells.push(`<td style="width: ${w}; padding: 8px;"></td>`);
-    }
-    rows.push(`<tr>${rowCells.join("")}</tr>`);
-  }
-
-  return `<table style="width: 100%; border-collapse: collapse; margin-top: 16px;">${rows.join("")}</table>`;
-}
-
 function buildMothersDayEmailShell(
   previewText: string,
   recipientEmail: string,
   innerHtml: string,
 ): string {
   const baseUrl = getBaseUrl();
-  const unsubscribeUrl = `${baseUrl}/odhlasit-novinky?token=${encodeURIComponent(signUnsubscribeToken(recipientEmail))}`;
-
-  return `<!DOCTYPE html>
-<html lang="cs">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-</head>
-<body style="margin: 0; padding: 0; background-color: #fdf4ff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333;">
-  <span style="display: none; max-height: 0; overflow: hidden; mso-hide: all;">${escapeHtml(previewText)}</span>
-  <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
-
-    <div style="text-align: center; padding: 24px 0;">
-      <a href="${baseUrl}" style="display: inline-block;"><img src="${baseUrl}/logo/logo-email.png" alt="Janička Shop" style="height: 40px; width: auto; border: 0;" /></a>
-      <p style="margin: 4px 0 0; font-size: 13px; color: #999;">Second hand móda pro tebe</p>
-    </div>
-
-    <div style="background: #fff; border-radius: 12px; padding: 32px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
-      ${innerHtml}
-    </div>
-
-    <div style="text-align: center; padding: 20px 0 4px;">
-      <p style="margin: 0; font-size: 12px; color: #a855f7; font-style: italic;">Tvoje fotky jsou tvoje. Vždy.</p>
-    </div>
-
-    <div style="text-align: center; padding: 4px 0 24px; font-size: 12px; color: #999;">
-      <p style="margin: 0;">Janička Shop — Second hand móda</p>
-      <p style="margin: 8px 0 0;">
-        <a href="${unsubscribeUrl}" style="color: #999; text-decoration: underline;">Odhlásit se z odběru</a>
-      </p>
-    </div>
-  </div>
-</body>
-</html>`;
+  return renderLayout({
+    preheader: previewText,
+    contentHtml: innerHtml,
+    footerNote: "<em>Pro mámu, která má svůj styl. Každý kousek u mě je jediný svého druhu.</em>",
+    unsubscribeUrl: `${baseUrl}/odhlasit-novinky?token=${encodeURIComponent(signUnsubscribeToken(recipientEmail))}`,
+    unsubscribeText: "Tenhle email ti chodí, protože odebíráš novinky z Janičky.",
+  });
 }
 
 // --- Email 1: Warmup (May 1) ---
@@ -2302,68 +2006,47 @@ function buildMothersDayEmail1Html(
   const ctaUrl = `${baseUrl}/products?sort=newest`;
 
   const productsHtml = products.length > 0
-    ? buildMothersDayProductGridHtml(products, 2)
+    ? renderProductGrid(campaignsToGridItems(products, "Unikát · 1 ks"), 2)
     : "";
 
+  const personaCell = (bg: string, label: string, copy: string) => `
+    <td valign="top" align="center" style="width: 33.33%; padding: 8px;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+        <tr>
+          <td align="center" style="background: ${bg}; border-radius: 14px; padding: 22px 12px;">
+            <p style="margin: 0; font-family: ${FONTS.serif}; font-size: 17px; font-weight: 600; color: ${BRAND.charcoal};">${label}</p>
+            <p style="margin: 8px 0 0; font-family: ${FONTS.sans}; font-size: 12px; line-height: 1.5; color: ${BRAND.charcoalSoft};">${copy}</p>
+          </td>
+        </tr>
+      </table>
+    </td>`;
+
   const personaGridHtml = `
-    <table style="width: 100%; border-collapse: collapse; margin: 24px 0 8px;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin: 24px -8px 4px;">
       <tr>
-        <td style="width: 33.33%; padding: 8px; vertical-align: top; text-align: center;">
-          <div style="background: #fdf4ff; border-radius: 12px; padding: 16px 8px;">
-            <div style="font-size: 28px; margin-bottom: 6px;">🤍</div>
-            <p style="margin: 0; font-size: 13px; font-weight: 600; color: #1a1a1a;">Minimalistka</p>
-            <p style="margin: 4px 0 0; font-size: 11px; color: #666; line-height: 1.4;">Čisté linie, nadčasové kousky</p>
-          </div>
-        </td>
-        <td style="width: 33.33%; padding: 8px; vertical-align: top; text-align: center;">
-          <div style="background: #fef3c7; border-radius: 12px; padding: 16px 8px;">
-            <div style="font-size: 28px; margin-bottom: 6px;">✨</div>
-            <p style="margin: 0; font-size: 13px; font-weight: 600; color: #1a1a1a;">Klasička</p>
-            <p style="margin: 4px 0 0; font-size: 11px; color: #666; line-height: 1.4;">Elegance a ověřená kvalita</p>
-          </div>
-        </td>
-        <td style="width: 33.33%; padding: 8px; vertical-align: top; text-align: center;">
-          <div style="background: #f0fdf4; border-radius: 12px; padding: 16px 8px;">
-            <div style="font-size: 28px; margin-bottom: 6px;">🌿</div>
-            <p style="margin: 0; font-size: 13px; font-weight: 600; color: #1a1a1a;">Boho</p>
-            <p style="margin: 4px 0 0; font-size: 11px; color: #666; line-height: 1.4;">Volnost, barvy, originalita</p>
-          </div>
-        </td>
+        ${personaCell(BRAND.blushSoft, "Minimalistka", "Čisté linie, nadčasové kousky")}
+        ${personaCell(BRAND.champagneSoft, "Klasička", "Elegance a ověřená kvalita")}
+        ${personaCell(BRAND.successSoft, "Boho", "Volnost, barvy, originalita")}
       </tr>
     </table>
-    <p style="margin: 0; text-align: center; font-size: 12px; color: #888;">Jaká je tvoje máma? Najdi jí kousek na míru.</p>
-  `;
+    <p style="margin: 4px 0 0; text-align: center; font-family: ${FONTS.serif}; font-style: italic; font-size: 14px; color: ${BRAND.charcoalSoft};">Jaká je tvoje máma? Najdi jí kousek na míru.</p>`;
 
   const innerHtml = `
-    <div style="text-align: center; margin-bottom: 20px;">
-      <div style="display: inline-block; font-size: 40px;">🌷</div>
-    </div>
-
-    <h2 style="margin: 0 0 16px; font-size: 24px; color: #1a1a1a; text-align: center; line-height: 1.3;">
-      Daruj mámě kousek,<br/>který nemá nikdo jiný
-    </h2>
-
-    <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.7; color: #444; text-align: center;">
-      Den matek je <strong style="color: #1a1a1a;">10.&nbsp;května</strong>.
-      Místo masově vyráběných dárků jí dej něco, co má příběh&nbsp;— originální kousek,
-      pečlivě vybraný a&nbsp;zkontrolovaný.
+    ${renderEyebrow("Den matek · 10. května")}
+    ${renderDisplayHeading("Daruj mámě kousek, který nemá nikdo jiný.")}
+    <p style="margin: 0 0 16px; font-family: ${FONTS.sans}; font-size: 15px; line-height: 1.7; color: ${BRAND.charcoalSoft};">
+      Místo masově vyráběných dárků jí dej něco, co má příběh &mdash; originální kousek, pečlivě vybraný a zkontrolovaný.
     </p>
-
-    <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.7; color: #444; text-align: center;">
-      Každý kus u&nbsp;nás existuje jen jednou. Žádné kopie, žádné série.
-      Až ho máma rozbalí, bude vědět, že jsi vybírala opravdu jen pro ni.
+    <p style="margin: 0 0 8px; font-family: ${FONTS.sans}; font-size: 15px; line-height: 1.7; color: ${BRAND.charcoalSoft};">
+      Každý kus u mě existuje jen jednou. Žádné kopie, žádné série. Až ho máma rozbalí, bude vědět, že jsi vybírala opravdu jen pro ni.
     </p>
 
     ${personaGridHtml}
-
     ${productsHtml}
 
-    <div style="text-align: center; margin-top: 28px;">
-      <a href="${escapeHtml(ctaUrl)}" style="display: inline-block; background: #a855f7; color: #fff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 15px; font-weight: 600;">
-        Prohlédnout dárky pro mámu
-      </a>
-    </div>
-  `;
+    <div style="margin: 28px 0 4px;">
+      ${renderButton({ href: ctaUrl, label: "Prohlédnout dárky pro mámu", variant: "primary" })}
+    </div>`;
 
   return buildMothersDayEmailShell(
     MOTHERS_DAY_PREVIEWS[1],
@@ -2382,42 +2065,30 @@ function buildMothersDayEmail2Html(
   const ctaUrl = `${baseUrl}/products?sort=newest`;
 
   const productsHtml = products.length > 0
-    ? buildMothersDayProductGridHtml(products, 2)
+    ? renderProductGrid(campaignsToGridItems(products, "Unikát · 1 ks"), 2)
     : "";
 
   const innerHtml = `
-    <div style="text-align: center; margin-bottom: 20px;">
-      <div style="display: inline-block; font-size: 40px;">💐</div>
-    </div>
-
-    <h2 style="margin: 0 0 16px; font-size: 24px; color: #1a1a1a; text-align: center; line-height: 1.3;">
-      Mámě zbývá pár dní.<br/>Co ji opravdu potěší?
-    </h2>
-
-    <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.7; color: #444; text-align: center;">
-      Den matek je už za <strong style="color: #1a1a1a;">3&nbsp;dny</strong>.
-      Kytka zvadne, bonboniéra se sní&nbsp;— ale krásný kousek oblečení
-      ji potěší pokaždé, když si ho oblékne.
+    ${renderEyebrow("Mámě zbývají 3 dny")}
+    ${renderDisplayHeading("Kytka zvadne. Krásný kousek zůstane.")}
+    <p style="margin: 0 0 16px; font-family: ${FONTS.sans}; font-size: 15px; line-height: 1.7; color: ${BRAND.charcoalSoft};">
+      Den matek je už za <strong style="color: ${BRAND.charcoal};">3 dny</strong>. Bonboniéra se sní za večer &mdash; ale kousek oblečení ji potěší pokaždé, když si ho oblékne a vzpomene na tebe.
     </p>
 
-    <div style="background: #fdf4ff; border-radius: 8px; padding: 12px 16px; margin: 0 0 20px; text-align: center;">
-      <p style="margin: 0; font-size: 13px; color: #7e22ce; font-weight: 600;">
-        ⚡ Každý kousek existuje jen jednou — kdokoliv ho může koupit dřív
-      </p>
-    </div>
+    ${renderInfoCard(
+      `<p style="margin: 0; font-family: ${FONTS.sans}; font-size: 13px; color: ${BRAND.charcoal}; line-height: 1.6;"><strong style="color: ${BRAND.primary};">Unikát.</strong> Každý kousek u mě existuje jen jednou &mdash; kdokoliv ho může koupit dřív.</p>`,
+      "champagne",
+    )}
 
     ${productsHtml}
 
-    <div style="text-align: center; margin-top: 28px;">
-      <a href="${escapeHtml(ctaUrl)}" style="display: inline-block; background: #a855f7; color: #fff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 15px; font-weight: 600;">
-        Vybrat dárek pro mámu
-      </a>
+    <div style="margin: 28px 0 4px;">
+      ${renderButton({ href: ctaUrl, label: "Vybrat dárek pro mámu", variant: "primary" })}
     </div>
 
-    <p style="margin: 20px 0 0; font-size: 13px; color: #888; text-align: center; line-height: 1.5;">
-      💡 Tip: Nevíš velikost? Dárková poukázka je vždy jistota.
-    </p>
-  `;
+    <p style="margin: 22px 0 0; font-family: ${FONTS.serif}; font-style: italic; font-size: 14px; color: ${BRAND.charcoalSoft}; text-align: center;">
+      Tip: Nevíš velikost? Dárková poukázka je vždy jistota.
+    </p>`;
 
   return buildMothersDayEmailShell(
     MOTHERS_DAY_PREVIEWS[2],
@@ -2436,43 +2107,26 @@ function buildMothersDayEmail3Html(
   const ctaUrl = `${baseUrl}/products?sort=newest`;
 
   const productsHtml = products.length > 0
-    ? buildMothersDayProductGridHtml(products.slice(0, 3), 3)
+    ? renderProductGrid(campaignsToGridItems(products.slice(0, 3), "Unikát"), 3)
     : "";
 
   const innerHtml = `
-    <div style="text-align: center; margin-bottom: 20px;">
-      <div style="display: inline-block; font-size: 40px;">⏰</div>
-    </div>
-
-    <h2 style="margin: 0 0 16px; font-size: 24px; color: #1a1a1a; text-align: center; line-height: 1.3;">
-      Poslední šance — Den matek je zítra!
-    </h2>
-
-    <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.7; color: #444; text-align: center;">
-      Objednávky zadané <strong style="color: #1a1a1a;">dnes</strong> stihneme odeslat
-      tak, aby dorazily včas. Nenechávej to na poslední chvíli.
+    ${renderEyebrow("Den matek · zítra")}
+    ${renderDisplayHeading("Poslední den, kdy to ještě stihnem.")}
+    <p style="margin: 0 0 16px; font-family: ${FONTS.sans}; font-size: 15px; line-height: 1.7; color: ${BRAND.charcoalSoft};">
+      Objednávky zadané <strong style="color: ${BRAND.charcoal};">dnes</strong> stihnu odeslat tak, aby dorazily včas. Nenechávej to na poslední chvíli.
     </p>
 
-    <div style="background: #f0fdf4; border-radius: 8px; padding: 12px 16px; margin: 0 0 8px; text-align: center;">
-      <p style="margin: 0; font-size: 14px; color: #166534; font-weight: 600;">
-        🚚 Doprava zdarma nad 1 500 Kč
-      </p>
-    </div>
-
-    <div style="background: #fef3c7; border-radius: 8px; padding: 12px 16px; margin: 0 0 20px; text-align: center;">
-      <p style="margin: 0; font-size: 13px; color: #92400e; font-weight: 600;">
-        ⚡ Objednej dnes — stihneme odeslat do 3 dnů
-      </p>
-    </div>
+    ${renderInfoCard(
+      `<p style="margin: 0; font-family: ${FONTS.sans}; font-size: 13px; color: ${BRAND.charcoal}; line-height: 1.6;"><strong style="color: ${BRAND.success};">Doprava zdarma nad 1 500 Kč.</strong> Objednej dnes &mdash; odešlu do 3 dnů.</p>`,
+      "success",
+    )}
 
     ${productsHtml}
 
-    <div style="text-align: center; margin-top: 28px;">
-      <a href="${escapeHtml(ctaUrl)}" style="display: inline-block; background: #dc2626; color: #fff; padding: 16px 36px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: 700;">
-        Objednat teď →
-      </a>
-    </div>
-  `;
+    <div style="margin: 28px 0 4px;">
+      ${renderButton({ href: ctaUrl, label: "Objednat pro mámu", variant: "primary" })}
+    </div>`;
 
   return buildMothersDayEmailShell(
     MOTHERS_DAY_PREVIEWS[3],
@@ -2553,87 +2207,19 @@ const CUSTOMS_PREVIEWS: Record<CustomsEmailNumber, string> = {
   2: "Od 1. července platí nová cla. U Janičky se nic nemění.",
 };
 
-function buildCustomsProductGridHtml(products: CampaignProduct[]): string {
-  const baseUrl = getBaseUrl();
-
-  const cells = products.map((p) => {
-    const productUrl = `${baseUrl}/products/${p.slug}`;
-    const imageHtml = p.image
-      ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" style="width: 100%; height: 180px; object-fit: cover; border-radius: 8px; border: 1px solid #f0f0f0;" />`
-      : `<div style="width: 100%; height: 180px; background: #f5f5f5; border-radius: 8px; display: flex; align-items: center; justify-content: center;"><span style="font-size: 32px;">👗</span></div>`;
-
-    const discount = p.compareAt && p.compareAt > p.price
-      ? Math.round(((p.compareAt - p.price) / p.compareAt) * 100)
-      : null;
-
-    const priceHtml = discount
-      ? `<span style="text-decoration: line-through; color: #999; font-size: 12px;">${formatPriceCzk(p.compareAt!)}</span><br/><strong style="color: #dc2626;">${formatPriceCzk(p.price)}</strong> <span style="background: #dc2626; color: #fff; font-size: 11px; padding: 1px 5px; border-radius: 4px;">-${discount}%</span>`
-      : `<strong style="color: #1a1a1a;">${formatPriceCzk(p.price)}</strong>`;
-
-    const conditionLabel = CONDITION_LABELS_EMAIL[p.condition] ?? p.condition;
-
-    return `
-      <td style="width: 50%; padding: 8px; vertical-align: top;">
-        <a href="${productUrl}" style="text-decoration: none; color: inherit; display: block;">
-          ${imageHtml}
-          <p style="margin: 8px 0 2px; font-size: 13px; font-weight: 600; color: #1a1a1a; line-height: 1.3;">${escapeHtml(p.name)}</p>
-          ${p.brand ? `<p style="margin: 0 0 2px; font-size: 12px; color: #888;">${escapeHtml(p.brand)}</p>` : ""}
-          <p style="margin: 0 0 2px; font-size: 11px; color: #666;">${escapeHtml(conditionLabel)}</p>
-          <p style="margin: 0; font-size: 11px; color: #16a34a;">Bez cla — domácí zboží</p>
-          <div style="margin-top: 4px;">${priceHtml}</div>
-        </a>
-      </td>`;
-  });
-
-  const rows: string[] = [];
-  for (let i = 0; i < cells.length; i += 2) {
-    const cell2 = cells[i + 1] ?? '<td style="width: 50%; padding: 8px;"></td>';
-    rows.push(`<tr>${cells[i]}${cell2}</tr>`);
-  }
-
-  return `<table style="width: 100%; border-collapse: collapse; margin-top: 16px;">${rows.join("")}</table>`;
-}
-
 function buildCustomsEmailShell(
   previewText: string,
   recipientEmail: string,
   innerHtml: string,
 ): string {
   const baseUrl = getBaseUrl();
-  const unsubscribeUrl = `${baseUrl}/odhlasit-novinky?token=${encodeURIComponent(signUnsubscribeToken(recipientEmail))}`;
-
-  return `<!DOCTYPE html>
-<html lang="cs">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <span style="display: none; max-height: 0; overflow: hidden; mso-hide: all;">${escapeHtml(previewText)}</span>
-</head>
-<body style="margin: 0; padding: 0; background-color: #f0fdf4; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333;">
-  <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
-
-    <div style="text-align: center; padding: 24px 0;">
-      <a href="${baseUrl}" style="display: inline-block;"><img src="${baseUrl}/logo/logo-email.png" alt="Janička Shop" style="height: 40px; width: auto; border: 0;" /></a>
-      <p style="margin: 4px 0 0; font-size: 13px; color: #999;">Second hand móda pro tebe</p>
-    </div>
-
-    <div style="background: #fff; border-radius: 12px; padding: 32px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
-      ${innerHtml}
-    </div>
-
-    <div style="text-align: center; padding: 20px 0 4px;">
-      <p style="margin: 0; font-size: 12px; color: #16a34a; font-style: italic;">Nakupuj lokálně — bez cel, bez překvapení.</p>
-    </div>
-
-    <div style="text-align: center; padding: 4px 0 24px; font-size: 12px; color: #999;">
-      <p style="margin: 0;">Janička Shop — Second hand móda</p>
-      <p style="margin: 8px 0 0;">
-        <a href="${unsubscribeUrl}" style="color: #999; text-decoration: underline;">Odhlásit se z odběru</a>
-      </p>
-    </div>
-  </div>
-</body>
-</html>`;
+  return renderLayout({
+    preheader: previewText,
+    contentHtml: innerHtml,
+    footerNote: "<em>Nakupuj lokálně &mdash; bez cel, bez překvapení.</em>",
+    unsubscribeUrl: `${baseUrl}/odhlasit-novinky?token=${encodeURIComponent(signUnsubscribeToken(recipientEmail))}`,
+    unsubscribeText: "Tenhle email ti chodí, protože odebíráš novinky z Janičky.",
+  });
 }
 
 // --- Email 1: Soft tease (June 15) ---
@@ -2647,61 +2233,42 @@ function buildCustomsEmail1Html(
   const shopUrl = `${baseUrl}/products?sort=newest`;
 
   const productsHtml = products.length > 0
-    ? buildCustomsProductGridHtml(products)
+    ? renderProductGrid(campaignsToGridItems(products, "Bez cla · z Česka"), 2)
     : "";
 
-  const innerHtml = `
-    <div style="text-align: center; margin-bottom: 20px;">
-      <div style="display: inline-block; font-size: 40px;">🇨🇿</div>
-    </div>
-
-    <h2 style="margin: 0 0 16px; font-size: 22px; color: #1a1a1a; text-align: center; line-height: 1.3;">
-      Chytré nakupování léto 2026
-    </h2>
-
-    <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.7; color: #444; text-align: center;">
-      Věděla jsi, že od <strong style="color: #1a1a1a;">1.&nbsp;července 2026</strong>
-      se mění pravidla dovozu do EU? Zásilky ze zahraničí
-      (Shein, Temu, Aliexpress) budou nově podléhat clu — minimálně
-      <strong style="color: #1a1a1a;">75&nbsp;Kč navíc</strong> za každou kategorii zboží.
-    </p>
-
-    <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.7; color: #444; text-align: center;">
-      U&nbsp;Janičky se nic nemění. Jsme český eshop — žádná cla,
-      žádné čekání na celnici, žádná překvapení.
-    </p>
-
-    <table style="width: 100%; border-collapse: collapse; margin: 24px 0; border-radius: 8px; overflow: hidden;">
+  const compareTable = `
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin: 24px 0; border-collapse: separate; border-spacing: 0;">
       <tr>
-        <td style="width: 50%; padding: 16px; background: #fef2f2; vertical-align: top;">
-          <p style="margin: 0 0 6px; font-size: 12px; font-weight: 700; color: #991b1b; text-transform: uppercase; letter-spacing: 0.5px;">Ze zahraničí</p>
-          <p style="margin: 0; font-size: 13px; color: #7f1d1d; line-height: 1.5;">
-            Cena + clo + DPH.<br/>2–6 týdnů čekání.<br/>Kvalita nejistá.
-          </p>
+        <td valign="top" style="width: 50%; padding: 18px; background: ${BRAND.dangerSoft}; border-radius: 12px 0 0 12px;">
+          <p style="margin: 0 0 8px; font-family: ${FONTS.sans}; font-size: 11px; font-weight: 700; color: ${BRAND.danger}; text-transform: uppercase; letter-spacing: 0.12em;">Ze zahraničí</p>
+          <p style="margin: 0; font-family: ${FONTS.sans}; font-size: 13px; color: ${BRAND.charcoal}; line-height: 1.6;">Cena + clo + DPH.<br/>2&ndash;6 týdnů čekání.<br/>Kvalita nejistá.</p>
         </td>
-        <td style="width: 50%; padding: 16px; background: #f0fdf4; vertical-align: top;">
-          <p style="margin: 0 0 6px; font-size: 12px; font-weight: 700; color: #166534; text-transform: uppercase; letter-spacing: 0.5px;">Janička</p>
-          <p style="margin: 0; font-size: 13px; color: #14532d; line-height: 1.5;">
-            Cena = finální cena.<br/>Doručení do 3 dnů.<br/>Ověřená kvalita.
-          </p>
+        <td valign="top" style="width: 50%; padding: 18px; background: ${BRAND.successSoft}; border-radius: 0 12px 12px 0;">
+          <p style="margin: 0 0 8px; font-family: ${FONTS.sans}; font-size: 11px; font-weight: 700; color: ${BRAND.success}; text-transform: uppercase; letter-spacing: 0.12em;">Janička</p>
+          <p style="margin: 0; font-family: ${FONTS.sans}; font-size: 13px; color: ${BRAND.charcoal}; line-height: 1.6;">Cena = finální cena.<br/>Doručení do 3 dnů.<br/>Ověřená kvalita.</p>
         </td>
       </tr>
-    </table>
+    </table>`;
 
+  const innerHtml = `
+    ${renderEyebrow("Léto 2026 · pravidla dovozu")}
+    ${renderDisplayHeading("Chytré nakupování bez celních překvapení.")}
+    <p style="margin: 0 0 16px; font-family: ${FONTS.sans}; font-size: 15px; line-height: 1.7; color: ${BRAND.charcoalSoft};">
+      Věděla jsi, že od <strong style="color: ${BRAND.charcoal};">1. července 2026</strong> se mění pravidla dovozu do EU? Zásilky ze Sheinu, Temu i Aliexpressu budou nově podléhat clu &mdash; minimálně <strong style="color: ${BRAND.charcoal};">75 Kč navíc</strong> za každou kategorii zboží.
+    </p>
+    <p style="margin: 0 0 4px; font-family: ${FONTS.sans}; font-size: 15px; line-height: 1.7; color: ${BRAND.charcoalSoft};">
+      U mě se nic nemění. Český eshop &mdash; žádná cla, žádné čekání na celnici, žádná překvapení.
+    </p>
+
+    ${compareTable}
     ${productsHtml}
 
-    <div style="text-align: center; margin-top: 28px; margin-bottom: 12px;">
-      <a href="${infoUrl}" style="display: inline-block; background: #1a1a1a; color: #fff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 15px; font-weight: 600;">
-        Zjistit víc o&nbsp;změnách
-      </a>
+    <div style="margin: 28px 0 12px;">
+      ${renderButton({ href: infoUrl, label: "Zjistit víc o změnách", variant: "outline" })}
     </div>
-
-    <div style="text-align: center;">
-      <a href="${shopUrl}" style="color: #666; font-size: 13px; text-decoration: underline;">
-        Nebo se rovnou podívej na nové kousky →
-      </a>
-    </div>
-  `;
+    <p style="margin: 0; text-align: center; font-family: ${FONTS.sans}; font-size: 13px;">
+      <a href="${shopUrl}" style="color: ${BRAND.charcoalSoft}; text-decoration: underline;">Nebo rovnou na nové kousky &rarr;</a>
+    </p>`;
 
   return buildCustomsEmailShell(CUSTOMS_PREVIEWS[1], recipientEmail, innerHtml);
 }
@@ -2717,53 +2284,33 @@ function buildCustomsEmail2Html(
   const infoUrl = `${baseUrl}/nakupuj-cesky`;
 
   const productsHtml = products.length > 0
-    ? buildCustomsProductGridHtml(products)
+    ? renderProductGrid(campaignsToGridItems(products, "Bez cla · z Česka"), 2)
     : "";
 
   const innerHtml = `
-    <div style="text-align: center; margin-bottom: 20px;">
-      <div style="display: inline-block; font-size: 40px;">📦</div>
-    </div>
-
-    <h2 style="margin: 0 0 16px; font-size: 22px; color: #1a1a1a; text-align: center; line-height: 1.3;">
-      Za 3 dny se mění pravidla dovozu
-    </h2>
-
-    <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.7; color: #444; text-align: center;">
-      Od <strong style="color: #1a1a1a;">1.&nbsp;července</strong> platí nová cla
-      na všechny zásilky ze zahraničí pod 150&nbsp;€. Oblečení z&nbsp;Číny
-      zdraží o&nbsp;15–50&nbsp;%.
+    ${renderEyebrow("Za 3 dny se mění dovoz")}
+    ${renderDisplayHeading("Než se změní pravidla &mdash; nakup u svých.")}
+    <p style="margin: 0 0 16px; font-family: ${FONTS.sans}; font-size: 15px; line-height: 1.7; color: ${BRAND.charcoalSoft};">
+      Od <strong style="color: ${BRAND.charcoal};">1. července</strong> platí nová cla na všechny zásilky ze zahraničí pod 150 €. Oblečení z Číny zdraží o 15&ndash;50 %.
     </p>
 
-    <div style="background: #fefce8; border-radius: 8px; padding: 16px; margin: 0 0 20px; text-align: center;">
-      <p style="margin: 0; font-size: 14px; color: #854d0e; line-height: 1.5;">
-        <strong>Šaty z&nbsp;Aliexpresu za 400&nbsp;Kč?</strong><br/>
-        Od července + 75&nbsp;Kč clo + týdny čekání.<br/>
-        U&nbsp;Janičky: kvalitní šaty od <strong>350&nbsp;Kč</strong>,
-        doručení do 3&nbsp;dnů, <strong>žádné clo</strong>.
-      </p>
-    </div>
+    ${renderInfoCard(
+      `<p style="margin: 0; font-family: ${FONTS.sans}; font-size: 13px; color: ${BRAND.charcoal}; line-height: 1.7;"><strong style="color: ${BRAND.warning};">Šaty z Aliexpresu za 400 Kč?</strong><br/>Od července + 75 Kč clo + týdny čekání.<br/>U mě: kvalitní šaty od <strong>350 Kč</strong>, doručení do 3 dnů, <strong>žádné clo</strong>.</p>`,
+      "warning",
+    )}
 
-    <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.7; color: #444; text-align: center;">
-      Nakupuj chytře — lokálně, bez poplatků navíc.
-      Každý kousek u&nbsp;nás je unikát, pečlivě zkontrolovaný
-      a&nbsp;vyfocený. Víš přesně, co dostaneš.
+    <p style="margin: 18px 0 0; font-family: ${FONTS.sans}; font-size: 15px; line-height: 1.7; color: ${BRAND.charcoalSoft};">
+      Nakupuj chytře &mdash; lokálně, bez poplatků navíc. Každý kousek u mě je unikát, pečlivě zkontrolovaný a vyfocený. Víš přesně, co dostaneš.
     </p>
 
     ${productsHtml}
 
-    <div style="text-align: center; margin-top: 28px; margin-bottom: 12px;">
-      <a href="${shopUrl}" style="display: inline-block; background: #16a34a; color: #fff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 15px; font-weight: 600;">
-        Prohlédnout nabídku
-      </a>
+    <div style="margin: 28px 0 12px;">
+      ${renderButton({ href: shopUrl, label: "Prohlédnout nabídku", variant: "primary" })}
     </div>
-
-    <div style="text-align: center;">
-      <a href="${infoUrl}" style="color: #666; font-size: 13px; text-decoration: underline;">
-        Přečíst si víc o&nbsp;změnách →
-      </a>
-    </div>
-  `;
+    <p style="margin: 0; text-align: center; font-family: ${FONTS.sans}; font-size: 13px;">
+      <a href="${infoUrl}" style="color: ${BRAND.charcoalSoft}; text-decoration: underline;">Přečíst si víc o změnách &rarr;</a>
+    </p>`;
 
   return buildCustomsEmailShell(CUSTOMS_PREVIEWS[2], recipientEmail, innerHtml);
 }

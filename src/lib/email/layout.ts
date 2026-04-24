@@ -117,9 +117,13 @@ interface LayoutOpts {
   preheader?: string;
   contentHtml: string;
   unsubscribeUrl?: string;
+  /** Override default unsubscribe explanation copy (newsletter-default if omitted). */
+  unsubscribeText?: string;
   footerNote?: string;
   showTagline?: boolean;
   lang?: string;
+  /** Override outer page background (defaults to BRAND.pageBg blush). */
+  pageBg?: string;
 }
 
 /**
@@ -130,19 +134,22 @@ export function renderLayout({
   preheader,
   contentHtml,
   unsubscribeUrl,
+  unsubscribeText,
   footerNote,
   showTagline = true,
   lang = "cs",
+  pageBg,
 }: LayoutOpts): string {
   const baseUrl = getBaseUrl();
   const logoUrl = `${baseUrl}/logo/logo-email.png`;
+  const bg = pageBg ?? BRAND.pageBg;
 
   const preheaderHtml = preheader
-    ? `<div style="display: none; max-height: 0; overflow: hidden; font-size: 1px; line-height: 1px; color: ${BRAND.pageBg}; opacity: 0;">${escapeHtml(preheader)}</div>`
+    ? `<div style="display: none; max-height: 0; overflow: hidden; font-size: 1px; line-height: 1px; color: ${bg}; opacity: 0;">${escapeHtml(preheader)}</div>`
     : "";
 
   const unsubscribeHtml = unsubscribeUrl
-    ? `<p style="margin: 12px 0 0; font-family: ${FONTS.sans}; font-size: 11px; color: ${BRAND.charcoalMuted}; line-height: 1.6;">Tenhle email ti chodí, protože ses přihlásila k odběru novinek. <a href="${escapeHtml(unsubscribeUrl)}" style="color: ${BRAND.charcoalSoft}; text-decoration: underline;">Odhlásit se</a></p>`
+    ? `<p style="margin: 12px 0 0; font-family: ${FONTS.sans}; font-size: 11px; color: ${BRAND.charcoalMuted}; line-height: 1.6;">${escapeHtml(unsubscribeText ?? "Tenhle email ti chodí, protože ses přihlásila k odběru novinek.")} <a href="${escapeHtml(unsubscribeUrl)}" style="color: ${BRAND.charcoalSoft}; text-decoration: underline;">Odhlásit se</a></p>`
     : "";
 
   const footerNoteHtml = footerNote
@@ -165,9 +172,9 @@ export function renderLayout({
   </style>
   <![endif]-->
 </head>
-<body style="margin: 0; padding: 0; width: 100%; background: ${BRAND.pageBg}; font-family: ${FONTS.sans}; color: ${BRAND.charcoal}; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;">
+<body style="margin: 0; padding: 0; width: 100%; background: ${bg}; font-family: ${FONTS.sans}; color: ${BRAND.charcoal}; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;">
   ${preheaderHtml}
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background: ${BRAND.pageBg};">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background: ${bg};">
     <tr>
       <td align="center" style="padding: 24px 12px 48px;">
 
@@ -249,6 +256,140 @@ export function renderDisplayHeading(text: string): string {
 /** Body paragraph — default copy style. */
 export function renderBody(text: string): string {
   return `<p style="margin: 0 0 14px; font-family: ${FONTS.sans}; font-size: 15px; line-height: 1.7; color: ${BRAND.charcoalSoft};">${text}</p>`;
+}
+
+interface ProductRowItem {
+  name: string;
+  brand?: string | null;
+  meta?: string | null;
+  url: string;
+  image?: string | null;
+  price: number;
+  compareAt?: number | null;
+}
+
+/**
+ * Single product as a horizontal row (image left, info right) — for transactional
+ * lists (abandoned cart, order summary, review request) where vertical density matters.
+ */
+export function renderProductRow(item: ProductRowItem, isFirst = false): string {
+  const imageHtml = item.image
+    ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" width="96" height="120" style="display: block; width: 96px; height: 120px; object-fit: cover; border-radius: 10px; border: 1px solid ${BRAND.borderSoft};" />`
+    : `<div style="width: 96px; height: 120px; background: ${BRAND.blushSoft}; border-radius: 10px; border: 1px solid ${BRAND.borderSoft};"></div>`;
+
+  const priceHtml = item.compareAt && item.compareAt > item.price
+    ? `<span style="font-family: ${FONTS.sans}; font-size: 12px; color: ${BRAND.charcoalMuted}; text-decoration: line-through; margin-right: 6px;">${formatPriceCzk(item.compareAt)}</span><strong style="font-family: ${FONTS.sans}; font-size: 15px; color: ${BRAND.primary};">${formatPriceCzk(item.price)}</strong>`
+    : `<strong style="font-family: ${FONTS.sans}; font-size: 15px; color: ${BRAND.charcoal};">${formatPriceCzk(item.price)}</strong>`;
+
+  const brandHtml = item.brand
+    ? `<div style="font-family: ${FONTS.sans}; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: ${BRAND.primary}; margin-bottom: 4px;">${escapeHtml(item.brand)}</div>`
+    : "";
+
+  const metaHtml = item.meta
+    ? `<div style="font-family: ${FONTS.sans}; font-size: 12px; color: ${BRAND.charcoalSoft}; margin-top: 4px;">${escapeHtml(item.meta)}</div>`
+    : "";
+
+  const topBorder = isFirst ? "none" : `1px solid ${BRAND.borderSoft}`;
+
+  return `
+    <tr>
+      <td valign="top" style="padding: 16px 0 16px 0; border-top: ${topBorder}; width: 96px;">
+        <a href="${escapeHtml(item.url)}" style="text-decoration: none; display: inline-block;">${imageHtml}</a>
+      </td>
+      <td valign="top" style="padding: 16px 0 16px 16px; border-top: ${topBorder};">
+        ${brandHtml}
+        <a href="${escapeHtml(item.url)}" style="text-decoration: none;"><span style="font-family: ${FONTS.serif}; font-size: 17px; font-weight: 600; line-height: 1.25; color: ${BRAND.charcoal};">${escapeHtml(item.name)}</span></a>
+        ${metaHtml}
+        <div style="margin-top: 8px;">${priceHtml}</div>
+      </td>
+    </tr>`;
+}
+
+/** Render a list of products as stacked rows, wrapped in a single table. */
+export function renderProductRowList(items: ProductRowItem[]): string {
+  if (items.length === 0) return "";
+  const rows = items.map((item, i) => renderProductRow(item, i === 0)).join("");
+  return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin: 8px 0;">${rows}</table>`;
+}
+
+interface ProductGridItem {
+  name: string;
+  brand?: string | null;
+  meta?: string | null;
+  url: string;
+  image?: string | null;
+  price: number;
+  compareAt?: number | null;
+  /** Optional small caption shown below price (e.g. "Unikát"). */
+  caption?: string | null;
+}
+
+/**
+ * Product grid (2 or 3 columns) — for marketing / discovery emails (campaigns,
+ * new arrivals, win-back). Uses nested tables for Outlook compatibility.
+ */
+export function renderProductGrid(items: ProductGridItem[], columns: 2 | 3 = 2): string {
+  if (items.length === 0) return "";
+  const widthPct = columns === 3 ? "33.33%" : "50%";
+
+  const cells = items.map((p) => {
+    const imageHtml = p.image
+      ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" style="display: block; width: 100%; height: 220px; object-fit: cover; border-radius: 12px; border: 1px solid ${BRAND.borderSoft};" />`
+      : `<div style="width: 100%; height: 220px; background: ${BRAND.blushSoft}; border-radius: 12px; border: 1px solid ${BRAND.borderSoft};"></div>`;
+
+    const priceHtml = p.compareAt && p.compareAt > p.price
+      ? `<span style="font-family: ${FONTS.sans}; font-size: 12px; color: ${BRAND.charcoalMuted}; text-decoration: line-through; margin-right: 6px;">${formatPriceCzk(p.compareAt)}</span><strong style="font-family: ${FONTS.sans}; font-size: 15px; color: ${BRAND.primary};">${formatPriceCzk(p.price)}</strong>`
+      : `<strong style="font-family: ${FONTS.sans}; font-size: 15px; color: ${BRAND.charcoal};">${formatPriceCzk(p.price)}</strong>`;
+
+    const brandHtml = p.brand
+      ? `<div style="font-family: ${FONTS.sans}; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: ${BRAND.primary}; margin: 10px 0 2px;">${escapeHtml(p.brand)}</div>`
+      : "";
+
+    const metaHtml = p.meta
+      ? `<div style="font-family: ${FONTS.sans}; font-size: 11px; color: ${BRAND.charcoalSoft}; margin-top: 2px;">${escapeHtml(p.meta)}</div>`
+      : "";
+
+    const captionHtml = p.caption
+      ? `<div style="font-family: ${FONTS.serif}; font-size: 12px; font-style: italic; color: ${BRAND.primary}; margin-top: 6px;">${escapeHtml(p.caption)}</div>`
+      : "";
+
+    return `
+      <td valign="top" align="left" style="width: ${widthPct}; padding: 8px;">
+        <a href="${escapeHtml(p.url)}" style="text-decoration: none; color: inherit; display: block;">
+          ${imageHtml}
+          ${brandHtml}
+          <div style="font-family: ${FONTS.serif}; font-size: 16px; font-weight: 600; line-height: 1.3; color: ${BRAND.charcoal}; margin-top: ${p.brand ? "0" : "10px"};">${escapeHtml(p.name)}</div>
+          ${metaHtml}
+          <div style="margin-top: 8px;">${priceHtml}</div>
+          ${captionHtml}
+        </a>
+      </td>`;
+  });
+
+  const rows: string[] = [];
+  for (let i = 0; i < cells.length; i += columns) {
+    const slice = cells.slice(i, i + columns);
+    while (slice.length < columns) {
+      slice.push(`<td style="width: ${widthPct}; padding: 8px;">&nbsp;</td>`);
+    }
+    rows.push(`<tr>${slice.join("")}</tr>`);
+  }
+
+  return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin: 16px -8px;">${rows.join("")}</table>`;
+}
+
+/**
+ * Tiny pill / accent caption used inline (e.g. "Unikát · 1 ks").
+ */
+export function renderTagPill(text: string, tone: "primary" | "champagne" | "success" | "warning" = "primary"): string {
+  const palette = tone === "champagne"
+    ? { bg: BRAND.champagneSoft, fg: BRAND.warning }
+    : tone === "success"
+      ? { bg: BRAND.successSoft, fg: BRAND.success }
+      : tone === "warning"
+        ? { bg: BRAND.warningSoft, fg: BRAND.warning }
+        : { bg: BRAND.blushSoft, fg: BRAND.primary };
+  return `<span style="display: inline-block; padding: 4px 10px; border-radius: 999px; background: ${palette.bg}; color: ${palette.fg}; font-family: ${FONTS.sans}; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;">${escapeHtml(text)}</span>`;
 }
 
 /** Soft info card (used for status banners, tracking numbers, etc.) */
