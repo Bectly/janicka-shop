@@ -202,6 +202,8 @@ model Order {
   @@index([customerId])
   @@index([status])
   @@index([orderNumber])
+  @@index([createdAt])
+  @@index([status, createdAt])
 }
 
 model OrderItem {
