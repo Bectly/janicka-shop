@@ -386,25 +386,26 @@ export default async function ProductDetailPage({ params }: Props) {
   const measurements = parseMeasurements(product.measurements);
   const defectImages = parseDefectImages(product.defectImages);
 
+  // Hoist hero-image preload into <head> — React 19 auto-hoists <link> from body.
+  // Computed ABOVE the sold/live fork so BOTH branches emit the preload; without it,
+  // the <Image priority> inside the client-component gallery only emits its preload
+  // during hydration, pushing resourceLoadDelay past 3s on mobile fresh-cache runs
+  // (regressed 2710→3206ms per C4867 #484). getImageProps mirrors next/image's
+  // optimized srcset so the preload matches the exact candidate <img> will request.
+  const heroImage = productImages[0];
+  const heroPreload = heroImage
+    ? getImageProps({
+        src: heroImage.url,
+        alt: "",
+        width: 800,
+        height: 1067,
+        sizes: "(max-width: 1024px) 100vw, 50vw",
+        quality: 90,
+      }).props
+    : null;
+
   // --- SOLD PRODUCT VIEW ---
   if (product.sold) {
-    // Hoist hero-image preload into <head> — React 19 auto-hoists <link> from body.
-    // Without this, the <Image priority> inside the client-component gallery only
-    // emits its preload during hydration, pushing resourceLoadDelay past 3s on
-    // mobile fresh-cache runs (regressed 2710→3206ms per C4867 #484).
-    // getImageProps mirrors next/image's optimized srcset so the preload matches
-    // the exact candidate <img> will request.
-    const heroImage = productImages[0];
-    const heroPreload = heroImage
-      ? getImageProps({
-          src: heroImage.url,
-          alt: "",
-          width: 800,
-          height: 1067,
-          sizes: "(max-width: 1024px) 100vw, 50vw",
-          quality: 90,
-        }).props
-      : null;
     return (
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {heroPreload && (
@@ -562,6 +563,16 @@ export default async function ProductDetailPage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      {heroPreload && (
+        <link
+          rel="preload"
+          as="image"
+          href={heroPreload.src}
+          imageSrcSet={heroPreload.srcSet}
+          imageSizes={heroPreload.sizes}
+          fetchPriority="high"
+        />
+      )}
       <TrackProductView product={trackData} />
       <BrowseAbandonmentTracker
         productId={product.id}
