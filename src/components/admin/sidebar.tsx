@@ -15,6 +15,7 @@ import {
   Tags,
   Zap,
   Mail,
+  Inbox,
   Layers,
   RotateCcw,
   Gift,
@@ -42,6 +43,7 @@ const navItems: NavItem[] = [
   { href: "/admin/referrals", label: "Referraly", icon: Gift },
   { href: "/admin/abandoned-carts", label: "Opuštěné košíky", icon: ShoppingBag },
   { href: "/admin/browse-abandonment", label: "Prohlížení", icon: Eye },
+  { href: "/admin/mailbox", label: "Schránka", icon: Inbox },
   { href: "/admin/subscribers", label: "Newsletter", icon: Mail },
   { href: "/admin/email-templates", label: "E-mail editor", icon: PenLine },
   { divider: true },
@@ -52,9 +54,11 @@ const navItems: NavItem[] = [
 export function AdminSidebar({
   userName,
   ordersLast24h = 0,
+  mailboxUnread = 0,
 }: {
   userName: string;
   ordersLast24h?: number;
+  mailboxUnread?: number;
 }) {
   const pathname = usePathname();
 
@@ -77,7 +81,14 @@ export function AdminSidebar({
           }
           const isActive = pathname.startsWith(item.href);
           const Icon = item.icon;
-          const showBadge = item.href === "/admin/orders" && ordersLast24h > 0;
+          const showOrderBadge = item.href === "/admin/orders" && ordersLast24h > 0;
+          const showMailboxBadge = item.href === "/admin/mailbox" && mailboxUnread > 0;
+          const badgeValue = showOrderBadge ? ordersLast24h : showMailboxBadge ? mailboxUnread : 0;
+          const badgeTitle = showOrderBadge
+            ? `Posledních 24h: ${ordersLast24h} nových objednávek`
+            : showMailboxBadge
+              ? `${mailboxUnread} nepřečtených e-mailů`
+              : undefined;
           return (
             <Link
               key={item.href}
@@ -87,16 +98,16 @@ export function AdminSidebar({
                   ? "bg-primary/10 text-primary"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               }`}
-              title={showBadge ? `Posledních 24h: ${ordersLast24h} nových objednávek` : undefined}
+              title={badgeTitle}
             >
               <Icon className="size-4" />
               <span className="flex-1">{item.label}</span>
-              {showBadge ? (
+              {badgeValue > 0 ? (
                 <span
-                  aria-label={`Posledních 24h: ${ordersLast24h} nových objednávek`}
+                  aria-label={badgeTitle}
                   className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold leading-5 text-primary-foreground"
                 >
-                  {ordersLast24h > 99 ? "99+" : ordersLast24h}
+                  {badgeValue > 99 ? "99+" : badgeValue}
                 </span>
               ) : null}
             </Link>

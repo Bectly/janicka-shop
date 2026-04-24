@@ -40,12 +40,19 @@ async function AdminAuthGate({
   // Sidebar badge: count of orders created in the last 24h
   // eslint-disable-next-line react-hooks/purity -- request-time read in RSC, not cached
   const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const [ordersLast24h, settings] = await Promise.all([
+  const [ordersLast24h, settings, mailboxUnread] = await Promise.all([
     db.order.count({ where: { createdAt: { gte: yesterday } } }),
     db.shopSettings.findUnique({
       where: { id: "singleton" },
       select: { soundNotifications: true },
     }),
+    db.emailThread
+      .aggregate({
+        where: { archived: false, trashed: false },
+        _sum: { unreadCount: true },
+      })
+      .then((r) => r._sum.unreadCount ?? 0)
+      .catch(() => 0),
   ]);
 
   return (
@@ -53,6 +60,7 @@ async function AdminAuthGate({
       <AdminSidebar
         userName={session.user.name ?? "Admin"}
         ordersLast24h={ordersLast24h}
+        mailboxUnread={mailboxUnread}
       />
       <main id="main-content" className="flex-1 overflow-auto">
         <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-card/95 px-4 backdrop-blur-sm sm:px-6 lg:px-8">

@@ -526,3 +526,67 @@ model ShopSettings {
   soundNotifications    Boolean  @default(false)
   updatedAt             DateTime @updatedAt
 }
+
+// --- Admin mailbox (task #496) ---
+// Inbound pipeline stores raw messages pulled from IMAP and groups them into threads.
+// Threading key: Message-ID header + In-Reply-To / References chain (RFC 5322).
+
+model EmailThread {
+  id               String         @id @default(cuid())
+  subject          String
+  participants     String         @default("[]") // JSON array of addresses seen in this thread
+  lastMessageAt    DateTime
+  messageCount     Int            @default(0)
+  unreadCount      Int            @default(0)
+  archived         Boolean        @default(false)
+  flagged          Boolean        @default(false)
+  trashed          Boolean        @default(false)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  messages         EmailMessage[]
+
+  @@index([lastMessageAt])
+  @@index([archived, trashed, lastMessageAt])
+}
+
+model EmailMessage {
+  id           String             @id @default(cuid())
+  threadId     String
+  thread       EmailThread        @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  messageId    String             @unique // RFC Message-ID header, used for dedup
+  inReplyTo    String?            // parent Message-ID
+  referencesIds String?           // JSON array of referenced Message-IDs
+  direction    String             @default("inbound") // "inbound" | "outbound"
+  fromAddress  String
+  fromName     String?
+  toAddresses  String             @default("[]") // JSON array
+  ccAddresses  String             @default("[]") // JSON array
+  bccAddresses String             @default("[]") // JSON array (outbound only)
+  subject      String
+  bodyText     String?
+  bodyHtml     String?
+  headersRaw   String?            // optional raw headers dump for debug
+  receivedAt   DateTime
+  readAt       DateTime?
+  spamScore    Float?
+  createdAt    DateTime           @default(now())
+  attachments  EmailAttachment[]
+
+  @@index([threadId, receivedAt])
+  @@index([receivedAt])
+  @@index([fromAddress])
+}
+
+model EmailAttachment {
+  id         String       @id @default(cuid())
+  messageId  String
+  message    EmailMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  filename   String
+  contentType String
+  sizeBytes  Int
+  r2Key      String       // object key in R2 bucket
+  checksumSha256 String?
+  createdAt  DateTime     @default(now())
+
+  @@index([messageId])
+}
