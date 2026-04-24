@@ -1,5 +1,6 @@
 import { ImapFlow, type FetchMessageObject } from "imapflow";
 import { simpleParser, type ParsedMail, type AddressObject } from "mailparser";
+import { revalidateTag } from "next/cache";
 import { getDb } from "@/lib/db";
 import { uploadToR2 } from "@/lib/r2";
 import { logger } from "@/lib/logger";
@@ -97,6 +98,18 @@ export async function syncImapInbox(): Promise<SyncResult> {
       error: err instanceof Error ? err.message : String(err),
     });
     return { ok: false, fetched, inserted, skipped, failed, error: "imap_error" };
+  }
+
+  // Each inbound insert increments EmailThread.unreadCount, which feeds the
+  // cached admin-badge trio (src/lib/admin-badges.ts). Drop the cached copy
+  // so the next admin nav reflects new mail.
+  if (inserted > 0) {
+    try {
+      revalidateTag("admin-badges");
+    } catch {
+      // revalidateTag may not be callable outside a request scope (e.g. cron
+      // wrapper). Non-fatal — TTL will still refresh the badge within minutes.
+    }
   }
 
   return { ok: true, fetched, inserted, skipped, failed };

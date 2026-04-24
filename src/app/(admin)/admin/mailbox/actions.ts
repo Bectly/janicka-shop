@@ -1,7 +1,7 @@
 "use server";
 
 import { randomBytes } from "crypto";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
@@ -94,6 +94,7 @@ export async function markThreadReadAction(threadId: string) {
 
   revalidatePath("/admin/mailbox");
   revalidatePath(`/admin/mailbox/${threadId}`);
+  revalidateTag("admin-badges", "max");
 }
 
 export async function markThreadUnreadAction(threadId: string) {
@@ -113,6 +114,7 @@ export async function markThreadUnreadAction(threadId: string) {
 
   revalidatePath("/admin/mailbox");
   revalidatePath(`/admin/mailbox/${threadId}`);
+  revalidateTag("admin-badges", "max");
 }
 
 export async function archiveThreadAction(threadId: string) {
@@ -125,6 +127,7 @@ export async function archiveThreadAction(threadId: string) {
     data: { archived: true },
   });
   revalidatePath("/admin/mailbox");
+  revalidateTag("admin-badges", "max");
   redirect("/admin/mailbox");
 }
 
@@ -139,6 +142,7 @@ export async function unarchiveThreadAction(threadId: string) {
   });
   revalidatePath("/admin/mailbox");
   revalidatePath(`/admin/mailbox/${threadId}`);
+  revalidateTag("admin-badges", "max");
 }
 
 export async function trashThreadAction(threadId: string) {
@@ -151,6 +155,7 @@ export async function trashThreadAction(threadId: string) {
     data: { trashed: true },
   });
   revalidatePath("/admin/mailbox");
+  revalidateTag("admin-badges", "max");
   redirect("/admin/mailbox");
 }
 

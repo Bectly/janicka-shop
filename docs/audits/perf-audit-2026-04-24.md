@@ -232,6 +232,107 @@ These are quick to wire but need a Vercel deploy + live data, so they belong in 
 
 ---
 
+## Phase 1b — Instrumentation wired (task #524f)
+
+Instrumentation shipped in this commit. Runs in parallel with #524a so pre-fix baseline is captured before the layout cache lands.
+
+### What was wired
+
+**`src/app/(admin)/admin/layout.tsx`** — `console.time`/`timeEnd` brackets around four segments of `AdminAuthGate`, each tagged with a per-request `navId` so concurrent invocations don't collide in the log stream:
+
+| Label | Covers | Expected pre-fix (Turso eu-west-1 warm) | Expected post-#524a |
+|---|---|---|---|
+| `[perf] <navId> total` | whole `AdminAuthGate` (connection → render) | 600–900 ms warm / 1.5–3 s cold | <100 ms warm |
+| `[perf] <navId> session.auth` | NextAuth `auth()` call (Prisma adapter lookup) | 150–300 ms | unchanged (not cached) |
+| `[perf] <navId> admin.findUnique` | onboarding gate query | 150–300 ms | unchanged (not cached — per-user) |
+| `[perf] <navId> badge-trio` | `Promise.all` of order.count + shopSettings + emailThread | 150–300 ms (max of three in parallel) | <20 ms (cache hit) |
+
+**`src/lib/db.ts`** — conditional `log: ["query"]` on the PrismaClient with an event listener that prints `[prisma-query] <ms>ms <sql>` to stdout. Params deliberately stripped before logging — normalized query text only, to keep PII out of Vercel log retention.
+
+### How to enable (bectly gate — Vercel env)
+
+Both behaviors are **off by default** (zero overhead for real users). To collect the one-day pre-fix baseline, set these in Vercel project env (Production, or Preview if you want to capture without touching prod):
+
+```
+PERF_PROFILE=1            # enables console.time brackets in admin layout
+PERF_PROFILE_PRISMA=1     # enables Prisma query-log → stdout
+```
+
+Redeploy (or wait for the next deploy after commit). Leave enabled for **24 h**, then unset both and redeploy to stop collecting.
+
+**Security/cost notes:**
+- `PERF_PROFILE_PRISMA=1` multiplies Vercel log ingestion by ~10× on hot routes. Safe for one day; do NOT leave on. Cost is the only risk — no PII is emitted (params stripped).
+- `PERF_PROFILE=1` alone is cheap (≤8 log lines per admin nav) and can stay on long-term if needed, but we turn it off once Phase 4 verification finishes.
+
+### How to read the sample
+
+**Vercel dashboard → Logs → filter by `[perf]`:**
+
+```
+[perf] admin-nav-a7f2k1 session.auth: 187.2ms
+[perf] admin-nav-a7f2k1 admin.findUnique: 201.4ms
+[perf] admin-nav-a7f2k1 badge-trio: 234.8ms
+[perf] admin-nav-a7f2k1 total: 631.9ms
+```
+
+Extract all `total` values over the 24h window → compute p50/p95/p99. Same for each sub-label to attribute the cost.
+
+**Vercel dashboard → Logs → filter by `[prisma-query]`:**
+
+```
+[prisma-query] 182ms SELECT `main`.`Order`.`id` FROM `main`.`Order` WHERE `main`.`Order`.`createdAt` >= ? …
+```
+
+Count lines per admin nav (cross-reference by surrounding `[perf]` brackets) → query count per route switch.
+
+### Chrome DevTools sequence (client-side, complementary)
+
+For user-perceived latency (TTI + LCP per nav), run manually in a browser signed in as admin:
+
+1. DevTools → Performance tab → record
+2. Click sidebar sequence: Dashboard → Produkty → Objednávky → Zákazníci → Mailbox → Nastavení
+3. Stop recording, export trace JSON to `docs/audits/traces/phase1b-admin-cold.json`
+4. Repeat once warm (same session, same click sequence) → `phase1b-admin-warm.json`
+
+These are the numbers the user perceives — server timings above are lower-bound.
+
+### Baseline capture template (fill after 24h Vercel sample)
+
+```
+Date captured: ____________
+Vercel env:    Production / Preview
+Sample size:   ____ admin navs over 24h
+
+Server-side (from [perf] logs):
+                 p50     p95     p99
+total           ___ms   ___ms   ___ms
+session.auth    ___ms   ___ms   ___ms
+admin.findUnique ___ms  ___ms   ___ms
+badge-trio      ___ms   ___ms   ___ms
+
+Query count per admin nav (from [prisma-query] count):
+  min ___  median ___  max ___
+
+Client-side (Chrome DevTools trace):
+                Cold    Warm
+Dashboard LCP   ___ms   ___ms
+Orders LCP      ___ms   ___ms
+Mailbox LCP     ___ms   ___ms
+```
+
+### Acceptance for #524f
+
+- [x] `console.time` brackets wired in `admin/layout.tsx` behind `PERF_PROFILE` flag (zero overhead when unset).
+- [x] Prisma `log: ["query"]` wired in `lib/db.ts` behind `PERF_PROFILE_PRISMA` flag, params stripped from stdout output.
+- [x] Phase 1b section in this doc documents enable/disable/read procedure.
+- [ ] **bectly gate** — set env vars in Vercel, let bake 24h, unset, fill baseline table above. Then Trace runs #524g Phase 4 re-capture in HEAD after #524a–e land for before/after delta.
+
+### Why this is instrumentation-only (not a fix)
+
+No Prisma query behavior changes. No cache behavior changes. No user-visible changes. The layout still runs the same 4 uncached queries per nav — Phase 1b's job is to *measure* that cost, not remove it. Removal is #524a's job, running in parallel.
+
+---
+
 ## Subtask decomposition for Lead
 
 Recommend splitting task #524 into:

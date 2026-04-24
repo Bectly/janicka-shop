@@ -170,6 +170,7 @@ export async function updateOrderStatus(orderId: string, status: string) {
   }
 
   revalidateTag("products", "max");
+  revalidateTag("admin-badges");
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath("/products");

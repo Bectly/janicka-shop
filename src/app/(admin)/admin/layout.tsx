@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
+import { getAdminBadges } from "@/lib/admin-badges";
 import { AdminSidebar } from "@/components/admin/sidebar";
 import { AdminOrderNotifier } from "@/components/admin/order-notifier";
 import { GlobalSearch } from "@/components/admin/global-search";
@@ -12,13 +13,32 @@ import {
   JarvisConsoleToggle,
 } from "@/components/admin/jarvis-console-overlay";
 
+// #524f Phase 1b: opt-in wall-clock instrumentation for pre/post cache-fix
+// baseline. Enable by setting PERF_PROFILE=1 in Vercel env. Emits console.time
+// labels on stdout with a unique marker per admin nav so Vercel log filters
+// pick them up; zero overhead when the flag is off.
+const PERF_PROFILE = process.env.PERF_PROFILE === "1";
+
+function perfStart(label: string) {
+  if (PERF_PROFILE) console.time(`[perf] ${label}`);
+}
+function perfEnd(label: string) {
+  if (PERF_PROFILE) console.timeEnd(`[perf] ${label}`);
+}
+
 async function AdminAuthGate({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const navId = PERF_PROFILE
+    ? `admin-nav-${Math.random().toString(36).slice(2, 8)}`
+    : "";
+  perfStart(`${navId} total`);
   await connection();
+  perfStart(`${navId} session.auth`);
   const session = await auth();
+  perfEnd(`${navId} session.auth`);
 
   if (!session?.user) {
     redirect("/admin/login");
@@ -26,34 +46,27 @@ async function AdminAuthGate({
 
   // Check onboarding status — redirect to welcome if not completed
   const db = await getDb();
+  perfStart(`${navId} admin.findUnique`);
   const admin = session.user.email
     ? await db.admin.findUnique({
         where: { email: session.user.email },
         select: { onboardedAt: true },
       })
     : null;
+  perfEnd(`${navId} admin.findUnique`);
 
   if (!admin?.onboardedAt) {
     redirect("/admin/welcome");
   }
 
-  // Sidebar badge: count of orders created in the last 24h
-  // eslint-disable-next-line react-hooks/purity -- request-time read in RSC, not cached
-  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const [ordersLast24h, settings, mailboxUnread] = await Promise.all([
-    db.order.count({ where: { createdAt: { gte: yesterday } } }),
-    db.shopSettings.findUnique({
-      where: { id: "singleton" },
-      select: { soundNotifications: true },
-    }),
-    db.emailThread
-      .aggregate({
-        where: { archived: false, trashed: false },
-        _sum: { unreadCount: true },
-      })
-      .then((r) => r._sum.unreadCount ?? 0)
-      .catch(() => 0),
-  ]);
+  // Badge trio — cached via "use cache" + cacheTag("admin-badges"); writers
+  // in order/settings/mailbox actions call revalidateTag to drop the entry.
+  // Cache hit: 0 Prisma RTTs. Miss: 3 parallel queries (~150-300ms Turso).
+  perfStart(`${navId} badge-trio`);
+  const { ordersLast24h, soundNotifications, mailboxUnread } =
+    await getAdminBadges();
+  perfEnd(`${navId} badge-trio`);
+  perfEnd(`${navId} total`);
 
   return (
     <>
@@ -74,7 +87,7 @@ async function AdminAuthGate({
           {children}
         </div>
       </main>
-      <AdminOrderNotifier soundEnabled={settings?.soundNotifications ?? false} />
+      <AdminOrderNotifier soundEnabled={soundNotifications} />
       <JarvisConsoleOverlay />
     </>
   );
