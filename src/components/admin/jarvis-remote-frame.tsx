@@ -1,6 +1,9 @@
 "use client";
 
+import { ExternalLink } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+
+const JARVIS_TERMINAL_URL = "https://jarvis-janicka.jvsatnik.cz";
 
 type UploadState =
   | { kind: "idle" }
@@ -64,7 +67,22 @@ export function JarvisRemoteFrame() {
   }, [handleFile]);
 
   return (
-    <div className="flex h-[calc(100vh-200px)] min-h-[600px] flex-col gap-4">
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col items-center gap-3 rounded-lg border bg-muted/30 px-4 py-10 text-center">
+        <a
+          href={JARVIS_TERMINAL_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-base font-medium text-primary-foreground shadow-sm hover:bg-primary/90"
+        >
+          <ExternalLink className="size-5" />
+          Otevřít JARVIS terminál v novém okně
+        </a>
+        <p className="text-xs text-muted-foreground">
+          Otevře se v novém okně kvůli Cloudflare Access auth flow.
+        </p>
+      </div>
+
       <div className="rounded-lg border bg-muted/30 p-4 text-sm">
         <p className="font-medium">Přihlášení do terminálu</p>
         <ol className="mt-2 list-inside list-decimal space-y-1 text-muted-foreground">
@@ -125,14 +143,6 @@ export function JarvisRemoteFrame() {
         </div>
       )}
 
-      <iframe
-        src="https://jarvis-janicka.jvsatnik.cz"
-        title="JARVIS Remote Console"
-        className="w-full flex-1 rounded-lg border bg-black"
-        sandbox="allow-scripts allow-same-origin allow-forms"
-        referrerPolicy="no-referrer"
-        allow=""
-      />
     </div>
   );
 }
