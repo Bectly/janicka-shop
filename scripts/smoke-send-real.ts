@@ -1,97 +1,147 @@
 /**
- * Fires real email templates from src/lib/email.ts through the production
- * SMTP transport (Resend SMTP). Hard-coded TO = jkopecky666@gmail.com.
+ * Live SMTP deliverability smoke — fires EVERY template registered in
+ * `renderEmailPreview` through the configured SMTP transport and prints a
+ * per-template status report. Intended for post-deploy manual verification
+ * against production SMTP (jvsatnik.cz MX) with the bectly test inbox as TO.
+ *
+ * Usage:
+ *   TO=jkopecky666@gmail.com npx tsx scripts/smoke-send-real.ts
+ *   # or filter: TO=... TEMPLATE=order-confirmation npx tsx scripts/smoke-send-real.ts
+ *
+ * Requires SMTP_HOST / SMTP_USER / SMTP_PASSWORD in the environment. Missing
+ * creds exit with code 2 so CI / cron can flag the gap loudly.
  */
 
 import {
-  sendOrderConfirmationEmail,
-  sendPaymentConfirmedEmail,
-  sendShippingNotificationEmail,
-  sendEmailChangeVerifyEmail,
-  sendNewsletterWelcomeEmail,
-  sendAbandonedCartEmail,
+  renderEmailPreview,
+  EMAIL_PREVIEW_TEMPLATES,
 } from "../src/lib/email";
+import { getMailer } from "../src/lib/email/smtp-transport";
+import {
+  FROM_ORDERS,
+  FROM_INFO,
+  FROM_NEWSLETTER,
+  FROM_SUPPORT,
+  REPLY_TO,
+} from "../src/lib/email/addresses";
 
-const TO = "jkopecky666@gmail.com";
+const TO = process.env.TO ?? "jkopecky666@gmail.com";
+const FILTER = process.env.TEMPLATE ?? null;
 
-const items = [
-  { name: "Žluté maxi šaty Shein", price: 249, size: "M", color: "žlutá" },
-  { name: "Pánská zimní bunda CXS", price: 299, size: "L", color: "černá" },
-  { name: "NA-KD maxi šaty růžové", price: 229, size: "XS", color: "růžová" },
-];
+function fromForGroup(group: string): string {
+  switch (group) {
+    case "Objednávka":
+    case "Po nákupu":
+      return FROM_ORDERS;
+    case "Marketing":
+      return FROM_NEWSLETTER;
+    case "Účet":
+      return FROM_SUPPORT;
+    case "Admin":
+      return FROM_INFO;
+    default:
+      return FROM_ORDERS;
+  }
+}
 
-const demoImage = "https://pub-88d95c0ca85d4cb999122434d83fb3c9.r2.dev/demo.jpg";
+interface Row {
+  template: string;
+  group: string;
+  from: string;
+  status: "sent" | "failed" | "skipped";
+  messageId?: string | null;
+  error?: string;
+}
 
-async function run() {
-  console.log("→ sendOrderConfirmationEmail");
-  await sendOrderConfirmationEmail({
-    orderNumber: "JN-260424-SMOKE",
-    customerName: "Jan Kopecký",
-    customerEmail: TO,
-    items,
-    subtotal: 777,
-    shipping: 69,
-    total: 846,
-    paymentMethod: "card",
-    shippingMethod: "Zásilkovna — výdejní místo",
-    shippingName: "Jan Kopecký",
-    shippingStreet: "Sousedská 2",
-    shippingCity: "Plzeň",
-    shippingZip: "30100",
-    shippingPointId: null,
-    note: null,
-    accessToken: "demo-access-token",
-    isCod: false,
-    expectedDeliveryDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
-  });
+async function run(): Promise<void> {
+  const mailer = getMailer();
+  if (!mailer) {
+    console.error(
+      "\n✗ SMTP not configured. Set SMTP_HOST / SMTP_USER / SMTP_PASSWORD (and optionally SMTP_PORT) before running this smoke.\n",
+    );
+    process.exit(2);
+  }
 
-  console.log("→ sendPaymentConfirmedEmail");
-  await sendPaymentConfirmedEmail({
-    orderNumber: "JN-260424-SMOKE",
-    customerName: "Jan Kopecký",
-    customerEmail: TO,
-    total: 846,
-    accessToken: "demo-access-token",
-  } as any);
+  const targets = FILTER
+    ? EMAIL_PREVIEW_TEMPLATES.filter((t) => t.key === FILTER)
+    : EMAIL_PREVIEW_TEMPLATES;
+  if (targets.length === 0) {
+    console.error(`✗ No templates match TEMPLATE=${FILTER}`);
+    process.exit(2);
+  }
 
-  console.log("→ sendShippingNotificationEmail");
-  await sendShippingNotificationEmail({
-    orderNumber: "JN-260424-SMOKE",
-    customerName: "Jan Kopecký",
-    customerEmail: TO,
-    total: 846,
-    accessToken: "demo-access-token",
-    trackingNumber: "Z1234567890",
-    items,
-    crossSellProducts: [],
-  });
+  console.log(
+    `→ Smoke-sending ${targets.length} template(s) to ${TO} via SMTP (${process.env.SMTP_HOST}:${process.env.SMTP_PORT ?? 587})\n`,
+  );
 
-  console.log("→ sendEmailChangeVerifyEmail");
-  await sendEmailChangeVerifyEmail({
-    newEmail: TO,
-    firstName: "Jan",
-    verifyUrl: "https://jvsatnik.cz/account/change-email/confirm?token=demo",
-  });
+  const rows: Row[] = [];
 
-  console.log("→ sendNewsletterWelcomeEmail");
-  await sendNewsletterWelcomeEmail(TO);
+  for (const tpl of targets) {
+    const preview = renderEmailPreview(tpl.key);
+    if (!preview) {
+      rows.push({
+        template: tpl.key,
+        group: tpl.group,
+        from: fromForGroup(tpl.group),
+        status: "skipped",
+        error: "renderEmailPreview returned null",
+      });
+      continue;
+    }
 
-  console.log("→ sendAbandonedCartEmail (stage 1)");
-  await sendAbandonedCartEmail(1, {
-    email: TO,
-    customerName: "Jan Kopecký",
-    items: [
-      { productId: "p1", name: "Žluté maxi šaty Shein", price: 249, image: demoImage, slug: "zlute-maxi-saty-shein", size: "M", color: "žlutá" },
-      { productId: "p2", name: "NA-KD maxi šaty růžové", price: 229, image: demoImage, slug: "na-kd-maxi-saty-ruzove", size: "XS", color: "růžová" },
-    ],
-    cartTotal: 478,
-    cartId: "demo-cart-id-xyz",
-  });
+    const from = fromForGroup(tpl.group);
+    try {
+      const info = await mailer.sendMail({
+        from,
+        replyTo: REPLY_TO,
+        to: TO,
+        subject: `[SMOKE] ${preview.subject}`,
+        html: preview.html,
+        headers: {
+          "X-Janicka-Preview": "1",
+          "X-Janicka-Template": tpl.key,
+          "X-Janicka-Group": tpl.group,
+        },
+      });
+      console.log(`  ✓ ${tpl.key.padEnd(32)} from=${from}  messageId=${info.messageId}`);
+      rows.push({
+        template: tpl.key,
+        group: tpl.group,
+        from,
+        status: "sent",
+        messageId: info.messageId,
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.log(`  ✗ ${tpl.key.padEnd(32)} FAILED  ${msg}`);
+      rows.push({
+        template: tpl.key,
+        group: tpl.group,
+        from,
+        status: "failed",
+        error: msg,
+      });
+    }
+  }
 
-  console.log("\n✓ 6 templates fired. Check jkopecky666@gmail.com.");
+  const sent = rows.filter((r) => r.status === "sent").length;
+  const failed = rows.filter((r) => r.status === "failed").length;
+  const skipped = rows.filter((r) => r.status === "skipped").length;
+
+  console.log("\n--- Summary ---");
+  console.log(`sent:    ${sent}`);
+  console.log(`failed:  ${failed}`);
+  console.log(`skipped: ${skipped}`);
+  console.log("\nVerify in inbox (raw headers):");
+  console.log("  - DKIM-Signature: d=jvsatnik.cz … and dkim=pass in Authentication-Results");
+  console.log("  - SPF: spf=pass smtp.mailfrom=jvsatnik.cz");
+  console.log("  - From: matches per-group envelope (objednavky@ / novinky@ / podpora@ / info@)");
+  console.log("  - Unsubscribe links in Marketing group round-trip through /api/unsubscribe");
+
+  if (failed > 0) process.exit(1);
 }
 
 run().catch((err) => {
-  console.error("✗ smoke failed:", err);
+  console.error("✗ smoke crashed:", err);
   process.exit(1);
 });
