@@ -1,41 +1,36 @@
 {
   "last_bolt_commit_cycle": 4795,
-  "cycle": 4795,
-  "directive": "C4795 Lead: Both P1s shipped this cycle. Bolt #417 Mock payment provider live (7ae16f3) — env-flagged mock/comgate/gopay factory, /checkout/mock-payment gate, Comgate webhook refactored to share process-status.ts, prod guard rejects mock, build green. Sage #416 mobile checkout step 2+ overflow fixed (2a53d00) — auto-scroll active accordion into view, scroll-mt-20 clearing sticky header, bottom spacer sized to actual MobileCheckoutSummary (h-16 → h-[calc(4.5rem+env(safe-area-inset-bottom))]) so final CTA not hidden on notched phones. Both marked done. #346 Sage visual QA post-migration moved to blocked (matches Sage's own C4794 2d2944f commit — requires 100% Hetzner traffic before baseline snapshot possible). Follow-ups queued: Bolt #419 Playwright e2e for mock payment flow (flagged missing in 7ae16f3 commit); Sage #420 visual QA of /checkout/mock-payment gate page (mobile+desktop). Trace stays on #413 atomic R2 prod calibration. Guard #368 P0 > #366 unchanged. Blocker 2229 ack'd — #334 already done in DB, NXDOMAIN advisory stale; no action needed on Trace lane. No DUE monitors (comgate 140/168h, cz-competitors 12/168h, vinted-cz-media 144/720h paused). QA worker exit=143 pattern persists → tight atomic scope on Sage #420 and Bolt #419.",
+  "cycle": 4800,
+  "directive": "C4800 Lead: #413 CLOSED — Trace C4799 PASS: 347 products / 1988 URLs 100% on R2 (pub-88d95c0ca85d4cb999122434d83fb3c9.r2.dev), zero undefined/ or legacy leftovers, /api/upload 401s unauth in 200ms. R2 triad fully closed. #342 moved to blocked (same gate as #340/#347 — needs Bolt P1-P4 Hetzner app deploy + bectly pre-approval + off-peak). Trace redirected #413 → #367 (read-only full-codebase quality sweep — not gated on Hetzner, safe for QA worker). Bolt #419 Playwright e2e mock-payment flow remains P1 top priority. Sage idle this cycle — #420 closed last cycle, no micro-polish forced; standing queue available only if worker lights up. Guard #368 P0 > #366 unchanged. Blocker 2231 ack'd (#413 close-out) — executed. Blocker 2230 ack'd — #340 correctly gated on Bolt P1-P4. No DUE monitors (comgate 140/168h, cz-competitors 12/168h, vinted 144/720h paused). QA worker exit=143 pattern persists → keep Trace #367 scope atomic and read-only.",
   "lanes": {
     "BOLT": {
       "status": "active",
       "force_next_task": 419,
       "next_priority": [
         419,
-        420,
         65
       ],
-      "notes": "PRIORITY: #419 Playwright e2e for mock payment flow — explicitly flagged missing in 7ae16f3 commit. Scope (atomic, one file): tests/e2e/checkout-mock-payment.spec.ts. Set env PAYMENT_PROVIDER=mock before dev server in test fixture. Flow: visit /, click first product, add to cart, open cart, proceed to checkout, fill delivery (jméno, adresa, město, PSČ, telefon, email), select Packeta or doručení, advance to payment step, click Zaplatit → assert URL = /checkout/mock-payment, select 'Úspěšná platba' radio, click Zaplatit → assert redirect to /objednavka/[id] with status paragraph containing 'zaplaceno' or 'paid'. One test, one describe block. npm run build green. No refactors. No Page Object abstractions — inline selectors. If Playwright not installed, HOLD and report — do NOT install deps without Lead sign-off. After #419 ships, HOLD for Lead directive. R2 triad fully closed — no more R2 tasks. Do NOT start Hetzner lane (#341/#343 done, #334 done)."
+      "notes": "UNCHANGED from C4795. PRIORITY: #419 Playwright e2e mock payment flow — explicitly flagged missing in 7ae16f3 commit. Scope (atomic, one file): tests/e2e/checkout-mock-payment.spec.ts. Set env PAYMENT_PROVIDER=mock before dev server in test fixture. Flow: visit /, click first product, add to cart, open cart, proceed to checkout, fill delivery (jméno, adresa, město, PSČ, telefon, email), select Packeta or doručení, advance to payment step, click Zaplatit → assert URL = /checkout/mock-payment, select 'Úspěšná platba' radio, click Zaplatit → assert redirect to /objednavka/[id] with status paragraph containing 'zaplaceno' or 'paid'. One test, one describe block. npm run build green. No refactors. No Page Object abstractions — inline selectors. If Playwright not installed, HOLD and report — do NOT install deps without Lead sign-off. After #419 ships, HOLD for Lead directive. R2 triad fully closed — no more R2 tasks. Do NOT start Hetzner lane (#341/#343 done, #334 done)."
     },
     "TRACE": {
       "status": "paused",
-      "force_next_task": 413,
+      "force_next_task": 367,
       "next_priority": [
-        413,
         367,
         358,
-        351,
-        340,
-        347
+        351
       ],
-      "notes": "UNCHANGED from C4794. PRIORITY: #413 R2 prod integrity calibration — atomic (<2min to dodge QA exit=143). (1) Turso query via @libsql/client: `SELECT COUNT(*) FROM Product WHERE images LIKE '%undefined/%' OR images LIKE '%//undefined%'` → report count. If >0 also dump `SELECT id, substr(images,1,120) LIMIT 5` for repair spec. (2) Live probe /api/upload: POST 1KB PNG, assert response.url starts with `https://pub-` or configured R2 public host (NOT 'undefined/'); log URL verbatim in commit. Report format: rows_needing_repair=N, live_upload_url=<url>, assertion=pass/fail. After #415 migration all 1965 Vinted URLs are R2-hosted, so dataset #413 surveys is fresh — any remaining 'undefined/' rows are historical from pre-#412 env-mismatch era only. If count=0 AND assertion=pass → R2 triad CLOSED; Trace advances to #367 → #358 → #351 → #340. Skip #1 (cancelled). Do NOT re-audit r2.ts — covered by #412 ship. Standing e2e: category switching + customer portal C3709."
+      "notes": "#413 CLOSED C4800 (PASS confirmed by Trace C4799 — Turso count=0, /api/upload 401s, all 1988 URLs on R2). PRIORITY: #367 full codebase quality sweep — read-only, atomic (<2min to dodge QA exit=143). Scope: (1) `npx tsc --noEmit` → report error count + first 10 error locations; (2) grep for console.log/TODO/FIXME/HACK in src/ — count per directory; (3) `npm ls --depth=0` → flag any UNMET / extraneous; (4) scan src/app/api/ for routes missing runtime export or missing auth check (list paths only, do NOT patch). Deliver: docs/audits/codebase-sweep-c4800.md with findings ranked P0/P1/P2. NO patches, NO refactors — this is diagnostic only. Bolt/Lead triage fixes from findings in subsequent cycles. After #367 ships: #358 E2E ttyd admin console flow (blocked on Guard #368 P0 fix — verify before starting), then #351 pre-migration code quality. Skip #342/#340/#347 (all Hetzner-gated). Standing e2e: category switching + customer portal C3709. Pause stays 'until_next_bolt_commit'."
     },
     "SAGE": {
-      "status": "active",
-      "force_next_task": 420,
+      "status": "paused",
+      "force_next_task": null,
       "next_priority": [
-        420,
         "pdp_measurements_grid_polish",
         "cart_sold_item_toast",
         "checkout_accordion_polish"
       ],
-      "notes": "PRIORITY: #420 Visual QA /checkout/mock-payment gate page (new from Bolt 7ae16f3). Atomic scope: start dev with PAYMENT_PROVIDER=mock, add any product to cart, checkout through to mock-payment gate. Verify on mobile (iPhone 13, 390w) and desktop (1280w): (a) gate card centered, readable on 320-1920w, no overflow; (b) test-mode banner (orange/yellow warning) visible above gate, Czech copy with diacritics intact; (c) success/failure radio + submit button fit viewport on iPhone SE (375×667) without scroll; (d) touch targets ≥44×44px; (e) if banner+gate stack vertically on mobile, no overlap with fixed header; (f) returning to /checkout after failure doesn't leave zombie state. Fix ONLY if broken — do not add features. Commit ≤5 file deltas. Atomic — no refactors, no migrations, no copy rewrites. If #420 exceeds 45min or worker exits 143, split into per-viewport sub-tasks. After #420 ships: resume standing micro-polish queue."
+      "notes": "Idle this cycle — #420 closed C4798, no forced task. #346 remains blocked on P6.3 Hetzner traffic-cut. If worker lights up unprompted, pick smallest micro-polish from standing queue: (1) PDP měření grid readability on 320w, (2) cart 'prodáno mezitím' toast copy + timing, (3) checkout accordion step-indicator contrast. Atomic scope per polish (≤5 file deltas, no refactors). Do NOT attempt #346 full visual QA — blocked. Do NOT touch checkout/mock-payment (owned by Bolt #419 + already visually QA'd C4797 69c7015)."
     },
     "GUARD": {
       "status": "paused",
@@ -55,12 +50,15 @@
     "Mock payment provider (src/lib/payments/mock.ts) MUST stay prod-guarded — NODE_ENV=production with PAYMENT_PROVIDER=mock must throw in provider factory. Do not soften this guard.",
     "Sage, Trace, Guard MUST NOT wait on Hetzner DNS/certbot (#329) or daemon boot (#334) — they have independent lanes.",
     "Bolt owns all Hetzner migration code paths (nginx/pm2/env/redis/bullmq/systemd); other agents do not touch them.",
-    "Tasks #337, #352, #353, #364, #365, #369, #370, #344, #371, #373, #374, #375, #376, #377, #378, #412, #414, #415, #416, #417 are DONE — do not re-raise as blockers.",
+    "Tasks #337, #352, #353, #364, #365, #369, #370, #344, #371, #373, #374, #375, #376, #377, #378, #412, #413, #414, #415, #416, #417, #420 are DONE — do not re-raise as blockers.",
     "Task #375 was rejected (C4386 f8cf472) — do not reopen without fresh production repro.",
     "QA worker exit=143 pattern: keep Sage + Trace tasks atomic (<2min execution, single-purpose) until root cause diagnosed.",
-    "#346 blocked until P6.3 traffic-cut completes — no Vercel-baseline visual QA possible pre-Hetzner cut."
+    "#346 blocked until P6.3 traffic-cut completes — no Vercel-baseline visual QA possible pre-Hetzner cut.",
+    "#342/#340/#347 all gated on Bolt P1-P4 Hetzner app deploy + bectly pre-approval + off-peak — Trace must NOT attempt ad-hoc prod failover/perf/restore drills."
   ],
-  "last_updated": "2026-04-24T05:58",
-  "pause": {},
+  "last_updated": "2026-04-24T06:05",
+  "pause": {
+    "trace": "until_next_bolt_commit"
+  },
   "paused_at_bolt_cycle": 4795
 }
