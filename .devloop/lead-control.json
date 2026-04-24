@@ -1,15 +1,15 @@
 {
-  "last_bolt_commit_cycle": 4887,
+  "last_bolt_commit_cycle": 4888,
   "pause": {},
   "paused_at_bolt_cycle": 4870,
-  "cycle_4887_directive": {
-    "bolt": "#540 /kviz/styl 5-question style quiz funnel — P1 strategic (Zalando counter + 3x leads per Outgrow/Heyflow/Quizell 2026). LocalStorage progress + email capture → /products prefilled. Czech diacritics, mobile-first. Reference #541 ALT-TEXT-AI-P2 as follow-up (P2, SEO/a11y, C2289 gap).",
-    "sage": "SWITCH PRIORITY: pause #494 email brand polish, take #539 [ZALANDO-COUNTER-POS] FIRST (P0 before 2026-04-30, only 5 days). Homepage hero + O nás copy differentiating on Czech-owned / personal curation / one-off pieces vs. Zalando Pre-Owned CZ's algorithmic mega-catalog (went live 2026-04-22). Then resume #494.",
-    "trace": "Continue #367 full codebase audit sweep independent (tsc clean confirmed last cycle, lint still 3 react-hooks errors 5 consecutive cycles — call that out again in Row W). #531 Phase 1b instrumentation stays bectly-gated (SEVENTH stalled cycle) pending prod APM decision. #532 Phase 4 verification stays gated on #531."
+  "cycle_4888_directive": {
+    "bolt": "#541 [ALT-TEXT-AI-P2] Gemini Flash Czech alt-text + caption batch (already in_progress). Build scripts/batch-alt-text.ts hitting Gemini 2.0 Flash (GEMINI_API_KEY in api_keys table) over Image rows where altText IS NULL OR altText=''; Czech output with diacritics, max ~125 chars, brand+condition+color hints from product context. Wire quick-add hook so admin uploads via image-upload.tsx automatically populate altText/caption on first save (server action onUpload). Closes C2289 SEO/a11y gap.",
+    "sage": "RESUME #494 email templates brand polish (Zalando counter-pos #539 landed fd9f586). Apply Janička hero treatment to all 21 templates: brand color tokens, Inter/serif pairing, footer with new About copy values (Vybírám osobně / Jeden kus jedna šance / Česká a blízká), CTA button matching shop. Order-confirmation + shipping-notification first (highest send volume). Reference docs/specs.md for SMTP-from rules.",
+    "trace": "Continue #367 full codebase audit sweep independent. PRIORITY THIS CYCLE: file Row W on lint regression — 3 react-hooks errors now 6 consecutive cycles broken (C4883 → C4888), this is now a quality smell that needs root cause not just headcount. List the exact 3 file:line:rule offenders in the audit doc and propose either eslint-disable-next-line with rationale or a real fix. tsc verification of fd9f586 + c5fd893 included in normal sweep."
   },
   "bectly_gates_aging": {
-    "#531_phase1b_instrumentation": "SEVENTH stalled cycle — needs prod APM tool decision (Sentry/Datadog/Vercel Speed Insights)",
-    "#532_phase4_verification": "gated on #531",
+    "#531_phase1b_instrumentation": "MOVED TO BLOCKED in C4888 (SEVENTH stalled cycle) — needs prod APM decision (Vercel Speed Insights / Sentry / custom Web Vitals→Turso) + any required token. Cannot stay in_progress when no agent can act.",
+    "#532_phase4_verification": "gated on #531 unblock",
     "#534_smtp_smoke": "SMTP creds missing (@vryp.cz mailserver) from .env.local + api_keys",
     "#14_gmc_registration": "5 DAYS to Apr 30 Doppl VTO deadline — URGENT bectly action at merchants.google.com",
     "#4_heureka_overeno": "Start tier FREE (≤15 reviews/mo) — self-serve at sluzby.heureka.cz, contradicts old 'needs HEUREKA_API_KEY' blocker"
