@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import Image from "next/image";
-import { uploadFiles } from "@/lib/uploadthing";
+import { uploadFiles } from "@/lib/upload-client";
 import { X, GripVertical, ImagePlus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 

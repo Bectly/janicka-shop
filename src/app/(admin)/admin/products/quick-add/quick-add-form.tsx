@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { CONDITION_LABELS, COLOR_MAP } from "@/lib/constants";
 import { ImageUpload } from "@/components/admin/image-upload";
 import { DefectsEditor } from "@/components/admin/defects-editor";
-import { uploadFiles } from "@/lib/uploadthing";
+import { uploadFiles } from "@/lib/upload-client";
 import { getSizeGroupsForCategory } from "@/lib/sizes";
 import { Zap, ChevronDown, ChevronUp, Video, X, Loader2, Ruler } from "lucide-react";
 

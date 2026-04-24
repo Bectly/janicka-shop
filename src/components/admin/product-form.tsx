@@ -18,7 +18,7 @@ import { DefectsEditor } from "@/components/admin/defects-editor";
 import { parseProductImages, parseMeasurements } from "@/lib/images";
 import { parseDefectImages } from "@/lib/defects";
 import type { ProductImage, ProductMeasurements } from "@/lib/images";
-import { uploadFiles } from "@/lib/uploadthing";
+import { uploadFiles } from "@/lib/upload-client";
 import { getSizeGroupsForCategory } from "@/lib/sizes";
 import { Save, Ruler, Video, X, Loader2, Search } from "lucide-react";
 
