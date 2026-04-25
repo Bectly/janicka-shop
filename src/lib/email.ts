@@ -2035,7 +2035,8 @@ function buildWinBackHtml(data: WinBackEmailData): string {
 
     <div style="margin: 28px 0 4px;">
       ${renderButton({ href: `${baseUrl}/products`, label: "Podívat se na novinky", variant: "primary" })}
-    </div>`;
+    </div>
+    ${renderAboutValues()}`;
 
   return renderLayout({
     preheader: "Přibyly mi nové unikátní kousky — třeba je mezi nimi ten tvůj.",
@@ -2141,7 +2142,8 @@ function buildCampaignHtml(data: CampaignEmailData, recipientEmail: string): str
 
     <div style="margin: 28px 0 4px;">
       ${renderButton({ href: data.ctaUrl, label: data.ctaText, variant: "primary" })}
-    </div>`;
+    </div>
+    ${renderAboutValues()}`;
 
   return renderLayout({
     preheader: data.previewText,

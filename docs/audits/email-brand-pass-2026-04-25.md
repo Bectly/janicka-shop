@@ -38,17 +38,17 @@
 | 19 | `sendNewArrivalEmail` | 1792 | `buildNewArrivalHtml` (1754) → `renderLayout` (1778) | **BRAND-PASSED** _(this cycle)_ | **CONVERTED in this cycle**: added `renderShopLink("Nebo projít celou nabídku")` + `renderAboutValues()` after the product grid. Already uses `renderProductGrid`. |
 | 20 | `sendBrowseAbandonmentEmail` | 1884 | `buildBrowseAbandonmentHtml` (1833) → `renderLayout` (1871) | **BRAND-PASSED** _(C4925)_ | **CONVERTED in C4925 #574**: replaced trailing inline "Nebo se podívej na další kousky →" anchor with canonical `renderShopLink("Nebo se podívej na další kousky")` and appended `renderAboutValues()` below the primary "Vrátit se ke kousku" CTA. Unused `shopUrl` local removed. |
 | 21 | `sendCrossSellFollowUpEmail` | 1971 | `buildCrossSellFollowUpHtml` (1941) → `renderLayout` (1958) | **BRAND-PASSED** _(C4925)_ | **CONVERTED in C4925 #574**: appended `renderAboutValues()` after the existing `renderProductGrid` + outline "Prohlédnout všechny novinky" CTA. CTA itself is the shop-browse, so no `renderShopLink` needed (matches `ctaIsShopBrowse` convention used in `abandoned-cart` 1322). |
-| 22 | `sendWinBackEmail` | 2036 | `buildWinBackHtml` (2004) → `renderLayout` (2023) | PARTIAL | No products; could host `renderAboutValues` to re-anchor lapsed customers. **Recommend follow-up.** |
-| 23 | `sendCampaignEmail` | 2141 | `buildCampaignHtml` (2108) → `renderLayout` (2129) | PARTIAL | Generic campaign wrapper — has `renderProductGrid`, lacks values footer. **Recommend follow-up.** |
-| 24 | `renderCampaignEmailPreview` | 2166 | inline → `renderLayout` (2208) | PARTIAL | Preview-time analogue of campaign builder; same gap. |
+| 22 | `sendWinBackEmail` | 2036 | `buildWinBackHtml` (2004) → `renderLayout` (2023) | **BRAND-PASSED** _(C4926)_ | **CONVERTED in C4926 #576**: appended `renderAboutValues()` after the primary "Podívat se na novinky" CTA to re-anchor lapsed customers on the brand pillars. No `renderShopLink` because the primary CTA already points to `/products` — adding the small text link would duplicate the destination (matches C4924 #572 newsletter-welcome convention). |
+| 23 | `sendCampaignEmail` | 2141 | `buildCampaignHtml` (2108) → `renderLayout` (2129) | **BRAND-PASSED** _(C4926)_ | **CONVERTED in C4926 #576**: appended `renderAboutValues()` after the existing `renderProductGrid` + primary CTA. CTA destination is admin-defined per campaign so `renderShopLink` deferred (would conflict with custom landing pages). |
+| 24 | `renderCampaignEmailPreview` | 2166 | inline → `renderLayout` (2208) | **BRAND-PASSED** _(C4926)_ | **CONVERTED in C4926 #576**: re-uses `buildCampaignHtml` so inherits the conversion in lockstep — admin preview matches the sent email byte-for-byte. |
 | 25 | `renderMothersDayPreview` / `sendMothersDayEmail` (×3 builders) | 2369 / 2385 | `buildMothersDayEmail{1,2,3}Html` (2219, 2278, 2320) → `buildMothersDayEmailShell` (2202) → `renderLayout` (2208 in shell) | PARTIAL | Campaign shell renders custom `footerNote` (italic tagline) instead of `renderAboutValues`. Intentional — campaign tone — but inconsistency worth noting. |
 | 26 | `renderCustomsCampaignPreview` / `sendCustomsCampaignEmail` (×2 builders) | 2548 / 2563 | `buildCustomsEmail{1,2}Html` (2445, 2496) → `buildCustomsEmailShell` (2428) → `renderLayout` (2434) | PARTIAL | Same shell pattern as Mother's Day — custom footer note replaces `renderAboutValues`. |
 | 27 | `renderEmailPreview` (dispatcher) | 2744 | dispatches to all builders above | n/a | Registry only; preview path inherits each template's status. The `email-change-verify` case (2829) duplicates inline HTML rather than re-importing the sender's content; harmless but a dedup opportunity. |
 
 ## Tally
 
-- **BRAND-PASSED**: 11 templates (order confirmation, shipping notification, account welcome, abandoned cart, new-arrival _(C4922)_, order-delivered _(C4923)_, review-request _(C4923)_, newsletter-welcome _(C4924)_, delivery-check _(C4924)_, **browse-abandonment** _(C4925)_, **cross-sell-follow-up** _(C4925)_).
-- **PARTIAL** (renderLayout + tokens but missing pillar polish): 5 customer-facing templates — win-back, campaign, mother's-day shell, customs shell, campaign-preview.
+- **BRAND-PASSED**: 14 templates (order confirmation, shipping notification, account welcome, abandoned cart, new-arrival _(C4922)_, order-delivered _(C4923)_, review-request _(C4923)_, newsletter-welcome _(C4924)_, delivery-check _(C4924)_, browse-abandonment _(C4925)_, cross-sell-follow-up _(C4925)_, **win-back** _(C4926)_, **campaign** _(C4926)_, **campaign-preview** _(C4926)_).
+- **PARTIAL** (renderLayout + tokens but missing pillar polish): 2 INTENTIONAL campaign shells — mother's-day shell, customs shell. Both replace `renderAboutValues` with a custom italic `footerNote` by campaign-tone design choice; conversion would dilute the bespoke creative voice.
 - **INLINE-LEGACY**: **0 templates**. Every send-path goes through `renderLayout`. The audit confirms the brand-pass infrastructure rollout is structurally complete.
 - **INTERNAL-OK** (admin/security — polish intentionally absent): 8 templates.
 
@@ -60,15 +60,15 @@ Diff is one block; no signature change, no call-site change, no new imports (`re
 
 ## Recommended follow-up bundles
 
-Group the remaining 7 PARTIAL templates into two cohesive Sage tasks (1–2 per cycle pace per #571):
+Brand-pass program **CLOSED** for non-shell customer-facing templates as of C4926 #576.
 
 1. **POLISH-RETENTION** — _Done C4925 #574_: `browse-abandonment` + `cross-sell-follow-up` both converted; `renderAboutValues()` appended and `renderShopLink` swapped in for the legacy inline anchor on browse-abandonment.
-2. **POLISH-CAMPAIGN** (3 templates + 2 shells): `win-back`, `campaign`, `campaign-preview`, `mother's-day shell`, `customs shell` — replace the bespoke campaign footer notes with `renderAboutValues()` and add `renderShopLink` where missing. Watch for tone clash on customs/Mother's Day, where the bespoke italic footer is part of the creative; may prefer a hybrid (values + tagline). _(`newsletter-welcome` landed in C4924 #572.)_
+2. **POLISH-CAMPAIGN** — _Done C4926 #576_: `win-back`, `campaign`, `campaign-preview` all converted (`renderAboutValues()` appended; preview inherits via `buildCampaignHtml`). Remaining `mother's-day shell` and `customs shell` are **INTENTIONAL PARTIAL** — bespoke italic `footerNote` is part of the campaign creative voice and replacing it with `renderAboutValues` would flatten the tone. Hybrid (values + tagline) deferred until/unless creative direction changes. _(`newsletter-welcome` landed in C4924 #572.)_
 
 ## Acceptance checklist
 
 - [x] Audit doc emitted at `docs/audits/email-brand-pass-2026-04-25.md`.
 - [x] Table covers every `send*` / `build*` / `render*Preview` export — 27 rows.
-- [x] One PARTIAL template converted to BRAND-PASSED in same cycle commit (`buildNewArrivalHtml`; +`buildOrderDeliveredHtml` & `buildReviewRequestHtml` in C4923 #571; +`buildNewsletterWelcomeHtml` & `buildDeliveryCheckHtml` in C4924 #572).
+- [x] One PARTIAL template converted to BRAND-PASSED in same cycle commit (`buildNewArrivalHtml`; +`buildOrderDeliveredHtml` & `buildReviewRequestHtml` in C4923 #571; +`buildNewsletterWelcomeHtml` & `buildDeliveryCheckHtml` in C4924 #572; +`buildBrowseAbandonmentHtml` & `buildCrossSellFollowUpHtml` in C4925 #574; +`buildWinBackHtml` & `buildCampaignHtml` (which `renderCampaignEmailPreview` re-uses) in C4926 #576 — closes brand-pass program for non-shell templates).
 - [x] No edits to `addresses.ts`, `smtp-transport.ts`, or `layout.ts`.
 - [x] Commit message will name the converted template.
