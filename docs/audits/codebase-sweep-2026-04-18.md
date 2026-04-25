@@ -1,8 +1,44 @@
 # Codebase Quality Sweep — 2026-04-18
 
-**Agent**: Trace (DevLoop C4808, re-verified C4811/C4817/C4821/C4826/C4833/C4839/C4839#2/C4844/C4847/C4851/C4860/C4928, task #367)
+**Agent**: Trace (DevLoop C4808, re-verified C4811/C4817/C4821/C4826/C4833/C4839/C4839#2/C4844/C4847/C4851/C4860/C4928/C4937, task #367)
 **Scope**: `src/**`, `prisma/**`, `next.config.ts`, `package.json`
 **Commands run**: `npx tsc --noEmit`, `npm run lint`, `npx ts-prune`, `npx depcheck`, targeted grep sweeps
+
+## C4937 re-verification addendum (2026-04-25, HEAD c0dd535, +4 commits since C4928)
+
+Quick recurring tick. Net code-touching delta since C4928 (78e932d):
+- `46cf6ab` — admin/manager real Prisma reads from project Turso (new shop UI surface)
+- `ac5dfb9` — C4935 P0 lint fix: scoped `// eslint-disable-next-line react-hooks/purity` on `Date.now()` in admin/manager RSC body, with rationale comment matching established "request-time read in RSC, not cached" pattern
+- `77bd01c` — admin/manager start-session button + comments on tasks/artifacts
+- `c0dd535` — `.gitignore` for prisma WAL/SHM (no src/ delta)
+
+### Gate state on HEAD `c0dd535`
+
+| Check | Result |
+|---|---|
+| `tsc --noEmit` | ✅ PASS (silent, 0 errors) |
+| `npm run lint` | ✅ **0 errors, 0 warnings** — Lead-tracked **62-commit lint-zero streak**, **37-cycle green-gate** (C4889-C4936) |
+| `@ts-ignore` / `@ts-nocheck` / `@ts-expect-error` | **0** in `src/` (unchanged across 13 audit cycles) |
+| `as any` real casts | **4 / 3 files** (unchanged — `lib/db.ts` ×2, `lib/invoice/*.ts` ×2; `lib/images.ts` grep hit is a comment "has any actual values") |
+| `dangerouslySetInnerHTML` | **17 occurrences / 7 files**, +1 occurrence vs C4928 with file count actually -1 (consolidation) — all via `jsonLdString()` helper, no new XSS surface |
+| Hardcoded secrets sweep | **0 hits** in `src/` |
+| `src/lib/email.ts` LoC | 3010 (unchanged this window — no email work this cycle) |
+
+### Carry-forward queue (rows N/O/P from C4928 — all unchanged)
+
+| Row | Priority | Description | C4937 status |
+|---|---|---|---|
+| **N** | P2 | `renderBody` dead export at `src/lib/email/layout.ts:311` | ⏳ STILL OPEN. ts-prune flags it; Sage Phase 2 chose inline-body pattern. |
+| **O** | P2 | Resend → SMTP comment drift (14 stale inline comments) | ⏳ STILL OPEN. Comments only, zero runtime impact. |
+| **P** | P1 | ts-prune close-out (5 symbols + sendPasswordResetEmail) | ⏳ STILL OPEN. No new orphans this window. |
+
+### admin/manager P0 lint fix (ac5dfb9) — verified
+
+Fix is the right shape: scope-narrowest `// eslint-disable-next-line react-hooks/purity` over the `Date.now() - 7 * 24 * 60 * 60 * 1000` recentCutoff line, with adjacent rationale comment matching the established convention from `src/app/(shop)/account/change-email/page.tsx:36` and 5 other RSC sites. No global rule weakening. Lint-zero gate restored without false-promoting the call site to a memo or moving it out of RSC body where it semantically belongs (request-time read). C4935 Trace landing was correct and minimal.
+
+**Verdict**: by-design idle for the 11th consecutive cycle on the recurring-sweep task. Codebase quality posture unchanged. No new follow-up tasks filed.
+
+---
 
 ## C4928 re-verification addendum (2026-04-25, HEAD 78e932d, +139 commits since C4860)
 
