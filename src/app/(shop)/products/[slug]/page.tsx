@@ -513,7 +513,9 @@ export default async function ProductDetailPage({ params }: Props) {
               </Link>
             </div>
 
-            {/* Back-in-stock — tight match (brand+size+condition), unique-inventory angle */}
+            {/* Back-in-stock — tight match (brand+size+condition); sold-PDP uses only this
+                form (retired NotifyMeForm here to prevent double-widget + double-email
+                dispatch — NotifyMeForm remains on the available PDP below). */}
             <div id="hlidat-podobny" className="scroll-mt-24">
             <BackInStockForm
               categoryId={product.categoryId}
@@ -533,14 +535,6 @@ export default async function ProductDetailPage({ params }: Props) {
               sourceProductId={product.id}
             />
             </div>
-
-            {/* Notify me — broader category-level opt-in for warm leads */}
-            <NotifyMeForm
-              categoryId={product.categoryId}
-              sizes={product.sizes}
-              brand={product.brand}
-              categoryName={product.category.name}
-            />
           </div>
         </div>
 
