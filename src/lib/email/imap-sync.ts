@@ -29,18 +29,18 @@ type SyncResult = {
  *   IMAP_BATCH_LIMIT (default 50)
  */
 export async function syncImapInbox(): Promise<SyncResult> {
-  const host = process.env.IMAP_HOST;
-  const user = process.env.IMAP_USER;
-  const pass = process.env.IMAP_PASSWORD;
+  const host = process.env.IMAP_HOST?.trim();
+  const user = process.env.IMAP_USER?.trim();
+  const pass = process.env.IMAP_PASSWORD?.trim();
   if (!host || !user || !pass) {
     logger.warn("[imap-sync] IMAP_HOST/IMAP_USER/IMAP_PASSWORD not set — skip");
     return { ok: false, fetched: 0, inserted: 0, skipped: 0, failed: 0, error: "imap_disabled" };
   }
 
-  const port = Number(process.env.IMAP_PORT ?? 993);
-  const secure = (process.env.IMAP_SECURE ?? "true") !== "false";
-  const mailbox = process.env.IMAP_MAILBOX ?? "INBOX";
-  const batchLimit = Math.max(1, Math.min(500, Number(process.env.IMAP_BATCH_LIMIT ?? 50)));
+  const port = Number((process.env.IMAP_PORT ?? "993").trim());
+  const secure = (process.env.IMAP_SECURE?.trim() ?? "true") !== "false";
+  const mailbox = process.env.IMAP_MAILBOX?.trim() ?? "INBOX";
+  const batchLimit = Math.max(1, Math.min(500, Number((process.env.IMAP_BATCH_LIMIT ?? "50").trim())));
 
   const client = new ImapFlow({
     host,

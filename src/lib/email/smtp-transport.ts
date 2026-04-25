@@ -11,10 +11,10 @@ let cached: Transporter | null | undefined;
 export function getMailer(): Transporter | null {
   if (cached !== undefined) return cached;
 
-  const host = process.env.SMTP_HOST;
-  const port = Number(process.env.SMTP_PORT ?? 587);
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASSWORD;
+  const host = process.env.SMTP_HOST?.trim();
+  const port = Number((process.env.SMTP_PORT ?? "587").trim());
+  const user = process.env.SMTP_USER?.trim();
+  const pass = process.env.SMTP_PASSWORD?.trim();
 
   if (!host || !user || !pass) {
     logger.warn(
