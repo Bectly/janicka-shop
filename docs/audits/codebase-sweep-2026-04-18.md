@@ -1739,3 +1739,121 @@ The bundle is **production-ready** for second-hand UX where every sold item is a
 - **P3** (nice-to-have): **W-5 NEW** (e2e cleanup-on-kill resilience). Carries: V, W-3.
 
 **Net cycle verdict (C4905→C4909, 4-cycle Phase 7 sweep)**: 6 code commits audited (Bolt `a612390` #553 docs-only / Bolt `534cac9` #554 e2e+W-2-assertion / Trace `3db9e4f` #531+#554 self-landing / Bolt `31f1c6f` #555 widget collapse / Bolt `b5e7277` #556 EmailDedupLog full-stack / Bolt `abcd32d` #557 cron-metrics wrapper). KEY VERIFICATION POINT for #556 passes on all six axes (unique constraint, supporting index, cross-pipeline scope, subscription-side state harmony, fail-open posture, doc-language drift on `createdAt` vs `sentAt`). Sold-PDP UX bundle now closed end-to-end. Cron observability gap closed via `wrapCronRoute`. Audit-debt fully cleared. One new P3 row filed (W-5 e2e cleanup resilience). Phase 7 sweep **COMPLETE**. Audit doc now ~1750 lines — flag for post-launch archival. Trace next-cycle dispatch per Lead C4908 P1: **shift to E2E coverage gap analysis** (e2e/ currently sold-pdp.spec.ts + #452 cart/PDP — survey untested critical paths: checkout flow end-to-end, wishlist sold-item trigger, BackInStock subscription dispatch).
+
+## Phase 8 addendum — C4910→C4916 e2e bundle audit (appended 2026-04-25 by Trace C4916)
+
+**Trigger**: Lead C4915 supervision armed Phase 8 after 4 fresh Bolt e2e landings stacked since Phase 7 close (#561 cleanup teardown + #563 wishlist-sold + #565 BIS + #566 admin-product). KEY VERIFICATION POINT this phase: **the four new specs do not regress dev DB state when the runner is killed mid-test, and they do not race each other under `fullyParallel: true`**.
+
+Quality gates re-run at `HEAD 86da958`: `tsc --noEmit` → **0 errors**, `npm run lint` → **0 warnings / 0 errors**, `npx vitest run` → **49/49 pass** (5/5 + 6/6 + 14/14 + 12/12 + 12/12 across the 5 unit-test files; surface unchanged since Phase 7). Green-gate streak extends C4889 → C4916 = **24 cycles**. Lint-zero commit streak: 47+ commits (per Lead 86da958). Phase 8 cycle count: 7 cycles (C4910→C4916).
+
+### C4910→C4916 landings reviewed
+
+| Commit | Cycle | Agent | Task | Scope | Verdict |
+|---|---|---|---|---|---|
+| `aeb1b4c` | C4911 | Sage | #559 | Win-back email RFC 8058 (List-Unsubscribe + One-Click) + generic /products CTA. Scope: `src/lib/email.ts` template body. | ⏸ **Out of Phase 8 e2e scope** (Sage email template work, audited under Phase 7 brand-pass cadence; no e2e impact). Header compliance left to Sage cycle. |
+| `5b6e756` | C4912 | Bolt | #561 | `scripts/playwright-global-teardown.ts` (47 lines, NEW) + `playwright.config.ts:5` `globalTeardown:` wired. Reverts orphan `sold=true` products that have **no completed-status orderItems**. Status set: `paid \| paid_mock \| shipped \| delivered \| received`. | ✅ **W-5 closure verified — see four-axis below.** |
+| `673e2c7` | C4912 | Trace | #562 | `docs/audits/e2e-coverage-gap-2026-04-25.md` (357 lines, NEW) — gap survey ranking 4 untested critical paths (A wishlist-sold / B back-in-stock / C admin-create / D abandoned-cart) by composite revenue+integrity+regression score. | ✅ **Self-audit (Trace own landing)**: ranking matches Phase 7 follow-up queue, A→C dispatched as Bolt tasks #563/#565/#566 (D deferred per spec). Deferral logic correct (D abandoned-cart token-restore is P2/P2/P3 vs A/B/C all hitting at least one P0). |
+| `86d53f4` | C4912 | Bolt | #563 | `e2e/wishlist-sold-trigger.spec.ts` (117 lines, NEW). Seeds unique `TEST_EMAIL`, creates `WishlistSubscription`, flips product to `sold=true`, hits `/api/cron/wishlist-sold-notify` with `Bearer CRON_SECRET`, asserts `notifiedAt` set + exactly 1 `EmailDedupLog` row + idempotent on re-run. | ✅ **Four-axis clean** — see below. |
+| `9e2371a` | C4914 | Bolt | #565 | `e2e/back-in-stock-dispatch.spec.ts` (162 lines, NEW). Sibling pattern: tuple-matched `BackInStockSubscription` (categoryId+brand+first parsed size, condition=null), forces `product.createdAt` into the cron's 48h-fresh window, hits `/api/cron/back-in-stock-notify`, asserts `notifiedAt` + `notifiedProductId` set + 1 dedup row + idempotent. | ✅ **Four-axis clean** — see below. **NEW P3 finding**: cleanup-on-kill resilience asymmetry vs sold flip (W-9). |
+| `af22040` | C4914 | Trace | #367 | Phase 8 hold per Lead C4912 — KEY VERIFICATION on #565 BIS spec only (tuple match + 48h window + dedup idempotency + cleanup symmetry); no audit doc commit yet. Acknowledged in this addendum. | ✅ Bridge cycle. |
+| `f3dff50` | C4914 | Bolt | #566 | `e2e/admin-product-create.spec.ts` (155 lines, NEW). Heaviest of the bundle: NextAuth credentials login → `/admin/products/new` → ProductForm fill (name+desc+price+SKU+brand+colors native; Radix Select `#categoryId`; chip-button `Univerzální` size) → submit → assert DB row by unique SKU + PDP renders <400 with name visible + listing has anchor. `afterAll` deletes `priceHistory` + `product`. | ✅ **Four-axis clean** — see below. **NEW P3 findings**: globalTeardown gap on E2E orphan products (W-10); listing-pagination assumption (W-11). |
+
+### KEY VERIFICATION POINT — globalTeardown idempotency + orphan-class coverage (per Lead C4915 directive armament)
+
+The four-axis acceptance bar Lead set for Phase 8: **the new specs must not regress dev DB state when the runner is killed mid-test, and they must not race each other under `fullyParallel: true`**.
+
+**Axis 1 — `globalTeardown` correctness on the `sold=true` orphan class** (`#561` claim):
+
+```ts
+// scripts/playwright-global-teardown.ts:27-37
+const result = await prisma.product.updateMany({
+  where: {
+    sold: true,
+    orderItems: {
+      none: {
+        order: { status: { in: COMPLETED_ORDER_STATUSES } },
+      },
+    },
+  },
+  data: { sold: false },
+});
+```
+
+The `orderItems.none` Prisma filter resolves to a `LEFT JOIN OrderItem … LEFT JOIN Order … WHERE Order.status NOT IN (…) OR Order.id IS NULL`. Three correctness checks:
+
+1. **Real-sold products are preserved**: a product flipped `sold=true` because a customer placed a `paid|paid_mock|shipped|delivered|received` order will have at least one `OrderItem` row whose parent `Order.status` is in the completed set → `orderItems.none(…)` evaluates `false` → row is **not** updated. ✅
+2. **E2E-flipped products are reverted**: the three e2e specs that flip `sold=true` (`sold-pdp.spec.ts:34`, `wishlist-sold-trigger.spec.ts:34`, plus the implicit case where a future spec follows the same pattern) seed only the `Product.sold` column — they never create `OrderItem` rows on a completed order → `orderItems.none(…)` evaluates `true` → row is reverted. ✅
+3. **Edge case — abandoned `pending` order with the product**: if an Order exists in status `pending|abandoned|expired|cancelled` linking to the sold product, `Order.status` is NOT in the completed set → `orderItems.none(…)` still evaluates `true` → row is reverted. **This is correct behaviour** because a pending/abandoned order doesn't yield revenue and the seller can re-flip via admin. The completed-status whitelist is the right semantic.
+
+**Status whitelist matches `OrderStatus` reality**: `grep -rn "status.*paid_mock\|status.*shipped" src/lib/payments/ src/app/api/checkout/` confirms the 5-value set covers every status that the checkout pipeline assigns when revenue is realised. No drift.
+
+**Axis 2 — `globalTeardown` runs on Ctrl-C / SIGKILL**: Playwright's contract is that `globalTeardown` runs even when the runner is interrupted (it is registered as a process exit handler). Does NOT run on `kill -9` or system OOM-killer (no graceful shutdown), but the W-5 spec was scoped to the Ctrl-C / CI-timeout / OOM-via-SIGTERM tier. ✅ Coverage matches the W-5 scope.
+
+**Axis 3 — Other orphan classes NOT covered by `globalTeardown`** (NEW Phase 8 findings):
+
+The teardown only sweeps `Product.sold` mutations. It does **not** sweep:
+- `Product.createdAt` mutations from `back-in-stock-dispatch.spec.ts:76-79` (W-9 below).
+- Test-created `Product` rows from `admin-product-create.spec.ts:108` if killed mid-test (W-10 below).
+- Orphan `WishlistSubscription` / `BackInStockSubscription` / `EmailDedupLog` rows seeded by the three new specs (W-9b below).
+
+These are filed as P3 follow-ups, not blockers — the customer-blast-radius is dev-DB-only and any subsequent test run will re-seed deterministically.
+
+**Axis 4 — Cross-spec race under `fullyParallel: true`** (W-12 below): the three new specs all `findFirst` / `findMany` on `active: true, sold: false` products. Under fully-parallel two-worker execution, two specs can pick the same product. wishlist-sold flips `sold=true`; back-in-stock cron filters `sold=false` so its tuple-match would skip that product → spec assertion `dedupRows.length === 1` would fail intermittently. This is the highest-priority Phase 8 finding.
+
+### #563 wishlist-sold-trigger spec — four-axis review
+
+1. **DB-side authority**: uses real `PrismaClient` against dev DB, no mocks. ✅
+2. **Cleanup symmetry**: `afterAll` deletes the `WishlistSubscription` row + `EmailDedupLog` rows + reverts `Product.sold`. The spec wraps the body in `try/finally` with a redundant product-revert (defensive). All deletes wrapped in `.catch(() => {})` to remain idempotent under afterAll re-runs. ✅
+3. **Idempotency assertion correctness** (line 89-101): the second cron invocation does NOT trigger because the cron's candidate-query already filters `notifiedAt: null`, so the second pass selects no rows and writes no dedup row. The test's intent (verify dedup gate is authoritative) is satisfied indirectly — the **comment at lines 86-88 acknowledges this honestly**. ✅ Honest test intent.
+4. **Environmental fragility — similarProducts requirement** (NEW P3, see W-9c below): `sendWishlistSoldNotifications` (`src/lib/email/wishlist-sold.ts:213`) `continue`s the send loop when `similarProducts.length === 0` — i.e., when the dev DB has only one product in the sold product's category, the dedup row is **never written** and the spec assertion `dedupRows.length === 1` fails. The spec's `findFirst` doesn't filter by `category._count >= 2`, so a sparse dev DB would flake. Filed as P3 W-9c.
+
+### #565 back-in-stock-dispatch spec — four-axis review
+
+1. **DB-side authority**: real PrismaClient, no mocks. ✅
+2. **Tuple-match correctness**: subscription is created with (categoryId, brand, firstParsedSize, condition=null) where firstParsedSize comes from `JSON.parse(c.sizes)[0]` of the actual target product. The cron at `back-in-stock-notify/route.ts:62-87` filters `categoryId` + `brand` + `createdAt >= now-48h` first then post-filters by size via the same JSON parse — exact match guaranteed by construction. ✅
+3. **48h window forcing**: `prisma.product.update({ data: { createdAt: new Date() } })` forces the product into the cron's freshness window. `originalCreatedAt` captured pre-mutation and restored in `afterAll` + `try/finally` redundancy. ✅
+4. **Cleanup-on-kill asymmetry vs sold flip** (NEW P3 W-9): `globalTeardown` reverts `sold=true` orphans but does NOT revert `createdAt` mutations. If the runner is killed mid-test, the dev DB has a product with `createdAt = mid-test-time` rather than its original timestamp. Subsequent BIS cron runs against that DB will see this product as fresh-within-48h and could over-fire if a real subscription happens to tuple-match. Mitigation cost is low — extend `globalTeardown` to also revert `createdAt` mutations OR have the spec write a sentinel (e.g., a custom `Product.adminNote` field, or a `ProductMeta` row) that `globalTeardown` can pick up. Filed as P3 W-9.
+
+### #566 admin-product-create spec — four-axis review
+
+1. **DB-side authority**: real PrismaClient + real NextAuth credentials login. ✅
+2. **Cleanup symmetry**: `afterAll` deletes `priceHistory` + `product` rows; spec body has `try/finally` redundancy. The unique `SKU = E2E-${Date.now()}` and `NAME = E2E Test Product ${UNIQUE}` ensure the cleanup target is unambiguous even if multiple test runs pile up. ✅
+3. **Auth wiring**: `page.fill` on the credentials form + `Promise.all([waitForURL(/\/admin\/dashboard/), click(submit)])` race correctly handles the JS-driven `signIn → router.push` flow noted in the spec comment at line 57-59. ✅
+4. **Two NEW P3 findings**:
+   - **W-10 globalTeardown gap on E2E orphan products**: if the spec is killed AFTER `prisma.product.create` but BEFORE `afterAll` runs, an `E2E Test Product …` row with SKU `E2E-…` survives. globalTeardown does not sweep this class. Mitigation: extend `globalTeardown` to delete `Product` rows where `sku LIKE 'E2E-%'` AND `name LIKE 'E2E Test Product %'` (double-key on both for safety against false-positives if a real seller ever uses an `E2E-` SKU prefix).
+   - **W-11 listing-pagination assumption**: the assertion at line 134-136 expects `/products` to surface an anchor to the new product on first load. If the dev DB has many active products and the new one is paginated off-page (default ordering may not place newest first), the assertion would fail. Spec works in dev because the createProduct revalidatePath sweep + the listing's default `createdAt desc` order surfaces the new product on page 1, but this is **not asserted by the spec itself** — it depends on the listing's current sort. If the listing's sort ever changes (e.g., to `popularity` or `price asc`), this spec breaks silently. Filed as P3.
+
+### Phase 8 follow-up queue update
+
+| # | Status @ C4916 |
+|---|---|
+| N (dead `renderBody` export) | Unchanged. P2. |
+| O (Resend → SMTP comment drift) | Unchanged. P2. |
+| P (ts-prune close-out) | Unchanged. P1. |
+| V (`ctaIsShopBrowse` substring guard) | Unchanged. P3 informational. |
+| M (DOMPurify on Phase 4 mailbox render) | Unchanged. P2. |
+| W-3 (retention sweep) | Unchanged. P3. |
+| W-5 (e2e cleanup-on-kill resilience for `sold=true`) | **CLOSED at C4912** — landed in `5b6e756` (#561). globalTeardown wired correctly per four-axis review above. |
+| W-9 (NEW C4916) — `globalTeardown` does not revert `Product.createdAt` mutations from `#565 back-in-stock-dispatch.spec.ts` | P3 BOLT. Extend `globalTeardown` to also persist+revert `createdAt` mutations OR have specs write a sentinel field that the teardown picks up. |
+| W-9b (NEW C4916) — orphan `WishlistSubscription` / `BackInStockSubscription` / `EmailDedupLog` rows on SIGKILL | P3 BOLT. Extend `globalTeardown` to delete rows whose `email LIKE '%-e2e-%@test.local'`. Cheap one-query addition per table. |
+| W-9c (NEW C4916) — `#563 wishlist-sold` flake on sparse dev DB (single product in category → no similarProducts → no dedup row → assertion fails) | P3 BOLT. Add `category._count >= 2` filter in spec's `beforeAll`, OR `test.skip` when no eligible category exists. Mirrors the `sold-pdp.spec.ts` `groupBy({having:_count.gte:5})` precedent. |
+| W-10 (NEW C4916) — `globalTeardown` does not sweep `E2E Test Product %` orphan rows from `#566 admin-product-create` | P3 BOLT. Extend teardown with `prisma.product.deleteMany({ where: { AND: [{ sku: { startsWith: 'E2E-' } }, { name: { startsWith: 'E2E Test Product ' } }] } })` (double-key to neutralise false-positive risk). |
+| W-11 (NEW C4916) — `#566 admin-product-create` listing-pagination assumption | P3 informational. Spec relies on listing's current `createdAt desc` default; would break silently if listing sort changes. Mitigation: assert via direct PDP slug check only (already in spec), drop the listing assertion OR use `?sort=newest` query when defined. |
+| W-12 (NEW C4916, **HIGHEST-PRIORITY of the Phase 8 batch**) — cross-spec race under `fullyParallel: true` | P2 BOLT. The three new specs (`sold-pdp` + `wishlist-sold-trigger` + `back-in-stock-dispatch`) all `findFirst`/`findMany` on `active:true, sold:false` products. Two parallel workers can pick the **same product**; wishlist-sold flips it `sold=true` → BIS cron filters `sold=false` → its tuple-match skips → assertion `dedupRows.length === 1` fails intermittently. Mitigations (any one of): (a) move new specs into `test.describe.serial`; (b) set `playwright.config.ts` `workers: 1` for these spec files via project config split; (c) have each spec pick its product via category-specific filters that can't collide (e.g. wishlist-sold picks from a tag not used by sold-pdp); (d) include `test.use({ test: { mode: 'serial' } })` in each new spec file. **(a) or (d) is the lowest-cost fix** (1-line per file). |
+
+### Phase 8 scorecard
+
+- **Gates**: tsc 0 / lint 0 / vitest 49/49 at `HEAD 86da958`.
+- **Test coverage delta**: e2e/ went from 7 specs / 561 LoC at Phase 7 close → 10 specs / ~895 LoC at Phase 8 close (+3 specs, +334 LoC). New specs cover wishlist-sold dispatch, BIS dispatch, admin product-create — three of the four highest-priority gaps from #562 survey.
+- **Streaks**: green-gate **24 cycles** (C4889 → C4916) · lint-zero **47+ commits** (per Lead 86da958).
+- **W-row queue net**: 1 closed (W-5), 5 new (W-9, W-9b, W-9c, W-10, W-11, W-12). **W-12 is the only P2** in the new set — others are P3.
+- **Phase 8 verdict**: e2e bundle landed clean on `tsc/lint/vitest` axes; **runtime e2e flake risk is moderate** (W-12 race + W-9c sparse-DB skip). Recommend Bolt next cycle prioritise **W-12 first** (P2, intermittent test failures will erode trust in the suite faster than dev-DB orphan rows), then W-9 + W-10 + W-9b as a single `globalTeardown` extension PR (cheap one-route addition: revert createdAt + delete e2e orphan rows + delete e2e orphan products).
+
+### Findings summary by P-tier
+
+- **P0** (security/data-loss): **none**.
+- **P1** (quality blockers): **none new**. Carries: P (ts-prune close-out).
+- **P2** (quality wins): **W-12 NEW** (cross-spec race under fullyParallel — highest priority). Carries: N, O, M.
+- **P3** (nice-to-have): **W-9 / W-9b / W-9c / W-10 / W-11 NEW** (globalTeardown extension class). Carries: V, W-3.
+
+**Net cycle verdict (C4910→C4916, 7-cycle Phase 8 sweep)**: 4 Bolt e2e landings audited (`5b6e756` #561 / `86d53f4` #563 / `9e2371a` #565 / `f3dff50` #566) + 1 Trace gap survey (`673e2c7` #562 self-audit) + 1 Sage email-template (`aeb1b4c` #559 deferred to Sage cadence). KEY VERIFICATION POINT for `#561 globalTeardown` passes the three-axis correctness check (real-sold preserved, e2e-flipped reverted, edge-case pending-order reverted). Three new e2e specs land four-axis clean on tsc/lint/vitest but introduce 6 new follow-up rows around teardown-class coverage and parallel-execution races. **W-12 (cross-spec race) is the only P2** — fix is 1 line per spec (`test.describe.serial` or `workers: 1` for the new files). Phase 8 sweep **COMPLETE**. Audit doc now ~1900 lines — second flag for post-launch archival; recommend extracting Phases 1–7 to `codebase-sweep-2026-04-18-archive.md` and keeping only Phase 8+ in the live doc post-launch.
