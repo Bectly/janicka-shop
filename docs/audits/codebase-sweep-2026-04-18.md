@@ -1,8 +1,98 @@
 # Codebase Quality Sweep — 2026-04-18
 
-**Agent**: Trace (DevLoop C4808, re-verified C4811/C4817/C4821/C4826/C4833/C4839/C4839#2/C4844/C4847/C4851/C4860, task #367)
+**Agent**: Trace (DevLoop C4808, re-verified C4811/C4817/C4821/C4826/C4833/C4839/C4839#2/C4844/C4847/C4851/C4860/C4928, task #367)
 **Scope**: `src/**`, `prisma/**`, `next.config.ts`, `package.json`
 **Commands run**: `npx tsc --noEmit`, `npm run lint`, `npx ts-prune`, `npx depcheck`, targeted grep sweeps
+
+## C4928 re-verification addendum (2026-04-25, HEAD 78e932d, +139 commits since C4860)
+
+Recurring sweep after a heavy 139-commit window since C4860 (`e2b10ea`). Major activity since: Phase 7 e2e cleanup → Phase 8 e2e sprint (W-12 cross-spec race fix via per-spec product reservation, W-9 cluster globalTeardown extension, W-10 PriceHistory cascade) — Phase 8 W-row queue fully drained at C4923. Brand-pass program closed at C4927 (14 BRAND-PASSED + 2 INTENTIONAL PARTIAL shells, of 27 templates classified at C4922). New e2e coverage: admin-product-create (#566), admin-product-edit (#578), wishlist-sold-trigger (#563), back-in-stock-dispatch (#565), similar-items-dispatch (#573), abandoned-cart-restore (#575), feed-xml-schema (#577 — DEFCON-0 last-line-of-defense for Apr 30 GMC/Doppl VTO).
+
+### Gate state on HEAD `78e932d`
+
+| Check | Result |
+|---|---|
+| `tsc --noEmit` | ✅ PASS (silent, 0 errors) |
+| `npm run lint` | ✅ **0 errors, 0 warnings** — Lead-tracked **60-commit lint-zero streak** (C4928), **33-cycle green-gate** (C4889-C4928) |
+| `@ts-ignore` / `@ts-nocheck` / `@ts-expect-error` | **0** in `src/` (unchanged across 12 audit cycles) |
+| `dangerouslySetInnerHTML` | **16 occurrences / 8 files**, +1 file vs C4860 (added in `src/app/(shop)/search/page.tsx` + `products/products-client.tsx` migration) — **all** via `jsonLdString()` helper, no new XSS surface |
+| Hardcoded secrets (`sk_live`/`sk_test`/`cfk_`/`whsec_`/AWS access keys) | **0 hits** in `src/` |
+| `as any` | **4 occurrences / 3 files** — `lib/db.ts` ×2 (Prisma `$on` event types + adapter constructor cast, framework-required), `lib/invoice/*.ts` ×2 (`(doc as any).lastAutoTable.finalY`, jspdf-autotable typings limitation) — all justified by upstream type gaps |
+| `: any` annotations | **4 occurrences / 3 files** — `not-found.tsx` ×2 + `analytics-section.tsx` ×2 (window.gtag/dataLayer typings, all guarded with feature checks) |
+
+### API route auth coverage (42 routes audited)
+
+Re-ran the auth-marker sweep on `src/app/api/**/route.ts` against `CRON_SECRET|requireAdmin|getServerSession|auth()|isAdmin|admin.session` plus a manual review of every route that didn't match:
+
+- **Admin-gated** (NextAuth session): all `(admin)/*` + `customer/data-export` + `wishlist/sync` + `upload`. ✅
+- **CRON_SECRET (Bearer + timingSafeEqual)**: all 12 `/api/cron/*` routes via `requireCronSecret` helper (closed C4854). ✅
+- **Token-gated** (opaque-secret comparison): `orders/[orderNumber]/status` (accessToken), `cart/restore` (AbandonedCart cuid + length≤64 regex), `payments/mock/confirm` (accessToken + 404 on PAYMENT_PROVIDER!=mock), `unsubscribe/*` (per-row tokens). ✅
+- **HMAC-gated**: `payments/comgate` (Comgate signature verified), `alerts/uptime` (constant-time UPTIMEROBOT_WEBHOOK_SECRET equality + 503 on unset env). ✅
+- **Bearer LEAD_API_KEY**: `dev-picks` POST/GET (rename from DEVCHAT_API_KEY closed C4844). `/dev-picks/[slug]` GET/PATCH intentionally public — slug acts as unguessable token + status state-machine prevents replay. ✅
+- **Public by design**: `auth/[...nextauth]`, `auth/register` (Zod + bcrypt cost 12 + rateLimitLogin), `search/products`, `products/random` (regex-whitelisted sizes filter, Set dedup, parameterized notIn), `suggest` (Mapy.cz proxy hides MAPY_API_KEY), `feed/{google-merchant,heureka,pinterest}` (FEED_SECRET-aware), `health{,-extended}`. ✅
+
+**No new auth gaps introduced since C4860.** `upload/route.ts` re-verified: NextAuth session + per-IP rate limit (20/min) + magic-byte content validation (JPEG/PNG/WebP/AVIF/GIF + MP4/WebM/MOV) — defense-in-depth against MIME spoofing.
+
+### Carry-forward queue (rows N/O/P/Q from C4860)
+
+| Row | Priority | Description | C4928 status |
+|---|---|---|---|
+| **N** | P2 | `renderBody` dead export at `src/lib/email/layout.ts:311` (renumbered from :250 — file grew to 533 LoC) | ⏳ **STILL OPEN**. ts-prune flags it; no new consumers. Sage Phase 2 explicitly chose inline-body pattern, so action item is the **delete** branch, not the wire-it-up branch. |
+| **O** | P2 | Resend → SMTP comment drift (14 stale inline comments naming "Resend" as transport) | ⏳ **STILL OPEN**. Re-grep confirms 14 hits across 12 files (`email-dispatch.ts`, `smtp-transport.ts`, `queues/{index,worker-email}.ts`, `subscribers/actions.ts`, `cron/{win-back,cross-sell,new-arrivals,delivery-check,review-request}/route.ts`, `(admin)/admin/orders/actions.ts`, `(shop)/checkout/actions.ts`). All 14 are **comments only** — `grep "from .resend.\|new Resend(\|RESEND_API_KEY"` returns 0 hits in `src/`. Pure documentation drift, zero runtime impact. |
+| **P** | P1 | ts-prune close-out (P1-7e/f trio + `updateSubscriberPreferences`) | ⏳ **STILL OPEN, ALL 5 SYMBOLS PERSIST**. Current ts-prune surface for src/ (excluding Next.js framework exports + module-internal usage): `checkAvailability` (`lib/actions/reservation.ts:145`), `getProducts` + `getCategories` (`lib/products-cache.ts:74,82`), `cancelPacket` (`lib/shipping/packeta.ts:212`), `updateSubscriberPreferences` (`(shop)/actions.ts:81`). **+1 NEW orphan**: `sendPasswordResetEmail` at `src/lib/email.ts:1082` — appears to be future-flow scaffolding. Decision needed: keep (forward-looking) or delete. |
+| **Q** | P2 | Email "emoji-free" cleanup — 7 surviving `&#NNNNN;` dingbats | ✅ **CLOSED**. Re-grep `&#10022;\|&#9679;\|&#10047;\|&#9733;` across `src/lib/email/` and `src/lib/email.ts`: **0 hits**. Only surviving `&#`-entities are the 2 `&#39;` apostrophe entities inside `escapeHtml` regex bodies (`email.ts:249`, `layout.ts:60`) — those are the **encoder**, not output. Sage brand-pass program (closed C4927) cleared the dingbats during the 14-template migration. |
+
+**Carry-forward delta summary**: 1 closed (Q), 3 still open (N/O/P), 1 NEW (sendPasswordResetEmail under row P umbrella). M (DOMPurify on Phase 4 mailbox render) remains correctly pending Phase 4 ingest.
+
+### email.ts size regression vs C4860 target
+
+C4860 row R established a "**LoC ≤ 2400**" integrity axis on `email.ts` (was 2369 at e2b10ea, after Sage Phase 2 cut −453 from 2822). Current state:
+
+```
+$ wc -l src/lib/email.ts
+3010
+```
+
+**+641 LoC (+27%)** in 139 commits, exceeding the C4860 target by 25%. Three contributing factors:
+1. **New email-template additions** (welcome / customs-extension / invoice-attached / refund-issued / abandoned-cart variants) bolted onto the central file rather than extracted to `src/lib/email/<name>.ts` siblings.
+2. **Sage brand-pass conversions** (14 templates appended `renderShopLink()` + `renderAboutValues()` blocks; net +30-50 LoC per template) — necessary for brand consistency, but compounds with #1.
+3. **One extraction did happen**: `src/lib/email/back-in-stock.ts` (+112 LoC, new file) split out from `email.ts`. Total `src/lib/email/` surface across 7 files = **1524 LoC** (+ `email.ts` 3010 = 4534 total email surface).
+
+**P2-NEW (row S)**: a second extraction pass (similar to the back-in-stock + similar-item + wishlist-sold pattern) on the largest in-`email.ts` builders would re-establish the C4860 size discipline. Candidates by LoC contribution: customs/refund/welcome/invoice/abandoned-cart bodies. Not blocking launch; queue as a post-Apr-30 cleanup.
+
+### depcheck delta vs C4860
+
+Unchanged from C4847/C4860:
+- **Declared but unused in `src/`**: `react-hook-form`, `@hookform/resolvers`, `tw-animate-css` (the latter loaded via `globals.css`, depcheck false-positive). The two `react-hook-form*` packages remain genuinely unused — confirmed via repo-wide `from "react-hook-form"` grep returns 0 hits.
+- **Missing (used but not declared)**: `chrome-launcher` (`scripts/lighthouse-perf.ts`), `fast-xml-parser` (`e2e/feed-xml-schema.spec.ts`, new at C4927). Both reach the binary via transitive deps, so runtime works — but explicit declaration would prevent future hoisting changes from breaking either path. Suggest adding both as devDependencies in the same cleanup commit as the unused removals.
+- **shadcn / @tailwindcss/postcss / tailwindcss / @types/react-dom** depcheck devDep flags — all legitimate (Tailwind v4 PostCSS plugin, shadcn CLI, React 19 typings).
+
+### CWV sprint #481/#482/#483 + task #484
+
+`git log --since='2026-04-24' --grep='CWV\|#481\|#482\|#483\|LCP\|CLS\|INP\|perf'` returns **0 commits**. Task **#484** (Lighthouse re-run on `jvsatnik.cz`) remains correctly **BLOCKED ON BOLT** — no code to measure since C4860. Predicted ~500-765ms LCP win from `jvsatnik.cz` redirect-chain retirement is still unrealised in any audit numbers; CLS 0.431 (homepage) + LCP 5.04 s (PDP) regressions inherited from C4834 are still on the books.
+
+`docs/audits/cwv-2026-04-24.md` + `cwv-2026-04-24.md.bak` + `perf-audit-2026-04-24.md` + `perf-verify-phase4-2026-04-25.md` + `bundle-analyzer-2026-04-25.md` + `shop-bundle-bleed-2026-04-25.md` audits all emitted in this window — bundle/perf instrumentation is well-tracked, code-side fixes are not yet shipped.
+
+### Phase 8 e2e sprint — closure verification
+
+Lead C4923 declared "Phase 8 W-row queue FULLY DRAINED (audit-debt zero)". Spot-check across `e2e/`:
+
+- `npx playwright test --list 2>/dev/null` deferred — Playwright not in this Trace shell, but Bolt's commit messages claim `vitest 49/49` consistently green (e.g. `2c16ecc`, `c1600d1`, `477bc1d`).
+- New e2e specs landed since C4860: `wishlist-sold-trigger.spec.ts`, `back-in-stock-dispatch.spec.ts`, `similar-items-dispatch.spec.ts`, `admin-product-create.spec.ts`, `admin-product-edit.spec.ts`, `abandoned-cart-restore.spec.ts`, `feed-xml-schema.spec.ts` (+globalTeardown extension across all of them with double-keyed sku+name + AbandonedCart -e2e@test.local AND filter + W-10 PriceHistory cascade per `c1600d1`). Phase 8 sprint visibly closed.
+
+### Net state at C4928
+
+Codebase remains at **clean-gates baseline** — third-longest streak in the audit log (60 commits lint-zero, 33-cycle green-gate). Phase 8 e2e sprint and brand-pass program both closed cleanly during this window. No new P0/P1 security regressions introduced. The single material new finding is the email.ts size regression (row S) — non-blocking for the Apr 30 GMC/Doppl gate, but worth folding into the post-launch cleanup queue.
+
+**Recommended Lead delta for C4929+**:
+- Row Q can be **struck from the queue** (closed at C4927).
+- Rows N/O/P remain low-priority BOLT cleanup — bundleable into a single ~100 LoC commit.
+- Row S (new) — post-launch only, not pre-Apr-30.
+- No CWV sprint commits since 2026-04-24 → if #484 is needed for the Apr 30 launch readiness signal, escalate the #481/#482/#483 sequence to BOLT P0 with concrete acceptance criteria (e.g. "homepage CLS ≤ 0.1 on Moto G Power slow-4G").
+
+No further Trace action needed until lint regresses, a new implementation surface appears, or bectly flips IMAP_* on Vercel (Phase 4 ingest gate, row M).
+
+---
 
 ## C4860 re-verification addendum (2026-04-24, post-e2b10ea, Sage Phase 2 email refactor + jvsatnik.cz PERF-VERIFY)
 
