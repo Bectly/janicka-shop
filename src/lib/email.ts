@@ -1999,12 +1999,12 @@ export async function sendCrossSellFollowUpEmail(
 export interface WinBackEmailData {
   customerName: string;
   customerEmail: string;
-  products: CrossSellProduct[];
 }
 
 function buildWinBackHtml(data: WinBackEmailData): string {
   const baseUrl = getBaseUrl();
   const firstName = data.customerName?.trim().split(" ")[0] || data.customerName;
+  const unsubscribeUrl = `${baseUrl}/odhlasit-novinky?token=${encodeURIComponent(signUnsubscribeToken(data.customerEmail))}`;
 
   const content = `
     ${renderEyebrow("Dlouho jsme se neviděly")}
@@ -2012,24 +2012,26 @@ function buildWinBackHtml(data: WinBackEmailData): string {
     <p style="margin: 0 0 18px; font-family: ${FONTS.sans}; font-size: 15px; line-height: 1.7; color: ${BRAND.charcoalSoft};">
       Už je to chvíli, co jsi naposledy nakupovala. Zatím mi přibyla spousta nových unikátních kousků &mdash; možná je mezi nimi něco přesně pro tebe.
     </p>
-
-    ${renderProductGrid(crossSellsToGridItems(data.products), 2)}
+    <p style="margin: 0 0 24px; font-family: ${FONTS.sans}; font-size: 15px; line-height: 1.7; color: ${BRAND.charcoalSoft};">
+      Mrkni se na to, co je nového. Když nic neuvidíš, tak nic — žádný tlak.
+    </p>
 
     <div style="margin: 28px 0 4px;">
-      ${renderButton({ href: `${baseUrl}/products?sort=newest`, label: "Podívat se na novinky", variant: "primary" })}
+      ${renderButton({ href: `${baseUrl}/products`, label: "Podívat se na novinky", variant: "primary" })}
     </div>`;
 
   return renderLayout({
     preheader: "Přibyly mi nové unikátní kousky — třeba je mezi nimi ten tvůj.",
     contentHtml: content,
-    unsubscribeUrl: `${baseUrl}/odhlasit-novinky?token=${encodeURIComponent(signUnsubscribeToken(data.customerEmail))}`,
+    unsubscribeUrl,
     unsubscribeText: "Tenhle email ti chodí, protože jsi u mě dřív nakoupila.",
   });
 }
 
 /**
  * Send win-back email to customers who haven't ordered in 30+ days.
- * Shows fresh products to re-engage lapsed customers.
+ * Generic re-engagement nudge with /products CTA (no items-list).
+ * Includes RFC 8058 List-Unsubscribe + one-click POST headers per CCD2/CZ legal.
  */
 export async function sendWinBackEmail(
   data: WinBackEmailData,
@@ -2040,6 +2042,9 @@ export async function sendWinBackEmail(
     return false;
   }
 
+  const baseUrl = getBaseUrl();
+  const unsubscribeUrl = `${baseUrl}/odhlasit-novinky?token=${encodeURIComponent(signUnsubscribeToken(data.customerEmail))}`;
+
   try {
     await mailer.sendMail({
       from: FROM_NEWSLETTER,
@@ -2047,6 +2052,10 @@ export async function sendWinBackEmail(
       to: data.customerEmail,
       subject: "Nové kousky čekají — Janička Shop",
       html: buildWinBackHtml(data),
+      headers: {
+        "List-Unsubscribe": `<${unsubscribeUrl}>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
     });
     return true;
   } catch (error) {
@@ -2930,7 +2939,6 @@ export function renderEmailPreview(templateKey: string): EmailPreviewResult | nu
         html: buildWinBackHtml({
           customerName: SAMPLE_CUSTOMER_NAME,
           customerEmail: SAMPLE_CUSTOMER_EMAIL,
-          products: SAMPLE_CROSS_SELL,
         }),
       };
     case "abandoned-cart-1":
