@@ -146,18 +146,25 @@ async function RelatedProductsSection({
 
   const relatedProducts = sold
     ? await (async () => {
+        const sourceProduct = await db.product.findUnique({
+          where: { id: productId },
+          select: { condition: true },
+        });
         const candidates = await db.product.findMany({ ...relatedQuery, take: 20 });
         let soldSizes: string[] = [];
         try { soldSizes = JSON.parse(productSizes); } catch { /* */ }
+        // Spec priority: brand > category > size > condition.
+        // Category is implicit (relatedQuery already filters categoryId).
         const scored = candidates.map((p) => {
           let score = 0;
+          if (p.brand && p.brand === productBrand) score += 20;
           try {
             const pSizes: string[] = JSON.parse(p.sizes);
-            if (soldSizes.length > 0 && pSizes.some((s) => soldSizes.includes(s))) score += 10;
+            if (soldSizes.length > 0 && pSizes.some((s) => soldSizes.includes(s))) score += 8;
           } catch { /* */ }
+          if (sourceProduct?.condition && p.condition === sourceProduct.condition) score += 4;
           const priceDiff = Math.abs(p.price - productPrice);
-          score += Math.max(0, 5 - priceDiff / 100);
-          if (p.brand && p.brand === productBrand) score += 3;
+          score += Math.max(0, 3 - priceDiff / 200);
           return { product: p, score };
         });
         scored.sort((a, b) => b.score - a.score);
@@ -172,17 +179,25 @@ async function RelatedProductsSection({
 
   if (sold) {
     return (
-      <section className="mt-16">
-        <div className="mb-6">
-          <span className="mb-3 flex w-fit items-center gap-1.5 rounded-full bg-sage-light/60 px-3 py-1 text-xs font-semibold tracking-wider text-sage-dark uppercase">
-            <span aria-hidden="true">◈</span> Podobné
-          </span>
-          <h2 className="font-heading text-xl font-bold text-foreground">
-            Podobné dostupné kousky
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Vybrali jsme kousky podobné velikosti, ceny a stylu
-          </p>
+      <section className="mt-16" data-testid="sold-similar-carousel">
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <span className="mb-3 flex w-fit items-center gap-1.5 rounded-full bg-sage-light/60 px-3 py-1 text-xs font-semibold tracking-wider text-sage-dark uppercase">
+              <span aria-hidden="true">◈</span> Podobné
+            </span>
+            <h2 className="font-heading text-xl font-bold text-foreground">
+              Podobné dostupné kousky
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Seřazeno podle značky, velikosti a stavu — vybírej dál.
+            </p>
+          </div>
+          <a
+            href="#hlidat-podobny"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.04] px-4 py-2 text-sm font-semibold text-primary transition-colors duration-150 hover:bg-primary/10"
+          >
+            Dej mi vědět o podobném →
+          </a>
         </div>
         <ProductCarousel ariaLabel="Podobné dostupné kousky">
           {relatedProducts.map((p) => (
@@ -499,6 +514,7 @@ export default async function ProductDetailPage({ params }: Props) {
             </div>
 
             {/* Back-in-stock — tight match (brand+size+condition), unique-inventory angle */}
+            <div id="hlidat-podobny" className="scroll-mt-24">
             <BackInStockForm
               categoryId={product.categoryId}
               brand={product.brand}
@@ -516,6 +532,7 @@ export default async function ProductDetailPage({ params }: Props) {
               condition={product.condition}
               sourceProductId={product.id}
             />
+            </div>
 
             {/* Notify me — broader category-level opt-in for warm leads */}
             <NotifyMeForm
