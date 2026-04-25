@@ -24,6 +24,7 @@ import {
   PenLine,
   Ruler,
   Terminal,
+  Briefcase,
   Menu,
 } from "lucide-react";
 import {
@@ -55,6 +56,7 @@ const navItems: NavItem[] = [
   { href: "/admin/subscribers", label: "Newsletter", icon: Mail },
   { href: "/admin/email-templates", label: "E-mail editor", icon: PenLine },
   { divider: true },
+  { href: "/admin/manager", label: "Manažerka", icon: Briefcase },
   { href: "/admin/settings", label: "Nastavení", icon: Settings },
   { href: "/admin/jarvis", label: "JARVIS", icon: Terminal },
 ];
