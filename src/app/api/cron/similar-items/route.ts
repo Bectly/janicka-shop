@@ -4,6 +4,7 @@ import { FROM_NEWSLETTER, REPLY_TO } from "@/lib/email/addresses";
 import { getDb } from "@/lib/db";
 import { buildSimilarItemsArrivedHtml } from "@/lib/email/similar-item";
 import { requireCronSecret } from "@/lib/cron-auth";
+import { checkAndRecordEmailDispatch } from "@/lib/email-dedup";
 import { logger } from "@/lib/logger";
 
 /**
@@ -75,6 +76,7 @@ export async function GET(request: Request) {
             createdAt: { gte: fortyEightHoursAgo },
           },
           select: {
+            id: true,
             name: true,
             slug: true,
             price: true,
@@ -126,7 +128,22 @@ export async function GET(request: Request) {
         // Take max 3
         const topProducts = finalProducts.slice(0, 3);
 
-        // 3. Send email
+        // 3. Cross-pipeline dedup gate (#556) — keyed on the lead match.
+        const allowed = await checkAndRecordEmailDispatch(
+          req.email,
+          topProducts[0].id,
+          "similar-item-arrived",
+        );
+        if (!allowed) {
+          await db.productNotifyRequest.update({
+            where: { id: req.id },
+            data: { notified: true },
+          });
+          skipped++;
+          continue;
+        }
+
+        // 4. Send email
         await mailer.sendMail({
           from: FROM_NEWSLETTER,
           replyTo: REPLY_TO,
@@ -135,7 +152,7 @@ export async function GET(request: Request) {
           html: buildSimilarItemsArrivedHtml(topProducts, req.email),
         });
 
-        // 4. Mark notified
+        // 5. Mark notified
         await db.productNotifyRequest.update({
           where: { id: req.id },
           data: { notified: true },

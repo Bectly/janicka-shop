@@ -300,6 +300,24 @@ model WishlistSubscription {
   @@index([notifiedAt])
 }
 
+// Cross-pipeline notify dedup gate (#556). The three product-notify pipelines
+// (BackInStockSubscription cron, WishlistSubscription on sold, ProductNotifyRequest
+// similar-item cron) can each fire for the same (email, productId) when one event
+// matches multiple criteria. Without a gate the recipient gets 2-3 near-identical
+// emails in a few hours — trust + spam-flag risk. checkAndRecordEmailDispatch
+// looks up this table for any prior dispatch within 24h before sending.
+model EmailDedupLog {
+  id        String   @id @default(cuid())
+  email     String
+  productId String
+  eventType String // back-in-stock | wishlist-sold | similar-item-arrived
+  sentAt    DateTime @default(now())
+
+  @@unique([email, productId, eventType])
+  @@index([email, productId, sentAt])
+  @@index([sentAt])
+}
+
 // Back-in-stock subscription for second-hand unique-inventory model.
 // Unlike ProductNotifyRequest (category-level match), this targets the exact
 // (brand + category + size + condition) tuple of a sold item — the cron matches

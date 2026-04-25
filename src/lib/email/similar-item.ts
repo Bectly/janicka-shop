@@ -2,6 +2,7 @@ import { getMailer } from "@/lib/email/smtp-transport";
 import { FROM_NEWSLETTER, REPLY_TO } from "@/lib/email/addresses";
 import { getDb } from "@/lib/db";
 import { signUnsubscribeToken } from "@/lib/unsubscribe-token";
+import { checkAndRecordEmailDispatch } from "@/lib/email-dedup";
 import { logger } from "@/lib/logger";
 import { CONDITION_LABELS } from "@/lib/constants";
 import {
@@ -218,6 +219,16 @@ export async function sendSimilarItemNotifications(
       const requestIds: string[] = [];
       for (const req of matchedRequests) {
         try {
+          const allowed = await checkAndRecordEmailDispatch(
+            req.email,
+            soldProduct.id,
+            "similar-item-arrived",
+          );
+          if (!allowed) {
+            requestIds.push(req.id);
+            continue;
+          }
+
           const subject = `${soldProduct.brand ? `${soldProduct.brand} ` : ""}${soldProduct.name} je pryč — mám pro tebe podobné`;
 
           await mailer.sendMail({

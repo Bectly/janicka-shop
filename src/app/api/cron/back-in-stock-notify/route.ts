@@ -4,6 +4,7 @@ import { FROM_NEWSLETTER, REPLY_TO } from "@/lib/email/addresses";
 import { getDb } from "@/lib/db";
 import { buildBackInStockHtml } from "@/lib/email/back-in-stock";
 import { requireCronSecret } from "@/lib/cron-auth";
+import { checkAndRecordEmailDispatch } from "@/lib/email-dedup";
 import { logger } from "@/lib/logger";
 
 /**
@@ -113,6 +114,22 @@ export async function GET(request: Request) {
         }
 
         const top = matched[0];
+
+        const allowed = await checkAndRecordEmailDispatch(
+          sub.email,
+          top.id,
+          "back-in-stock",
+        );
+        if (!allowed) {
+          // Mark subscription as notified so we don't re-evaluate next run —
+          // dedup is the authority, not the subscription state.
+          await db.backInStockSubscription.update({
+            where: { id: sub.id },
+            data: { notifiedAt: now, notifiedProductId: top.id },
+          });
+          skipped++;
+          continue;
+        }
 
         await mailer.sendMail({
           from: FROM_NEWSLETTER,

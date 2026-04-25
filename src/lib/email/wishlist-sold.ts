@@ -2,6 +2,7 @@ import { getMailer } from "@/lib/email/smtp-transport";
 import { FROM_NEWSLETTER, REPLY_TO } from "@/lib/email/addresses";
 import { getDb } from "@/lib/db";
 import { signUnsubscribeToken } from "@/lib/unsubscribe-token";
+import { checkAndRecordEmailDispatch } from "@/lib/email-dedup";
 import { logger } from "@/lib/logger";
 import { CONDITION_LABELS } from "@/lib/constants";
 import {
@@ -216,6 +217,17 @@ export async function sendWishlistSoldNotifications(
       const notifiedIds: string[] = [];
       for (const sub of subscribers) {
         try {
+          const allowed = await checkAndRecordEmailDispatch(
+            sub.email,
+            soldProduct.id,
+            "wishlist-sold",
+          );
+          if (!allowed) {
+            // Still mark subscription notified — dedup gate is authoritative.
+            notifiedIds.push(sub.id);
+            continue;
+          }
+
           await mailer.sendMail({
             from: FROM_NEWSLETTER,
             replyTo: REPLY_TO,
