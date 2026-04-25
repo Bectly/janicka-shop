@@ -1072,6 +1072,113 @@ export async function sendNewsletterWelcomeEmail(email: string): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
+// Account creation welcome email
+//
+// Sent transactionally after `/api/auth/register` succeeds. Mirrors the
+// abandoned-cart wrapper pattern (brand header + body + About-values footer +
+// shop CTA) so the first message a registered customer receives reinforces
+// Janička's "vybírám osobně, jeden kus jedna šance, česká a blízká" pillars.
+// ---------------------------------------------------------------------------
+
+interface AccountWelcomeData {
+  email: string;
+  firstName?: string | null;
+}
+
+function buildAccountWelcomeHtml(data: AccountWelcomeData): string {
+  const baseUrl = getBaseUrl();
+  const firstName = (data.firstName ?? "").trim();
+  const greeting = firstName
+    ? `Vítej u mě, ${escapeHtml(firstName)}.`
+    : "Vítej u mě.";
+
+  const perks: { numeral: string; title: string; text: string }[] = [
+    {
+      numeral: "01",
+      title: "Oblíbené kousky pohromadě",
+      text: "Co se ti líbí, ulož do oblíbených. Dám ti vědět, kdyby se objevilo něco podobného.",
+    },
+    {
+      numeral: "02",
+      title: "Rychlejší pokladna",
+      text: "Adresa, doručení i platba uložené. Příště ti to zabere pár vteřin.",
+    },
+    {
+      numeral: "03",
+      title: "Přehled objednávek",
+      text: "Vidíš, kde tvoje zásilka právě je, i co sis u mě v minulosti odnesla.",
+    },
+  ];
+
+  const perksHtml = perks
+    .map(
+      (p) => `
+      <tr>
+        <td style="padding: 10px 0; vertical-align: top; width: 36px;">
+          <div style="width: 32px; height: 32px; line-height: 32px; text-align: center; background: ${BRAND.blush}; border-radius: 50%; color: ${BRAND.primary}; font-family: ${FONTS.serif}; font-style: italic; font-size: 13px; font-weight: 600; letter-spacing: 0.02em;">${p.numeral}</div>
+        </td>
+        <td style="padding: 10px 0 10px 14px; vertical-align: top; font-family: ${FONTS.sans};">
+          <p style="margin: 0 0 2px; font-family: ${FONTS.serif}; font-size: 16px; font-weight: 600; color: ${BRAND.charcoal};">${p.title}</p>
+          <p style="margin: 0; font-size: 13px; color: ${BRAND.charcoalSoft}; line-height: 1.6;">${p.text}</p>
+        </td>
+      </tr>`,
+    )
+    .join("");
+
+  const content = `
+    <div style="text-align: center;">
+      ${renderEyebrow("Tvůj nový účet")}
+      ${renderDisplayHeading(greeting)}
+      <p style="margin: 0 0 8px; font-family: ${FONTS.sans}; font-size: 15px; color: ${BRAND.charcoalSoft}; line-height: 1.7;">
+        Janička tady. Tvůj účet je založený &mdash; děkuju, že jsi mi dala důvěru.
+      </p>
+      <p style="margin: 0 0 28px; font-family: ${FONTS.serif}; font-style: italic; font-size: 17px; color: ${BRAND.primary};">
+        &bdquo;Móda, která měla první život. A zaslouží si i druhý.&ldquo;
+      </p>
+    </div>
+
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin: 8px 0 0;">
+      ${perksHtml}
+    </table>
+
+    <div style="margin: 32px 0 4px;">
+      ${renderButton({ href: `${baseUrl}/account`, label: "Otevřít můj účet", variant: "primary" })}
+    </div>
+    ${renderShopLink("Prohlédnout novinky")}
+    ${renderAboutValues()}`;
+
+  return renderLayout({
+    preheader: "Tvůj účet u Janičky je založený. Tady je, co tě čeká.",
+    contentHtml: content,
+    showUnsubscribe: false,
+  });
+}
+
+/**
+ * Send account-creation welcome email (transactional, no unsubscribe).
+ * Non-blocking: logs errors instead of throwing so registration always succeeds.
+ */
+export async function sendAccountWelcomeEmail(data: AccountWelcomeData): Promise<void> {
+  const mailer = getMailer();
+  if (!mailer) {
+    logger.warn("[Email] SMTP not configured — skipping account welcome email");
+    return;
+  }
+
+  try {
+    await mailer.sendMail({
+      from: FROM_INFO,
+      replyTo: REPLY_TO,
+      to: data.email,
+      subject: "Vítej u Janičky — tvůj účet je založený",
+      html: buildAccountWelcomeHtml(data),
+    });
+  } catch (error) {
+    logger.error(`[Email] Failed to send account welcome email to ${data.email}:`, error);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Abandoned cart recovery emails (3-email sequence)
 // ---------------------------------------------------------------------------
 
@@ -2550,6 +2657,14 @@ export function renderEmailPreview(templateKey: string): EmailPreviewResult | nu
         subject: "Vítej v Janičce! — Janička Shop",
         html: buildNewsletterWelcomeHtml(SAMPLE_CUSTOMER_EMAIL),
       };
+    case "account-welcome":
+      return {
+        subject: "Vítej u Janičky — tvůj účet je založený",
+        html: buildAccountWelcomeHtml({
+          email: SAMPLE_CUSTOMER_EMAIL,
+          firstName: SAMPLE_CUSTOMER_NAME.split(" ")[0],
+        }),
+      };
     case "admin-new-order":
       return {
         subject: `Nová objednávka ${SAMPLE_ORDER_NUMBER} — ${formatPriceCzk(4159)}`,
@@ -2703,6 +2818,7 @@ export const EMAIL_PREVIEW_TEMPLATES: { key: string; label: string; group: strin
   { key: "abandoned-cart-3", label: "Opuštěný košík #3 (48-72 h)", group: "Marketing" },
   { key: "win-back", label: "Win-back (30+ dní)", group: "Marketing" },
   { key: "wishlist-sold", label: "Wishlist — prodáno", group: "Marketing" },
+  { key: "account-welcome", label: "Vítej v účtu (registrace)", group: "Účet" },
   { key: "email-change-verify", label: "Potvrzení změny emailu", group: "Účet" },
   { key: "admin-new-order", label: "Admin: nová objednávka", group: "Admin" },
 ];

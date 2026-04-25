@@ -3,6 +3,7 @@ import { z } from "zod";
 import { hash } from "bcryptjs";
 import { getDb } from "@/lib/db";
 import { rateLimitLogin } from "@/lib/rate-limit";
+import { sendAccountWelcomeEmail } from "@/lib/email";
 
 const registerSchema = z.object({
   email: z.string().email("Neplatný email"),
@@ -68,6 +69,8 @@ export async function POST(request: Request) {
       },
     });
   }
+
+  void sendAccountWelcomeEmail({ email, firstName });
 
   return NextResponse.json({ success: true });
 }
