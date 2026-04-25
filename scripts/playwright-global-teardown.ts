@@ -103,12 +103,25 @@ export default async function globalTeardown() {
       );
     }
 
-    // W-10: sweep orphan E2E products. Match BOTH sku prefix `E2E-` AND name
-    // prefix `E2E Test Product ` to avoid hitting any real seller listings.
+    // W-10: sweep orphan E2E products. Match BOTH sku prefix AND name prefix
+    // (double-key) to avoid hitting any real seller listings. Two prefix
+    // pairs are recognised: the original create-spec pair (`E2E-` / `E2E Test
+    // Product `, C4922) and the edit-spec pair (`E2E-EDIT-` / `E2E Edit
+    // Product `, C4927 #578) added when admin-product-edit.spec.ts landed.
     const e2eProductFilter = {
-      AND: [
-        { sku: { startsWith: "E2E-" } },
-        { name: { startsWith: "E2E Test Product " } },
+      OR: [
+        {
+          AND: [
+            { sku: { startsWith: "E2E-" } },
+            { name: { startsWith: "E2E Test Product " } },
+          ],
+        },
+        {
+          AND: [
+            { sku: { startsWith: "E2E-EDIT-" } },
+            { name: { startsWith: "E2E Edit Product " } },
+          ],
+        },
       ],
     };
     const orphanProducts = await prisma.product.findMany({
