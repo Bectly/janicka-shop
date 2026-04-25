@@ -22,6 +22,8 @@ import {
   renderProductRowList,
   renderProductGrid,
   renderTagPill,
+  renderAboutValues,
+  renderShopLink,
 } from "@/lib/email/layout";
 
 interface OrderItem {
@@ -197,9 +199,12 @@ function buildOrderConfirmationHtml(data: OrderEmailData): string {
     <div style="margin: 36px 0 8px;">
       ${renderButton({ href: orderUrl, label: "Zobrazit objednávku", variant: "primary" })}
     </div>
+    ${renderShopLink("Prohlédnout nové kousky")}
     <p style="margin: 14px 0 0; font-family: ${FONTS.sans}; font-size: 12px; color: ${BRAND.charcoalMuted}; text-align: center; line-height: 1.6;">
       Dotaz? Odpověz rovnou na tenhle email nebo piš na <a href="mailto:podpora@jvsatnik.cz" style="color: ${BRAND.charcoalSoft};">podpora@jvsatnik.cz</a>.
-    </p>`;
+    </p>
+
+    ${renderAboutValues()}`;
 
   return renderLayout({
     preheader: `Tvoje objednávka ${data.orderNumber} je u mě. ${formatPriceCzk(data.total)}.`,
@@ -570,8 +575,11 @@ function buildShippingNotificationHtml(data: ShippingNotificationData): string {
     <div style="margin: 32px 0 8px;">
       ${renderButton({ href: orderUrl, label: "Sledovat zásilku", variant: "primary" })}
     </div>
+    ${renderShopLink("Prohlédnout další kousky")}
 
-    ${crossSellHtml}`;
+    ${crossSellHtml}
+
+    ${renderAboutValues()}`;
 
   return renderLayout({
     preheader: `Tvoje objednávka ${data.orderNumber} je na cestě${data.trackingNumber ? ` · ${data.trackingNumber}` : ""}.`,

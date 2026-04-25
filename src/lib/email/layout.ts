@@ -446,6 +446,72 @@ export function renderTagPill(text: string, tone: "primary" | "champagne" | "suc
   return `<span style="display: inline-block; padding: 4px 10px; border-radius: 999px; background: ${palette.bg}; color: ${palette.fg}; font-family: ${FONTS.sans}; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;">${escapeHtml(text)}</span>`;
 }
 
+/**
+ * About-values footer strip — mirrors `/about` page's three pillars
+ * ("Vybírám osobně", "Jeden kus, jedna šance", "Česká a blízká").
+ * Used in transactional emails where it reinforces brand story without
+ * needing marketing unsubscribe (order confirmation, shipping notification).
+ *
+ * Layout: 3 columns on desktop (stacked on ≤520px via `.j-stack`), each
+ * with serif title + sans body + brand-pink ornamental numeral. Anchored
+ * by eyebrow label + soft divider so it reads as Janička signature block.
+ */
+export function renderAboutValues(): string {
+  const values: { numeral: string; title: string; body: string }[] = [
+    {
+      numeral: "i",
+      title: "Vybírám osobně",
+      body: "Každý kousek prochází mýma rukama. Nafotím ho, zkontroluju stav, popíšu každý detail.",
+    },
+    {
+      numeral: "ii",
+      title: "Jeden kus, jedna šance",
+      body: "Každý kousek je u mě jen jednou. Žádné duplikáty, žádná druhá stejná velikost.",
+    },
+    {
+      numeral: "iii",
+      title: "Česká a blízká",
+      body: "Malý rodinný second hand z Česka. Napíšeš a odpovídá ti člověk — ne chatbot.",
+    },
+  ];
+
+  const cell = (v: typeof values[number], isFirst: boolean) => `
+    <td valign="top" class="j-stack${isFirst ? " j-stack-first" : ""}" style="width: 33.33%; padding: 0 18px; ${isFirst ? "" : `border-left: 1px solid ${BRAND.borderSoft};`} vertical-align: top;">
+      <div style="font-family: ${FONTS.serif}; font-style: italic; font-size: 14px; font-weight: 600; color: ${BRAND.primary}; letter-spacing: 0.08em; text-transform: lowercase; margin: 0 0 8px;">${v.numeral}.</div>
+      <div style="font-family: ${FONTS.serif}; font-size: 16px; font-weight: 600; color: ${BRAND.charcoal}; line-height: 1.25; margin: 0 0 6px;">${escapeHtml(v.title)}</div>
+      <div style="font-family: ${FONTS.sans}; font-size: 12.5px; color: ${BRAND.charcoalSoft}; line-height: 1.6;">${escapeHtml(v.body)}</div>
+    </td>`;
+
+  return `
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin: 36px 0 4px; padding: 28px 0 4px; border-top: 1px solid ${BRAND.borderSoft};">
+      <tr>
+        <td align="center" style="padding: 0 0 18px;">
+          <span style="font-family: ${FONTS.sans}; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.18em; color: ${BRAND.primary};">Jak to u mě chodí</span>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+            <tr>
+              ${values.map((v, i) => cell(v, i === 0)).join("")}
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>`;
+}
+
+/**
+ * Secondary shop-link row — small text CTA matching the About page's
+ * "Prohlédnout novinky →" underline style. Pair with a primary button.
+ */
+export function renderShopLink(label = "Prohlédnout další kousky", path = "/products?sort=newest"): string {
+  const href = `${getBaseUrl()}${path}`;
+  return `<p style="margin: 14px 0 0; text-align: center; font-family: ${FONTS.sans}; font-size: 13px; line-height: 1.6;">
+    <a href="${escapeHtml(href)}" style="color: ${BRAND.primary}; font-weight: 600; text-decoration: none; border-bottom: 1px solid ${BRAND.primaryLight}; padding-bottom: 2px;">${escapeHtml(label)} &rarr;</a>
+  </p>`;
+}
+
 /** Soft info card (used for status banners, tracking numbers, etc.) */
 export function renderInfoCard(contentHtml: string, tone: "blush" | "champagne" | "success" | "warning" = "blush"): string {
   const bg = tone === "success" ? BRAND.successSoft
