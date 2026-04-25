@@ -58,11 +58,11 @@
 
 Diff is one block; no signature change, no call-site change, no new imports (`renderShopLink` and `renderAboutValues` were already imported on lines 25–26).
 
-## Recommended follow-up bundles (do not action this cycle)
+## Recommended follow-up bundles
 
-Group the 11 PARTIAL templates into two cohesive Bolt/Sage tasks:
+Group the remaining 9 PARTIAL templates into two cohesive Sage tasks (1–2 per cycle pace per #571):
 
-1. **POLISH-RETENTION** (5 templates): `order-delivered`, `review-request`, `delivery-check`, `browse-abandonment`, `cross-sell-follow-up` — all post-purchase / re-engagement touchpoints where `renderShopLink` + `renderAboutValues` reinforce the next-purchase loop. No new data dependencies.
+1. **POLISH-RETENTION** (3 remaining): `delivery-check`, `browse-abandonment`, `cross-sell-follow-up` — all post-purchase / re-engagement touchpoints where `renderShopLink` + `renderAboutValues` reinforce the next-purchase loop. No new data dependencies. _(`order-delivered` and `review-request` landed in C4923 #571.)_
 2. **POLISH-CAMPAIGN** (4 templates + 2 shells): `newsletter-welcome`, `win-back`, `campaign`, `campaign-preview`, `mother's-day shell`, `customs shell` — replace the bespoke campaign footer notes with `renderAboutValues()` and add `renderShopLink` where missing. Watch for tone clash on customs/Mother's Day, where the bespoke italic footer is part of the creative; may prefer a hybrid (values + tagline).
 
 ## Acceptance checklist
