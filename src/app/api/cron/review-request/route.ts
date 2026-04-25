@@ -41,7 +41,12 @@ export async function GET(request: Request) {
           select: { firstName: true, lastName: true, email: true },
         },
         items: {
-          select: { name: true, size: true, color: true },
+          select: {
+            name: true,
+            size: true,
+            color: true,
+            product: { select: { slug: true, images: true } },
+          },
         },
       },
       take: 10,
@@ -54,11 +59,22 @@ export async function GET(request: Request) {
         customerName: `${order.customer.firstName} ${order.customer.lastName}`,
         customerEmail: order.customer.email,
         accessToken: order.accessToken ?? "",
-        items: order.items.map((i) => ({
-          name: i.name,
-          size: i.size,
-          color: i.color,
-        })),
+        items: order.items.map((i) => {
+          let firstImage: string | null = null;
+          try {
+            const imgs: string[] = JSON.parse(i.product?.images ?? "[]");
+            firstImage = imgs[0] ?? null;
+          } catch {
+            firstImage = null;
+          }
+          return {
+            name: i.name,
+            size: i.size,
+            color: i.color,
+            slug: i.product?.slug ?? null,
+            image: firstImage,
+          };
+        }),
       });
 
       if (success) {

@@ -3,6 +3,8 @@
 import { getDb } from "@/lib/db";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
+import { auth } from "@/lib/auth";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export interface WishlistProduct {
   id: string;
@@ -92,5 +94,67 @@ export async function subscribeWishlistNotifications(input: {
   } catch (err) {
     logger.error("[Wishlist] Subscribe failed:", err);
     return { ok: false, count: 0 };
+  }
+}
+
+const singleSubscribeSchema = z.object({
+  productId: z.string().max(128),
+  // Email is optional: signed-in customers are subscribed via session.
+  email: z.string().email().max(254).optional(),
+});
+
+export type SingleSubscribeResult =
+  | { ok: true }
+  | { ok: false; reason: "invalid" | "rate_limited" | "auth_required" | "error" };
+
+/**
+ * Per-product wishlist subscribe for PDP "notify me if sold" capture.
+ * Signed-in customers auto-subscribe using session email — client omits `email`.
+ * Unauth visitors must pass `email`; rate-limited per IP (5/min).
+ * Silently no-ops if the product is already sold (nothing to wait for).
+ */
+export async function subscribeSingleWishlistNotification(input: {
+  productId: string;
+  email?: string;
+}): Promise<SingleSubscribeResult> {
+  const parsed = singleSubscribeSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, reason: "invalid" };
+
+  const session = await auth();
+  const sessionEmail =
+    session?.user?.role === "customer" ? session.user.email ?? null : null;
+
+  const email = sessionEmail ?? parsed.data.email;
+  if (!email) return { ok: false, reason: "auth_required" };
+
+  if (!sessionEmail) {
+    const ip = await getClientIp();
+    const rl = checkRateLimit(`wishlist-subscribe:${ip}`, 5, 60_000);
+    if (!rl.success) return { ok: false, reason: "rate_limited" };
+  }
+
+  const normalizedEmail = email.toLowerCase();
+  const { productId } = parsed.data;
+
+  try {
+    const db = await getDb();
+
+    const product = await db.product.findUnique({
+      where: { id: productId },
+      select: { active: true, sold: true },
+    });
+    if (!product || !product.active || product.sold) {
+      return { ok: true };
+    }
+
+    await db.wishlistSubscription.upsert({
+      where: { email_productId: { email: normalizedEmail, productId } },
+      create: { email: normalizedEmail, productId },
+      update: {},
+    });
+    return { ok: true };
+  } catch (err) {
+    logger.error("[Wishlist] Single subscribe failed:", err);
+    return { ok: false, reason: "error" };
   }
 }

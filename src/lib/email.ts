@@ -1446,7 +1446,13 @@ interface ReviewRequestEmailData {
   customerName: string;
   customerEmail: string;
   accessToken: string;
-  items: { name: string; size?: string | null; color?: string | null }[];
+  items: {
+    name: string;
+    size?: string | null;
+    color?: string | null;
+    image?: string | null;
+    slug?: string | null;
+  }[];
 }
 
 function buildReviewRequestHtml(data: ReviewRequestEmailData): string {
@@ -1455,38 +1461,66 @@ function buildReviewRequestHtml(data: ReviewRequestEmailData): string {
   const shopUrl = `${baseUrl}/products?sort=newest`;
   const firstName = data.customerName?.trim().split(" ")[0] || data.customerName;
 
-  const itemsList = data.items
+  const itemCards = data.items
+    .slice(0, 3)
     .map((item) => {
       const detail = [item.size, item.color].filter(Boolean).join(" · ");
-      return `<li style="padding: 6px 0; font-family: ${FONTS.sans}; font-size: 14px; color: ${BRAND.charcoal}; line-height: 1.5;"><span style="font-family: ${FONTS.serif}; font-weight: 600;">${escapeHtml(item.name)}</span>${detail ? `<span style="color: ${BRAND.charcoalSoft}; font-size: 13px;"> &middot; ${escapeHtml(detail)}</span>` : ""}</li>`;
+      const productUrl = item.slug ? `${baseUrl}/products/${encodeURIComponent(item.slug)}` : null;
+      const wrap = (inner: string) =>
+        productUrl
+          ? `<a href="${escapeHtml(productUrl)}" style="text-decoration: none; color: inherit; display: block;">${inner}</a>`
+          : inner;
+      const thumb = item.image
+        ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" width="64" height="80" style="width: 64px; height: 80px; object-fit: cover; border-radius: 8px; display: block; border: 1px solid ${BRAND.borderSoft};" />`
+        : `<div style="width: 64px; height: 80px; background: ${BRAND.blush}; border-radius: 8px; line-height: 80px; text-align: center; font-family: ${FONTS.serif}; font-style: italic; font-size: 28px; color: ${BRAND.primaryLight};">J</div>`;
+      const textBlock = `
+        <p style="margin: 0; font-family: ${FONTS.serif}; font-size: 15px; font-weight: 600; color: ${BRAND.charcoal}; line-height: 1.3;">${escapeHtml(item.name)}</p>
+        ${detail ? `<p style="margin: 4px 0 0; font-family: ${FONTS.sans}; font-size: 12px; color: ${BRAND.charcoalSoft};">${escapeHtml(detail)}</p>` : ""}`;
+      return `
+        <tr>
+          <td style="padding: 8px 0; vertical-align: top; width: 76px;">${wrap(thumb)}</td>
+          <td style="padding: 8px 0 8px 12px; vertical-align: middle;">${wrap(textBlock)}</td>
+        </tr>`;
     })
     .join("");
+
+  const moreItems =
+    data.items.length > 3
+      ? `<p style="margin: 6px 0 0; font-family: ${FONTS.sans}; font-size: 12px; color: ${BRAND.charcoalMuted}; text-align: center; font-style: italic;">a ještě ${data.items.length - 3} další</p>`
+      : "";
+
+  const starsRow = `
+    <div style="text-align: center; margin: 0 0 8px;">
+      <span style="font-family: ${FONTS.serif}; font-size: 28px; letter-spacing: 6px; color: ${BRAND.primary};">★ ★ ★ ★ ★</span>
+    </div>`;
 
   const content = `
     ${renderEyebrow(`Objednávka ${data.orderNumber}`)}
     ${renderDisplayHeading(firstName ? `${escapeHtml(firstName)}, jak ti padly?` : "Jak ti padly?")}
-    <p style="margin: 0 0 16px; font-family: ${FONTS.sans}; font-size: 15px; line-height: 1.7; color: ${BRAND.charcoalSoft};">
+    <p style="margin: 0 0 20px; font-family: ${FONTS.sans}; font-size: 15px; line-height: 1.7; color: ${BRAND.charcoalSoft};">
       Je to týden, co máš svoji objednávku doma. Hrozně mě zajímá, jestli ti všechno padne přesně tak, jak jsi doufala &mdash; a kdyby něco nesedělo, ráda to s tebou vyřeším.
     </p>
 
-    ${renderInfoCard(
-      `<div style="font-family: ${FONTS.sans}; font-size: 13px; color: ${BRAND.charcoalSoft};">
-        <p style="margin: 0 0 8px; font-family: ${FONTS.sans}; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: ${BRAND.primary};">Tvoje kousky</p>
-        <ul style="margin: 0; padding: 0 0 0 18px;">${itemsList}</ul>
-      </div>`,
-      "blush",
-    )}
+    <div style="border: 1px solid ${BRAND.borderSoft}; border-radius: 14px; padding: 14px 18px; background: ${BRAND.ivory}; margin: 0 0 24px;">
+      <p style="margin: 0 0 6px; font-family: ${FONTS.sans}; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: ${BRAND.primary};">Tvoje kousky</p>
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse: collapse;">
+        ${itemCards}
+      </table>
+      ${moreItems}
+    </div>
 
-    <p style="margin: 18px 0 24px; font-family: ${FONTS.sans}; font-size: 14px; line-height: 1.7; color: ${BRAND.charcoalSoft}; text-align: center;">
-      Tvoje hodnocení mi pomůže vybírat ještě lépe &mdash; a další holky díky tobě uvidí, jak to u mě chodí doopravdy.
+    ${starsRow}
+    <p style="margin: 0 0 24px; font-family: ${FONTS.serif}; font-style: italic; font-size: 16px; line-height: 1.6; color: ${BRAND.primary}; text-align: center;">
+      Pár vět od tebe mi pomůže vybírat ještě lépe.
     </p>
 
-    <div style="margin: 20px 0 8px;">
+    <div style="margin: 8px 0;">
       ${renderButton({ href: orderUrl, label: "Napsat hodnocení", variant: "primary" })}
     </div>
 
-    <p style="margin: 20px 0 0; text-align: center; font-family: ${FONTS.sans}; font-size: 13px;">
-      <a href="${shopUrl}" style="color: ${BRAND.charcoalSoft}; text-decoration: underline;">Nebo se podívej na novinky &rarr;</a>
+    <p style="margin: 22px 0 0; text-align: center; font-family: ${FONTS.sans}; font-size: 13px; color: ${BRAND.charcoalSoft};">
+      Kdyby něco nesedělo, napiš mi rovnou &mdash;<br />
+      <a href="${shopUrl}" style="color: ${BRAND.primary}; text-decoration: underline;">nebo se podívej na novinky &rarr;</a>
     </p>`;
 
   return renderLayout({
@@ -2754,7 +2788,11 @@ export function renderEmailPreview(templateKey: string): EmailPreviewResult | nu
           customerName: SAMPLE_CUSTOMER_NAME,
           customerEmail: SAMPLE_CUSTOMER_EMAIL,
           accessToken: SAMPLE_TOKEN,
-          items: SAMPLE_ITEMS,
+          items: SAMPLE_ITEMS.map((it, idx) => ({
+            ...it,
+            slug: SAMPLE_CROSS_SELL[idx]?.slug ?? null,
+            image: SAMPLE_CROSS_SELL[idx]?.image ?? null,
+          })),
         }),
       };
     case "delivery-check":
