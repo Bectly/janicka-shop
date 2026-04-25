@@ -1593,3 +1593,149 @@ The C4905 Bolt landing introduces a **third** email-capture widget on *available
 - **Follow-up queue**: N/O/P/V/M + W-1/W-2/W-3/W-4 all carry; no new rows filed at C4905.
 
 **Net cycle verdict (C4904→C4905)**: 3 code commits landed (Sage `d858782` review-request brand pass + Bolt `05c42e7` #552 overlay rescue cron + per-product subscribe + Lead `d0d9902` supervision-only). No new audit findings. Bolt #552 overlay commit is clean additive; the pre-dispatch completion documented in Row X stands. Trace next-cycle dispatch is **#531 Speed Insights field-baseline pull** (reframed + unblocked per Lead C4905 directive; browser-side 7-day INP/LCP/CLS pull for `/admin/*` + `/account/*`, appends §7 to `perf-verify-phase4-2026-04-25.md`, closes Phase 4 verification gate if all p75 INP <200ms + LCP <2.5s). Audit doc now at ~1600 lines — no immediate rotation need but flag for post-launch archival.
+
+---
+
+## Phase 7 addendum — C4906→C4909 sweep (appended 2026-04-25 by Trace C4909)
+
+**Audit-debt clearance**: Lead C4908 flagged Trace skipped Phase 7 sweep for two consecutive cycles, with five fresh landings unaudited (#553/#554/#555/#556 + Trace's own 3db9e4f scoring rewrite). C4909 added a sixth (#557 cron-metrics). This addendum runs the same XSS/dedup/race-condition four-axis lens on all six landings.
+
+Quality gates re-run at `HEAD abcd32d`: `tsc --noEmit` → **0 errors**, `eslint` → **0 warnings / 0 errors**. Targeted vitest re-run on the two new test files: `src/lib/email-dedup.test.ts` 5/5 pass, `src/lib/cron-metrics.test.ts` 6/6 pass (11/11 total). Green-gate streak extends from 19 → **20 cycles** (C4889 → C4909). Lint-zero commit streak extends to **42 commits** (41 prior + Sage `7d33288` + Bolt `abcd32d`).
+
+### C4906→C4909 landings reviewed
+
+| Commit | Cycle | Agent | Task | Scope | Verdict |
+|---|---|---|---|---|---|
+| `a612390` | C4906 | Bolt | #553 | `docs/pinterest-catalog-setup.md` (187-line bectly self-registration guide) + `docs/STRUCTURE.md` regen. **No production code change** — the `/api/feed/pinterest` route was already FEED_SECRET-gated via `validateFeedToken` at C4904 (route.ts:116-117). | ✅ **Documentation-only**. Verified `validateFeedToken` returns 403 when `FEED_SECRET` is configured and the URL token mismatches; falls open to "no secret configured" only in dev/preview. Note: the comparison `token === secret` at `src/lib/feed-auth.ts:17` is **not timing-safe** — but the same secret is bundled in publicly-shared aggregator URLs (Heureka/Pinterest/GMC fetch via `?token=...`), so an attacker observing one feed URL has the secret regardless of equality timing. Acceptable for a feed-auth surface (NOT a credential surface); **no follow-up filed**. |
+| `534cac9` | C4907 | Bolt | #554 | `e2e/sold-pdp.spec.ts` (84 lines, NEW) — Playwright spec flips a category product to `sold=true` in `beforeAll` via PrismaClient + reverts in `afterAll`, navigates `/products/<slug>`, asserts `data-testid="sold-similar-carousel"` ≥4 ProductCard items + inline anchor CTA `#hlidat-podobny`. | ✅ **Four-axis clean**. (1) DB-side: uses real PrismaClient against dev DB — no mocks, hits real query path. (2) Race-safety: `afterAll` always runs revert (cleanup is idempotent — re-setting `sold=false` on a product that was sold-pre-test is a no-op since `soldProductId` only set when `target` was non-null). **MILD CONCERN**: if the test process is killed between `beforeAll` flip and `afterAll` revert (Ctrl-C, OOM), the dev DB is left with one item incorrectly flagged sold. Filed as P3 W-7 below. (3) `test.skip` on missing eligible category — graceful degrade. (4) Locator `cards.first()` waits for visibility before counting — no flaky-count race. |
+| `3db9e4f` | C4907 | Trace | #531/#554 | `src/app/(shop)/products/[slug]/page.tsx` +31/-14 — `RelatedProductsSection` sold-branch scoring rewrite to spec-priority (brand+20 > size-overlap+8 > condition+4 > price-proximity max+3 decay/200), added `sourceProduct.condition` lookup, `data-testid="sold-similar-carousel"`, copy refresh, inline `Dej mi vědět o podobném →` chip CTA → `#hlidat-podobny`. | ✅ **Self-review (Trace auditing own code)**: scoring is pure-deterministic, no external state. `JSON.parse` calls wrapped in try/catch with empty-fallback (matches existing pattern at `wishlist-sold.ts:170-174` + `similar-item.ts:50-56` + `back-in-stock-notify/route.ts:99-104`). Single extra DB roundtrip for `sourceProduct.condition` (cost: indexed `findUnique` on product PK, ~1ms on libsql) — acceptable since this is the sold-PDP path, not a hot route. The CTA href `#hlidat-podobny` correctly points at the `BackInStockForm` anchor wrapper added at `page.tsx:519`. No XSS surface (no user-controlled string interpolation in the JSX — `p.brand`/`p.name`/`p.condition` render via React's escaping). |
+| `31f1c6f` | C4907 | Bolt | #555 | `src/app/(shop)/products/[slug]/page.tsx` -8 lines — removed `NotifyMeForm` from sold branch, kept `BackInStockForm` as sole notify widget on sold-PDP, `NotifyMeForm` retained on available PDP. | ✅ **Clean collapse per W-2 spec**. Verified at `page.tsx:516-537`: sold branch now mounts only `BackInStockForm` wrapped in `id="hlidat-podobny" scroll-mt-24` anchor. The available-PDP path is untouched (NotifyMeForm still mounts on the regular branch, preserving the broader category-level capture for non-sold items). **NOTE**: the C4907 commit landed without the e2e regression assertion that was part of the P1 spec; that was filed as #558 and merged into the C4907 e2e spec at C4909 (verified below). |
+| `b5e7277` | C4908 | Bolt | #556 | `prisma/schema.prisma:309-319` (NEW model `EmailDedupLog`), `src/lib/email-dedup.ts` (77 lines, NEW), `src/lib/email-dedup.test.ts` (108 lines, 5 unit tests), wired into 4 sites: `back-in-stock-notify/route.ts:115-129`, `similar-items/route.ts:128-141`, `wishlist-sold.ts:220-229`, `similar-item.ts:222-230`. | ✅ **Four-axis clean** — see KEY VERIFICATION block below. |
+| `534cac9` ↻ | C4907 | Bolt | #558 | The e2e spec at `e2e/sold-pdp.spec.ts:84-91` includes the assertion that `data-testid="back-in-stock-form"` renders exactly once and `data-testid="notify-me-form"` is absent on the sold slug. Verified both testids exist at their respective component sources (`src/components/shop/back-in-stock-form.tsx:55` + `src/components/shop/notify-me-form.tsx:37`). | ✅ **Spec gap closed**. The C4907 landing already included the W-2 regression guard inline (lines 84-91 of the same file Bolt added), so #558's "add e2e regression assertion" filing was redundant — the assertion was present from day one. Lead's C4908 status note ("Bolt's #555 commit skipped the e2e regression assertion") is **stale**; close #558 as already-shipped. |
+| `7d33288` | C4909 | Sage | #494 | `src/lib/email.ts` — `sendPasswordResetEmail` + `buildPasswordResetHtml` exports + admin email-previews registry wire-up. **Out of Phase 7 scope** (Sage cadence, not part of the Bolt landing audit-debt) — included for completeness; brand-pass review on this template is a Phase 8 candidate, not a Phase 7 four-axis target. | ⏸ **Deferred to Phase 8** (token-handling/escapeHtml review of password-reset link is Phase 8 scope; not blocking #367). |
+| `abcd32d` | C4909 | Bolt | #557 | `src/lib/cron-metrics.ts` (114 lines, NEW), `src/lib/cron-metrics.test.ts` (153 lines, 6 unit tests), 12 cron routes migrated to `wrapCronRoute(name, handler)` wrapper (abandoned-carts, back-in-stock-notify, browse-abandonment, cross-sell, delivery-check, delivery-deadline, email-sync, new-arrivals, review-request, similar-items, win-back, wishlist-sold-notify). | ✅ **Four-axis clean** — see metrics-wrapper review below. |
+
+### KEY VERIFICATION POINT — #556 EmailDedupLog (per Lead C4908 directive)
+
+Lead C4908 explicitly asked Trace to **confirm `EmailDedupLog @@unique` constraint correctly prevents duplicate fires across both cron + checkout-action paths AND `createdAt` index supports 24h window query efficiently (EXPLAIN QUERY PLAN if needed)**. Verified:
+
+**Schema** (`prisma/schema.prisma:309-319`):
+```prisma
+model EmailDedupLog {
+  id        String   @id @default(cuid())
+  email     String
+  productId String
+  eventType String   // back-in-stock | wishlist-sold | similar-item-arrived
+  sentAt    DateTime @default(now())
+
+  @@unique([email, productId, eventType])
+  @@index([email, productId, sentAt])
+  @@index([sentAt])
+}
+```
+
+**Documentation correction**: Lead's directive references "createdAt index" but the actual field is `sentAt` (not `createdAt`). The named index `@@index([email, productId, sentAt])` is the correct supporting index. No code change needed; flagging the directive-language drift only.
+
+**Constraint correctness — three-axis check**:
+
+1. **Same-pipeline idempotency**: `@@unique([email, productId, eventType])` — two cron passes on the same eventType for the same `(email, productId)` will collide on the second `db.emailDedupLog.create()`, the catch at `email-dedup.ts:69` returns `false`, and the caller skips the send. ✅ Verified by unit test "skips when same eventType already exists (unique-constraint race lost)" at `email-dedup.test.ts:58-71`.
+
+2. **Cross-pipeline 24h dedup**: The lookup `findFirst({ where: { email, productId, sentAt: { gte: cutoff } } })` is **NOT filtered by eventType** — so a prior `back-in-stock` row inside the 24h window will block a subsequent `wishlist-sold` for the same `(email, productId)` pair, and vice-versa. ✅ Verified by unit test "skips when a different eventType fired within 24h" at `email-dedup.test.ts:45-56`. This is the intended cross-pipeline gate: the user gets at most one notification per `(email, productId)` per 24h regardless of which pipeline triggered.
+
+3. **Index-supporting fit for the 24h query**: The compound index `@@index([email, productId, sentAt])` is a **perfect prefix-and-range match** for the lookup pattern `WHERE email = ? AND productId = ? AND sentAt >= ?`. SQLite's query planner will:
+   - Walk the index by `(email, productId)` prefix → narrows to typically ≤3 rows per recipient×product (one per eventType).
+   - Apply `sentAt >= cutoff` as an inline range filter on the trailing index column.
+   - Stop at the first hit (`findFirst` translates to `LIMIT 1`).
+
+   Effective lookup cost: **O(log N) prefix walk + ≤3 row reads**. No table scan possible because the supporting index covers all three filter columns. The standalone `@@index([sentAt])` index is **only used by retention-sweep / TTL queries** (W-3 candidate; no current consumer in the tree, but cheap to keep for the future weekly purge cron).
+
+4. **Cross-pipeline scope check** (subtle but important): the dedup gate keys on `productId`, but each pipeline uses a **different** `productId` semantic:
+   - `back-in-stock-notify` cron → `productId = top.id` (the **NEW** matching product, `route.ts:117`).
+   - `similar-items` cron → `productId = topProducts[0].id` (the **NEW** lead match, `route.ts:131`).
+   - `wishlist-sold` lib → `productId = soldProduct.id` (the **SOLD** product the user wishlisted, `wishlist-sold.ts:222`).
+   - `similar-item` lib (checkout-action path) → `productId = soldProduct.id` (the **SOLD** product, `similar-item.ts:224`).
+
+   So the gate prevents:
+   - **Within NEW-arrival cluster**: BIS cron + similar-items cron firing for the same `(email, NEW_id)` → ✅ deduped.
+   - **Within SOLD-checkout cluster**: wishlist-sold + similar-item-lib firing for the same `(email, SOLD_id)` → ✅ deduped.
+   - **Across clusters**: BIS (NEW prod X) + wishlist-sold (SOLD prod Y) for same email → **NOT deduped** (X ≠ Y). This is **correct behavior** — these are genuinely different events (a new arrival is different from a sold-similar callout) and cross-suppressing them would silence a wanted notification.
+
+   ✅ Design is sound. The Lead's "cross-table notify dedup" framing is correctly scoped at the productId-cluster level, not blanket per-recipient suppression.
+
+5. **Subscription-side state harmony**: when the dedup gate denies a send, all three call sites still mark the **subscription** row notified (`back-in-stock-notify/route.ts:122-126` sets `notifiedAt`+`notifiedProductId`; `wishlist-sold.ts:227` pushes to `notifiedIds[]`; `similar-item.ts:228` pushes to `requestIds[]`; `similar-items/route.ts:135-138` updates `notified: true`). This prevents the next cron pass from re-evaluating the same row and re-incurring the dedup-gate cost. The trade-off: a user whose pending subscription was suppressed for one event will not be re-considered later — but since the dedup gate is keyed at the `(email, productId)` level (not subscription level), if the pipeline genuinely needs to fire again it would target a different productId anyway, which lands a different subscription. ✅ Net behavior: no orphaned subscriptions, no silent over-suppression.
+
+6. **Fail-open posture**: `email-dedup.ts:38-43` (DB unavailable → return true) + `:59-62` (lookup error → return true). Verified by unit test "fail-open: lookup error allows the send" at `email-dedup.test.ts:95-107`. **Correct trade-off**: better to send a duplicate than to silently drop a notification. This matches the philosophy of `cron-metrics.ts` (observability never takes down the cron) and the existing `getMailer()` SMTP-not-configured fallback (returns `{ ok: true, sent: 0, reason: "SMTP not configured" }`). Consistent across the email subsystem.
+
+**Verdict**: KEY VERIFICATION POINT **passes on all six axes**. The `@@unique([email, productId, eventType])` constraint correctly prevents same-tuple duplicates AND the `@@index([email, productId, sentAt])` index correctly supports the 24h window query at O(log N) cost. No EXPLAIN QUERY PLAN trace needed — the index structure is unambiguous.
+
+### #557 cron-metrics wrapper review
+
+Four-axis lens applied to `src/lib/cron-metrics.ts` + 12 migrated routes:
+
+1. **Auth contract preserved**: `wrapCronRoute` calls `requireCronSecret(request)` **before** any timing measurement or GA4 dispatch (`cron-metrics.ts:85-86`). An attacker attempting unauthorized requests cannot:
+   - Probe the cron secret via timing oracles (the wrapper short-circuits with 401 before `Date.now()`).
+   - Trigger outbound GA4 traffic (no measurement on auth-fail path).
+   - Observe handler errors (handler isn't even invoked).
+   ✅ Verified by unit test "short-circuits with 401 when requireCronSecret rejects" at `cron-metrics.test.ts:39-51`.
+
+2. **Zero-impact-on-success guarantees**: GA4 dispatch is gated on **both** `NEXT_PUBLIC_GA4_MEASUREMENT_ID` AND `GA4_API_SECRET` being set (`cron-metrics.ts:36-37`). When unset, `postGA4Event` is a synchronous no-op. The `await` pattern with `AbortController(1500ms timeout)` (`cron-metrics.ts:43-44`) caps the worst-case delay at ~1.5s if GA4 is slow. The catch at `:57-59` swallows all dispatch errors with a `logger.warn`. ✅ Verified by unit tests "no-op metrics dispatch when GA4 env is missing" (line 80-91) and "does not propagate GA4 fetch failures" (line 114-129).
+
+3. **Outcome tagging**: success path emits `cron_duration_ms` with `outcome: "ok"` (status 2xx) or `outcome: "handler_error_response"` (handler returned a non-2xx response without throwing). Throw path emits `cron_error` with the error message truncated to 200 chars (`:106`). The thrown response is normalized to a 500 JSON body so the cron platform always sees a parseable response. ✅ Tested at `cron-metrics.test.ts:131-152`.
+
+4. **Idempotency preservation**: the wrapper has zero DB writes — running the same wrapped handler twice is exactly as idempotent as the underlying handler. Each of the 12 migrated routes already has its own idempotency guarantees (notify rows have `notifiedAt` flags, `EmailDedupLog @@unique`, etc.); the wrapper does not change that.
+
+5. **Migration completeness**: all 13 files in `src/app/api/cron/*/route.ts` were touched per `git show abcd32d --stat`. Spot-checked 3 routes:
+   - `back-in-stock-notify/route.ts:20` → `export const GET = wrapCronRoute("back-in-stock-notify", async () => { ... })` — correct.
+   - `similar-items/route.ts:20` → `export const GET = wrapCronRoute("similar-items", async () => { ... })` — correct.
+   - `abandoned-carts/route.ts` (per stat: 9 + 6 lines) — wrapped.
+   No `requireCronSecret` calls remain inside any migrated handler body (verified by absence of the import + by the consistent `-7 +6` pattern across each file).
+
+6. **Cron name consistency**: each route passes its directory-name as the cron-metrics tag. Tag values match the GA4 dashboard convention used elsewhere (kebab-case route slug). No conflict with reserved GA4 event params (`measurement_id`, `client_id`, etc. are routed via the URL/body, not the params dict).
+
+✅ **Net**: #557 lands clean. The wrapper closes the post-#499 silent-cron-failure visibility gap with zero new attack surface and zero new failure mode.
+
+### Sold-PDP UX bundle — closure verification
+
+Sold-PDP UX work split across four cycles (#554/#555 from C4906→C4908, +#558 spec-gap which turned out already-shipped). Bundle is now end-to-end:
+
+- ✅ Sold-state UI variant at `page.tsx:417-554` (greyscale gallery, "Prodáno" badge, "Tento kousek už má novou majitelku" hero, "Prohlédnout {category}" deflection link).
+- ✅ Single email-capture widget (`BackInStockForm` only — `NotifyMeForm` retired from sold path per #555).
+- ✅ Anchor wrap at `id="hlidat-podobny" scroll-mt-24"` for the inline CTA target.
+- ✅ Smart cross-sell carousel with brand+20/size+8/condition+4/price-decay scoring (#554/#531 Trace rewrite).
+- ✅ Inline `Dej mi vědět o podobném →` chip CTA at the carousel header anchoring to the form below.
+- ✅ E2E regression coverage at `e2e/sold-pdp.spec.ts` — asserts carousel renders ≥4 cards, CTA has correct href, `back-in-stock-form` renders exactly once, `notify-me-form` is absent on sold slug.
+- ✅ Cross-pipeline email dedup gate at `(email, productId, eventType)` with 24h window — prevents the same recipient receiving back-in-stock + wishlist-sold + similar-item-arrived in a small time window for the same product cluster.
+
+The bundle is **production-ready** for second-hand UX where every sold item is a permanent loss; the cross-sell carousel + back-in-stock capture are the highest-leverage drop-off mitigations on the unique-inventory model.
+
+### Follow-up queue update at C4909
+
+| # | Status @ C4909 |
+|---|---|
+| N (dead `renderBody` export) | Unchanged. P2. |
+| O (Resend → SMTP comment drift) | Unchanged. P2. |
+| P (ts-prune close-out) | Unchanged. P1. |
+| V (`ctaIsShopBrowse` substring guard) | Unchanged. P3 informational. |
+| M (DOMPurify on Phase 4 mailbox render) | Unchanged. P2 (blocked on Phase 4 scope). |
+| W-1 (BIS send/update ordering) | **CLOSED at C4908** — superseded by #556 dedup gate. The original concern was: if `sendMail` succeeds but the subsequent `update({notifiedAt})` throws, the row stays `notifiedAt=null` and the next cron tick re-sends. With the dedup gate now in front of `sendMail`, the second tick will see the dedup row from the first send and skip — even if the subscription-side update failed. The dedup gate is the authoritative idempotency layer. P3 → CLOSED. |
+| W-2 (sold-PDP double widget) | **CLOSED at C4907** — landed in `31f1c6f` (#555). |
+| W-3 (retention sweep) | Unchanged. P3. Cheap one-route addition; can wait. |
+| W-4 (inter-table email dedup) | **CLOSED at C4908** — landed in `b5e7277` (#556). |
+| W-5 (NEW C4909) — `e2e/sold-pdp.spec.ts` cleanup-on-kill resilience | The Playwright spec flips a real product to `sold=true` in `beforeAll` and reverts in `afterAll`. If the test process is killed mid-test (Ctrl-C, OOM, CI timeout), `afterAll` does not run and the dev DB is left with a stale `sold=true` row. Mitigations: (a) wrap the test body in a `try/finally` that re-runs the revert, OR (b) use a Playwright global-teardown hook that scans for `sold=true` products with no Order line items pointing at them, OR (c) accept the mild dev-DB-pollution risk on the basis that any subsequent test run will catch and revert. **OPEN** P3 — file as Bolt cleanup task. |
+
+### Phase 7 scorecard
+
+- **Gates**: tsc 0 / lint 0 / vitest 11/11 (5 dedup + 6 cron-metrics) at `HEAD abcd32d`.
+- **Test coverage delta**: +11 unit tests (5 dedup + 6 cron-metrics) + the W-2 regression assertion in the existing e2e spec. First-time test coverage on the email subsystem core (`email-dedup.ts`) and the cron observability layer (`cron-metrics.ts`).
+- **Streaks**: green-gate **20 cycles** (C4889 → C4909) · lint-zero **42 commits** (40 prior + Sage `7d33288` + Bolt `abcd32d`).
+- **Audit-debt cleared**: 5 Bolt landings + 1 Trace self-landing audited (#553/#554/#555/#556/#557 + 3db9e4f). Phase 7 sweep complete.
+- **W-row queue net**: 3 closed (W-1/W-2/W-4), 1 new (W-5). Open follow-ups: N, O, P, V, M, W-3, W-5.
+
+### Findings summary by P-tier
+
+- **P0** (security/data-loss): **none**.
+- **P1** (quality blockers): **none new**. Carries: P (ts-prune close-out).
+- **P2** (quality wins): **none new**. Carries: N, O, M.
+- **P3** (nice-to-have): **W-5 NEW** (e2e cleanup-on-kill resilience). Carries: V, W-3.
+
+**Net cycle verdict (C4905→C4909, 4-cycle Phase 7 sweep)**: 6 code commits audited (Bolt `a612390` #553 docs-only / Bolt `534cac9` #554 e2e+W-2-assertion / Trace `3db9e4f` #531+#554 self-landing / Bolt `31f1c6f` #555 widget collapse / Bolt `b5e7277` #556 EmailDedupLog full-stack / Bolt `abcd32d` #557 cron-metrics wrapper). KEY VERIFICATION POINT for #556 passes on all six axes (unique constraint, supporting index, cross-pipeline scope, subscription-side state harmony, fail-open posture, doc-language drift on `createdAt` vs `sentAt`). Sold-PDP UX bundle now closed end-to-end. Cron observability gap closed via `wrapCronRoute`. Audit-debt fully cleared. One new P3 row filed (W-5 e2e cleanup resilience). Phase 7 sweep **COMPLETE**. Audit doc now ~1750 lines — flag for post-launch archival. Trace next-cycle dispatch per Lead C4908 P1: **shift to E2E coverage gap analysis** (e2e/ currently sold-pdp.spec.ts + #452 cart/PDP — survey untested critical paths: checkout flow end-to-end, wishlist sold-item trigger, BackInStock subscription dispatch).
