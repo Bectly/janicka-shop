@@ -5,6 +5,15 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Calendar, Tag, AlertCircle, CheckCircle2, XCircle, Pause, Play } from "lucide-react";
 import { changeTaskStatusAction } from "@/app/(admin)/admin/manager/actions";
+import { CommentThread } from "@/components/admin/manager/comment-thread";
+
+type Comment = {
+  id: string;
+  authorRole: string;
+  authorName: string | null;
+  bodyMd: string;
+  createdAt: Date | string;
+};
 
 type Task = {
   id: string;
@@ -18,6 +27,7 @@ type Task = {
   dueAt: Date | null;
   status: string;
   createdAt: Date;
+  comments?: Comment[];
 };
 
 const PRIORITY_STYLES: Record<string, string> = {
@@ -241,6 +251,12 @@ export function TaskCard({ task }: { task: Task }) {
           </span>
         )}
       </div>
+
+      <CommentThread
+        parentType="task"
+        parentId={task.id}
+        comments={task.comments ?? []}
+      />
     </div>
   );
 }

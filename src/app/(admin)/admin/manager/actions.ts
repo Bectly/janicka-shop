@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/lib/db";
 
+const JANICKA_PROJECT_ID = 15;
 const VALID_TRANSITIONS: Record<string, string[]> = {
   open: ["accepted", "rejected"],
   accepted: ["in_progress", "rejected", "blocked"],
@@ -67,4 +68,82 @@ export async function changeArtifactStatusAction(
   });
   revalidatePath("/admin/manager");
   return { ok: true };
+}
+
+/**
+ * Request a new manager session. The watcher daemon on bectly's machine
+ * polls Turso for ManagerSession.status='requested' and spawns the runner.
+ */
+export async function requestSessionAction(
+  openingMessage?: string,
+): Promise<{ ok: boolean; error?: string; sessionId?: string }> {
+  const prisma = await getDb();
+  // Block if there's already an active session (running/requested/claimed)
+  const existing = await prisma.managerSession.findFirst({
+    where: {
+      projectId: JANICKA_PROJECT_ID,
+      status: { in: ["requested", "claimed", "running"] },
+    },
+  });
+  if (existing) {
+    return {
+      ok: false,
+      error: "Manažerka už běží (nebo je ve frontě). Počkej až dokončí.",
+    };
+  }
+  const session = await prisma.managerSession.create({
+    data: {
+      projectId: JANICKA_PROJECT_ID,
+      status: "requested",
+      triggeredBy: "janicka-admin",
+      openingMessage: openingMessage?.trim() || null,
+      requestedAt: new Date(),
+    },
+  });
+  revalidatePath("/admin/manager");
+  return { ok: true, sessionId: session.id };
+}
+
+/**
+ * Add a comment to a task / artifact / session.
+ * Comments are visible to both the shop owner and the manager (next session
+ * can read recent comments as feedback context).
+ */
+export async function addCommentAction(
+  parentType: "task" | "artifact" | "session",
+  parentId: string,
+  bodyMd: string,
+  authorRole: "shop owner" | "bectly" = "shop owner",
+): Promise<{ ok: boolean; error?: string; commentId?: string }> {
+  const trimmed = bodyMd.trim();
+  if (!trimmed) return { ok: false, error: "Prázdný komentář" };
+  if (trimmed.length > 4000)
+    return { ok: false, error: "Komentář je moc dlouhý (max 4000 znaků)" };
+  if (!["task", "artifact", "session"].includes(parentType))
+    return { ok: false, error: "Neplatný typ" };
+
+  const prisma = await getDb();
+  const data: {
+    projectId: number;
+    parentType: string;
+    parentId: string;
+    authorRole: string;
+    bodyMd: string;
+    taskId?: string;
+    artifactId?: string;
+    sessionId?: string;
+  } = {
+    projectId: JANICKA_PROJECT_ID,
+    parentType,
+    parentId,
+    authorRole,
+    bodyMd: trimmed,
+  };
+  if (parentType === "task") data.taskId = parentId;
+  if (parentType === "artifact") data.artifactId = parentId;
+  if (parentType === "session") data.sessionId = parentId;
+
+  const c = await prisma.managerComment.create({ data });
+  revalidatePath("/admin/manager");
+  return { ok: true, commentId: c.id };
 }

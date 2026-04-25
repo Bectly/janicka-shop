@@ -5,6 +5,15 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { FileText, BarChart3, StickyNote, ChevronDown, ChevronUp } from "lucide-react";
+import { CommentThread } from "@/components/admin/manager/comment-thread";
+
+type Comment = {
+  id: string;
+  authorRole: string;
+  authorName: string | null;
+  bodyMd: string;
+  createdAt: Date | string;
+};
 
 type Artifact = {
   id: string;
@@ -15,6 +24,7 @@ type Artifact = {
   status: string;
   mood: string | null;
   createdAt: Date | string;
+  comments?: Comment[];
 };
 
 const MOOD_TINT: Record<string, string> = {
@@ -174,6 +184,12 @@ export function ArtifactCard({ artifact }: { artifact: Artifact }) {
           )}
         </div>
       )}
+
+      <CommentThread
+        parentType="artifact"
+        parentId={artifact.id}
+        comments={artifact.comments ?? []}
+      />
     </article>
   );
 }

@@ -643,8 +643,10 @@ model ManagerSession {
   projectId       Int                 // 15 = janicka-shop in JARVIS DB
   workerName      String?             // 'mgr-janicka-shop-N' on bectly's machine
   taskId          Int?                // task_queue.id in JARVIS DB
-  status          String              @default("running") // running|paused|done|aborted|failed
+  status          String              @default("running") // requested|running|paused|done|aborted|failed
   triggeredBy     String?             // 'cli'|'tauri'|'janicka-admin'
+  openingMessage  String?             // user's opening prompt when triggered from UI
+  requestedAt     DateTime?           // set when status='requested', cleared when claimed
   startedAt       DateTime            @default(now())
   endedAt         DateTime?
   endReason       String?
@@ -654,9 +656,11 @@ model ManagerSession {
   claudeSessionId String?
   artifacts       ManagerArtifact[]
   tasks           ManagerTask[]
+  comments        ManagerComment[]
 
   @@index([projectId, status])
   @@index([startedAt])
+  @@index([status, requestedAt])
 }
 
 model ManagerArtifact {
@@ -673,6 +677,7 @@ model ManagerArtifact {
   parentArtifactId  String?
   parent            ManagerArtifact? @relation("ArtifactReplies", fields: [parentArtifactId], references: [id], onDelete: SetNull)
   replies           ManagerArtifact[] @relation("ArtifactReplies")
+  comments          ManagerComment[]
   createdAt         DateTime        @default(now())
   acceptedAt        DateTime?
   acceptedBy        String?
@@ -704,8 +709,29 @@ model ManagerTask {
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
   sourceArtifact    ManagerArtifact?
+  comments          ManagerComment[]
 
   @@index([projectId, status, priority])
   @@index([assigneeHint, status])
   @@index([dueAt])
+}
+
+model ManagerComment {
+  id           String           @id @default(cuid())
+  projectId    Int
+  parentType   String           // 'session' | 'task' | 'artifact'
+  parentId     String           // id of session / task / artifact (denormalized for fast queries)
+  authorRole   String           // 'shop owner' | 'bectly' | 'manager' | 'system'
+  authorName   String?
+  bodyMd       String
+  createdAt    DateTime         @default(now())
+  taskId       String?
+  task         ManagerTask?     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  artifactId   String?
+  artifact     ManagerArtifact? @relation(fields: [artifactId], references: [id], onDelete: Cascade)
+  sessionId    String?
+  session      ManagerSession?  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([parentType, parentId, createdAt])
+  @@index([projectId, createdAt])
 }

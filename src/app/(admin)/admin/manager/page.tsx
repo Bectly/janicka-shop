@@ -16,6 +16,7 @@ import { Briefcase, Inbox, Sparkles } from "lucide-react";
 import { getDb } from "@/lib/db";
 import { ArtifactCard } from "@/components/admin/manager/artifact-card";
 import { TaskCard } from "@/components/admin/manager/task-card";
+import { StartSessionForm } from "@/components/admin/manager/start-session-form";
 
 const JANICKA_PROJECT_ID = 15;
 
@@ -24,6 +25,8 @@ export const metadata: Metadata = {
 };
 
 const STATUS_LABEL: Record<string, string> = {
+  requested: "Ve frontě",
+  claimed: "Spouští se",
   running: "Běží",
   paused: "Pozastavena",
   done: "Hotovo",
@@ -50,12 +53,15 @@ export default async function AdminManagerPage() {
   const [latestSession, tasksRaw, artifacts] = await Promise.all([
     prisma.managerSession.findFirst({
       where: { projectId: JANICKA_PROJECT_ID },
-      orderBy: { startedAt: "desc" },
+      orderBy: [{ requestedAt: "desc" }, { startedAt: "desc" }],
     }),
     prisma.managerTask.findMany({
       where: { projectId: JANICKA_PROJECT_ID },
       orderBy: [{ priority: "asc" }, { dueAt: "asc" }, { createdAt: "desc" }],
       take: 200,
+      include: {
+        comments: { orderBy: { createdAt: "asc" }, take: 50 },
+      },
     }),
     prisma.managerArtifact.findMany({
       where: {
@@ -64,9 +70,23 @@ export default async function AdminManagerPage() {
       },
       orderBy: { createdAt: "desc" },
       take: 12,
+      include: {
+        comments: { orderBy: { createdAt: "asc" }, take: 50 },
+      },
     }),
   ]);
   const tasks = tasksRaw;
+  const sessionBusy =
+    latestSession?.status === "requested" ||
+    latestSession?.status === "claimed" ||
+    latestSession?.status === "running";
+  const sessionBusyReason = sessionBusy
+    ? latestSession?.status === "requested"
+      ? "Manažerka je ve frontě — startuje do 30 sekund."
+      : latestSession?.status === "claimed"
+        ? "Manažerka se právě spouští…"
+        : "Manažerka teď běží — počkej až dokončí."
+    : undefined;
 
   type TaskRow = (typeof tasks)[number];
   const openTasks = tasks.filter((t: TaskRow) => t.status === "open");
@@ -98,16 +118,17 @@ export default async function AdminManagerPage() {
         </p>
       </header>
 
-      {/* Latest session status */}
-      <section className="rounded-xl border bg-card p-4 shadow-sm">
+      {/* Spustit session + status */}
+      <section className="rounded-xl border bg-card p-4 shadow-sm space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="flex items-center gap-2 font-heading text-base font-semibold">
               <Sparkles className="size-4 text-primary" />
-              Poslední session
+              Spustit manažerku
             </h2>
             {latestSession ? (
               <p className="mt-1 text-sm text-muted-foreground">
+                Poslední:{" "}
                 {STATUS_LABEL[latestSession.status] ?? latestSession.status} ·{" "}
                 {formatCest(latestSession.startedAt)}
                 {latestSession.endedAt
@@ -119,7 +140,7 @@ export default async function AdminManagerPage() {
               </p>
             ) : (
               <p className="mt-1 text-sm text-muted-foreground italic">
-                Zatím žádná session. bectly ji spustí v JARVIS aplikaci.
+                Ještě žádná session. Spusť první níže.
               </p>
             )}
           </div>
@@ -128,19 +149,28 @@ export default async function AdminManagerPage() {
               className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${
                 latestSession.status === "running"
                   ? "bg-emerald-500/15 text-emerald-700"
-                  : latestSession.status === "done"
-                    ? "bg-foreground/[0.08] text-muted-foreground"
-                    : "bg-amber-500/15 text-amber-700"
+                  : latestSession.status === "requested" ||
+                      latestSession.status === "claimed"
+                    ? "bg-amber-500/15 text-amber-700"
+                    : latestSession.status === "done"
+                      ? "bg-foreground/[0.08] text-muted-foreground"
+                      : "bg-red-500/15 text-red-700"
               }`}
             >
               {STATUS_LABEL[latestSession.status] ?? latestSession.status}
             </span>
           )}
         </div>
+
+        <StartSessionForm
+          disabled={sessionBusy}
+          disabledReason={sessionBusyReason}
+        />
+
         {latestSession?.summaryMd && (
-          <details className="mt-3 rounded-md border bg-background/50 p-3 text-sm">
+          <details className="rounded-md border bg-background/50 p-3 text-sm">
             <summary className="cursor-pointer font-medium text-foreground">
-              Shrnutí
+              Shrnutí poslední session
             </summary>
             <pre className="mt-2 whitespace-pre-wrap font-sans text-xs text-foreground/80">
               {latestSession.summaryMd}
