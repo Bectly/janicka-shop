@@ -65,6 +65,12 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     images: ["/logo/og-image.png"],
   },
+  // Pinterest domain-claim verification — set PINTEREST_SITE_VERIFICATION in
+  // Vercel env once the code is generated in Pinterest Business → Claim website.
+  // See docs/pinterest-catalog-setup.md
+  verification: process.env.PINTEREST_SITE_VERIFICATION
+    ? { other: { "p:domain_verify": process.env.PINTEREST_SITE_VERIFICATION } }
+    : undefined,
 };
 
 export default function RootLayout({

@@ -49,6 +49,7 @@ const COLUMNS = [
   "image_link",
   "additional_image_link",
   "price",
+  "sale_price",
   "availability",
   "condition",
   "brand",
@@ -58,9 +59,40 @@ const COLUMNS = [
   "age_group",
   "color",
   "size",
+  "material",
   "item_group_id",
   "shipping",
 ] as const;
+
+export const PINTEREST_FEED_COLUMNS = COLUMNS;
+
+/**
+ * Detect primary material from Czech product description.
+ * Returns first matching material string in canonical form, or "" if none found.
+ * Pinterest accepts free-text; used for filtering and richer Rich Pins.
+ */
+const MATERIAL_PATTERNS: Array<[RegExp, string]> = [
+  [/\bbavln[aěy]\b/i, "bavlna"],
+  [/\bpolyester\w*/i, "polyester"],
+  [/\bvisk[oó]z\w*/i, "viskóza"],
+  [/\bvln[aěy]\b|\bmerino\b/i, "vlna"],
+  [/\bhedv[aá]b\w*/i, "hedvábí"],
+  [/\bl[eě]n\w*/i, "len"],
+  [/\bka[šs]m[ií]r\w*/i, "kašmír"],
+  [/\bk[oů]že\b|\bk[oů]žen\w*/i, "kůže"],
+  [/\bakryl\w*/i, "akryl"],
+  [/\belasta[nm]\w*/i, "elastan"],
+  [/\bden(im|y)\b/i, "denim"],
+  [/\btw[ie]ed\b/i, "tvíd"],
+];
+
+export function detectMaterial(text: string | null | undefined): string {
+  if (!text) return "";
+  for (const [re, label] of MATERIAL_PATTERNS) {
+    if (re.test(text)) return label;
+  }
+  return "";
+}
 
 function escapeTsv(value: string): string {
   // TSV fields: escape tabs, newlines, and wrap in quotes if needed
@@ -111,8 +143,14 @@ export async function GET(req: NextRequest) {
       const googleCategory =
         GOOGLE_CATEGORY_MAP[product.category.slug] ?? FALLBACK_CATEGORY;
 
-      // Pinterest price format requires decimal notation: "450.00 CZK"
-      const priceStr = `${product.price.toFixed(2)} CZK`;
+      // Pinterest price format requires decimal notation: "450.00 CZK".
+      // When compareAt > price the original is "price" and current is "sale_price"
+      // (Pinterest convention for sale signal in Rich Pins).
+      const hasSale =
+        typeof product.compareAt === "number" &&
+        product.compareAt > product.price;
+      const priceStr = `${(hasSale ? product.compareAt! : product.price).toFixed(2)} CZK`;
+      const salePriceStr = hasSale ? `${product.price.toFixed(2)} CZK` : "";
 
       // Shipping: free above threshold, otherwise cheapest option
       const shippingStr =
@@ -129,6 +167,8 @@ export async function GET(req: NextRequest) {
         ? `${conditionLabel}. ${product.description}`
         : product.description;
 
+      const material = detectMaterial(product.description);
+
       const row = [
         escapeTsv(product.sku),                                    // id
         escapeTsv(product.name),                                   // title
@@ -137,6 +177,7 @@ export async function GET(req: NextRequest) {
         images[0] ?? "",                                           // image_link
         additionalImages,                                          // additional_image_link
         priceStr,                                                  // price
+        salePriceStr,                                              // sale_price
         "in stock",                                                // availability
         CONDITION_MAP[product.condition] ?? "used",                // condition
         escapeTsv(product.brand ?? ""),                            // brand
@@ -146,7 +187,8 @@ export async function GET(req: NextRequest) {
         "adult",                                                   // age_group
         escapeTsv(colors.join(", ")),                              // color
         escapeTsv(sizes.join(", ")),                               // size
-        "",                                                        // item_group_id (no variants for unique items)
+        escapeTsv(material),                                       // material
+        escapeTsv(product.sku),                                    // item_group_id (unique item = own group)
         shippingStr,                                               // shipping
       ];
 

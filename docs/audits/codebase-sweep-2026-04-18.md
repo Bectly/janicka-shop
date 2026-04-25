@@ -1548,3 +1548,48 @@ Three user-email-capture tables now coexist in the tree. Spot-check for tuple co
 | W-4 (NEW) | P3 | BOLT | Inter-table email dedup at cron send time — `new-arrivals` cron and `back-in-stock-notify` cron both can fire on the same new product for the same email via different tables. Add a short-circuit: before `sendMail`, check if the same `(email, productId)` pair has been emailed within the last 6h via any of the three notification tables. Low-effort (a single compound `findFirst` across `notifiedProductId` columns) but prevents the mild inter-table email-duplication identified in row Y.3. | **OPEN** (NEW at C4904) |
 
 **Net cycle verdict (C4900→C4904)**: 2 code commits landed (Sage `9dc334c` email-preview registry + Bolt `1e19508` #550 BIS end-to-end); 15-cycle green quality-gate streak intact; lint-zero streak extends to 33 commits. Phase 5 punch-list closed at 6-of-7 with 1 stalled. `#550/#552` domain-separation cleared — no model/trigger collision; only mild inter-table email-dedup gap (row W-4) surfaced. `#552` WishlistSubscription correction: **already end-to-end wired** pre-dispatch; Lead dispatch shape should be reconciled to completed-before-dispatch. 4 new follow-up rows filed (W-1/W-2/W-3/W-4); prior N/O/P/V/M queue unchanged.
+
+---
+
+## Phase 6 addendum — C4905 cycle review (appended 2026-04-25)
+
+Quality gates re-run at `HEAD d0d9902`: `tsc --noEmit` → **0 errors**, `eslint` → **0 warnings / 0 errors**. Green-gate streak extends from 16 → **17 cycles** (C4889 → C4905). Lint-zero commit streak extends from 35 → **38 commits** (C4905 landed three: Sage `d858782`, Bolt `05c42e7` [overlay of pre-dispatch #552 rescue], Lead `d0d9902`).
+
+### C4905 landings reviewed
+
+| Commit | Agent | Task | Scope | Verdict |
+|---|---|---|---|---|
+| `d858782` | Sage | #494 review-request brand pass | `src/lib/email.ts` + `src/app/api/cron/review-request/route.ts` + admin email-previews. Replaces `<ul>`-item-list with 3-item thumbnail table. `ReviewRequestEmailData.items` extended with optional `image` + `slug`. | ✅ **XSS-safe**: `escapeHtml(item.name / detail / image src)`, `encodeURIComponent(slug)` on PDP link. Monogram "J" fallback on missing-image path (prevents broken-thumb render). Progressive cap at 3 items + "a ještě N další" overflow line. Stars row is static SGML. No new user-controlled interpolation paths. |
+| `05c42e7` | Bolt | #552 WishlistSubscription (overlay on pre-dispatch completion) | `src/app/api/cron/wishlist-sold-notify/route.ts` (NEW, fallback safety-net cron), `vercel.json` (`*/30 * * * *` entry), `src/app/(shop)/oblibene/actions.ts` (`subscribeSingleWishlistNotification` server action), `src/components/shop/wishlist-button.tsx` (detail-variant PDP inline prompt). | ✅ **Clean four-axis**: (1) cron gated by `requireCronSecret` + bounded `take: 200` + dedup via `Set` + sold-filter; (2) action has Zod (`.email().max(254)` + `productId.max(128)`), session-first email (role==="customer"), 5/min IP rate-limit for unauth path, `.toLowerCase()` at tuple boundary, compound-unique upsert on `(email, productId)`, silent no-op when `!active || sold` (prevents zombie rows); (3) WishlistButton optimistic subscribe only on `variant==="detail" && willBeWishlisted`, no subscribe on remove, no subscribe on card-variant (avoids spray from search results). (4) No secret leakage in client — server action only returns `{ ok, reason }`, session email never crosses the wire to the client. |
+
+**Note on cycle semantics**: Bolt dispatched on #552 in parallel with Trace's mid-flight C4904 status-correction audit. The Bolt landing adds a *safety-net* fallback cron that picks up any `WishlistSubscription` rows whose primary checkout-fired path missed (admin mark-sold, manual order, payment-return rescue, fire-and-forget crash). This is strictly additive to the pre-dispatch end-to-end flow documented in Row X above — no behavioural collision with the synchronous `sendWishlistSoldNotifications` at `checkout/actions.ts:543`. The cron's `notifiedAt=null` filter prevents double-send. The new `subscribeSingleWishlistNotification` is a *per-product* opt-in path distinct from the existing `/oblibene` batch path — both converge on the same compound-unique index so no duplicate rows.
+
+### Third email-capture surface — collision re-check (Row Y update)
+
+The C4905 Bolt landing introduces a **third** email-capture widget on *available* PDP: the WishlistButton detail-variant auto-subscribes on wishlist-add (or prompts unauth). Re-running the collision matrix:
+
+| Product state | Email-capture widgets visible |
+|---|---|
+| **Available PDP** | ① WishlistButton detail-variant (new C4905 — auto-subscribe on signed-in add, prompt on unauth add) + ② NotifyMeForm (`ProductNotifyRequest`, "notify me when similar arrives") — **2 widgets on available PDP**. |
+| **Sold PDP** | ③ BackInStockForm (`BackInStockSubscription`, #550, C4904) + ④ NotifyMeForm (`ProductNotifyRequest`, legacy) — **2 widgets on sold PDP** (W-2 overlap, unchanged). WishlistButton no-ops silently because `subscribeSingleWishlistNotification` early-returns on `product.sold`. |
+
+**Verdict**: No new W-row needed. The available-PDP double widget (WishlistButton prompt + NotifyMeForm) is **semantically different** — WishlistButton targets *this specific item* (subscriber wants *this* piece back on inventory change, i.e. sold-out alert if later pulled), NotifyMeForm targets *similar items in same category* (forward-looking). Unlike W-2 on sold-PDP which is two widgets with overlapping "notify me about new arrivals" semantics, the available-PDP pair is complementary (hold-my-spot vs notify-future). Recommend Sage leave the available-PDP pair intact when acting on W-2; only the sold-PDP duplication needs collapse.
+
+### W-row status @ C4905
+
+| # | Status at C4905 |
+|---|---|
+| N, O, P, V, M | Unchanged (no Bolt capacity spent here this cycle). |
+| W-1 (BIS send/update ordering, P3) | Unchanged. |
+| W-2 (sold-PDP double widget, P2) | Unchanged — Lead spawned as new Bolt task **#555** (collapse recommendation: BackInStockForm-only on sold PDP, retire NotifyMeForm there). |
+| W-3 (retention sweep, P3) | Unchanged. |
+| W-4 (inter-table email dedup, P2) | Unchanged — Lead spawned as new Bolt task **#556** (24h dedup gate inside `lib/email-dispatch.ts`). |
+
+### Scorecard
+
+- **Gates**: tsc 0, lint 0, build not re-run this phase (Lead C4905 reports green at e384b67 immediately prior).
+- **Test coverage**: unchanged — no new tests this cycle (Bolt #552 overlay is behavioural symmetry with existing wishlist-sold flow, which has no dedicated test suite; W-5 candidate is filed in prior phases for expansion to coverage).
+- **Streaks**: green-gate 17 cycles · lint-zero 38 commits.
+- **Follow-up queue**: N/O/P/V/M + W-1/W-2/W-3/W-4 all carry; no new rows filed at C4905.
+
+**Net cycle verdict (C4904→C4905)**: 3 code commits landed (Sage `d858782` review-request brand pass + Bolt `05c42e7` #552 overlay rescue cron + per-product subscribe + Lead `d0d9902` supervision-only). No new audit findings. Bolt #552 overlay commit is clean additive; the pre-dispatch completion documented in Row X stands. Trace next-cycle dispatch is **#531 Speed Insights field-baseline pull** (reframed + unblocked per Lead C4905 directive; browser-side 7-day INP/LCP/CLS pull for `/admin/*` + `/account/*`, appends §7 to `perf-verify-phase4-2026-04-25.md`, closes Phase 4 verification gate if all p75 INP <200ms + LCP <2.5s). Audit doc now at ~1600 lines — no immediate rotation need but flag for post-launch archival.
