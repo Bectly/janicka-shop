@@ -74,10 +74,12 @@ export default async function AdminManagerPage() {
     (t: TaskRow) => t.status === "accepted" || t.status === "in_progress",
   );
   const blockedTasks = tasks.filter((t: TaskRow) => t.status === "blocked");
+  // eslint-disable-next-line react-hooks/purity -- request-time read in RSC, not cached
+  const recentCutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
   const recentDone = tasks.filter((t: TaskRow) => {
     if (t.status !== "done" && t.status !== "rejected") return false;
     const ref = t.completedAt ?? t.updatedAt;
-    return ref && Date.now() - ref.getTime() < 7 * 24 * 60 * 60 * 1000;
+    return ref ? ref.getTime() >= recentCutoff : false;
   });
 
   const totalActive =
