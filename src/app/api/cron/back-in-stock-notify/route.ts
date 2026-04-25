@@ -3,7 +3,7 @@ import { getMailer } from "@/lib/email/smtp-transport";
 import { FROM_NEWSLETTER, REPLY_TO } from "@/lib/email/addresses";
 import { getDb } from "@/lib/db";
 import { buildBackInStockHtml } from "@/lib/email/back-in-stock";
-import { requireCronSecret } from "@/lib/cron-auth";
+import { wrapCronRoute } from "@/lib/cron-metrics";
 import { checkAndRecordEmailDispatch } from "@/lib/email-dedup";
 import { logger } from "@/lib/logger";
 
@@ -17,10 +17,7 @@ import { logger } from "@/lib/logger";
  *
  * Protected by CRON_SECRET. Batch limit: 50 per run.
  */
-export async function GET(request: Request) {
-  const unauthorized = requireCronSecret(request);
-  if (unauthorized) return unauthorized;
-
+export const GET = wrapCronRoute("back-in-stock-notify", async () => {
   const mailer = getMailer();
   if (!mailer) {
     return NextResponse.json({
@@ -166,4 +163,4 @@ export async function GET(request: Request) {
   }
 
   return NextResponse.json({ ok: true, sent, skipped, failed });
-}
+});

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { sendBrowseAbandonmentEmail } from "@/lib/email";
-import { requireCronSecret } from "@/lib/cron-auth";
+import { wrapCronRoute } from "@/lib/cron-metrics";
 import { logger } from "@/lib/logger";
 
 /**
@@ -22,10 +22,7 @@ import { logger } from "@/lib/logger";
  *
  * Scout benchmark: €3.22 RPR.
  */
-export async function GET(request: Request) {
-  const unauthorized = requireCronSecret(request);
-  if (unauthorized) return unauthorized;
-
+export const GET = wrapCronRoute("browse-abandonment", async () => {
   const db = await getDb();
   const now = new Date();
 
@@ -151,4 +148,4 @@ export async function GET(request: Request) {
     logger.error("[Cron] Browse abandonment processing failed:", error);
     return NextResponse.json({ error: "Processing failed" }, { status: 500 });
   }
-}
+});

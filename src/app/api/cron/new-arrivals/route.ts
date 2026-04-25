@@ -3,7 +3,7 @@ import { getDb } from "@/lib/db";
 import { sendNewArrivalEmail } from "@/lib/email";
 import type { NewArrivalEmailData } from "@/lib/email";
 import { getImageUrls } from "@/lib/images";
-import { requireCronSecret } from "@/lib/cron-auth";
+import { wrapCronRoute } from "@/lib/cron-metrics";
 import { logger } from "@/lib/logger";
 
 /**
@@ -23,10 +23,7 @@ import { logger } from "@/lib/logger";
  *
  * Batch limit: 20 per run to stay within Resend rate limits.
  */
-export async function GET(request: Request) {
-  const unauthorized = requireCronSecret(request);
-  if (unauthorized) return unauthorized;
-
+export const GET = wrapCronRoute("new-arrivals", async () => {
   const db = await getDb();
   const now = new Date();
   const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -213,4 +210,4 @@ export async function GET(request: Request) {
     failed,
     newProducts: newProductCount,
   });
-}
+});

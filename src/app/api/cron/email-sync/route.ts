@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { syncImapInbox } from "@/lib/email/imap-sync";
-import { requireCronSecret } from "@/lib/cron-auth";
+import { wrapCronRoute } from "@/lib/cron-metrics";
 import { logger } from "@/lib/logger";
 
 /**
@@ -9,10 +9,7 @@ import { logger } from "@/lib/logger";
  *
  * Task #496 — admin mailbox inbound pipeline (Phase 1).
  */
-export async function GET(request: Request) {
-  const unauthorized = requireCronSecret(request);
-  if (unauthorized) return unauthorized;
-
+export const GET = wrapCronRoute("email-sync", async () => {
   try {
     const result = await syncImapInbox();
     if (!result.ok) {
@@ -24,4 +21,4 @@ export async function GET(request: Request) {
     logger.error("[Cron:email-sync] unhandled error", error);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
-}
+});

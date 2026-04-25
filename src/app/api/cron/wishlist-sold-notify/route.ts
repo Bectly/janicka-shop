@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
-import { requireCronSecret } from "@/lib/cron-auth";
+import { wrapCronRoute } from "@/lib/cron-metrics";
 import { sendWishlistSoldNotifications } from "@/lib/email/wishlist-sold";
 import { logger } from "@/lib/logger";
 
@@ -20,10 +20,7 @@ import { logger } from "@/lib/logger";
  *
  * Protected by CRON_SECRET.
  */
-export async function GET(request: Request) {
-  const unauthorized = requireCronSecret(request);
-  if (unauthorized) return unauthorized;
-
+export const GET = wrapCronRoute("wishlist-sold-notify", async () => {
   const db = await getDb();
 
   try {
@@ -72,4 +69,4 @@ export async function GET(request: Request) {
     logger.error("[Cron:wishlist-sold-notify] Error:", error);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
-}
+});

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { sendReviewRequestEmail } from "@/lib/email";
-import { requireCronSecret } from "@/lib/cron-auth";
+import { wrapCronRoute } from "@/lib/cron-metrics";
 import { logger } from "@/lib/logger";
 
 /**
@@ -17,10 +17,7 @@ import { logger } from "@/lib/logger";
  *
  * Batch limit: 10 per run to stay within Resend rate limits.
  */
-export async function GET(request: Request) {
-  const unauthorized = requireCronSecret(request);
-  if (unauthorized) return unauthorized;
-
+export const GET = wrapCronRoute("review-request", async () => {
   const db = await getDb();
   const now = new Date();
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -97,4 +94,4 @@ export async function GET(request: Request) {
   }
 
   return NextResponse.json({ ok: true, sent, failed });
-}
+});

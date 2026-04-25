@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { sendAdminDeadlineAlertEmail, type DeadlineAlertOrder } from "@/lib/email";
-import { requireCronSecret } from "@/lib/cron-auth";
+import { wrapCronRoute } from "@/lib/cron-metrics";
 import { logger } from "@/lib/logger";
 
 /**
@@ -15,10 +15,7 @@ import { logger } from "@/lib/logger";
  * - status is NOT "delivered" or "cancelled"
  * - expectedDeliveryDate is within 5 days OR already past
  */
-export async function GET(request: Request) {
-  const unauthorized = requireCronSecret(request);
-  if (unauthorized) return unauthorized;
-
+export const GET = wrapCronRoute("delivery-deadline", async () => {
   const db = await getDb();
   const now = new Date();
   const fiveDaysFromNow = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000);
@@ -72,4 +69,4 @@ export async function GET(request: Request) {
       { status: 500 },
     );
   }
-}
+});
