@@ -31,8 +31,22 @@ let productId: string | null = null;
 let subscriptionId: string | null = null;
 
 test.beforeAll(async () => {
-  const category = await prisma.category.findFirst({ select: { id: true } });
-  if (!category) return;
+  // W-9c: pick a category that has ≥1 OTHER active+unsold product, otherwise
+  // sendWishlistSoldNotifications computes similarProducts.length === 0,
+  // continues without writing a dedup row, and the spec's
+  // `dedupRows.length === 1` assertion fails on a sparse dev DB. Mirrors the
+  // sold-pdp.spec.ts groupBy({having:_count.gte:N}) precedent (sold-pdp uses
+  // gte:4 for its ≥4-card carousel; wishlist-sold needs only 1 similar item
+  // for the dedup row to be written).
+  const candidates = await prisma.product.groupBy({
+    by: ["categoryId"],
+    where: { active: true, sold: false },
+    _count: { _all: true },
+    having: { categoryId: { _count: { gte: 1 } } },
+    take: 1,
+  });
+  if (candidates.length === 0) return;
+  const categoryId = candidates[0].categoryId;
   const product = await prisma.product.create({
     data: {
       name: NAME,
@@ -41,7 +55,7 @@ test.beforeAll(async () => {
         "E2E auto-generated (wishlist-sold-trigger.spec.ts). Cleaned up in afterAll.",
       price: 100,
       sku: SKU,
-      categoryId: category.id,
+      categoryId,
       active: true,
       sold: false,
     },
@@ -83,7 +97,10 @@ test.describe("Wishlist sold-item trigger — cron dispatch + dedup idempotency"
   test("cron sets notifiedAt, writes exactly 1 EmailDedupLog row, idempotent on re-run", async ({
     request,
   }) => {
-    test.skip(!productId || !subscriptionId, "No category in dev DB");
+    test.skip(
+      !productId || !subscriptionId,
+      "No category with ≥1 active+unsold product in dev DB",
+    );
     const cronSecret = process.env.CRON_SECRET;
     test.skip(!cronSecret, "CRON_SECRET not configured");
 

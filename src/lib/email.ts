@@ -372,15 +372,29 @@ function buildOrderShippedHtml(data: StatusEmailData): string {
 }
 
 function buildOrderDeliveredHtml(data: StatusEmailData): string {
+  const baseUrl = getBaseUrl();
+  const orderUrl = `${baseUrl}/order/${data.orderNumber}?token=${data.accessToken}`;
   const firstName = data.customerName.split(" ")[0] || data.customerName;
-  return buildStatusEmailWrapper({
-    eyebrow: "Doručeno",
-    heading: `Už je u tebe, ${escapeHtml(firstName)}.`,
-    bodyHtml: `
-      <p style="margin: 0;">Objednávka <strong style="color: ${BRAND.charcoal};">${escapeHtml(data.orderNumber)}</strong> byla úspěšně doručena.</p>
-      <p style="margin: 14px 0 0; font-family: ${FONTS.serif}; font-style: italic; font-size: 17px; color: ${BRAND.primary};">Užij si své nové kousky. Sluší ti to.</p>`,
+
+  const content = `
+    <div style="text-align: center;">
+      ${renderEyebrow("Doručeno")}
+      ${renderDisplayHeading(`Už je u tebe, ${escapeHtml(firstName)}.`)}
+      <div style="font-family: ${FONTS.sans}; font-size: 15px; line-height: 1.7; color: ${BRAND.charcoalSoft};">
+        <p style="margin: 0;">Objednávka <strong style="color: ${BRAND.charcoal};">${escapeHtml(data.orderNumber)}</strong> byla úspěšně doručena.</p>
+        <p style="margin: 14px 0 0; font-family: ${FONTS.serif}; font-style: italic; font-size: 17px; color: ${BRAND.primary};">Užij si své nové kousky. Sluší ti to.</p>
+      </div>
+    </div>
+    <div style="margin: 32px 0 8px;">
+      ${renderButton({ href: orderUrl, label: "Zobrazit objednávku", variant: "primary" })}
+    </div>
+    ${renderShopLink("Prohlédnout další kousky")}
+    ${renderAboutValues()}`;
+
+  return renderLayout({
     preheader: `Objednávka ${data.orderNumber} byla úspěšně doručena.`,
-  }, data);
+    contentHtml: content,
+  });
 }
 
 function buildOrderCancelledHtml(data: StatusEmailData): string {
@@ -1526,7 +1540,6 @@ interface ReviewRequestEmailData {
 function buildReviewRequestHtml(data: ReviewRequestEmailData): string {
   const baseUrl = getBaseUrl();
   const orderUrl = `${baseUrl}/order/${data.orderNumber}?token=${data.accessToken}`;
-  const shopUrl = `${baseUrl}/products?sort=newest`;
   const firstName = data.customerName?.trim().split(" ")[0] || data.customerName;
 
   const itemCards = data.items
@@ -1587,9 +1600,10 @@ function buildReviewRequestHtml(data: ReviewRequestEmailData): string {
     </div>
 
     <p style="margin: 22px 0 0; text-align: center; font-family: ${FONTS.sans}; font-size: 13px; color: ${BRAND.charcoalSoft};">
-      Kdyby něco nesedělo, napiš mi rovnou &mdash;<br />
-      <a href="${shopUrl}" style="color: ${BRAND.primary}; text-decoration: underline;">nebo se podívej na novinky &rarr;</a>
-    </p>`;
+      Kdyby něco nesedělo, napiš mi rovnou.
+    </p>
+    ${renderShopLink("Nebo projít celou nabídku")}
+    ${renderAboutValues()}`;
 
   return renderLayout({
     preheader: `Jak ti padla objednávka ${data.orderNumber}? Tvůj názor mi pomáhá.`,

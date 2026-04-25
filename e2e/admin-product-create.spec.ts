@@ -131,7 +131,10 @@ test.describe("Admin product-create happy path — admin write → public PDP + 
       // 9. /products listing surfaces a link to the new product. revalidatePath
       //    sweeps in createProduct cover both /products and /, so the new
       //    product should be paginated/ordered into the listing on first load.
-      await page.goto("/products");
+      //    W-11: pin `?sort=newest` so the assertion does not silently break if
+      //    the listing's default sort ever changes (currently `newest` per
+      //    products-client.tsx, but explicit > implicit for regression guards).
+      await page.goto("/products?sort=newest");
       const link = page.locator(`a[href="/products/${created!.slug}"]`);
       await expect(link.first()).toBeVisible({ timeout: 10_000 });
     } finally {

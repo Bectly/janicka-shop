@@ -21,7 +21,7 @@
 | 2 | `sendPaymentConfirmedEmail` | 280 | `buildPaymentConfirmedHtml` (218) | INTERNAL-OK | Tight transactional confirm; polish would dilute the receipt focus. |
 | 3 | `sendOrderStatusEmail (confirmed)` | 417 | `buildOrderConfirmedHtml` via `buildStatusEmailWrapper` (319) | INTERNAL-OK | Status-update wrapper; intentionally minimal. |
 | 4 | `sendOrderStatusEmail (shipped)` | 417 | `buildOrderShippedHtml` (354) | INTERNAL-OK | Same wrapper. |
-| 5 | `sendOrderStatusEmail (delivered)` | 417 | `buildOrderDeliveredHtml` (374) | PARTIAL | Could host `renderShopLink("Prohlédnout další kousky")` + `renderAboutValues()` post-delivery — natural cross-sell moment. **Recommend follow-up.** |
+| 5 | `sendOrderStatusEmail (delivered)` | 417 | `buildOrderDeliveredHtml` (374) | **BRAND-PASSED** _(C4923)_ | **CONVERTED in C4923 #571**: bypassed `buildStatusEmailWrapper` (status wrapper has no slot after the primary button) and inlined an equivalent layout that appends `renderShopLink("Prohlédnout další kousky")` + `renderAboutValues()` after the order CTA. Other 3 status flows (`confirmed`/`shipped`/`cancelled`) intentionally remain INTERNAL-OK on the wrapper. |
 | 6 | `sendOrderStatusEmail (cancelled)` | 417 | `buildOrderCancelledHtml` (386) | INTERNAL-OK | Cancellation should not push CTAs. |
 | 7 | `sendShippingNotificationEmail` | 598 | `buildShippingNotificationHtml` (526) | **BRAND-PASSED** | Uses `renderShopLink` (580) + `renderAboutValues` (584). |
 | 8 | `sendAdminNewOrderEmail` | 789 | `buildAdminNewOrderHtml` (734) | INTERNAL-OK | Admin notification — `showTagline:false`, no public-facing polish. |
@@ -33,7 +33,7 @@
 | 14 | `sendNewsletterWelcomeEmail` | 1124 | `buildNewsletterWelcomeHtml` (624) → `renderLayout` (673) | PARTIAL | First marketing touch — perks list + button only. Could host `renderAboutValues()` to reinforce pillars (no product data wired, so `renderProductGrid` requires data-flow change → defer). **Recommend follow-up.** |
 | 15 | `sendAccountWelcomeEmail` | 1231 | `buildAccountWelcomeHtml` (1158) → `renderLayout` (1220) | **BRAND-PASSED** | Uses `renderShopLink` (1217) + `renderAboutValues` (1218). |
 | 16 | `sendAbandonedCartEmail` | 1463 | `buildAbandonedCartEmail{1,2,3}Html` → `buildAbandonedCartEmailWrapper` (1292) → `renderLayout` (1309) | **BRAND-PASSED** | Uses `renderShopLink` (1307, conditional) + `renderAboutValues` (1308) + `renderProductRowList`. |
-| 17 | `sendReviewRequestEmail` | 1605 | `buildReviewRequestHtml` (1526) → `renderLayout` (1594) | PARTIAL | Post-purchase request; could host `renderShopLink` + `renderAboutValues` to convert reviewers into repeat buyers. **Recommend follow-up.** |
+| 17 | `sendReviewRequestEmail` | 1605 | `buildReviewRequestHtml` (1526) → `renderLayout` (1594) | **BRAND-PASSED** _(C4923)_ | **CONVERTED in C4923 #571**: trailing inline "nebo se podívej na novinky →" link replaced by `renderShopLink("Nebo projít celou nabídku")`, with `renderAboutValues()` appended below. The "Kdyby něco nesedělo, napiš mi rovnou." support note kept as a standalone line so support and brand-pillar polish are visually distinct. |
 | 18 | `sendDeliveryCheckEmail` | 1692 | `buildDeliveryCheckHtml` (1639) → `renderLayout` (1679) | PARTIAL | "Did your order arrive?" — natural shop-link moment. **Recommend follow-up.** |
 | 19 | `sendNewArrivalEmail` | 1792 | `buildNewArrivalHtml` (1754) → `renderLayout` (1778) | **BRAND-PASSED** _(this cycle)_ | **CONVERTED in this cycle**: added `renderShopLink("Nebo projít celou nabídku")` + `renderAboutValues()` after the product grid. Already uses `renderProductGrid`. |
 | 20 | `sendBrowseAbandonmentEmail` | 1884 | `buildBrowseAbandonmentHtml` (1833) → `renderLayout` (1871) | PARTIAL | Has `renderProductRowList` but no values footer. **Recommend follow-up.** |
@@ -47,8 +47,8 @@
 
 ## Tally
 
-- **BRAND-PASSED**: 5 templates (order confirmation, shipping notification, account welcome, abandoned cart, **new-arrival** as of this cycle).
-- **PARTIAL** (renderLayout + tokens but missing pillar polish): 11 customer-facing templates — order-delivered, newsletter-welcome, review-request, delivery-check, browse-abandonment, cross-sell-follow-up, win-back, campaign, mother's-day shell, customs shell, campaign-preview.
+- **BRAND-PASSED**: 7 templates (order confirmation, shipping notification, account welcome, abandoned cart, new-arrival _(C4922)_, **order-delivered** _(C4923)_, **review-request** _(C4923)_).
+- **PARTIAL** (renderLayout + tokens but missing pillar polish): 9 customer-facing templates — newsletter-welcome, delivery-check, browse-abandonment, cross-sell-follow-up, win-back, campaign, mother's-day shell, customs shell, campaign-preview.
 - **INLINE-LEGACY**: **0 templates**. Every send-path goes through `renderLayout`. The audit confirms the brand-pass infrastructure rollout is structurally complete.
 - **INTERNAL-OK** (admin/security — polish intentionally absent): 8 templates.
 
