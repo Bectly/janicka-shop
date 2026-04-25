@@ -80,5 +80,14 @@ test.describe("Sold PDP — similar carousel + back-in-stock CTA", () => {
     await expect(
       formAnchor.locator('input[type="email"][name="email"]'),
     ).toBeVisible();
+
+    // Regression guard (Trace W-2 / Lead C4907 P1): on the sold PDP the
+    // back-in-stock form must render exactly ONCE and the legacy NotifyMeForm
+    // (used for ProductNotifyRequest dispatch on available PDPs) must be
+    // ABSENT — otherwise a future revert that re-mounts NotifyMeForm into the
+    // sold branch would silently double-dispatch emails on the same event.
+    const backInStockForms = page.getByTestId("back-in-stock-form");
+    await expect(backInStockForms).toHaveCount(1);
+    await expect(page.getByTestId("notify-me-form")).toHaveCount(0);
   });
 });

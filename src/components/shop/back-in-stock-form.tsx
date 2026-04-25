@@ -51,7 +51,10 @@ export function BackInStockForm({
   const summary = parts.length > 0 ? parts.join(" · ") : "stejná kategorie";
 
   return (
-    <div className="mt-4 rounded-xl border border-primary/15 bg-primary/[0.03] p-4">
+    <div
+      data-testid="back-in-stock-form"
+      className="mt-4 rounded-xl border border-primary/15 bg-primary/[0.03] p-4"
+    >
       <div className="flex items-center gap-2">
         <BellRing className="size-4 text-primary" />
         <h3 className="text-sm font-semibold text-foreground">
