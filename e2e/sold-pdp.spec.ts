@@ -53,41 +53,58 @@ test.describe("Sold PDP — similar carousel + back-in-stock CTA", () => {
   }) => {
     test.skip(!soldSlug, "No category with ≥5 products in dev DB");
 
-    await page.goto(`/products/${soldSlug}`);
+    try {
+      await page.goto(`/products/${soldSlug}`);
 
-    // "Prodáno" badge present — confirms sold-PDP variant rendered.
-    await expect(page.getByText("Prodáno", { exact: true })).toBeVisible();
+      // "Prodáno" badge present — confirms sold-PDP variant rendered.
+      await expect(page.getByText("Prodáno", { exact: true })).toBeVisible();
 
-    // Similar carousel section.
-    const carousel = page.getByTestId("sold-similar-carousel");
-    await expect(carousel).toBeVisible({ timeout: 10_000 });
+      // Similar carousel section.
+      const carousel = page.getByTestId("sold-similar-carousel");
+      await expect(carousel).toBeVisible({ timeout: 10_000 });
 
-    // Carousel must surface ≥4 product cards (links into /products/<slug>).
-    const cards = carousel.locator('a[href^="/products/"]');
-    await expect(cards.first()).toBeVisible();
-    expect(await cards.count()).toBeGreaterThanOrEqual(4);
+      // Carousel must surface ≥4 product cards (links into /products/<slug>).
+      const cards = carousel.locator('a[href^="/products/"]');
+      await expect(cards.first()).toBeVisible();
+      expect(await cards.count()).toBeGreaterThanOrEqual(4);
 
-    // Inline CTA "Dej mi vědět o podobném →" anchors to the back-in-stock form.
-    const ctaLink = carousel.getByRole("link", {
-      name: /Dej mi v.d.t o podobn.m/i,
-    });
-    await expect(ctaLink).toBeVisible();
-    expect(await ctaLink.getAttribute("href")).toBe("#hlidat-podobny");
+      // Inline CTA "Dej mi vědět o podobném →" anchors to the back-in-stock form.
+      const ctaLink = carousel.getByRole("link", {
+        name: /Dej mi v.d.t o podobn.m/i,
+      });
+      await expect(ctaLink).toBeVisible();
+      expect(await ctaLink.getAttribute("href")).toBe("#hlidat-podobny");
 
-    // Back-in-stock form anchor exists with a working email input.
-    const formAnchor = page.locator("#hlidat-podobny");
-    await expect(formAnchor).toBeAttached();
-    await expect(
-      formAnchor.locator('input[type="email"][name="email"]'),
-    ).toBeVisible();
+      // Back-in-stock form anchor exists with a working email input.
+      const formAnchor = page.locator("#hlidat-podobny");
+      await expect(formAnchor).toBeAttached();
+      await expect(
+        formAnchor.locator('input[type="email"][name="email"]'),
+      ).toBeVisible();
 
-    // Regression guard (Trace W-2 / Lead C4907 P1): on the sold PDP the
-    // back-in-stock form must render exactly ONCE and the legacy NotifyMeForm
-    // (used for ProductNotifyRequest dispatch on available PDPs) must be
-    // ABSENT — otherwise a future revert that re-mounts NotifyMeForm into the
-    // sold branch would silently double-dispatch emails on the same event.
-    const backInStockForms = page.getByTestId("back-in-stock-form");
-    await expect(backInStockForms).toHaveCount(1);
-    await expect(page.getByTestId("notify-me-form")).toHaveCount(0);
+      // Regression guard (Trace W-2 / Lead C4907 P1): on the sold PDP the
+      // back-in-stock form must render exactly ONCE and the legacy NotifyMeForm
+      // (used for ProductNotifyRequest dispatch on available PDPs) must be
+      // ABSENT — otherwise a future revert that re-mounts NotifyMeForm into the
+      // sold branch would silently double-dispatch emails on the same event.
+      const backInStockForms = page.getByTestId("back-in-stock-form");
+      await expect(backInStockForms).toHaveCount(1);
+      await expect(page.getByTestId("notify-me-form")).toHaveCount(0);
+    } finally {
+      // Safety net for assertion failures — afterAll handles the happy path,
+      // globalTeardown handles SIGKILL/Ctrl-C, this catches the middle case
+      // where a thrown assertion would still let afterAll run but a panic in
+      // beforeAll-during-update could leave the row flipped without the id
+      // being recorded yet. Idempotent — if afterAll runs after this, the
+      // second update is a no-op.
+      if (soldProductId) {
+        await prisma.product
+          .update({
+            where: { id: soldProductId },
+            data: { sold: false },
+          })
+          .catch(() => {});
+      }
+    }
   });
 });
