@@ -1444,3 +1444,107 @@ These are network-layer timings, not Lighthouse scores — no LCP/TBT/CLS, no CP
 | M | P2 | BOLT | DOMPurify on Phase 4 mailbox render. | **UNCHANGED** (blocked on Phase 4 scope). |
 
 **Net cycle verdict (C4898→C4900)**: 0 code commits landed (Lead supervision only); 13-cycle green quality-gate streak intact; lint-zero streak extends to 31 commits. Task #532 closed as demoted (superseded by #551 BOLT). No new audit signal from `433b498` to file. Follow-up queue carries forward unchanged.
+
+## C4904 Phase 5 consolidated summary + #550/#552 domain-separation spot-check (2026-04-25, post-1e19508)
+
+**Scope**: Lead C4903 directive asked for "Phase 5 consolidated summary addendum + domain-separation spot-check that #550 BackInStockSubscription (generic size+brand new-arrival alerts) doesn't collide with #552 WishlistSubscription (wishlisted-specific-item sold-out similar-match)." Two new commits since C4900 HEAD `433b498`:
+
+- `9dc334c` (C4904 Sage): email-preview registry brand-pass cleanup for #494 — exports `buildWishlistSoldHtml` + `buildSimilarItemHtml` so admin preview renders them; adds `wishlist-sold` / `similar-item-sold` / `similar-item-arrived` preview cases.
+- `1e19508` (C4904 Bolt): #550 `BackInStockSubscription` — new Prisma model, server action `requestBackInStock`, `BackInStockForm` client component wired into sold PDP, `buildBackInStockHtml` email builder, `/api/cron/back-in-stock-notify` route registered in `vercel.json` at `30 */2 * * *`.
+
+### Quality gates at HEAD `1e19508`
+
+- **`npx tsc --noEmit`**: ✅ PASS (exit 0, silent).
+- **`npm run lint`**: ✅ **0 errors, 0 warnings** (the `[BABEL]` note on `font-data.ts` is size-only; exit 0). Lint-zero streak extends to **33 consecutive commits** (since C4829 milestone).
+- **15-cycle green quality-gate streak** (since C4892 close-out) intact.
+- `git diff --stat 46336b1..1e19508` → 13 files / +555 / −26, all in audit scope (`src/**`, `prisma/**`, `vercel.json`).
+- **Hardcoded secrets** (`sk_live|sk_test|cfk_|inline Bearer`): 0 hits in `src/`.
+
+### Phase 5 punch-list — consolidated scorecard (C4891→C4903, 7 items)
+
+| Item | Priority | Agent | Landing | Status |
+|---|---|---|---|---|
+| P5-a | recharts dynamic-import on admin dashboard | Bolt | C4891 | ✅ CLOSED — shop chunk clean (confirmed at C4903 bleed-check) |
+| P5-b | Phase 5 bundle-analyzer initial pass | Bolt | C4892 | ✅ CLOSED — `docs/audits/bundle-analyzer-2026-04-25.md` |
+| P5-c | MiniSearch dynamic-import on `/products` | Bolt | C4893 (`c763a87`) | ✅ CLOSED — TTFB proxy confirms no PDP/listing regression (C4900 informal snapshot) |
+| P5-d | browserslist polyfill chunk | Bolt | C4902 | ✅ NULL-RESULT — `docs/audits/browserslist-polyfill-2026-04-25.md`; Next 16 `CopyFilePlugin` + `noModule:true` means modern browsers never download the 39.5 KB gzip chunk; Scout premise did not hold; task #547 CANCELLED |
+| P5-e | vaul dynamic-import investigation (#545) | Bolt | — | ⏳ STALLED — 8th cycle in-flight per Lead; demoted to investigation-only (next cycle cancel if no doc) |
+| P5-f | bundle-analyzer follow-up | Bolt | C4892 | ✅ CLOSED — `docs/audits/bundle-analyzer-2026-04-25-followup.md` |
+| P5-g | shop-bundle-bleed verification (#548) | Bolt | C4903 (`46336b1`) | ✅ CLOSED — `docs/audits/shop-bundle-bleed-2026-04-25.md`; 35-route × 12 admin-component-identifier matrix clean |
+
+**Scorecard**: 4 resolved / 1 null-result documented / 1 stalled / 1 closed = **6 of 7 items off the punch-list** with explicit outcomes. Only `#545` (vaul, P5-e) remains in flight with stalled status. Net signal: the Phase 5 bundle-grinding sprint has produced the wins it was going to produce; Lead's C4903 pivot to Phase 4 verification (#551) + new-feature leverage (#550/#552) is correctly timed.
+
+### Row W (NEW C4904) — #550 `BackInStockSubscription` four-axis review
+
+| Axis | Check | Verdict |
+|---|---|---|
+| **XSS surface — email render** | `buildBackInStockHtml` (`src/lib/email/back-in-stock.ts`) interpolates user-controlled `product.name`, `product.brand`, `criteriaLine`. All three flow through `escapeHtml()` (layout helper) before `${}` injection (`:80-106`). Unsubscribe URL passes `signUnsubscribeToken(recipientEmail)` through `encodeURIComponent` (`:64`). Image URLs via `escapeHtml` inside `renderProductGrid`. | ✅ No XSS vector. |
+| **Input validation — server action** | `requestBackInStock` (`src/app/(shop)/products/[slug]/back-in-stock-actions.ts`) uses Zod schema with `.email()` + `.max(254)` on email, `.max(128/200/50)` on other fields; lowercases+trims email at the schema boundary; rate-limits via `checkRateLimit` keyed by IP at 5/min; dedup via `findFirst` on exact tuple before `create`. | ✅ Matches the `requestProductNotify` pattern already in-tree. |
+| **Cron auth** | `/api/cron/back-in-stock-notify` starts with `requireCronSecret(request)` (timing-safe `node:crypto.timingSafeEqual` with length-padding neutraliser, via `src/lib/cron-auth.ts`). Fail-closed when `CRON_SECRET` not set. | ✅ Consistent with the 11 prior migrations (row K close-out at C4854). |
+| **DB portability** | Size filter is post-SQL JS-level (`candidates.filter(...JSON.parse(p.sizes))`) because the `sizes` column is a JSON-stringified array and SQL JSON operators are not portable across sqlite/libsql. `Prisma where` clause handles categoryId/brand/condition/createdAt/active/sold/id-not-source. Batch capped at `take: 50` subscriptions × `take: 10` candidates per sub → bounded fan-out. | ✅ Portable + bounded. |
+| **Dedup + email-loop safety** | Server action dedups on `(email, categoryId, brand, size, condition, notifiedAt=null)` before insert; cron updates `notifiedAt` + `notifiedProductId` after send so repeat runs skip the row. No exception-on-send rollback flow (if `sendMail` succeeds but `update` fails, row is notified + DB says unnotified → re-send on next run). Risk is low in practice (Prisma update to an indexed pk is reliable) but worth noting. | ⚠️ **P3 informational** (see row W-1 below). |
+
+### Row X (NEW C4904) — #552 `WishlistSubscription` status correction
+
+**Finding**: Lead C4903 directive characterises `#552` as "wire up WishlistSubscription (POST /api/wishlist/subscribe + PDP widget + /api/cron/wishlist-sold-notify + vercel.json @hourly registration), model exists at `prisma/schema.prisma:290-301` with zero TS refs." **The "zero TS refs / unwired" premise is stale.** Full grep and call-site audit:
+
+| Piece | Lead expected | Actual state |
+|---|---|---|
+| Prisma model | exists, unused | exists at `prisma/schema.prisma:290-301` |
+| Subscribe endpoint | `POST /api/wishlist/subscribe` | `subscribeWishlistNotifications` server action at `src/app/(shop)/oblibene/actions.ts:60-96` — Zod-validated (email + productId[]), filters to `active && !sold` products, upserts on `@@unique([email, productId])` compound index at `:84` |
+| Subscribe UI | "PDP widget" | `/oblibene` wishlist page widget — `subscribeWishlistNotifications` is called at `src/app/(shop)/oblibene/wishlist-content.tsx:45` |
+| Trigger → email | `/api/cron/wishlist-sold-notify @hourly` | Synchronous fire-and-forget at checkout: `sendWishlistSoldNotifications(order.soldProducts)` invoked from `src/app/(shop)/checkout/actions.ts:543` after the order marks products sold; implementation at `src/lib/email/wishlist-sold.ts:147-252` — finds subscribers with `notifiedAt=null`, scores candidates in same category (size-overlap +10, brand-match +3), sends top-3 similar via `sendMail`, `updateMany` notifiedAt at the end |
+| Email template | — | `buildWishlistSoldHtml` at `src/lib/email/wishlist-sold.ts:88-139` (grayscale sold-image hero + 3-cell similar grid, renderLayout shell) |
+| `vercel.json` cron registration | `@hourly` | intentionally absent — the trigger is checkout-mutation-driven, not time-driven |
+
+**TS-refs evidence** (grep `wishlistSubscription` in `src/`): 3 call-sites in 2 files (`src/lib/email/wishlist-sold.ts:162,240` + `src/app/(shop)/oblibene/actions.ts:84`). TS-refs of `buildWishlistSoldHtml`: `src/app/(admin)/admin/email-previews/...` registry (added C4904 `9dc334c` for admin preview) + `src/lib/email/wishlist-sold.ts` consumer.
+
+**Net**: `#552` is already **end-to-end live** on the Once-Again pattern. The implementation choice differs from the Lead-specified shape:
+
+- Server action (progressive-enhancement) instead of `POST /api/wishlist/subscribe` — matches the rest of the shop's form pattern (checkout, notify-me, back-in-stock, abandoned-cart).
+- Subscribe widget on `/oblibene` (user adds items to wishlist → opts in once for all of them) instead of per-PDP — matches the Once-Again UX reference precisely (you wishlist at PDP, get asked for email once in the consolidated wishlist view).
+- Synchronous checkout-fired email instead of cron — latency-better (email lands in the hour the item sold, not at the next hourly tick) and avoids a redundant cron lane for the same notifiedAt-gated flow.
+
+**Recommendation**: Lead should mark `#552` as completed-before-dispatch (similar to the C4858 `#484` pattern where the scoped task had already shipped by an earlier cycle). No code change needed; the feature is live, the admin preview registry now covers it, and the domain-separation audit below confirms it doesn't collide with `#550`.
+
+### Row Y (NEW C4904) — `#550` ↔ `#552` ↔ `ProductNotifyRequest` domain-separation spot-check
+
+Three user-email-capture tables now coexist in the tree. Spot-check for tuple collisions, trigger collisions, and cron-loop collisions:
+
+| | ProductNotifyRequest | BackInStockSubscription (#550) | WishlistSubscription (#552) |
+|---|---|---|---|
+| **Key tuple** | `(email, categoryId, sizes[], brand?)` | `(email, categoryId, brand?, size?, condition?, sourceProductId?)` | `(email, productId)` unique |
+| **Capture UI** | `NotifyMeForm` on sold + available PDP | `BackInStockForm` on sold PDP only | `/oblibene` wishlist-consolidation page |
+| **Trigger** | Cron `/api/cron/new-arrivals` 07:00 + 17:00 daily (twice-daily new-product fanout) | Cron `/api/cron/back-in-stock-notify` `30 */2 * * *` (every 2h at :30, matches NEW products last 48h) | Synchronous fire-and-forget at `checkout/actions.ts:543` when order marks products sold |
+| **Match logic** | Category + sizes (any overlap) + optional brand on any new-enough product | Category + optional brand + optional single-size (JSON includes) + optional condition, only products created last 48h, excludes `sourceProductId` | Exact `productId` match where `notifiedAt=null`, then top-3 similar items (same category, scored by size overlap +10, brand +3) |
+| **Email subject** | "Přidali jsme nové kousky — podívejte se" (per new-arrivals builder) | "Přidali jsme kousek, který jsi hlídala" | "Tvůj vysněný kousek se právě prodal — podívej se na podobné" |
+| **Notification key** | `notified: Boolean` flipped after first send | `notifiedAt: DateTime?` + `notifiedProductId: String?` set after send | `notifiedAt: DateTime?` set after send |
+
+**Collision analysis**:
+
+1. **Model-space collision — NONE**. Three separate tables, disjoint primary keys. No FK overlap, no shared trigger source.
+2. **Trigger-space collision — NONE**. Wishlist fires at checkout-mutation (synchronous user-action-driven); BackInStock + ProductNotify fire from cron on NEW product arrival. The three never contend for the same job row.
+3. **Email-space collision — MILD (P2)**. On a sold PDP, the tree now renders **both** `BackInStockForm` and `NotifyMeForm` stacked (see `src/app/(shop)/products/[slug]/page.tsx:502` and `:521`). A user submitting the same email to both widgets creates:
+   - one `BackInStockSubscription` row with the tight tuple `(brand, size, condition, categoryId)`
+   - one `ProductNotifyRequest` row with the broader tuple `(categoryId, sizes[], brand?)`
+   When a new product arrives that matches both tuples, `/api/cron/back-in-stock-notify` (at :30) AND `/api/cron/new-arrivals` (at 07:00/17:00) can both fire emails to the same address for the same product. Neither cron dedups across table boundaries. Mitigation is already partial: BackInStockSubscription marks `notifiedAt` after the first match so it won't re-fire for the next product, and ProductNotifyRequest flips `notified: true` after the first send so it also won't re-fire — **within** its own table. But the inter-table dedup is absent.
+4. **UI/UX collision — MILD (P2)**. Two near-identical email-capture widgets stacked on the same sold-PDP viewport. Copy disambiguates ("Hlídat přesně tenhle typ" for tight vs "Dejte mi vědět" for broad) but the visual duplication is real. Row W-2 below proposes a cleanup.
+5. **GDPR minimization** — all three tables store email+consent-context in separate rows. None of them currently purge rows that sit at `notifiedAt=null` forever. Not urgent (retention policy is a launch-time sweep) but worth a tracking row (W-3 below).
+
+**Verdict**: `#550` and `#552` do **not** collide in the model or trigger layer. The mild email-space overlap is between `#550` BIS and the pre-existing `ProductNotifyRequest` on sold-PDP captures, not between `#550` and `#552`. Lead's dispatch concern is answered with a clean ✅ on the `#550/#552` pair; the overlap that does exist is orthogonal to the dispatched pair and filed as P2.
+
+### Follow-up queue at HEAD `1e19508`
+
+| # | Priority | Agent | Scope | Status |
+|---|---|---|---|---|
+| N | P2 | BOLT | Dead `renderBody` export at `src/lib/email/layout.ts`. | **OPEN** (C4847 → C4904, unchanged) |
+| O | P2 | BOLT | Resend → SMTP comment drift across 14 files. | **OPEN** (C4847 → C4904, unchanged) |
+| P | P1 | BOLT | ts-prune close-out. | **OPEN** (C4833 → C4904, unchanged) |
+| V | P3 | — | Tighten `ctaIsShopBrowse` substring guard in `buildAbandonedCartEmailWrapper`. | **INFORMATIONAL** (C4898 → C4904, unchanged) |
+| M | P2 | BOLT | DOMPurify on Phase 4 mailbox render. | **UNCHANGED** (blocked on Phase 4 scope). |
+| W-1 (NEW) | P3 | BOLT | `back-in-stock-notify` send/update ordering — if `sendMail` succeeds but the subsequent `backInStockSubscription.update` throws, the row stays `notifiedAt=null` and the next cron tick re-sends the same email. Fix: update `notifiedAt` with a pre-commit reservation (update before send, rollback on failure via `update({data:{notifiedAt:null}})`), OR wrap send+update in a try/catch that logs the dual-write window. Matches the `wishlist-sold.ts:216-244` pattern which already uses a `notifiedIds[]` accumulator + single `updateMany` after all sends. | **OPEN** (NEW at C4904) |
+| W-2 (NEW) | P2 | SAGE | Sold-PDP double email-capture — `BackInStockForm` (`page.tsx:502`) + `NotifyMeForm` (`:521`) stacked together. Collapse into a single progressive-disclosure widget (default: tight `BackInStockForm`; "also notify me about new arrivals in this category" checkbox wires the broader `ProductNotifyRequest` capture) so submissions land on at most one of the two tables unless the user explicitly opts into both. | **OPEN** (NEW at C4904) |
+| W-3 (NEW) | P3 | BOLT | Retention sweep — add a weekly cron that purges `ProductNotifyRequest` / `BackInStockSubscription` / `WishlistSubscription` rows where `notifiedAt` has been set for > 90d, plus `notifiedAt=null` rows older than 180d (GDPR minimization). Can be one `/api/cron/notify-retention` route. | **OPEN** (NEW at C4904) |
+| W-4 (NEW) | P3 | BOLT | Inter-table email dedup at cron send time — `new-arrivals` cron and `back-in-stock-notify` cron both can fire on the same new product for the same email via different tables. Add a short-circuit: before `sendMail`, check if the same `(email, productId)` pair has been emailed within the last 6h via any of the three notification tables. Low-effort (a single compound `findFirst` across `notifiedProductId` columns) but prevents the mild inter-table email-duplication identified in row Y.3. | **OPEN** (NEW at C4904) |
+
+**Net cycle verdict (C4900→C4904)**: 2 code commits landed (Sage `9dc334c` email-preview registry + Bolt `1e19508` #550 BIS end-to-end); 15-cycle green quality-gate streak intact; lint-zero streak extends to 33 commits. Phase 5 punch-list closed at 6-of-7 with 1 stalled. `#550/#552` domain-separation cleared — no model/trigger collision; only mild inter-table email-dedup gap (row W-4) surfaced. `#552` WishlistSubscription correction: **already end-to-end wired** pre-dispatch; Lead dispatch shape should be reconciled to completed-before-dispatch. 4 new follow-up rows filed (W-1/W-2/W-3/W-4); prior N/O/P/V/M queue unchanged.
