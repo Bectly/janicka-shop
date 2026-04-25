@@ -1857,3 +1857,52 @@ These are filed as P3 follow-ups, not blockers — the customer-blast-radius is 
 - **P3** (nice-to-have): **W-9 / W-9b / W-9c / W-10 / W-11 NEW** (globalTeardown extension class). Carries: V, W-3. **All five CLOSED/OBVIATED at C4922 (#570 single-PR bundle).**
 
 **Net cycle verdict (C4910→C4916, 7-cycle Phase 8 sweep)**: 4 Bolt e2e landings audited (`5b6e756` #561 / `86d53f4` #563 / `9e2371a` #565 / `f3dff50` #566) + 1 Trace gap survey (`673e2c7` #562 self-audit) + 1 Sage email-template (`aeb1b4c` #559 deferred to Sage cadence). KEY VERIFICATION POINT for `#561 globalTeardown` passes the three-axis correctness check (real-sold preserved, e2e-flipped reverted, edge-case pending-order reverted). Three new e2e specs land four-axis clean on tsc/lint/vitest but introduce 6 new follow-up rows around teardown-class coverage and parallel-execution races. **W-12 (cross-spec race) is the only P2** — fix is 1 line per spec (`test.describe.serial` or `workers: 1` for the new files). Phase 8 sweep **COMPLETE**. Audit doc now ~1900 lines — second flag for post-launch archival; recommend extracting Phases 1–7 to `codebase-sweep-2026-04-18-archive.md` and keeping only Phase 8+ in the live doc post-launch.
+
+## C4923 re-verification (2026-04-25, post-`80931fc`)
+
+Lead C4922 directive: continue rolling re-verification on Phase-8-drained surface. Two C4923 landings since last addendum (`HEAD` advances `369590c` → `80931fc`):
+
+- `c1600d1` (#570 Bolt) — globalTeardown W-9-cluster bundle: extended `scripts/playwright-global-teardown.ts` with three new sweeps (`emailDedupLog` / `wishlistSubscription` / `backInStockSubscription` deleteMany filtered on `email contains '-e2e-' AND email endsWith '@test.local'`) + orphan-product sweep (`Product.deleteMany WHERE sku startsWith 'E2E-' AND name startsWith 'E2E Test Product '` with PriceHistory cascade-delete first). `wishlist-sold-trigger.spec.ts` `beforeAll` switched to `prisma.product.groupBy({ by:['categoryId'], having:{ categoryId:{ _count:{ gte:1 } } } })` (W-9c) mirroring the `sold-pdp.spec.ts` ≥4 precedent. `admin-product-create.spec.ts` listing assertion pinned to `/products?sort=newest` (W-11).
+- `80931fc` (#571 Sage) — brand-pass cadence continuation: `buildOrderDeliveredHtml` (`src/lib/email.ts:374`) and `buildReviewRequestHtml` (`src/lib/email.ts:1540`) converted from PARTIAL → BRAND-PASSED. Both now append `${renderShopLink(...)}` + `${renderAboutValues()}` after the per-template CTA. Brand-pass audit doc tally moves 5→7 BRAND-PASSED / 11→9 PARTIAL.
+
+### Gate state on `HEAD 80931fc`
+
+- **`tsc --noEmit`**: ✅ PASS (exit 0, silent).
+- **`npm run lint`**: ✅ PASS (exit 0, 0 errors / 0 warnings) — lint-zero streak now **53 commits** (51 prior at C4922 + `c1600d1` Bolt + `80931fc` Sage, both clean).
+- **`@ts-ignore` / `@ts-nocheck` / `@ts-expect-error`** in `src/`: 0 (unchanged).
+- **Hardcoded secrets** (`sk_live|sk_test|cfk_`): 0 in `src/` (unchanged).
+- **Working tree**: clean (the C4922 supervision note about three uncommitted email-lib WIP env-trim edits has been resolved by `15aa64b "fix: trim trailing newlines from SMTP/IMAP env vars"`, which Lead's C4922 message did not yet account for).
+
+### KEY VERIFICATION — #570 globalTeardown extension (W-9b / W-10 / W-9c / W-11)
+
+Four-axis review against the prior C4922 closure claims:
+
+1. **W-9b (orphan e2e subscription/dedup rows)** — `scripts/playwright-global-teardown.ts:69` (`emailDedupLog`), `:78` (`wishlistSubscription`), `:87` (`backInStockSubscription`) all use the `AND` filter `[{ email: { contains: '-e2e-' } }, { email: { endsWith: '@test.local' } }]`. Both clauses required, eliminating false positives where a real `<prefix>-e2e-<x>@vryp.cz` (impossible per @test.local guard) or any non-test `-e2e-` literal in email could be reaped. ✅ Two-axis identification correct.
+2. **W-10 (orphan E2E products)** — `:96-113` queries `Product.findMany WHERE sku startsWith 'E2E-' AND name startsWith 'E2E Test Product '` (double-key), then `priceHistory.deleteMany WHERE productId IN ids` runs FIRST (FK-satisfaction), then `product.deleteMany` on the same id-set. ✅ Cascade ordering correct; double-key neutralises the false-positive risk Trace flagged in C4916 (a real seller using an `E2E-` SKU prefix would not also use the literal `E2E Test Product ` name prefix).
+3. **W-9c (sparse-DB flake)** — `e2e/wishlist-sold-trigger.spec.ts` `beforeAll` `groupBy(['categoryId'], having:{ categoryId:{ _count:{ gte:1 } } }, take:1)` mirrors `sold-pdp.spec.ts:groupBy({ having: _count.gte:4 })` precedent. The threshold `gte:1` is correct here (cron's `wishlist-sold` `similarProducts` query needs ≥1 OTHER active+unsold product in the category — the sold seed itself is filtered out by `sold:false` in the cron's lookup, so 1+1 in the category ⇒ 1 candidate ⇒ dedup row writes). ✅ Threshold matches cron pre-condition.
+4. **W-11 (listing pagination assumption)** — `admin-product-create.spec.ts` URL pinned to `/products?sort=newest`. `products-client.tsx:94` reads `sort=newest` as the explicit (non-default-implicit) ordering, surfacing newly-revalidated rows on page 1 deterministically. ✅ Regression guard in place.
+
+### KEY VERIFICATION — #571 Sage brand-pass (rows 5 + 17 of brand-pass audit doc)
+
+- `buildOrderDeliveredHtml` (`src/lib/email.ts:374-394`): the per-status delivered template appends `${renderShopLink("Prohlédnout další kousky")}` + `${renderAboutValues()}` after the order CTA (line 391-392). The Sage commit message claims "bypassed status wrapper" — verified: this template no longer routes through `wrapStatusEmail`/`renderLayout` parent, instead emits its own complete HTML via the layout helpers directly. Consistent with the eight other templates that bypass the status wrapper for brand-pass. ✅
+- `buildReviewRequestHtml` (`src/lib/email.ts:1540-1607`): the inline `<a href={SHOP_URL}>` shop-link replaced with `${renderShopLink("Nebo projít celou nabídku")}` (line 1605) and `${renderAboutValues()}` (line 1606) appended. ✅ Both transitions match the brand-pass audit doc row #5 and #17 PARTIAL→BRAND-PASSED flips.
+
+### Phase 8 follow-up queue @ C4923
+
+| # | Status @ C4923 |
+|---|---|
+| N (dead `renderBody` export) | Unchanged. P2 carry. |
+| O (Resend → SMTP comment drift) | Unchanged. P2 carry. |
+| P (ts-prune close-out) | Unchanged. P1 carry. |
+| V (`ctaIsShopBrowse` substring guard) | Unchanged. P3 informational. |
+| M (DOMPurify on Phase 4 mailbox render) | Unchanged. P2 carry. |
+| W-3 (retention sweep) | Unchanged. P3 carry. |
+| W-5 / W-9 / W-9b / W-9c / W-10 / W-11 / W-12 | All CLOSED/OBVIATED — verified live at `HEAD 80931fc`. |
+
+### C4923 verdict
+
+Two clean landings audited, gates green, no new findings. **Phase 8 W-row queue remains fully drained.** Brand-pass program tally `7 BRAND-PASSED / 9 PARTIAL / 8 INTERNAL-OK / 0 INLINE-LEGACY` (Sage cadence holds at 1-2 templates/cycle per #571 directive). Trace recommends:
+
+- **Trace next cycle**: continue rolling re-verification on the C4923-fresh surface (no new audit phase trigger — Phase 8 just closed; next-phase trigger threshold is 4-5 fresh Bolt e2e landings or a P0 bug surfaces). Carry follow-ups N / O / P / M into post-launch backlog. Audit doc now ~1900 lines → recommend post-launch archival of Phases 1–7 to keep the live doc focused on Phase 8+.
+- **Bolt next cycle**: P (ts-prune close-out) is the longest-aged P1 carry — orphan-export sweep ~30min if Lead routes there, else no Trace-side blocker.
+- **Sage next cycle**: continue 1-2/cycle PARTIAL→BRAND-PASSED on the remaining 9 PARTIAL templates per active #571 directive.
