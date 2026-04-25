@@ -45,6 +45,10 @@ async function AdminAuthGate({
     redirect("/admin/login");
   }
 
+  if (session.user.role !== "admin") {
+    redirect("/admin/login");
+  }
+
   // Check onboarding status — redirect to welcome if not completed
   const db = await getDb();
   perfStart(`${navId} admin.findUnique`);

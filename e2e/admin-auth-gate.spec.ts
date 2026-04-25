@@ -29,10 +29,44 @@ const CUSTOMER_PASSWORD = "Test12345!secret";
 
 test.afterAll(async () => {
   await prisma.customer
-    .deleteMany({ where: { email: CUSTOMER_EMAIL } })
+    .deleteMany({ where: { email: { contains: "admin-gate-e2e-" } } })
     .catch(() => {});
   await prisma.$disconnect();
 });
+
+// Register a fresh customer per test (isolated browser context) and sign in
+// via the public credentials form so NextAuth issues a real role="customer" JWT.
+async function registerAndLoginCustomer(
+  page: import("@playwright/test").Page,
+  request: import("@playwright/test").APIRequestContext,
+): Promise<string> {
+  const id = `${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
+  const email = `admin-gate-e2e-${id}@test.local`;
+  const reg = await request.post("/api/auth/register", {
+    data: {
+      email,
+      password: CUSTOMER_PASSWORD,
+      firstName: "Gate",
+      lastName: "Tester",
+    },
+  });
+  if (reg.status() !== 200) return email;
+
+  await page.goto("/login");
+  await page.getByLabel(/email/i).first().fill(email);
+  await page
+    .getByLabel(/heslo|password/i)
+    .first()
+    .fill(CUSTOMER_PASSWORD);
+  await Promise.all([
+    page.waitForURL(/\/account|\/login/, { timeout: 15_000 }).catch(() => {}),
+    page
+      .getByRole("button", { name: /p.ihl.{1,3}sit|sign in|log in/i })
+      .first()
+      .click(),
+  ]);
+  return email;
+}
 
 test.describe("Admin auth gate — middleware + server actions", () => {
   test("anonymous GET /admin/manager redirects to /admin/login", async ({
@@ -91,6 +125,81 @@ test.describe("Admin auth gate — middleware + server actions", () => {
     // Now try to hit /admin/manager — middleware must bounce a customer.
     await page.goto("/admin/manager");
     await expect(page).not.toHaveURL(/\/admin\/manager(\?|$)/);
+    await expect(page).toHaveURL(/\/admin\/login/);
+  });
+
+  test("customer session → 403 on /api/admin/search", async ({ page, request, context }) => {
+    await registerAndLoginCustomer(page, request);
+    const cookies = await context.cookies();
+    const hasSession = cookies.some(
+      (c) =>
+        c.name === "authjs.session-token" ||
+        c.name === "__Secure-authjs.session-token",
+    );
+    test.skip(
+      !hasSession,
+      "Customer login flow did not set a NextAuth session cookie in this env",
+    );
+
+    const res = await request.get("/api/admin/search?q=test");
+    expect(res.status()).toBe(403);
+    const body = await res.json().catch(() => ({}));
+    expect(body).not.toHaveProperty("orders");
+    expect(body).not.toHaveProperty("customers");
+  });
+
+  test("customer session → 403 on /api/admin/email-preview", async ({ page, request, context }) => {
+    await registerAndLoginCustomer(page, request);
+    const cookies = await context.cookies();
+    const hasSession = cookies.some(
+      (c) =>
+        c.name === "authjs.session-token" ||
+        c.name === "__Secure-authjs.session-token",
+    );
+    test.skip(
+      !hasSession,
+      "Customer login flow did not set a NextAuth session cookie in this env",
+    );
+
+    const res = await request.get("/api/admin/email-preview");
+    expect(res.status()).toBe(403);
+  });
+
+  test("customer session → 403 on /api/admin/new-orders-since", async ({ page, request, context }) => {
+    await registerAndLoginCustomer(page, request);
+    const cookies = await context.cookies();
+    const hasSession = cookies.some(
+      (c) =>
+        c.name === "authjs.session-token" ||
+        c.name === "__Secure-authjs.session-token",
+    );
+    test.skip(
+      !hasSession,
+      "Customer login flow did not set a NextAuth session cookie in this env",
+    );
+
+    const res = await request.get(
+      `/api/admin/new-orders-since?ts=${encodeURIComponent(new Date().toISOString())}`,
+    );
+    expect(res.status()).toBe(403);
+    const body = await res.json().catch(() => ({}));
+    expect(body).not.toHaveProperty("orders");
+  });
+
+  test("customer session bounces from admin layout to /admin/login", async ({ page, request, context }) => {
+    await registerAndLoginCustomer(page, request);
+    const cookies = await context.cookies();
+    const hasSession = cookies.some(
+      (c) =>
+        c.name === "authjs.session-token" ||
+        c.name === "__Secure-authjs.session-token",
+    );
+    test.skip(
+      !hasSession,
+      "Customer login flow did not set a NextAuth session cookie in this env",
+    );
+
+    await page.goto("/admin");
     await expect(page).toHaveURL(/\/admin\/login/);
   });
 

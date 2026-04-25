@@ -9,6 +9,9 @@ export async function GET(req: Request) {
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  if (session.user.role !== "admin") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   const url = new URL(req.url);
   const q = (url.searchParams.get("q") ?? "").trim();
