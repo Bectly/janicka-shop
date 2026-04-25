@@ -1773,7 +1773,9 @@ function buildNewArrivalHtml(data: NewArrivalEmailData): string {
 
     <div style="margin: 28px 0 4px;">
       ${renderButton({ href: shopUrl, label: "Prohlédnout všechny novinky", variant: "outline" })}
-    </div>`;
+    </div>
+    ${renderShopLink("Nebo projít celou nabídku")}
+    ${renderAboutValues()}`;
 
   return renderLayout({
     preheader: count === 1
