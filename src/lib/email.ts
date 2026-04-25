@@ -1119,11 +1119,16 @@ function buildAbandonedCartEmailWrapper(
   ctaUrl: string,
   cartId: string,
 ): string {
+  // Suppress secondary shop-link when the primary CTA already routes to /products
+  // (i.e. all cart items already sold) — avoids two near-identical browse links.
+  const ctaIsShopBrowse = ctaUrl.includes("/products");
   const finalContent = `
     ${contentHtml}
     <div style="margin: 32px 0 4px;">
       ${renderButton({ href: ctaUrl, label: ctaText, variant: "primary" })}
-    </div>`;
+    </div>
+    ${ctaIsShopBrowse ? "" : renderShopLink("Prohlédnout další kousky")}
+    ${renderAboutValues()}`;
   return renderLayout({
     preheader,
     contentHtml: finalContent,
