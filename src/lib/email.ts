@@ -1852,7 +1852,6 @@ export interface BrowseAbandonmentEmailData {
 function buildBrowseAbandonmentHtml(data: BrowseAbandonmentEmailData): string {
   const baseUrl = getBaseUrl();
   const productUrl = `${baseUrl}/products/${encodeURIComponent(data.productSlug)}`;
-  const shopUrl = `${baseUrl}/products?sort=newest`;
 
   const brandLine = data.productBrand ? ` od ${escapeHtml(data.productBrand)}` : "";
   const sizeLine = data.productSize ? ` (vel. ${escapeHtml(data.productSize)})` : "";
@@ -1882,10 +1881,8 @@ function buildBrowseAbandonmentHtml(data: BrowseAbandonmentEmailData): string {
     <div style="margin: 28px 0 4px;">
       ${renderButton({ href: productUrl, label: "Vrátit se ke kousku", variant: "primary" })}
     </div>
-
-    <p style="margin: 18px 0 0; text-align: center; font-family: ${FONTS.sans}; font-size: 13px;">
-      <a href="${shopUrl}" style="color: ${BRAND.charcoalSoft}; text-decoration: underline;">Nebo se podívej na další kousky &rarr;</a>
-    </p>`;
+    ${renderShopLink("Nebo se podívej na další kousky")}
+    ${renderAboutValues()}`;
 
   return renderLayout({
     preheader: `${data.productName} u mě pořád čeká — ale jen na jednu z vás.`,
@@ -1972,7 +1969,8 @@ function buildCrossSellFollowUpHtml(data: CrossSellFollowUpData): string {
 
     <div style="margin: 28px 0 4px;">
       ${renderButton({ href: `${baseUrl}/products?sort=newest`, label: "Prohlédnout všechny novinky", variant: "outline" })}
-    </div>`;
+    </div>
+    ${renderAboutValues()}`;
 
   return renderLayout({
     preheader: "Mám pro tebe pár nových kousků ve tvém stylu.",

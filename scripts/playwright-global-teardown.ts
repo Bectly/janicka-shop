@@ -12,7 +12,8 @@
  *   - W-5  (closed C4914): orphan sold=true Products → revert to sold=false.
  *           "Completed" = paid | paid_mock | shipped | delivered | received.
  *   - W-9b (closed C4922): orphan WishlistSubscription / BackInStockSubscription
- *           / EmailDedupLog rows whose `email` matches `%-e2e-%@test.local`.
+ *           / EmailDedupLog / AbandonedCart rows whose `email` matches
+ *           `%-e2e-%@test.local`.
  *   - W-10 (closed C4922): orphan Product rows where `sku` startsWith `E2E-`
  *           AND `name` startsWith `E2E Test Product `. Double-key on both
  *           columns neutralises false-positive risk if a real seller ever
@@ -90,6 +91,15 @@ export default async function globalTeardown() {
     if (bisSubSweep.count > 0) {
       console.log(
         `[playwright-global-teardown] W-9b: deleted ${bisSubSweep.count} orphan BackInStockSubscription row(s)`,
+      );
+    }
+
+    const abandonedCartSweep = await prisma.abandonedCart.deleteMany({
+      where: e2eEmailFilter,
+    });
+    if (abandonedCartSweep.count > 0) {
+      console.log(
+        `[playwright-global-teardown] W-9b: deleted ${abandonedCartSweep.count} orphan AbandonedCart row(s)`,
       );
     }
 

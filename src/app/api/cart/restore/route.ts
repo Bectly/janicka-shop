@@ -41,11 +41,11 @@ export async function POST(request: Request): Promise<Response> {
     try {
       items = JSON.parse(cart.cartItems);
     } catch {
-      return NextResponse.json({ error: "Corrupt cart data" }, { status: 500 });
+      return NextResponse.json({ error: "Corrupt cart data" }, { status: 422 });
     }
 
     if (!Array.isArray(items)) {
-      return NextResponse.json({ error: "Corrupt cart data" }, { status: 500 });
+      return NextResponse.json({ error: "Corrupt cart data" }, { status: 422 });
     }
 
     logger.info(`[CartRestored] cartId=${cart.id} items=${items.length}`);

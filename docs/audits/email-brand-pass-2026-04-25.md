@@ -36,8 +36,8 @@
 | 17 | `sendReviewRequestEmail` | 1605 | `buildReviewRequestHtml` (1526) → `renderLayout` (1594) | **BRAND-PASSED** _(C4923)_ | **CONVERTED in C4923 #571**: trailing inline "nebo se podívej na novinky →" link replaced by `renderShopLink("Nebo projít celou nabídku")`, with `renderAboutValues()` appended below. The "Kdyby něco nesedělo, napiš mi rovnou." support note kept as a standalone line so support and brand-pillar polish are visually distinct. |
 | 18 | `sendDeliveryCheckEmail` | 1692 | `buildDeliveryCheckHtml` (1639) → `renderLayout` (1679) | **BRAND-PASSED** _(C4924)_ | **CONVERTED in C4924 #572**: appended `renderShopLink("Nebo se podívat na nové kousky")` + `renderAboutValues()` after the order-detail link below the primary "Mám problém" CTA. Returns CTA stays primary; brand polish lives below it so the support focus is preserved. |
 | 19 | `sendNewArrivalEmail` | 1792 | `buildNewArrivalHtml` (1754) → `renderLayout` (1778) | **BRAND-PASSED** _(this cycle)_ | **CONVERTED in this cycle**: added `renderShopLink("Nebo projít celou nabídku")` + `renderAboutValues()` after the product grid. Already uses `renderProductGrid`. |
-| 20 | `sendBrowseAbandonmentEmail` | 1884 | `buildBrowseAbandonmentHtml` (1833) → `renderLayout` (1871) | PARTIAL | Has `renderProductRowList` but no values footer. **Recommend follow-up.** |
-| 21 | `sendCrossSellFollowUpEmail` | 1971 | `buildCrossSellFollowUpHtml` (1941) → `renderLayout` (1958) | PARTIAL | Has `renderProductGrid`; missing values footer. **Recommend follow-up.** |
+| 20 | `sendBrowseAbandonmentEmail` | 1884 | `buildBrowseAbandonmentHtml` (1833) → `renderLayout` (1871) | **BRAND-PASSED** _(C4925)_ | **CONVERTED in C4925 #574**: replaced trailing inline "Nebo se podívej na další kousky →" anchor with canonical `renderShopLink("Nebo se podívej na další kousky")` and appended `renderAboutValues()` below the primary "Vrátit se ke kousku" CTA. Unused `shopUrl` local removed. |
+| 21 | `sendCrossSellFollowUpEmail` | 1971 | `buildCrossSellFollowUpHtml` (1941) → `renderLayout` (1958) | **BRAND-PASSED** _(C4925)_ | **CONVERTED in C4925 #574**: appended `renderAboutValues()` after the existing `renderProductGrid` + outline "Prohlédnout všechny novinky" CTA. CTA itself is the shop-browse, so no `renderShopLink` needed (matches `ctaIsShopBrowse` convention used in `abandoned-cart` 1322). |
 | 22 | `sendWinBackEmail` | 2036 | `buildWinBackHtml` (2004) → `renderLayout` (2023) | PARTIAL | No products; could host `renderAboutValues` to re-anchor lapsed customers. **Recommend follow-up.** |
 | 23 | `sendCampaignEmail` | 2141 | `buildCampaignHtml` (2108) → `renderLayout` (2129) | PARTIAL | Generic campaign wrapper — has `renderProductGrid`, lacks values footer. **Recommend follow-up.** |
 | 24 | `renderCampaignEmailPreview` | 2166 | inline → `renderLayout` (2208) | PARTIAL | Preview-time analogue of campaign builder; same gap. |
@@ -47,8 +47,8 @@
 
 ## Tally
 
-- **BRAND-PASSED**: 9 templates (order confirmation, shipping notification, account welcome, abandoned cart, new-arrival _(C4922)_, order-delivered _(C4923)_, review-request _(C4923)_, **newsletter-welcome** _(C4924)_, **delivery-check** _(C4924)_).
-- **PARTIAL** (renderLayout + tokens but missing pillar polish): 7 customer-facing templates — browse-abandonment, cross-sell-follow-up, win-back, campaign, mother's-day shell, customs shell, campaign-preview.
+- **BRAND-PASSED**: 11 templates (order confirmation, shipping notification, account welcome, abandoned cart, new-arrival _(C4922)_, order-delivered _(C4923)_, review-request _(C4923)_, newsletter-welcome _(C4924)_, delivery-check _(C4924)_, **browse-abandonment** _(C4925)_, **cross-sell-follow-up** _(C4925)_).
+- **PARTIAL** (renderLayout + tokens but missing pillar polish): 5 customer-facing templates — win-back, campaign, mother's-day shell, customs shell, campaign-preview.
 - **INLINE-LEGACY**: **0 templates**. Every send-path goes through `renderLayout`. The audit confirms the brand-pass infrastructure rollout is structurally complete.
 - **INTERNAL-OK** (admin/security — polish intentionally absent): 8 templates.
 
@@ -62,7 +62,7 @@ Diff is one block; no signature change, no call-site change, no new imports (`re
 
 Group the remaining 7 PARTIAL templates into two cohesive Sage tasks (1–2 per cycle pace per #571):
 
-1. **POLISH-RETENTION** (2 remaining): `browse-abandonment`, `cross-sell-follow-up` — both post-purchase / re-engagement touchpoints where `renderAboutValues` (and optionally `renderShopLink`) reinforce the next-purchase loop. No new data dependencies. _(`order-delivered` and `review-request` landed in C4923 #571; `delivery-check` landed in C4924 #572.)_
+1. **POLISH-RETENTION** — _Done C4925 #574_: `browse-abandonment` + `cross-sell-follow-up` both converted; `renderAboutValues()` appended and `renderShopLink` swapped in for the legacy inline anchor on browse-abandonment.
 2. **POLISH-CAMPAIGN** (3 templates + 2 shells): `win-back`, `campaign`, `campaign-preview`, `mother's-day shell`, `customs shell` — replace the bespoke campaign footer notes with `renderAboutValues()` and add `renderShopLink` where missing. Watch for tone clash on customs/Mother's Day, where the bespoke italic footer is part of the creative; may prefer a hybrid (values + tagline). _(`newsletter-welcome` landed in C4924 #572.)_
 
 ## Acceptance checklist
