@@ -1015,6 +1015,74 @@ export async function sendEmailChangeNoticeEmail(data: {
   }
 }
 
+interface PasswordResetEmailData {
+  email: string;
+  firstName: string;
+  resetUrl: string;
+  /** Window the link stays valid (default "jednu hodinu"). */
+  validityLabel?: string;
+}
+
+function buildPasswordResetHtml(data: PasswordResetEmailData): string {
+  const firstName = (data.firstName || "").trim();
+  const safeUrl = data.resetUrl;
+  const validity = data.validityLabel ?? "jednu hodinu";
+  const content = `
+    ${renderEyebrow("Zabezpečení účtu")}
+    ${renderDisplayHeading(firstName ? `Nastavme nové heslo, ${escapeHtml(firstName)}.` : "Nastavme nové heslo.")}
+    <p style="margin: 0 0 18px; font-family: ${FONTS.sans}; font-size: 15px; line-height: 1.7; color: ${BRAND.charcoalSoft};">
+      Požádala jsi o obnovení hesla ke svému účtu Janička Shop. Klikni na tlačítko a nastav si nové. Odkaz je platný <strong style="color: ${BRAND.charcoal};">${escapeHtml(validity)}</strong> a dá se použít jen jednou.
+    </p>
+
+    <div style="margin: 28px 0 8px;">
+      ${renderButton({ href: safeUrl, label: "Nastavit nové heslo", variant: "primary" })}
+    </div>
+
+    ${renderInfoCard(
+      `<p style="margin: 0 0 8px; font-family: ${FONTS.sans}; font-size: 13px; color: ${BRAND.charcoal}; line-height: 1.6;"><strong style="color: ${BRAND.charcoal};">Krátký tip pro silné heslo</strong></p>
+       <p style="margin: 0; font-family: ${FONTS.sans}; font-size: 13px; color: ${BRAND.charcoalSoft}; line-height: 1.6;">Aspoň 12 znaků, kombinace písmen, čísel a třeba i mezery. Klidně si zvol celou větu &mdash; pamatovatelnou jen pro tebe.</p>`,
+      "blush",
+    )}
+
+    ${renderInfoCard(
+      `<p style="margin: 0; font-family: ${FONTS.sans}; font-size: 13px; color: ${BRAND.charcoalSoft}; line-height: 1.6;"><strong style="color: ${BRAND.charcoal};">Nežádala jsi o reset?</strong> Tenhle email v klidu ignoruj &mdash; tvoje heslo zůstane beze změny. Pokud se ti to ale opakuje, ozvi se mi na <a href="mailto:podpora@jvsatnik.cz" style="color: ${BRAND.primary}; font-weight: 600;">podpora@jvsatnik.cz</a> a účet společně zabezpečíme.</p>`,
+      "warning",
+    )}
+
+    <p style="margin: 22px 0 0; font-family: ${FONTS.sans}; font-size: 12px; color: ${BRAND.charcoalMuted}; line-height: 1.6;">
+      Tlačítko nejede? Zkopíruj si odkaz do prohlížeče:<br/>
+      <span style="word-break: break-all; color: ${BRAND.charcoalSoft};">${escapeHtml(safeUrl)}</span>
+    </p>`;
+  return renderLayout({
+    preheader: "Obnov si heslo k účtu Janička Shop. Odkaz platí jen pár desítek minut.",
+    contentHtml: content,
+  });
+}
+
+/**
+ * Send a password reset link. Transactional — no unsubscribe footer.
+ * Caller is responsible for generating a single-use, time-bound `resetUrl`
+ * (HMAC-signed token bound to the account); this function only ships HTML.
+ */
+export async function sendPasswordResetEmail(data: PasswordResetEmailData): Promise<void> {
+  const mailer = getMailer();
+  if (!mailer) {
+    logger.warn("[Email] SMTP not configured — skipping password-reset");
+    return;
+  }
+  try {
+    await mailer.sendMail({
+      from: FROM_INFO,
+      replyTo: REPLY_TO,
+      to: data.email,
+      subject: "Obnovení hesla — Janička Shop",
+      html: buildPasswordResetHtml(data),
+    });
+  } catch (error) {
+    logger.error(`[Email] Failed to send password-reset to ${data.email}:`, error);
+  }
+}
+
 /** Confirm to the customer that GDPR deletion has completed. */
 export async function sendAccountDeletedEmail(data: {
   email: string;
@@ -2740,6 +2808,15 @@ export function renderEmailPreview(templateKey: string): EmailPreviewResult | nu
           paid: true,
         }),
       };
+    case "password-reset":
+      return {
+        subject: "Obnovení hesla — Janička Shop",
+        html: buildPasswordResetHtml({
+          email: SAMPLE_CUSTOMER_EMAIL,
+          firstName: SAMPLE_CUSTOMER_NAME.split(" ")[0],
+          resetUrl: `${getBaseUrl()}/ucet/heslo/obnova?token=preview-token-1234567890abcdef`,
+        }),
+      };
     case "email-change-verify":
       return {
         subject: "Potvrď změnu emailu — Janička Shop",
@@ -2900,6 +2977,7 @@ export const EMAIL_PREVIEW_TEMPLATES: { key: string; label: string; group: strin
   { key: "similar-item-sold", label: "Sledovaný kousek prodán + podobné", group: "Marketing" },
   { key: "similar-item-arrived", label: "Nové kousky dle hledání", group: "Marketing" },
   { key: "account-welcome", label: "Vítej v účtu (registrace)", group: "Účet" },
+  { key: "password-reset", label: "Obnovení hesla", group: "Účet" },
   { key: "email-change-verify", label: "Potvrzení změny emailu", group: "Účet" },
   { key: "admin-new-order", label: "Admin: nová objednávka", group: "Admin" },
 ];
