@@ -633,3 +633,79 @@ model EmailAttachment {
 
   @@index([messageId])
 }
+
+// ============================================================================
+// Manager Framework — strategic agent per project (~/.claude/plans/piped-orbiting-fox.md)
+// ============================================================================
+
+model ManagerSession {
+  id              String              @id @default(cuid())
+  projectId       Int                 // 15 = janicka-shop in JARVIS DB
+  workerName      String?             // 'mgr-janicka-shop-N' on bectly's machine
+  taskId          Int?                // task_queue.id in JARVIS DB
+  status          String              @default("running") // running|paused|done|aborted|failed
+  triggeredBy     String?             // 'cli'|'tauri'|'janicka-admin'
+  startedAt       DateTime            @default(now())
+  endedAt         DateTime?
+  endReason       String?
+  summaryMd       String?
+  costUsd         Float               @default(0.0)
+  tokensTotal     Int                 @default(0)
+  claudeSessionId String?
+  artifacts       ManagerArtifact[]
+  tasks           ManagerTask[]
+
+  @@index([projectId, status])
+  @@index([startedAt])
+}
+
+model ManagerArtifact {
+  id                String          @id @default(cuid())
+  sessionId         String
+  session           ManagerSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  projectId         Int
+  kind              String          // note|chart|report|task_ai|task_human|access_request|amendment|action_proposal|screenshot
+  title             String?
+  bodyMd            String?
+  bodyJson          String?         // Raw JSON for kind-specific structured payload
+  status            String          @default("open") // open|accepted|rejected|done|merged|expired
+  mood              String?         // positive|concern|urgent
+  parentArtifactId  String?
+  parent            ManagerArtifact? @relation("ArtifactReplies", fields: [parentArtifactId], references: [id], onDelete: SetNull)
+  replies           ManagerArtifact[] @relation("ArtifactReplies")
+  createdAt         DateTime        @default(now())
+  acceptedAt        DateTime?
+  acceptedBy        String?
+  promotedTask      ManagerTask?    @relation(fields: [promotedTaskId], references: [id], onDelete: SetNull)
+  promotedTaskId    String?         @unique
+
+  @@index([sessionId, createdAt])
+  @@index([projectId, kind, status])
+}
+
+model ManagerTask {
+  id                String              @id @default(cuid())
+  sessionId         String?
+  session           ManagerSession?     @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  projectId         Int
+  category          String              // sales|marketing|tech|analytics|people|strategy|admin|other
+  priority          String              @default("medium") // urgent|high|medium|low
+  assigneeHint      String?             // bectly|shop owner|marketer|...
+  title             String
+  descriptionMd     String
+  rationaleMd       String?
+  expectedOutcome   String?
+  dueAt             DateTime?
+  status            String              @default("open") // open|accepted|in_progress|blocked|done|rejected|stale
+  acceptedAt        DateTime?
+  startedAt         DateTime?
+  completedAt       DateTime?
+  completionNotes   String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  sourceArtifact    ManagerArtifact?
+
+  @@index([projectId, status, priority])
+  @@index([assigneeHint, status])
+  @@index([dueAt])
+}
