@@ -25,6 +25,7 @@ import { ProductDescription } from "@/components/shop/product-description";
 import { parseDefectImages } from "@/lib/defects";
 import { FreeShippingBar } from "@/components/shop/free-shipping-bar";
 import { NotifyMeForm } from "@/components/shop/notify-me-form";
+import { BackInStockForm } from "@/components/shop/back-in-stock-form";
 import { MeasurementGuide } from "@/components/shop/measurement-guide";
 import { BrowseAbandonmentTracker } from "@/components/shop/browse-abandonment-tracker";
 import { Truck, Leaf, Ruler, Sparkles, Heart } from "lucide-react";
@@ -497,7 +498,26 @@ export default async function ProductDetailPage({ params }: Props) {
               </Link>
             </div>
 
-            {/* Notify me — email capture for warm leads */}
+            {/* Back-in-stock — tight match (brand+size+condition), unique-inventory angle */}
+            <BackInStockForm
+              categoryId={product.categoryId}
+              brand={product.brand}
+              size={(() => {
+                try {
+                  const arr = JSON.parse(product.sizes) as unknown;
+                  if (Array.isArray(arr) && arr.length > 0 && typeof arr[0] === "string") {
+                    return arr[0];
+                  }
+                } catch {
+                  /* ignore */
+                }
+                return null;
+              })()}
+              condition={product.condition}
+              sourceProductId={product.id}
+            />
+
+            {/* Notify me — broader category-level opt-in for warm leads */}
             <NotifyMeForm
               categoryId={product.categoryId}
               sizes={product.sizes}

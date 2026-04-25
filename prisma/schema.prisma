@@ -300,6 +300,29 @@ model WishlistSubscription {
   @@index([notifiedAt])
 }
 
+// Back-in-stock subscription for second-hand unique-inventory model.
+// Unlike ProductNotifyRequest (category-level match), this targets the exact
+// (brand + category + size + condition) tuple of a sold item — the cron matches
+// NEW products against these tuples, not exact SKUs, since every piece is unique.
+model BackInStockSubscription {
+  id            String    @id @default(cuid())
+  email         String
+  customerId    String? // set when subscriber is an authenticated Customer
+  categoryId    String
+  brand         String? // null means "any brand"
+  size          String? // single preferred size, null means "any size"
+  condition     String? // condition filter, null means "any condition"
+  sourceProductId String? // the sold product that triggered the opt-in (audit/attribution)
+  notifiedAt    DateTime? // set when a match email was sent (prevents duplicates)
+  notifiedProductId String? // product id that triggered the notification
+  createdAt     DateTime  @default(now())
+
+  @@index([email])
+  @@index([categoryId])
+  @@index([notifiedAt])
+  @@index([categoryId, brand, size, condition])
+}
+
 model AbandonedCart {
   id               String    @id @default(cuid())
   email            String

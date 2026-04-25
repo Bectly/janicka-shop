@@ -74,7 +74,7 @@ function toGridItems(products: SimilarProduct[], baseUrl: string) {
   }));
 }
 
-function buildSimilarItemHtml(
+export function buildSimilarItemHtml(
   soldProduct: SoldProduct,
   similarProducts: SimilarProduct[],
   recipientEmail: string,

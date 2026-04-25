@@ -25,6 +25,8 @@ import {
   renderAboutValues,
   renderShopLink,
 } from "@/lib/email/layout";
+import { buildWishlistSoldHtml } from "@/lib/email/wishlist-sold";
+import { buildSimilarItemHtml, buildSimilarItemsArrivedHtml } from "@/lib/email/similar-item";
 
 interface OrderItem {
   name: string;
@@ -2581,6 +2583,30 @@ function sampleShippingNotificationData(): ShippingNotificationData {
   };
 }
 
+function sampleSoldProduct() {
+  return {
+    id: "preview-sold-id",
+    name: "Vlněný kabát",
+    brand: "Max Mara",
+    categoryId: "preview-category",
+    sizes: JSON.stringify(["M", "38"]),
+    images: JSON.stringify([] as string[]),
+  };
+}
+
+function sampleSimilarProducts() {
+  return SAMPLE_CROSS_SELL.slice(0, 3).map((p) => ({
+    name: p.name,
+    slug: p.slug,
+    price: p.price,
+    compareAt: p.compareAt,
+    brand: p.brand,
+    condition: p.condition,
+    images: JSON.stringify(p.image ? [p.image] : ([] as string[])),
+    sizes: JSON.stringify(p.sizes),
+  }));
+}
+
 function sampleAbandonedCartData(): AbandonedCartEmailData {
   return {
     email: SAMPLE_CUSTOMER_EMAIL,
@@ -2698,13 +2724,28 @@ export function renderEmailPreview(templateKey: string): EmailPreviewResult | nu
           return renderLayout({ preheader: "Potvrď změnu přihlašovacího emailu u Janičky.", contentHtml: content });
         })(),
       };
-    case "wishlist-sold":
-      // buildWishlistSoldHtml lives in src/lib/email/wishlist-sold.ts and is not
-      // exported; preview surfaces the newsletter-welcome shell as placeholder.
+    case "wishlist-sold": {
+      const sold = sampleSoldProduct();
+      const similar = sampleSimilarProducts();
       return {
-        subject: "Tvůj vysněný kousek se právě prodal — podívej se na podobné",
-        html: buildNewsletterWelcomeHtml(SAMPLE_CUSTOMER_EMAIL),
+        subject: `${sold.brand} ${sold.name} se právě prodal — podívej se na podobné`,
+        html: buildWishlistSoldHtml(sold, similar, SAMPLE_CUSTOMER_EMAIL),
       };
+    }
+    case "similar-item-sold": {
+      const sold = sampleSoldProduct();
+      const similar = sampleSimilarProducts();
+      return {
+        subject: `${sold.brand} ${sold.name} je pryč — mám pro tebe podobné`,
+        html: buildSimilarItemHtml(sold, similar, SAMPLE_CUSTOMER_EMAIL),
+      };
+    }
+    case "similar-item-arrived": {
+      return {
+        subject: "Nové kousky odpovídající tvému hledání — Janička Shop",
+        html: buildSimilarItemsArrivedHtml(sampleSimilarProducts(), SAMPLE_CUSTOMER_EMAIL),
+      };
+    }
     case "review-request":
       return {
         subject: `Jak jsi spokojená? — ${SAMPLE_ORDER_NUMBER} — Janička Shop`,
@@ -2817,7 +2858,9 @@ export const EMAIL_PREVIEW_TEMPLATES: { key: string; label: string; group: strin
   { key: "abandoned-cart-2", label: "Opuštěný košík #2 (12-24 h)", group: "Marketing" },
   { key: "abandoned-cart-3", label: "Opuštěný košík #3 (48-72 h)", group: "Marketing" },
   { key: "win-back", label: "Win-back (30+ dní)", group: "Marketing" },
-  { key: "wishlist-sold", label: "Wishlist — prodáno", group: "Marketing" },
+  { key: "wishlist-sold", label: "Wishlist — prodáno + podobné", group: "Marketing" },
+  { key: "similar-item-sold", label: "Sledovaný kousek prodán + podobné", group: "Marketing" },
+  { key: "similar-item-arrived", label: "Nové kousky dle hledání", group: "Marketing" },
   { key: "account-welcome", label: "Vítej v účtu (registrace)", group: "Účet" },
   { key: "email-change-verify", label: "Potvrzení změny emailu", group: "Účet" },
   { key: "admin-new-order", label: "Admin: nová objednávka", group: "Admin" },

@@ -85,7 +85,7 @@ function buildSimilarCard(p: SimilarProduct, baseUrl: string): string {
     </td>`;
 }
 
-function buildWishlistSoldHtml(
+export function buildWishlistSoldHtml(
   soldProduct: SoldProduct,
   similarProducts: SimilarProduct[],
   recipientEmail: string,
