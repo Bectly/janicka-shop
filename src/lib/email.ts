@@ -682,7 +682,8 @@ function buildNewsletterWelcomeHtml(email: string): string {
     </div>
     <p style="margin: 14px 0 0; font-family: ${FONTS.sans}; font-size: 12px; color: ${BRAND.charcoalMuted}; text-align: center; line-height: 1.6;">
       Piš mi kdykoli na <a href="mailto:podpora@jvsatnik.cz" style="color: ${BRAND.charcoalSoft};">podpora@jvsatnik.cz</a>. Odpovídám osobně.
-    </p>`;
+    </p>
+    ${renderAboutValues()}`;
 
   return renderLayout({
     preheader: "Ráda tě tu mám. Tady je, co tě u Janičky čeká.",
@@ -1688,7 +1689,9 @@ function buildDeliveryCheckHtml(data: DeliveryCheckEmailData): string {
 
     <p style="margin: 20px 0 0; text-align: center; font-family: ${FONTS.sans}; font-size: 13px;">
       <a href="${orderUrl}" style="color: ${BRAND.charcoalSoft}; text-decoration: underline;">Detail objednávky &rarr;</a>
-    </p>`;
+    </p>
+    ${renderShopLink("Nebo se podívat na nové kousky")}
+    ${renderAboutValues()}`;
 
   return renderLayout({
     preheader: `Tvůj balíček by měl být u tebe — všechno v pořádku?`,
