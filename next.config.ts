@@ -11,6 +11,10 @@ const withBundleAnalyzer = bundleAnalyzer({
 const nextConfig: NextConfig = {
   output: "standalone",
   cacheComponents: true,
+  // @libsql/client ships large native binaries per-platform; bundling all of
+  // them into Vercel functions blows past the 300MB function size limit.
+  // Mark as external so they're loaded at runtime from node_modules instead.
+  serverExternalPackages: ["@libsql/client"],
   // #517 PERF-CSS-BLOCK: inline critical CSS (via beasties) so the 32KB
   // framework chunk stops render-blocking on mobile. Non-critical rules ship
   // async after first paint. Needed package is auto-picked-up by Next 16.

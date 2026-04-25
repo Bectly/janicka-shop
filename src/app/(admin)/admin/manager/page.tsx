@@ -51,12 +51,57 @@ function isWithinLastDays(iso: string | null, days: number): boolean {
   return Date.now() - d.getTime() <= days * 24 * 60 * 60 * 1000;
 }
 
+// JARVIS DB lives on bectly's local machine (file:///home/bectly/.claude/jarvis-gym/jarvis.db).
+// On Vercel/production this path doesn't exist — page renders a placeholder pointing users
+// to the JARVIS Tauri app. Cross-app DB access only works for localhost development.
+const IS_LOCAL_DEV = process.env.NODE_ENV === "development";
+
 export default async function AdminManagerPage({
   searchParams,
 }: {
   searchParams: Promise<{ priority?: string }>;
 }) {
   await connection();
+
+  if (!IS_LOCAL_DEV) {
+    return (
+      <div className="space-y-4">
+        <header>
+          <h1 className="flex items-center gap-2 font-heading text-2xl font-bold text-foreground">
+            <Briefcase className="size-6 text-primary" />
+            Manažerka projektu
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Strategický partner pro Janičku — sales, marketing, růst.
+          </p>
+        </header>
+        <section className="rounded-xl border bg-card p-6 shadow-sm">
+          <h2 className="font-heading text-lg font-semibold">
+            Dostupné v JARVIS aplikaci
+          </h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Manažerka běží přímo v JARVIS Tauri aplikaci na bectly&apos;s počítači.
+            Otevři <strong>Managers</strong> sekci v sidebaru ✯ a najdeš všechny
+            sessions, tasky, reporty.
+          </p>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Cross-shop integrace přes tunnel{" "}
+            <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
+              jarvis-janicka.jvsatnik.cz
+            </code>{" "}
+            přijde v dalším milestone.
+          </p>
+          <a
+            href="/admin/jarvis"
+            className="mt-4 inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            <Inbox className="size-4" />
+            Otevřít JARVIS console
+          </a>
+        </section>
+      </div>
+    );
+  }
 
   const params = await searchParams;
   const priorityParam = params.priority ?? "all";
