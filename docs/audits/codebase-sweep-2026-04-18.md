@@ -1294,3 +1294,71 @@ Row W / Row Z2 react-hooks lint red closed after 8 consecutive cycles (C4883 →
 - **W4** `style-quiz.tsx:133` — **Fallback applied**: `eslint-disable-next-line react-hooks/set-state-in-effect` with SSR-safe localStorage hydration rationale per C4817 Lead decision pattern.
 
 Verification: `npm run lint` exit 0 / 0 errors / 0 warnings; `npx tsc --noEmit` exit 0; `npm run build` green.
+
+
+## C4895 re-verification addendum (2026-04-25, post-ef67bce — consolidated C4892→C4895)
+
+**Scope**: verify gates and follow-up queue at HEAD `ef67bce` across the four commits that landed since the C4891 close-out was written: `8484fd1` (C4892 Bolt, Row W close), `c763a87` (C4893 Bolt, #544 MiniSearch dynamic-import), `ef67bce` (C4895 Sage, `renderAboutValues` + `renderShopLink`). `7bdb7ba` / `c8b57d7` / `2f0e355` are Lead supervision-only markers with zero src/prisma diff (confirmed via `git show --stat`).
+
+### Gate state on HEAD `ef67bce`
+
+- **`npx tsc --noEmit`**: ✅ PASS (exit 0, silent).
+- **`npm run lint`**: ✅ **0 errors, 0 warnings** — C4829 MILESTONE now preserved through **29 consecutive commits** (up from 25 at C4860), and the C4883→C4890 8-cycle lint red is confirmed fully closed (Row W / Row Z2 all four sites verified by `grep eslint-disable-next-line react-hooks` matching the documented fallback rationales at `admin/layout.tsx:35`, `mailbox-search.tsx:23`, `style-quiz.tsx:133`; `customers/page.tsx:150` primary cacheLife fix confirmed — the remaining `customers/page.tsx:172` purity disable at HEAD is a **different** RSC request-time-read site unrelated to Row W).
+- **`@ts-ignore` / `@ts-nocheck` / `@ts-expect-error`**: **0 in `src/`** (unchanged since C4860).
+- **`dangerouslySetInnerHTML`**: 17 occurrences / 7 files, unchanged (all via `jsonLdString()` — `<` escaped).
+- **Hardcoded secrets** (`sk_live|sk_test|cfk_` across `src/`+`prisma/` minus node_modules/test/.d.ts): **0 hits**.
+- **Emoji entity scan** (`&#[0-9]{4,5};`) across `src/lib/email.ts` + `src/lib/email/`: **0 hits** — Row Q closed in `b750124` (C4875 Phase 3) by replacing all 7 dingbats with brand-aligned serif 'J' placeholders + 01–04 numerals. The C4860 Row R "P2-new" finding is therefore **resolved**; no new emoji regressions introduced by C4892→C4895.
+
+### Row S (NEW C4895) — Sage C4895 layout helpers (`renderAboutValues` + `renderShopLink`)
+
+Four-axis review of `ef67bce` (66 LoC added to `layout.ts` at `:446→:512`, 10 LoC added to `email.ts` for import + 2 call-site pairs):
+
+| Axis | Check | Verdict |
+|---|---|---|
+| **XSS surface** | `renderAboutValues` values array is a 3-entry compile-time literal (no user input); `renderShopLink(label, path)` wraps both args through `escapeHtml(href)` / `escapeHtml(label)` before interpolation. All brand-pillar strings also escaped via `escapeHtml(v.title/v.body)` per layout.ts:483-484. | ✅ No XSS vector added — even if future callers pass dynamic `label`/`path`, escape is at the helper boundary. |
+| **Brand-token discipline** | All colors via `BRAND.*` (`primary`, `primaryLight`, `charcoal`, `charcoalSoft`, `borderSoft`); all font stacks via `FONTS.*` (`sans`/`serif`). No hex literals introduced. | ✅ Consistent with Row R acceptance bar. |
+| **Emoji-free** | `renderAboutValues` uses Roman numerals `i./ii./iii.` as ornamental counters (not emoji); `renderShopLink` uses `&rarr;` HTML entity — that is a typographic arrow, not in the `&#NNNNN;` dingbat class flagged by Row Q. | ✅ No new `&#NNNNN;` entities. |
+| **Consumer wiring** | `grep renderAboutValues\|renderShopLink src/lib/`: 2 definitions + 4 call sites — order-confirmation body (`email.ts:202` shop-link, `:207` about-values) + shipping-notification body (`:578` shop-link, `:582` about-values). Both helpers are live-consumed, so **no new ts-prune dead-export candidates** from this commit. | ✅ |
+
+**Non-blocking cosmetic observations** (file as P3 or ignore):
+- `cell` local helper at `layout.ts:477` uses `typeof values[number]` for its param type — fine TS, but a named interface `AboutValue` at module scope would be reusable if this pattern spreads to other multi-pillar blocks.
+- `renderShopLink`'s default `path = "/products?sort=newest"` hardcodes the query-string shape; if the `/products` route grows a different "newest first" param convention, this silently drifts. Low risk — single-source helper, easy to update.
+
+### Row T (NEW C4895) — MiniSearch dynamic-import consumer wiring verify
+
+Phase 5-c (C4893 `c763a87`) wrapped `instant-search.tsx` behind `instant-search-lazy.tsx` (next/dynamic ssr:false). Consumer grep at HEAD:
+
+- `src/components/shop/header.tsx:7` — imports from `./instant-search-lazy` ✅
+- `src/components/shop/mobile-nav.tsx:16` — imports from `./instant-search-lazy` ✅
+- No lingering `from "./instant-search"` references outside the lazy wrapper itself (`instant-search-lazy.tsx:9` dynamic import target is the only intentional reference to the underlying module).
+
+Verdict: dynamic-import **fully wired on every public-route entry point** (header + mobile nav). No follow-up task needed; C4893 Lead-reported 7.4 KB gzip drop on header chunk is consistent with the import graph.
+
+### Row U (NEW C4895) — `email.ts` LoC drift (informational, not a regression)
+
+C4860 Row R acceptance bar was **LoC ≤ 2400** post-Phase-2 refactor. Current `wc -l src/lib/email.ts` → **2703** (+303 above the refactor target, +334 above the C4860 2369 baseline).
+
+Growth contributors since `e2b10ea` (C4860):
+- `b750124` (C4875) — Phase 3 `showUnsubscribe` + `recipientEmail` opts + dingbat purge narrative changes
+- `5086ce2` (C4885) — `\uXXXX` escape purge + CONDITION_LABELS dedupe (should have been net-negative but may have touched comment density)
+- `89cf36e` (C4890) — 5-site `podpora@jvsatnik.cz` domain swap (trivial LoC delta)
+- `ef67bce` (C4895) — +10 LoC for 2 helper import lines + 4 call sites
+
+None of these commits were meant to be LoC-bounded; the 2400 target only applied to the Phase 2 refactor deliverable. **Not a follow-up item.** Recording here only because the C4860 addendum table referenced the 2400 number — future re-verifications should understand that bar is historical and not a current gate.
+
+### Follow-up queue at HEAD `ef67bce`
+
+| # | Priority | Agent | Scope | Status |
+|---|----------|-------|-------|--------|
+| N | P2 | BOLT | Drop dead `renderBody` export at `src/lib/email/layout.ts:311` (ts-prune confirms 0 consumers at HEAD; Phase 2 definitively chose the inline-body pattern). ~3 LoC. | **OPEN** (carried from C4847 → C4895; still the only clean P2 email cleanup) |
+| O | P2 | BOLT | Resend → SMTP comment drift across 14 cron/worker/action files. ~14 LoC. | **OPEN** (carried C4847 → C4895) |
+| P | P1 | BOLT | ts-prune close-out — delete `products-cache.ts:74 getProducts` / `:82 getCategories`, `sizes.ts:305 normalizeSizesForCategory`, plus any other true-dead `src/` candidates from the 355-line ts-prune report (minus framework/router/manifest/metadata symbols which are false positives). | **OPEN** (carried from C4833 → C4895; queue unchanged) |
+| Q | P2 | BOLT | Email emoji-entity cleanup. | ✅ **CLOSED** by `b750124` (C4875) — confirmed via 0-hit `&#NNNNN;` scan across `src/lib/email.ts` + `src/lib/email/`. |
+| S | P3 | — | Optional polish on `renderAboutValues` / `renderShopLink` (named param interface, parametrised "newest" URL). | **INFORMATIONAL** (file only if pattern spreads). |
+| T | — | — | MiniSearch dynamic-import consumer wiring. | ✅ **CLOSED** by `c763a87` (C4893) — verified this addendum. |
+| U | — | — | `email.ts` LoC drift. | **INFORMATIONAL** (historical bar, not a current gate). |
+| W / Z2 | P1 | BOLT | 4 react-hooks lint offenders. | ✅ **CLOSED** by `8484fd1` (C4892) — re-verified this addendum. |
+| M | P2 | BOLT | DOMPurify on Phase 4 mailbox render — still pending Phase 4 ingest. | **UNCHANGED** (blocked on Phase 4 scope). |
+
+**Net cycle verdict (C4892→C4895)**: 3 code commits landed cleanly; 9-cycle green quality-gate streak (since C4892 close-out) holds and extends the lint-zero milestone to 29 consecutive commits. No new P0/P1 audit findings introduced by `8484fd1` / `c763a87` / `ef67bce`. Open follow-ups remain N (renderBody dead export), O (Resend comment drift), P (ts-prune close-out), M (DOMPurify, Phase-4-gated).
+
