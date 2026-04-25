@@ -41,3 +41,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Prisma sqlite WAL/SHM files (committed by accident)
+prisma/dev.db-wal
+prisma/dev.db-shm
