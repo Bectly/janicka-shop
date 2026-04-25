@@ -1397,3 +1397,50 @@ Four-axis review of `445ceab` (+6 / −1 LoC in `src/lib/email.ts:1119-1131` ins
 | M | P2 | BOLT | DOMPurify on Phase 4 mailbox render. | **UNCHANGED** (blocked on Phase 4 scope). |
 
 **Net cycle verdict (C4895→C4898)**: 1 code commit landed (`445ceab` Sage); 12-cycle green quality-gate streak intact; lint-zero streak extends to 30 commits. No new P0/P1 audit findings introduced. Per-cycle C4896 Lead explicit-scope escalation on #532 (Phase 4 admin Re-Lighthouse) is acknowledged — this addendum exists because the orchestrator dispatched task #367 (codebase sweep) this cycle, not #532; Lighthouse re-measurement remains queued for next Trace spawn on #532.
+
+
+## C4900 re-verification addendum (2026-04-25, post-433b498)
+
+**Scope**: verify gates at HEAD `433b498` (Lead supervision commit, no code delta) and acknowledge the C4899 Lead task-reshuffle.
+
+### Quality gates at HEAD `433b498`
+
+- **`npx tsc --noEmit`**: ✅ PASS (exit 0, silent).
+- **`npm run lint`**: ✅ **0 errors, 0 warnings** (the babel deopt note on `src/lib/invoice/font-data.ts` is a size-only notice, not a lint violation). Lint-zero streak extends to **31 consecutive commits** (since C4829 milestone).
+- **13-cycle green quality-gate streak** (since C4892 close-out).
+- `git diff --stat e1d0a7b..433b498` → supervision commit only, zero `src/` touches. No new audit surface to scan.
+
+### Task reshuffle acknowledgement — #532 → #551 Bolt
+
+Lead C4899 (433b498) explicitly triggered the C4896 escalation clause and:
+
+1. **Demoted/cancelled** #532 (TRACE Phase 4 verification) after 5 consecutive Trace audit-addendum pickups C4895→C4899.
+2. **Filed #551** (BOLT [PERF-VERIFY-PHASE4]) as fallback — Playwright + lighthouse-ci script against admin-dashboard/products/orders/mailbox + /account bundle #526–#530, before/after numbers only.
+3. Re-pointed Trace P0 to **#367 [AUDIT] codebase quality sweep continuation** — "stop fighting the signal, the in_progress #367 IS audit work so align with it."
+
+The orchestrator dispatched the stale #532 wiring to Trace this cycle before Lead's supervision commit landed, but the Lead directive supersedes. Per C4899, Trace produces audit signal (this row); Bolt picks up Lighthouse measurement under #551 with a Playwright + lighthouse-ci harness capable of carrying admin auth cookies — a capability the current Trace dispatch env cannot supply (verified this cycle: 3 chromium binaries tried under Lighthouse CDP, all returned `NO_FCP` or `Connection closed`; the local `@playwright/test` chromium paints fine under its own harness but not under `npx lighthouse`'s launcher, which is precisely why #551's Playwright-orchestrated approach is the correct fallback).
+
+### Informal `/` and `/products` HTTP-timing snapshot (Phase 5-c proxy, NOT Lighthouse)
+
+Per the C4896/C4897 "/-route Phase 5-c informal delta" ask, captured via `curl -w time_starttransfer / time_total` (3 runs each, Vercel prod, warm):
+
+| Route | TTFB median | Total median | Payload |
+|---|---|---|---|
+| `/` | ~90 ms | ~2.4 s | 602 KB |
+| `/products` | ~95 ms | ~2.3 s | 799 KB |
+| `/products?q=sarah` | ~90 ms | ~2.3 s | 799 KB |
+| `/about` | ~90 ms | ~1.3 s | 233 KB |
+
+These are network-layer timings, not Lighthouse scores — no LCP/TBT/CLS, no CPU throttling. Consistent with the Phase 5-c MiniSearch dynamic-import win (C4893 `c763a87`) and Phase 5-a recharts dynamic-import (C4891) — shop-route payload is bounded, TTFB dominated by Vercel edge (≈90 ms from this machine to fra1), total wall-clock dominated by body download + paint. Admin and `/account` routes return 307 redirects to login (confirmed this cycle), so HTTP-timing proxy is structurally unavailable for the #526–#530 bundle — this is the auth-gate constraint that #551 is designed around.
+
+### Follow-up queue at HEAD `433b498` — unchanged from C4898
+
+| # | Priority | Agent | Scope | Status |
+|---|----------|-------|-------|--------|
+| N | P2 | BOLT | Dead `renderBody` export at `src/lib/email/layout.ts:311`. | **OPEN** (unchanged C4847 → C4900) |
+| O | P2 | BOLT | Resend → SMTP comment drift across 14 files. | **OPEN** (unchanged C4847 → C4900) |
+| P | P1 | BOLT | ts-prune close-out. | **OPEN** (unchanged C4833 → C4900) |
+| V | P3 | — | Tighten `ctaIsShopBrowse` substring guard in `buildAbandonedCartEmailWrapper`. | **INFORMATIONAL** (unchanged C4898 → C4900) |
+| M | P2 | BOLT | DOMPurify on Phase 4 mailbox render. | **UNCHANGED** (blocked on Phase 4 scope). |
+
+**Net cycle verdict (C4898→C4900)**: 0 code commits landed (Lead supervision only); 13-cycle green quality-gate streak intact; lint-zero streak extends to 31 commits. Task #532 closed as demoted (superseded by #551 BOLT). No new audit signal from `433b498` to file. Follow-up queue carries forward unchanged.
