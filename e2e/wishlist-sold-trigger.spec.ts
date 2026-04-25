@@ -12,27 +12,49 @@ import { PrismaClient } from "@prisma/client";
 //   (c) re-running the cron does NOT create a second EmailDedupLog row — the dedup
 //       gate is the authoritative idempotency layer per Phase 7 KEY VERIFICATION
 //       on #556.
-// Skips gracefully when no eligible product exists OR CRON_SECRET is unset.
+// Skips gracefully when no Category exists OR CRON_SECRET is unset.
+//
+// W-12 fix (cross-spec race under fullyParallel:true): the spec creates its OWN
+// dedicated Product in beforeAll (unique SKU/slug) instead of grabbing a shared
+// active+unsold row. This eliminates contention with sold-pdp.spec.ts and
+// back-in-stock-dispatch.spec.ts, which previously could pick the SAME product
+// under workers=2 and silently corrupt each other's tuple-match assertions.
+// SKU prefix `E2E-` matches the W-10 globalTeardown sweep class.
 
 const prisma = new PrismaClient();
-const TEST_EMAIL = `wishlist-sold-e2e-${Date.now()}@test.local`;
+const UNIQUE = `${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
+const TEST_EMAIL = `wishlist-sold-e2e-${UNIQUE}@test.local`;
+const SKU = `E2E-WS-${UNIQUE}`;
+const SLUG = `e2e-ws-${UNIQUE}`;
+const NAME = `E2E Test Product ${UNIQUE} WS`;
 let productId: string | null = null;
 let subscriptionId: string | null = null;
 
 test.beforeAll(async () => {
-  const target = await prisma.product.findFirst({
-    where: { active: true, sold: false },
+  const category = await prisma.category.findFirst({ select: { id: true } });
+  if (!category) return;
+  const product = await prisma.product.create({
+    data: {
+      name: NAME,
+      slug: SLUG,
+      description:
+        "E2E auto-generated (wishlist-sold-trigger.spec.ts). Cleaned up in afterAll.",
+      price: 100,
+      sku: SKU,
+      categoryId: category.id,
+      active: true,
+      sold: false,
+    },
     select: { id: true },
   });
-  if (!target) return;
-  productId = target.id;
+  productId = product.id;
   const sub = await prisma.wishlistSubscription.create({
-    data: { email: TEST_EMAIL, productId: target.id },
+    data: { email: TEST_EMAIL, productId: product.id },
     select: { id: true },
   });
   subscriptionId = sub.id;
   await prisma.product.update({
-    where: { id: target.id },
+    where: { id: product.id },
     data: { sold: true },
   });
 });
@@ -47,8 +69,11 @@ test.afterAll(async () => {
     .deleteMany({ where: { email: TEST_EMAIL } })
     .catch(() => {});
   if (productId) {
+    await prisma.priceHistory
+      .deleteMany({ where: { productId } })
+      .catch(() => {});
     await prisma.product
-      .update({ where: { id: productId }, data: { sold: false } })
+      .delete({ where: { id: productId } })
       .catch(() => {});
   }
   await prisma.$disconnect();
@@ -58,7 +83,7 @@ test.describe("Wishlist sold-item trigger — cron dispatch + dedup idempotency"
   test("cron sets notifiedAt, writes exactly 1 EmailDedupLog row, idempotent on re-run", async ({
     request,
   }) => {
-    test.skip(!productId || !subscriptionId, "No eligible product in dev DB");
+    test.skip(!productId || !subscriptionId, "No category in dev DB");
     const cronSecret = process.env.CRON_SECRET;
     test.skip(!cronSecret, "CRON_SECRET not configured");
 
@@ -101,15 +126,23 @@ test.describe("Wishlist sold-item trigger — cron dispatch + dedup idempotency"
       expect(dedupRowsAfter.length).toBe(1);
     } finally {
       // Safety net for assertion failures — afterAll covers the happy path,
-      // globalTeardown covers SIGKILL/Ctrl-C, this catches the middle case
-      // where a thrown assertion would still let afterAll run but a panic
-      // before subscriptionId is recorded could leave the row orphaned.
-      // Idempotent — if afterAll runs after this, the second delete/update
-      // is a no-op via .catch(() => {}).
-      if (productId) {
-        await prisma.product
-          .update({ where: { id: productId }, data: { sold: false } })
+      // globalTeardown covers SIGKILL/Ctrl-C. With the W-12 fix the spec owns
+      // its own Product row, so cleanup is symmetric: delete subscription +
+      // dedup logs + product. Idempotent — afterAll's second pass is no-op.
+      if (subscriptionId) {
+        await prisma.wishlistSubscription
+          .delete({ where: { id: subscriptionId } })
           .catch(() => {});
+        subscriptionId = null;
+      }
+      if (productId) {
+        await prisma.priceHistory
+          .deleteMany({ where: { productId } })
+          .catch(() => {});
+        await prisma.product
+          .delete({ where: { id: productId } })
+          .catch(() => {});
+        productId = null;
       }
     }
   });
