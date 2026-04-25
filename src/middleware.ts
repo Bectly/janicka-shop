@@ -1,32 +1,50 @@
-// Middleware runs on Edge — MUST NOT import anything that depends on @libsql/client
+// Middleware runs on Edge — MUST NOT import anything that depends on @libsql/client.
+// authConfig has no providers and no DB import, so it stays Edge-safe.
+//
+// We use NextAuth() to get a real JWT-decoding `auth()` wrapper (replaces the
+// previous raw-cookie-presence check that let any logged-in user hit /admin/*),
+// then enforce role-specific gates: /admin/* requires role=admin and bounces
+// to /admin/login; /account/* requires role=customer and bounces to /login.
+import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { authConfig } from "@/lib/auth-config";
 
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+const { auth } = NextAuth(authConfig);
 
-  // Public auth pages — always accessible
-  if (pathname === "/admin/login" || pathname === "/login" || pathname === "/register") {
+export default auth((req) => {
+  const { nextUrl } = req;
+  const path = nextUrl.pathname;
+  const isLoggedIn = !!req.auth?.user;
+  const role = req.auth?.user?.role;
+
+  // /admin/login is the only public path inside our matcher
+  // (/admin/:path*). Bounce already-authed admins to dashboard, otherwise
+  // let it render so they can sign in.
+  if (path === "/admin/login") {
+    if (isLoggedIn && role === "admin") {
+      return NextResponse.redirect(new URL("/admin/dashboard", nextUrl));
+    }
     return NextResponse.next();
   }
 
-  const token =
-    request.cookies.get("authjs.session-token") ||
-    request.cookies.get("__Secure-authjs.session-token");
-
-  if (!token) {
-    if (pathname.startsWith("/admin")) {
-      return NextResponse.redirect(new URL("/admin/login", request.url));
+  if (path.startsWith("/admin")) {
+    if (!isLoggedIn || role !== "admin") {
+      return NextResponse.redirect(new URL("/admin/login", nextUrl));
     }
-    if (pathname.startsWith("/account")) {
-      const url = new URL("/login", request.url);
-      url.searchParams.set("redirect", pathname);
+    return NextResponse.next();
+  }
+
+  if (path.startsWith("/account")) {
+    if (!isLoggedIn || role !== "customer") {
+      const url = new URL("/login", nextUrl);
+      url.searchParams.set("redirect", path);
       return NextResponse.redirect(url);
     }
+    return NextResponse.next();
   }
 
   return NextResponse.next();
-}
+});
 
 export const config = {
   matcher: ["/admin/:path*", "/account/:path*"],

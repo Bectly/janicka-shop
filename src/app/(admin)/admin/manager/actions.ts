@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/lib/db";
+import { auth } from "@/lib/auth";
 
 const JANICKA_PROJECT_ID = 15;
 const VALID_TRANSITIONS: Record<string, string[]> = {
@@ -18,11 +19,20 @@ function canTransition(current: string, next: string): boolean {
   return VALID_TRANSITIONS[current]?.includes(next) ?? false;
 }
 
+async function requireAdmin(): Promise<{ email: string }> {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "admin") {
+    throw new Error("Unauthorized");
+  }
+  return { email: session.user.email ?? "shop-owner" };
+}
+
 export async function changeTaskStatusAction(
   taskId: string,
   newStatus: string,
   notes?: string,
 ): Promise<{ ok: boolean; error?: string }> {
+  await requireAdmin();
   const prisma = await getDb();
   const task = await prisma.managerTask.findUnique({ where: { id: taskId } });
   if (!task) return { ok: false, error: "Task nenalezen" };
@@ -53,6 +63,7 @@ export async function changeArtifactStatusAction(
   artifactId: string,
   newStatus: string,
 ): Promise<{ ok: boolean; error?: string }> {
+  const { email } = await requireAdmin();
   const allowed = ["accepted", "rejected", "merged", "done"];
   if (!allowed.includes(newStatus)) {
     return { ok: false, error: "Neplatný status" };
@@ -63,7 +74,7 @@ export async function changeArtifactStatusAction(
     data: {
       status: newStatus,
       acceptedAt: newStatus === "accepted" ? new Date() : undefined,
-      acceptedBy: "shop-owner",
+      acceptedBy: email,
     },
   });
   revalidatePath("/admin/manager");
@@ -77,6 +88,7 @@ export async function changeArtifactStatusAction(
 export async function requestSessionAction(
   openingMessage?: string,
 ): Promise<{ ok: boolean; error?: string; sessionId?: string }> {
+  await requireAdmin();
   const prisma = await getDb();
   // Block if there's already an active session (running/requested/claimed)
   const existing = await prisma.managerSession.findFirst({
@@ -113,8 +125,8 @@ export async function addCommentAction(
   parentType: "task" | "artifact" | "session",
   parentId: string,
   bodyMd: string,
-  authorRole: "shop owner" | "bectly" = "shop owner",
 ): Promise<{ ok: boolean; error?: string; commentId?: string }> {
+  const { email } = await requireAdmin();
   const trimmed = bodyMd.trim();
   if (!trimmed) return { ok: false, error: "Prázdný komentář" };
   if (trimmed.length > 4000)
@@ -128,6 +140,7 @@ export async function addCommentAction(
     parentType: string;
     parentId: string;
     authorRole: string;
+    authorName: string;
     bodyMd: string;
     taskId?: string;
     artifactId?: string;
@@ -136,7 +149,8 @@ export async function addCommentAction(
     projectId: JANICKA_PROJECT_ID,
     parentType,
     parentId,
-    authorRole,
+    authorRole: "shop owner",
+    authorName: email,
     bodyMd: trimmed,
   };
   if (parentType === "task") data.taskId = parentId;
