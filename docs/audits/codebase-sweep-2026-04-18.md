@@ -1362,3 +1362,38 @@ None of these commits were meant to be LoC-bounded; the 2400 target only applied
 
 **Net cycle verdict (C4892→C4895)**: 3 code commits landed cleanly; 9-cycle green quality-gate streak (since C4892 close-out) holds and extends the lint-zero milestone to 29 consecutive commits. No new P0/P1 audit findings introduced by `8484fd1` / `c763a87` / `ef67bce`. Open follow-ups remain N (renderBody dead export), O (Resend comment drift), P (ts-prune close-out), M (DOMPurify, Phase-4-gated).
 
+
+## C4898 re-verification addendum (2026-04-25, post-445ceab)
+
+**Scope**: verify gates and four-axis review of `445ceab` (C4897 Sage, `buildAbandonedCartEmailWrapper` now carries `renderShopLink` + `renderAboutValues` with `/products`-CTA suppression guard).
+
+### Quality gates at HEAD `445ceab`
+
+- **`npx tsc --noEmit`**: ✅ PASS (exit 0, silent).
+- **`npm run lint`**: ✅ **0 errors, 0 warnings** — lint-zero streak extends to **30 consecutive commits** (since C4829 milestone).
+- **12-cycle green quality-gate streak** (since C4892 close-out) intact.
+
+### Row V (NEW C4898) — Sage C4897 abandoned-cart brand wrapper
+
+Four-axis review of `445ceab` (+6 / −1 LoC in `src/lib/email.ts:1119-1131` inside `buildAbandonedCartEmailWrapper`):
+
+| Axis | Check | Verdict |
+|---|---|---|
+| **XSS surface** | Only new dynamic logic is `const ctaIsShopBrowse = ctaUrl.includes("/products")` — plain string predicate on a param already passed through `escapeHtml(href)` by `renderShopLink`/button helpers at the boundary. No new user-string interpolation. | ✅ No XSS vector. |
+| **Brand-token discipline** | No inline styles / hex values added; both helpers already internalise `BRAND.*` tokens per Row S audit. | ✅ Consistent. |
+| **Emoji-free** | No new `&#NNNNN;` dingbats; `renderShopLink` default label "Prohlédnout další kousky" is pure text (arrow glyph inside helper is `&rarr;`, already cleared in Row S). | ✅ No new entities. |
+| **Consumer wiring** | All 3 abandoned-cart stages funnel through the wrapper — `buildAbandonedCartEmail1` (`:1166`, 1h, primary CTA `/cart?restore=…`), `buildAbandonedCartEmail2` (`:1218`, 12–24h, CTA is `/cart?restore=…` when `availableItems.length > 0` else `/products?sort=newest`), `buildAbandonedCartEmail3` (`:1270`, 48–72h, same branch). Guard `ctaUrl.includes("/products")` correctly suppresses the duplicate shop-link in the all-sold fallback for stages 2 + 3; stage 1 primary CTA is always `/cart?restore=…` so the shop-link always renders beneath it — matches Lead's C4896 "brand header + body + About-values footer + shop CTA" pattern for the active-cart path. | ✅ 3 live consumers, suppression logic correct. |
+
+**Semantic edge case — worth flagging (informational)**: the `includes("/products")` predicate is a **substring** match. The `{baseUrl}/cart?restore=…` CTA in stages 1/2/3 primary branch does not contain `"/products"` anywhere, so the suppression currently never mis-fires. If a future CTA adds a `?from=/products` query-string or routes to e.g. `/products-info`, the guard would suppress the shop-link incorrectly. Low risk today (all 3 call sites audited) but worth a P3 follow-up to tighten the check.
+
+### Follow-up queue at HEAD `445ceab`
+
+| # | Priority | Agent | Scope | Status |
+|---|----------|-------|-------|--------|
+| N | P2 | BOLT | Dead `renderBody` export at `src/lib/email/layout.ts:311`. | **OPEN** (unchanged C4847 → C4898) |
+| O | P2 | BOLT | Resend → SMTP comment drift across 14 files. | **OPEN** (unchanged C4847 → C4898) |
+| P | P1 | BOLT | ts-prune close-out (`products-cache.ts` `getProducts`/`getCategories`, `sizes.ts` `normalizeSizesForCategory`, etc.). | **OPEN** (unchanged C4833 → C4898) |
+| V (NEW) | P3 | — | Tighten `ctaIsShopBrowse` from `includes("/products")` substring to a path-exact check (e.g. `new URL(ctaUrl).pathname.startsWith("/products")`) to avoid future false-positive suppression. | **INFORMATIONAL** (file only if a new CTA shape appears). |
+| M | P2 | BOLT | DOMPurify on Phase 4 mailbox render. | **UNCHANGED** (blocked on Phase 4 scope). |
+
+**Net cycle verdict (C4895→C4898)**: 1 code commit landed (`445ceab` Sage); 12-cycle green quality-gate streak intact; lint-zero streak extends to 30 commits. No new P0/P1 audit findings introduced. Per-cycle C4896 Lead explicit-scope escalation on #532 (Phase 4 admin Re-Lighthouse) is acknowledged — this addendum exists because the orchestrator dispatched task #367 (codebase sweep) this cycle, not #532; Lighthouse re-measurement remains queued for next Trace spawn on #532.
