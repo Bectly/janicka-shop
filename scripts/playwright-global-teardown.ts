@@ -19,6 +19,13 @@
  *           columns neutralises false-positive risk if a real seller ever
  *           uses an `E2E-` SKU prefix. PriceHistory rows for the same products
  *           are swept first to satisfy the FK.
+ *   - W-13 (Phase 9 bundle): orphan Order rows whose `orderNumber` starts
+ *           with `E2E-GUEST-` or `E2E-BULK-` (seeded by
+ *           order-guest-account-create.spec.ts and admin-bulk-ship.spec.ts).
+ *           Order delete cascades to OrderItem. The associated E2E Customer
+ *           rows ride out on the W-9b email-pattern sweep. The E2E-BULK-
+ *           Product row is caught by W-10's name-prefix double-key (extended
+ *           below to recognise `E2E Bulk Product `).
  *   - W-9  (obviated C4922): back-in-stock-dispatch.spec.ts no longer mutates
  *           Product.createdAt — the spec creates its own product whose default
  *           createdAt sits inside the cron's 48h-fresh window, so the original
@@ -103,11 +110,45 @@ export default async function globalTeardown() {
       );
     }
 
+    // W-13: sweep orphan E2E orders. Order → OrderItem cascade is configured
+    // in the schema (`onDelete: Cascade`), so deleting the Order row cleans
+    // up children. Two prefixes are recognised: `E2E-GUEST-` (seeded by
+    // order-guest-account-create.spec.ts) and `E2E-BULK-` (seeded by
+    // admin-bulk-ship.spec.ts). orderNumber is @unique so a real seller can
+    // never use these — false-positive risk is structurally zero.
+    const orderSweep = await prisma.order.deleteMany({
+      where: {
+        OR: [
+          { orderNumber: { startsWith: "E2E-GUEST-" } },
+          { orderNumber: { startsWith: "E2E-BULK-" } },
+        ],
+      },
+    });
+    if (orderSweep.count > 0) {
+      console.log(
+        `[playwright-global-teardown] W-13: deleted ${orderSweep.count} orphan E2E order(s)`,
+      );
+    }
+
+    // W-13b: sweep orphan E2E customers tied to the order specs. Email shape
+    // matches the W-9b pattern (`-e2e-` + `@test.local`) but Customer was
+    // not in the original W-9b sweep list, so we add it here. Runs AFTER
+    // the order sweep so the FK from Order.customerId is already gone.
+    const customerSweep = await prisma.customer.deleteMany({
+      where: e2eEmailFilter,
+    });
+    if (customerSweep.count > 0) {
+      console.log(
+        `[playwright-global-teardown] W-13b: deleted ${customerSweep.count} orphan E2E customer(s)`,
+      );
+    }
+
     // W-10: sweep orphan E2E products. Match BOTH sku prefix AND name prefix
-    // (double-key) to avoid hitting any real seller listings. Two prefix
+    // (double-key) to avoid hitting any real seller listings. Three prefix
     // pairs are recognised: the original create-spec pair (`E2E-` / `E2E Test
-    // Product `, C4922) and the edit-spec pair (`E2E-EDIT-` / `E2E Edit
-    // Product `, C4927 #578) added when admin-product-edit.spec.ts landed.
+    // Product `, C4922), the edit-spec pair (`E2E-EDIT-` / `E2E Edit
+    // Product `, C4927 #578), and the bulk-ship-spec pair (`E2E-BULK-` /
+    // `E2E Bulk Product `, Phase 9 bundle).
     const e2eProductFilter = {
       OR: [
         {
@@ -120,6 +161,12 @@ export default async function globalTeardown() {
           AND: [
             { sku: { startsWith: "E2E-EDIT-" } },
             { name: { startsWith: "E2E Edit Product " } },
+          ],
+        },
+        {
+          AND: [
+            { sku: { startsWith: "E2E-BULK-" } },
+            { name: { startsWith: "E2E Bulk Product " } },
           ],
         },
       ],
