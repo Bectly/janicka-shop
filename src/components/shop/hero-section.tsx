@@ -74,6 +74,9 @@ export function HeroSection() {
 
       {/* Hero content */}
       <div className="relative mx-auto flex max-w-7xl flex-col items-center px-4 py-16 text-center sm:px-6 sm:py-24 lg:px-8 lg:py-32">
+        <h1 className="sr-only">
+          Janička — second hand &amp; vintage móda, značkové oblečení levně
+        </h1>
         {/* Logo — dominant, first thing visitor sees */}
         <div
           className={`transition-all duration-1000 ease-out ${

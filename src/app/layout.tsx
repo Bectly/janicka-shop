@@ -33,11 +33,11 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: "Janička — Móda pro moderní ženy",
+    default: "Janička — second hand & vintage móda | značkové oblečení levně",
     template: "%s | Janička",
   },
   description:
-    "Objevte stylové oblečení pro každou příležitost. Šaty, topy, kalhoty, bundy a doplňky s rychlým doručením po celé ČR.",
+    "Český second hand bazar se značkovým oblečením za zlomek ceny. Šaty, topy, kalhoty, bundy a doplňky — každý kus unikát, osobně vybraný a focený. Doručení po celé ČR.",
   metadataBase: new URL(getSiteUrl()),
   icons: {
     icon: [
