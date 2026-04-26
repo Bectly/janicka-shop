@@ -584,19 +584,21 @@ export default function CheckoutPage() {
 
   if (items.length === 0) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-16 text-center sm:px-6 lg:px-8">
-        <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-gradient-to-br from-brand/10 to-blush/30">
-          <ShoppingBag className="size-7 text-brand" />
+      <div className="mx-auto min-h-[70vh] max-w-3xl px-4 py-20 sm:px-6 lg:px-8">
+        <div className="flex flex-col items-center text-center">
+          <div className="flex size-20 items-center justify-center rounded-2xl bg-gradient-to-br from-blush to-champagne-light ring-1 ring-inset ring-black/[0.04]">
+            <ShoppingBag className="size-9 text-primary/60" />
+          </div>
+          <h1 className="mt-6 font-heading text-2xl font-bold">
+            Košík je prázdný
+          </h1>
+          <p className="mt-2 max-w-xs text-muted-foreground">
+            Přidejte si něco hezkého z naší kolekce jedinečných kousků.
+          </p>
+          <Button size="lg" className="mt-8" render={<Link href="/products" />}>
+            Prohlédnout kolekci
+          </Button>
         </div>
-        <h1 className="font-heading text-2xl font-bold text-foreground">
-          Košík je prázdný
-        </h1>
-        <p className="mt-2 text-muted-foreground">
-          Nejdříve si přidejte něco do košíku.
-        </p>
-        <Button size="lg" className="mt-6" render={<Link href="/products" />}>
-          Prohlédnout produkty
-        </Button>
       </div>
     );
   }

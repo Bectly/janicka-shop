@@ -26,7 +26,7 @@ const tabs: Tab[] = [
 ];
 
 // Routes where bottom nav should be hidden
-const hiddenPrefixes = ["/checkout", "/admin", "/pick/"];
+const hiddenPrefixes = ["/admin", "/pick/"];
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -38,6 +38,9 @@ export function BottomNav() {
   const wlCount = mounted ? wishlistCount() : 0;
 
   if (hiddenPrefixes.some((r) => pathname.startsWith(r))) return null;
+  // Hide on /checkout only when cart has items (active checkout flow). Empty
+  // /checkout keeps the nav for orientation — matches /cart empty-state UX.
+  if (pathname.startsWith("/checkout") && cartCount > 0) return null;
 
   return (
     <nav
