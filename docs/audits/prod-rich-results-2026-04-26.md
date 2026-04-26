@@ -140,3 +140,27 @@ this audit caught.
 
 Filed Bolt tasks: env-var fix is bectly-bound (cannot be done in code);
 the spec + this audit are this cycle's deliverables.
+
+## Addendum 2026-04-26 — Cycle #4967 — Launch gate spec landed
+
+Companion harness `e2e/prod-launch-gate.spec.ts` (devloop #625) authored to
+verify all 12 callsites that read `NEXT_PUBLIC_SITE_URL` once #620 lands.
+Asserts:
+
+1. GMC `/api/feed/google-merchant` — first 5 `<g:link>` match `^https://www.jvsatnik.cz/` and contain no whitespace
+2. Pinterest `/api/feed/pinterest` — first 5 TSV `link` column rows are clean absolute jvsatnik.cz (and column count matches header — embedded `\n` would split the row)
+3. `/sitemap.xml` — every `<loc>` is absolute jvsatnik.cz
+4. `/robots.txt` — every `Sitemap:` line is absolute jvsatnik.cz
+5. `/` homepage JSON-LD — `Organization.url` + `WebSite.url` are absolute jvsatnik.cz
+6. `/products/[active]` PDP JSON-LD — `Product.url` + `offers.url` are absolute jvsatnik.cz
+
+**After #620 lands on Vercel, run:**
+
+```bash
+PROD_LAUNCH=1 npx playwright test e2e/prod-launch-gate.spec.ts
+```
+
+Override base URL if needed: `PROD_LAUNCH_URL=https://www.jvsatnik.cz`. The
+existing `prod-rich-results.spec.ts` (broader JSON-LD/Rich-Results coverage)
+remains the deeper post-fix audit; this gate is the one-shot binary
+pass/fail signal for the env-var fix specifically.
