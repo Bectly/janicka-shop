@@ -3,6 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/lib/db";
 import { auth } from "@/lib/auth";
+import {
+  markDevloopTaskBlocked as jarvisMarkBlocked,
+  markDevloopTaskCompleted as jarvisMarkCompleted,
+} from "@/lib/jarvis-db";
 
 const JANICKA_PROJECT_ID = 15;
 const VALID_TRANSITIONS: Record<string, string[]> = {
@@ -192,4 +196,35 @@ export async function addCommentAction(
   const c = await prisma.managerComment.create({ data });
   revalidatePath("/admin/manager");
   return { ok: true, commentId: c.id };
+}
+
+/**
+ * Flip a devloop_task in JARVIS DB to `blocked`. Server-side enforces ownership
+ * (Janička can only mutate tasks she or her promote pipeline created — Lead/Bolt
+ * tasks stay read-only).
+ */
+export async function markDevloopTaskBlockedAction(
+  id: number,
+  reason: string,
+): Promise<{ ok: boolean; error?: string }> {
+  await requireAdmin();
+  if (!Number.isInteger(id) || id <= 0) {
+    return { ok: false, error: "Neplatné ID" };
+  }
+  const result = await jarvisMarkBlocked(id, reason);
+  if (result.ok) revalidatePath("/admin/manager");
+  return result;
+}
+
+export async function markDevloopTaskCompletedAction(
+  id: number,
+  notes?: string,
+): Promise<{ ok: boolean; error?: string }> {
+  await requireAdmin();
+  if (!Number.isInteger(id) || id <= 0) {
+    return { ok: false, error: "Neplatné ID" };
+  }
+  const result = await jarvisMarkCompleted(id, notes);
+  if (result.ok) revalidatePath("/admin/manager");
+  return result;
 }

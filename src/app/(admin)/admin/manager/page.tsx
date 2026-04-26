@@ -11,11 +11,13 @@
  */
 import type { Metadata } from "next";
 import { connection } from "next/server";
-import { Briefcase, Inbox, Sparkles } from "lucide-react";
+import { Bot, Briefcase, Inbox, Sparkles } from "lucide-react";
 
 import { getDb } from "@/lib/db";
+import { getJanickaDevloopTasks } from "@/lib/jarvis-db";
 import { ArtifactCard } from "@/components/admin/manager/artifact-card";
 import { TaskCard } from "@/components/admin/manager/task-card";
+import { DevloopTaskCard } from "@/components/admin/manager/devloop-task-card";
 import { StartSessionForm } from "@/components/admin/manager/start-session-form";
 
 const JANICKA_PROJECT_ID = 15;
@@ -50,7 +52,7 @@ export default async function AdminManagerPage() {
   await connection();
 
   const prisma = await getDb();
-  const [latestSession, tasksRaw, artifacts] = await Promise.all([
+  const [latestSession, tasksRaw, artifacts, devloopTasks] = await Promise.all([
     prisma.managerSession.findFirst({
       where: { projectId: JANICKA_PROJECT_ID },
       orderBy: [{ requestedAt: "desc" }, { startedAt: "desc" }],
@@ -74,7 +76,10 @@ export default async function AdminManagerPage() {
         comments: { orderBy: { createdAt: "asc" }, take: 50 },
       },
     }),
+    getJanickaDevloopTasks(),
   ]);
+  const devloopOpen = devloopTasks.filter((t) => t.status === "open");
+  const devloopBlocked = devloopTasks.filter((t) => t.status === "blocked");
   const tasks = tasksRaw;
   const sessionBusy =
     latestSession?.status === "requested" ||
@@ -226,6 +231,49 @@ export default async function AdminManagerPage() {
               ))}
             </div>
           </div>
+        )}
+      </section>
+
+      {/* Devloop tasks (AI workers) */}
+      <section className="space-y-3">
+        <div>
+          <h2 className="flex items-center gap-2 font-heading text-xl font-semibold">
+            <Bot className="size-5 text-primary" />
+            Devloop tasky (AI workers)
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            Co řeší Bolt, Trace, Lead a spol. v pozadí. Tasky které jsi zadala
+            přes manažerku nebo promote ze shopu můžeš zavřít/blokovat — ostatní
+            jsou jen na čtení.
+          </p>
+        </div>
+        {devloopTasks.length === 0 ? (
+          <div className="rounded-lg border border-dashed bg-card/50 p-6 text-center text-sm text-muted-foreground">
+            Žádné aktivní devloop tasky (nebo JARVIS DB není dostupná z tohohle
+            prostředí).
+          </div>
+        ) : (
+          <>
+            {devloopOpen.length > 0 && (
+              <div className="grid gap-3 md:grid-cols-2">
+                {devloopOpen.map((t) => (
+                  <DevloopTaskCard key={t.id} task={t} />
+                ))}
+              </div>
+            )}
+            {devloopBlocked.length > 0 && (
+              <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 space-y-2">
+                <h3 className="font-medium text-sm text-amber-700">
+                  Blokované ({devloopBlocked.length})
+                </h3>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {devloopBlocked.map((t) => (
+                    <DevloopTaskCard key={t.id} task={t} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </section>
 
