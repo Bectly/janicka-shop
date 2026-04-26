@@ -23,6 +23,7 @@ import { ProductInfoAccordion } from "@/components/shop/product-info-accordion";
 import { ProductDefects } from "@/components/shop/product-defects";
 import { ProductDescription } from "@/components/shop/product-description";
 import { parseDefectImages } from "@/lib/defects";
+import { getSiteUrl } from "@/lib/site-url";
 import { FreeShippingBar } from "@/components/shop/free-shipping-bar";
 import { NotifyMeForm } from "@/components/shop/notify-me-form";
 import { BackInStockForm } from "@/components/shop/back-in-stock-form";
@@ -66,8 +67,7 @@ function formatDeliveryDate(date: Date): string {
   }).format(date);
 }
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://jvsatnik.cz";
+const BASE_URL = getSiteUrl();
 
 async function getProduct(slug: string) {
   "use cache";

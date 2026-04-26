@@ -11,9 +11,9 @@ import {
   SHIPPING_PRICES,
 } from "@/lib/constants";
 import { getImageUrls, parseProductImages } from "@/lib/images";
+import { getSiteUrl } from "@/lib/site-url";
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://jvsatnik.cz";
+const BASE_URL = getSiteUrl();
 
 const CONDITION_TO_SCHEMA: Record<string, string> = {
   new_with_tags: "https://schema.org/NewCondition",

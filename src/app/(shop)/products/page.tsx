@@ -6,9 +6,9 @@ import { CategoryHero, CatalogHero } from "@/components/shop/category-hero";
 import { buildBreadcrumbSchema, jsonLdString } from "@/lib/structured-data";
 import { ProductsClient, type CatalogProduct } from "./products-client";
 import type { Metadata } from "next";
+import { getSiteUrl } from "@/lib/site-url";
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://jvsatnik.cz";
+const BASE_URL = getSiteUrl();
 
 interface SearchParams {
   category?: string;

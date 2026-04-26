@@ -5,9 +5,9 @@ import { CollectionCard } from "@/components/shop/collection-card";
 
 import { Layers } from "lucide-react";
 import type { Metadata } from "next";
+import { getSiteUrl } from "@/lib/site-url";
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://jvsatnik.cz";
+const BASE_URL = getSiteUrl();
 
 export const metadata: Metadata = {
   title: "Kolekce",

@@ -9,6 +9,9 @@
  */
 
 import { logger } from "@/lib/logger";
+import { checkSiteUrlEnv } from "@/lib/site-url";
+
+export { checkSiteUrlEnv };
 
 type R2Var = {
   name: string;

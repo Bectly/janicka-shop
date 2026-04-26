@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { StyleQuiz } from "./style-quiz";
+import { getSiteUrl } from "@/lib/site-url";
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://jvsatnik.cz";
+const BASE_URL = getSiteUrl();
 
 export const metadata: Metadata = {
   title: "Kvíz: Najdi svůj styl | Janička",

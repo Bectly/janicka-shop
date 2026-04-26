@@ -9,9 +9,9 @@ import { getLowestPrices30d } from "@/lib/price-history";
 import { CollectionHero } from "@/components/shop/collection-hero";
 import { buildItemListSchema, buildBreadcrumbSchema, jsonLdString } from "@/lib/structured-data";
 import type { Metadata } from "next";
+import { getSiteUrl } from "@/lib/site-url";
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://jvsatnik.cz";
+const BASE_URL = getSiteUrl();
 
 const getCollection = cache(async (slug: string, now: Date) => {
   const db = await getDb();

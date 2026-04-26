@@ -10,8 +10,8 @@ import {
 } from "@/lib/constants";
 
 import { logger } from "@/lib/logger";
-const BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://jvsatnik.cz";
+import { getSiteUrl } from "@/lib/site-url";
+const BASE_URL = getSiteUrl();
 
 /**
  * Map internal category slugs to Heureka.cz category tree paths.

@@ -4,7 +4,8 @@
  */
 export async function register(): Promise<void> {
   if (process.env.NEXT_RUNTIME === "nodejs") {
-    const { checkR2Env } = await import("./lib/env-check");
+    const { checkR2Env, checkSiteUrlEnv } = await import("./lib/env-check");
     checkR2Env();
+    checkSiteUrlEnv();
   }
 }
