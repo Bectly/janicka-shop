@@ -45,6 +45,7 @@ let expiredId: string | null = null;
 let corruptId: string | null = null;
 let nonArrayId: string | null = null;
 let pageRoundTripId: string | null = null;
+let rateLimitId: string | null = null;
 
 test.beforeAll(async () => {
   const happy = await prisma.abandonedCart.create({
@@ -119,6 +120,17 @@ test.beforeAll(async () => {
     select: { id: true },
   });
   pageRoundTripId = pageCart.id;
+
+  const rateLimitCart = await prisma.abandonedCart.create({
+    data: {
+      email: TEST_EMAIL,
+      cartItems: JSON.stringify(HAPPY_ITEMS),
+      cartTotal: 499,
+      status: "pending",
+    },
+    select: { id: true },
+  });
+  rateLimitId = rateLimitCart.id;
 });
 
 test.afterAll(async () => {
@@ -192,6 +204,30 @@ test.describe("Abandoned-cart token-restore — round-trip + guard rails", () =>
       `/api/cart/restore?token=${encodeURIComponent(nonArrayId!)}`,
     );
     expect(res.status()).toBe(422);
+  });
+
+  test("API: rate-limit returns 429 after 60 requests/min/IP (defense-in-depth)", async ({
+    request,
+  }) => {
+    test.skip(!rateLimitId, "AbandonedCart seed missing");
+    // 60/min limit — fire 60 OK calls then assert 61st is 429. Sequential
+    // ordering matters against the in-memory sliding window. We pin a
+    // dedicated x-forwarded-for so concurrent siblings (which share the
+    // playwright runner IP) cannot pollute the bucket.
+    const ipOctet = (Math.floor(Math.random() * 250) + 2).toString();
+    const ipHeaders = { "x-forwarded-for": `10.99.${ipOctet}.1` };
+    for (let i = 0; i < 60; i++) {
+      const res = await request.post(
+        `/api/cart/restore?token=${encodeURIComponent(rateLimitId!)}`,
+        { headers: ipHeaders },
+      );
+      expect(res.status()).toBe(200);
+    }
+    const limited = await request.post(
+      `/api/cart/restore?token=${encodeURIComponent(rateLimitId!)}`,
+      { headers: ipHeaders },
+    );
+    expect(limited.status()).toBe(429);
   });
 
   test("Page round-trip: /cart?restore={token} renders success and redirects to /checkout", async ({

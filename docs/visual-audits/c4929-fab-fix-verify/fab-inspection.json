@@ -1,0 +1,122 @@
+[
+  {
+    "fullName": "home-iphone14pro",
+    "url": "https://janicka-shop.vercel.app/",
+    "fab": {
+      "present": true,
+      "x": 168.0420379638672,
+      "y": 714.5970458984375,
+      "w": 56.915924072265625,
+      "h": 56.91595458984375,
+      "cx": 196.5,
+      "cy": 743.0550231933594
+    }
+  },
+  {
+    "fullName": "products-iphone14pro",
+    "url": "https://janicka-shop.vercel.app/products",
+    "fab": {
+      "present": true,
+      "x": 167.2229766845703,
+      "y": 712.0463256835938,
+      "w": 58.554046630859375,
+      "h": 58.5540771484375,
+      "cx": 196.5,
+      "cy": 741.3233642578125
+    }
+  },
+  {
+    "fullName": "pdp-available-iphone14pro",
+    "url": "https://janicka-shop.vercel.app/products/panska-zimni-bunda-cxs-vel-xs",
+    "fab": {
+      "present": false
+    }
+  },
+  {
+    "fullName": "pdp-sold-iphone14pro",
+    "url": "https://janicka-shop.vercel.app/products/spaci-pytel-pro-miminko-helios",
+    "fab": {
+      "present": false
+    }
+  },
+  {
+    "fullName": "cart-iphone14pro",
+    "url": "https://janicka-shop.vercel.app/cart",
+    "fab": {
+      "present": true,
+      "x": 167.12989807128906,
+      "y": 711.6708984375,
+      "w": 58.740203857421875,
+      "h": 58.74017333984375,
+      "cx": 196.5,
+      "cy": 741.0409851074219
+    }
+  },
+  {
+    "fullName": "checkout-iphone14pro",
+    "url": "https://janicka-shop.vercel.app/checkout",
+    "fab": {
+      "present": false
+    }
+  },
+  {
+    "fullName": "home-pixel7",
+    "url": "https://janicka-shop.vercel.app/",
+    "fab": {
+      "present": true,
+      "x": 178,
+      "y": 779,
+      "w": 56,
+      "h": 56,
+      "cx": 206,
+      "cy": 807
+    }
+  },
+  {
+    "fullName": "products-pixel7",
+    "url": "https://janicka-shop.vercel.app/products",
+    "fab": {
+      "present": true,
+      "x": 178,
+      "y": 779,
+      "w": 56,
+      "h": 56,
+      "cx": 206,
+      "cy": 807
+    }
+  },
+  {
+    "fullName": "pdp-available-pixel7",
+    "url": "https://janicka-shop.vercel.app/products/panska-zimni-bunda-cxs-vel-xs",
+    "fab": {
+      "present": false
+    }
+  },
+  {
+    "fullName": "pdp-sold-pixel7",
+    "url": "https://janicka-shop.vercel.app/products/spaci-pytel-pro-miminko-helios",
+    "fab": {
+      "present": false
+    }
+  },
+  {
+    "fullName": "cart-pixel7",
+    "url": "https://janicka-shop.vercel.app/cart",
+    "fab": {
+      "present": true,
+      "x": 175.1984405517578,
+      "y": 771.64990234375,
+      "w": 61.603118896484375,
+      "h": 61.60308837890625,
+      "cx": 206,
+      "cy": 802.4514465332031
+    }
+  },
+  {
+    "fullName": "checkout-pixel7",
+    "url": "https://janicka-shop.vercel.app/checkout",
+    "fab": {
+      "present": false
+    }
+  }
+]

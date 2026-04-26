@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 /**
  * Token-based cart restore for abandoned-cart email one-click recovery.
@@ -18,6 +19,12 @@ export async function POST(request: Request): Promise<Response> {
 
   if (!token || typeof token !== "string" || token.length > 64 || !/^[a-z0-9]+$/i.test(token)) {
     return NextResponse.json({ error: "Invalid token" }, { status: 400 });
+  }
+
+  const ip = await getClientIp();
+  const rl = checkRateLimit(`cart-restore:${ip}`, 60, 60_000);
+  if (!rl.success) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
   try {

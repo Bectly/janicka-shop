@@ -75,3 +75,40 @@ All screenshots in `docs/visual-audits/c4927-launch-ready-mobile/`:
 Filing a single Bolt task to fix the FAB-overlap (covers findings 1+2+3 with one positioning change) is the highest-leverage pre-launch polish. P2 copy/nav consistency can land post-launch without affecting GMC/Doppl readiness.
 
 Apr 30 launch — green from a critical-path mobile-visual standpoint.
+
+---
+
+## Re-verification — 2026-04-26 (C4952 Sage #581)
+
+**Bolt fix verified**: 8462286 (`shuffle-button.tsx`) — route-aware hide on `/products/<slug>` + mobile centering via `left-1/2 -translate-x-1/2` (desktop unchanged at `lg:left-4 lg:translate-x-0`). Production HEAD `c0dd535` includes the fix.
+
+**Capture script**: `scripts/sage-c4929-fab-verify.mjs`
+**Artifacts**: `docs/visual-audits/c4929-fab-fix-verify/`
+**DOM-level FAB measurements** (cx = horizontal center):
+
+| Route | iPhone 14 Pro 393×852 | Pixel 7 412×915 |
+| --- | --- | --- |
+| `/` | PRESENT cx=197 (centered ✓) | PRESENT cx=206 (centered ✓) |
+| `/products` | PRESENT cx=197 (centered ✓) | PRESENT cx=206 (centered ✓) |
+| `/products/<available>` | **HIDDEN ✓** | **HIDDEN ✓** |
+| `/products/spaci-pytel-pro-miminko-helios` (sold) | **HIDDEN ✓** | **HIDDEN ✓** |
+| `/cart` (empty) | PRESENT cx=197 | PRESENT cx=206 |
+| `/checkout` | HIDDEN (already was) | HIDDEN (already was) |
+
+### P1 verdict — original 3 findings
+
+1. **P1#1 — FAB overlaps PDP sticky CTA bar** → **RESOLVED**. FAB unmounted on `/products/<slug>` on both viewports. Confirmed via DOM (`querySelector` returns null) + screenshot (`pdp-available-{vp}.png`, `pdp-sold-{vp}.png` show only the back-to-top arrow on bottom-right).
+
+2. **P1#2 — FAB overlaps `Vše (343)` filter chip** → **RESOLVED (literal)**. Centered FAB no longer overlaps the leftmost `Vše` chip on either viewport. ⚠ **Residual collision (NEW)**: with FAB at `cx≈viewport/2`, the chip row underneath shifts the overlap onto `Šaty` (iPhone 14 Pro) and `Kalhoty & Sukně` (Pixel 7). See `products-iphone14pro.png` / `products-pixel7.png`. Severity dropped from "blocks #1 most-tapped chip" to "blocks a mid-tier category chip", but pattern persists.
+
+3. **P1#3 — FAB overlaps first card "stav" badge on `/`** → **RESOLVED (literal)**. First card's `Výborný stav` badge is now uncovered. ⚠ **Residual collision (NEW)**: on Pixel 7 the centered FAB now overlaps the **second** card's `Výborný stav` badge in the `Nově přidané` carousel (`home-pixel7.png`). On iPhone 14 Pro the carousel is barely visible above-fold so impact is minimal there.
+
+### Follow-up
+
+The Bolt #580 fix closes all three P1s exactly as originally written, restoring the tap-targets that were specifically called out (Vše chip, first card badge, PDP sticky CTA). However, the centering strategy moves the collision rather than eliminating it for `/products` chip row + `/` carousel.
+
+**Recommended targeted follow-up** (non-blocker for Apr 30 — original P1s closed, residual is lower severity): give the FAB a safer mobile slot — e.g., dock to the right edge with `right-4` (mirroring desktop) so it joins the back-to-top arrow lane without overlapping centered card/chip content; or render it only when user scrolls past the carousels.
+
+### Final verdict
+
+**LAUNCH-READY confirmed for Apr 30 GMC/Doppl gate.** All three originally-filed P1 collisions on the 5 critical-path pages are resolved as described. Residual mid-severity overlaps noted above are filed as a non-blocking polish follow-up.

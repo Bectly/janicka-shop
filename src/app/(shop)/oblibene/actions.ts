@@ -69,6 +69,17 @@ export async function subscribeWishlistNotifications(input: {
   const { email, productIds } = parsed.data;
   const normalizedEmail = email.toLowerCase();
 
+  // Defense-in-depth: signed-in customers exempt; unauth callers capped at
+  // 10/min/IP so an attacker can't weaponize bulk subscribe (up to 100 ids
+  // per call, no double-opt-in) against a third-party email.
+  const session = await auth();
+  const isCustomer = session?.user?.role === "customer";
+  if (!isCustomer) {
+    const ip = await getClientIp();
+    const rl = checkRateLimit(`wishlist-bulk:${ip}`, 10, 60_000);
+    if (!rl.success) return { ok: false, count: 0 };
+  }
+
   try {
     const db = await getDb();
 

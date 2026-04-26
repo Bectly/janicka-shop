@@ -57,7 +57,9 @@ async function shoot(browser, vp, { url, name, fullPage = false }) {
   console.log(`-> ${fullName} ${vp.width}x${vp.height} ${url}`);
   try { await page.goto(url, { waitUntil: 'networkidle', timeout: 45000 }); } catch (e) { console.log(`  goto warn: ${e.message}`); }
   await dismissCookies(page);
-  await page.waitForTimeout(700);
+  await page.waitForTimeout(400);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(400);
   const fab = await inspectFab(page);
   await page.screenshot({ path: `${OUT}/${fullName}${fullPage ? '-full' : ''}.png`, fullPage });
   await ctx.close();
