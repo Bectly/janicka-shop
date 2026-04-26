@@ -2032,3 +2032,54 @@ Two clean landings audited, gates green, no new findings. **Phase 8 W-row queue 
 - **Trace next cycle**: continue rolling re-verification on the C4923-fresh surface (no new audit phase trigger — Phase 8 just closed; next-phase trigger threshold is 4-5 fresh Bolt e2e landings or a P0 bug surfaces). Carry follow-ups N / O / P / M into post-launch backlog. Audit doc now ~1900 lines → recommend post-launch archival of Phases 1–7 to keep the live doc focused on Phase 8+.
 - **Bolt next cycle**: P (ts-prune close-out) is the longest-aged P1 carry — orphan-export sweep ~30min if Lead routes there, else no Trace-side blocker.
 - **Sage next cycle**: continue 1-2/cycle PARTIAL→BRAND-PASSED on the remaining 9 PARTIAL templates per active #571 directive.
+
+## C4959 re-verification (2026-04-26, post-`1529407`)
+
+Rolling re-verification across the 11-commit window since C4937 (`HEAD c0dd535` → `1529407`). Window contains: admin/manager UI surface (`46cf6ab`/`77bd01c`/`f47a0ec`/`23522d7`), Bolt #584 P0 admin auth-gate landing (manager/actions.ts `requireAdmin()` + middleware NextAuth.auth() rewrite + e2e/admin-auth-gate.spec.ts), Bolt #585 e2e/prod-smoke.spec.ts (PROD_SMOKE=1 gated, 235 LoC, 30 expect() assertions), Bolt #582 cart/checkout empty-state unification, Bolt #580 shuffle-FAB position fix, Sage #581 visual re-verify.
+
+### Gate state on `HEAD 1529407`
+
+- **`tsc --noEmit`**: ✅ PASS (exit 0, silent).
+- **`npm run lint`**: ✅ PASS (exit 0, 0 errors / 0 warnings) — lint-zero streak holds (~64+ commits).
+- **`@ts-ignore` / `@ts-nocheck` / `@ts-expect-error`** in `src/`: 0 (unchanged across 36 cycles).
+- **Hardcoded secrets** (`sk_live|sk_test_*|cfk_*|AKIA…`) in `src/`: 0.
+- **Working tree**: only `.devloop/lead-control.json` modified (orchestrator state — non-code).
+
+### KEY VERIFICATION — Bolt #584 admin auth-gate (closes C4938 P0×4 from `docs/audits/admin-auth-gap-2026-04-25.md`)
+
+`src/app/(admin)/admin/manager/actions.ts`:
+- `requireAdmin()` helper (`actions.ts:22-28`) calls `auth()`, throws `Unauthorized` when `session.user.role !== "admin"`. Returns `{ email }` derived server-side from session — eliminates the C4938 client-controlled `authorRole` prompt-injection vector.
+- **Parity check**: `grep -c "^export async function" actions.ts` = **4** vs `grep -c "await requireAdmin()" actions.ts` = **4**. Every exported server action now gates through `requireAdmin()` — full coverage of the four C4938 P0 mutations (changeTaskStatusAction / changeArtifactStatusAction / requestSessionAction / addCommentAction). ✅
+
+`e2e/admin-auth-gate.spec.ts` (companion regression spec):
+- Three-axis assertion: anonymous → /admin/login redirect; customer-role JWT → redirect away from /admin/manager (no 200 render); direct Next-Action POST with customer cookie → server throws Unauthorized + zero ManagerComment row written.
+- Cleanup-safe: customer email shape `admin-gate-e2e-${UNIQUE}@test.local` matches the C4922 W-9b globalTeardown sweep class. ✅
+
+### KEY VERIFICATION — Bolt #585 prod-smoke spec
+
+`e2e/prod-smoke.spec.ts`: 235 LoC, 30 `expect()` assertions, gated by `PROD_SMOKE=1` (read-only suite — no DB writes, no checkout submission). `package.json` adds `smoke:prod` script. Safe to run against Vercel prod. ✅
+
+### KEY VERIFICATION — Bolt #580 shuffle-FAB position fix (closes Sage #579 P1×3)
+
+`src/components/shop/shuffle-button.tsx` route-aware hide on `/products/<slug>` (PDP sticky CTA collision) + `left-1/2 -translate-x-1/2` mobile centering (closes /products `Vše` chip + home card badge collisions). Sage #581 re-verified at `5d2ef58` on prod 393x852 + 412x915 — LAUNCH-READY confirmed for Apr 30 GMC/Doppl gate. ✅
+
+### KEY VERIFICATION — Bolt #582 cart/checkout empty-state unification
+
+`/checkout` empty state matches `/cart` (warmer body copy + "Prohlédnout kolekci" CTA + size-20 gradient tile shell). `BottomNav` stays visible on empty `/checkout` (hidden only when cart has items). Sage #579 P2×2 closed. ✅
+
+### Phase 8 follow-up queue @ C4959
+
+| # | Status @ C4959 |
+|---|---|
+| N (dead `renderBody` export) | Unchanged. P2 carry. |
+| O (Resend → SMTP comment drift) | Unchanged. P2 carry. |
+| P (ts-prune close-out) | Unchanged. P1 carry. |
+| V (`ctaIsShopBrowse` substring guard) | Unchanged. P3 informational. |
+| M (DOMPurify on Phase 4 mailbox render) | Unchanged. P2 carry. |
+| W-3 (retention sweep) | Unchanged. P3 carry. |
+| W-5 / W-9 / W-9b / W-9c / W-10 / W-11 / W-12 | All CLOSED/OBVIATED — verified live. |
+| C4938 P0×4 (manager/actions.ts auth-gate) | ✅ CLOSED at `21893ce` (#584 Bolt). 4/4 exported actions guarded; e2e/admin-auth-gate.spec.ts in tree. |
+
+### C4959 verdict
+
+11-commit window audited end-to-end, gates green, **zero new findings**. Largest landing in window — Bolt #584 admin auth-gate — fully closes the C4938 P0×4 cluster surfaced by Trace last cycle. Audit doc now ~2080 lines; post-launch archival of Phases 1-7 still recommended (deferred while Apr 30 launch gate is live). **No P0/P1 in current code surface.** Trace #367 stays in recurring-sweep mode — next-phase trigger remains 4-5 fresh Bolt e2e landings or a P0 bug surfacing.
