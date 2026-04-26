@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse, connection } from "next/server";
 import { getDb } from "@/lib/db";
-import { getImageUrls, parseJsonStringArray } from "@/lib/images";
+import {
+  getImageUrls,
+  parseJsonStringArray,
+  parseMeasurements,
+  type ProductMeasurements,
+} from "@/lib/images";
 import { validateFeedToken } from "@/lib/feed-auth";
 import {
   SHIPPING_PRICES,
@@ -38,6 +43,22 @@ const GOOGLE_CATEGORY_MAP: Record<string, string> = {
 };
 
 const FALLBACK_CATEGORY = "166"; // Apparel & Accessories > Clothing
+
+// Handling time in business days. Packeta Z-Box pickup ships next business day.
+// Recommended attribute since 2024 GMC spec; required-equivalent for Doppl-into-Search
+// VTO eligibility (Apr 30 2026) per Merchant Center fast-shipping signals.
+const MIN_HANDLING_DAYS = 1;
+const MAX_HANDLING_DAYS = 2;
+
+const MEASUREMENT_LABELS_CZ: Record<keyof ProductMeasurements, string> = {
+  chest: "Hrudník",
+  waist: "Pas",
+  hips: "Boky",
+  length: "Délka",
+  sleeve: "Rukáv",
+  inseam: "Vnitřní šev",
+  shoulders: "Ramena",
+};
 
 function escapeXml(str: string): string {
   return str
@@ -90,6 +111,7 @@ export async function GET(req: NextRequest) {
       const images = getImageUrls(product.images);
       const sizes = parseJsonStringArray(product.sizes);
       const colors = parseJsonStringArray(product.colors);
+      const measurements = parseMeasurements(product.measurements);
       const googleCategory =
         GOOGLE_CATEGORY_MAP[product.category.slug] ?? FALLBACK_CATEGORY;
       const condition = CONDITION_MAP[product.condition] ?? "used";
@@ -157,13 +179,51 @@ export async function GET(req: NextRequest) {
       // Shipping
       xml += "    <g:shipping>\n";
       xml += "      <g:country>CZ</g:country>\n";
+      xml += "      <g:service>Standardní</g:service>\n";
       xml += `      <g:price>${shippingPrice.toFixed(2)} CZK</g:price>\n`;
       xml += "    </g:shipping>\n";
 
-      // Video URL — enriches Google Shopping listing
+      // Handling time — fast-shipping signal for GMC + Doppl-into-Search VTO
+      xml += `    <g:min_handling_time>${MIN_HANDLING_DAYS}</g:min_handling_time>\n`;
+      xml += `    <g:max_handling_time>${MAX_HANDLING_DAYS}</g:max_handling_time>\n`;
+
+      // Video URL — enriches Google Shopping listing (2026-04-14 spec update
+      // formalised g:video_link for apparel feeds; Doppl-into-Search VTO uses
+      // it for try-on previews when the still images aren't enough).
       if (product.videoUrl && /^https?:\/\//.test(product.videoUrl)) {
         xml += `    <g:video_link>${escapeXml(product.videoUrl)}</g:video_link>\n`;
       }
+
+      // Product highlights — up to 4 short bullets surfaced in Shopping listing.
+      const highlights: string[] = [];
+      if (product.brand) highlights.push(`Značka: ${product.brand}`);
+      if (conditionLabel) highlights.push(`Stav: ${conditionLabel}`);
+      if (product.fitNote) highlights.push(product.fitNote);
+      highlights.push("Unikát — 1 ks skladem");
+      for (const h of highlights.slice(0, 4)) {
+        const trimmed = h.length > 150 ? h.slice(0, 147) + "…" : h;
+        xml += `    <g:product_highlight>${escapeXml(trimmed)}</g:product_highlight>\n`;
+      }
+
+      // Product detail — measurements as structured key/value pairs.
+      // Critical for second-hand (Baymard: real garment measurements = #1 fix).
+      for (const key of Object.keys(measurements) as (keyof ProductMeasurements)[]) {
+        const value = measurements[key];
+        if (typeof value !== "number") continue;
+        xml += "    <g:product_detail>\n";
+        xml += "      <g:section_name>Rozměry</g:section_name>\n";
+        xml += `      <g:attribute_name>${escapeXml(MEASUREMENT_LABELS_CZ[key])}</g:attribute_name>\n`;
+        xml += `      <g:attribute_value>${value} cm</g:attribute_value>\n`;
+        xml += "    </g:product_detail>\n";
+      }
+
+      // Custom labels — segmentation for Performance Max / Standard Shopping.
+      // 0 = condition, 1 = brand, 2 = price tier (under/over free-ship threshold).
+      xml += `    <g:custom_label_0>${escapeXml(product.condition)}</g:custom_label_0>\n`;
+      if (product.brand) {
+        xml += `    <g:custom_label_1>${escapeXml(product.brand)}</g:custom_label_1>\n`;
+      }
+      xml += `    <g:custom_label_2>${product.price >= FREE_SHIPPING_THRESHOLD ? "premium" : "standard"}</g:custom_label_2>\n`;
 
       // Identifier exists (no GTIN for second-hand unique items)
       xml += `    <g:identifier_exists>false</g:identifier_exists>\n`;
