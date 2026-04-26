@@ -26,8 +26,8 @@ export default function AdminError({
         V adminu něco selhalo
       </h1>
       <p className="mt-3 text-muted-foreground">
-        Zkuste operaci zopakovat. Pokud chyba přetrvává, podívej se do JARVIS
-        logu nebo kontaktuj devs. Obnovení stránky ti nic nerozbije.
+        Zkuste operaci zopakovat. Pokud chyba přetrvává, kontaktuj devs.
+        Obnovení stránky ti nic nerozbije.
       </p>
       {error.digest && (
         <p className="mt-2 text-xs text-muted-foreground">
@@ -48,13 +48,6 @@ export default function AdminError({
         >
           <LayoutDashboard className="size-4" />
           Zpět na dashboard
-        </Button>
-        <Button
-          size="lg"
-          variant="ghost"
-          render={<Link href="/admin/jarvis" />}
-        >
-          JARVIS log
         </Button>
       </div>
     </div>

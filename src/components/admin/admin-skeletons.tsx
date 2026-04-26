@@ -176,15 +176,6 @@ export function AdminMailboxSkeleton() {
   );
 }
 
-export function AdminJarvisSkeleton() {
-  return (
-    <div aria-busy="true" aria-live="polite" className="space-y-4">
-      <AdminHeaderSkeleton titleWidth="w-28" subtitle={false} />
-      <Skeleton className="h-[60vh] w-full rounded-lg" />
-    </div>
-  );
-}
-
 export function AdminSettingsSkeleton() {
   return (
     <div aria-busy="true" aria-live="polite" className="space-y-6">

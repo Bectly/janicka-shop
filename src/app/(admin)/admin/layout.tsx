@@ -8,10 +8,6 @@ import { AdminSidebar, AdminSidebarMobileTrigger } from "@/components/admin/side
 import { AdminOrderNotifier } from "@/components/admin/order-notifier";
 import { GlobalSearch } from "@/components/admin/global-search";
 import { Breadcrumbs } from "@/components/admin/breadcrumbs";
-import {
-  JarvisConsoleOverlay,
-  JarvisConsoleToggle,
-} from "@/components/admin/jarvis-console-overlay";
 
 // #524f Phase 1b: opt-in wall-clock instrumentation for pre/post cache-fix
 // baseline. Enable by setting PERF_PROFILE=1 in Vercel env. Emits console.time
@@ -92,7 +88,6 @@ async function AdminAuthGate({
           </div>
           <div className="flex items-center gap-2">
             <GlobalSearch />
-            <JarvisConsoleToggle />
           </div>
         </header>
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
@@ -100,7 +95,6 @@ async function AdminAuthGate({
         </div>
       </main>
       <AdminOrderNotifier soundEnabled={soundNotifications} />
-      <JarvisConsoleOverlay />
     </>
   );
 }

@@ -23,7 +23,6 @@ import {
   Eye,
   PenLine,
   Ruler,
-  Terminal,
   Briefcase,
   Menu,
 } from "lucide-react";
@@ -58,7 +57,6 @@ const navItems: NavItem[] = [
   { divider: true },
   { href: "/admin/manager", label: "Manažerka", icon: Briefcase },
   { href: "/admin/settings", label: "Nastavení", icon: Settings },
-  { href: "/admin/jarvis", label: "JARVIS", icon: Terminal },
 ];
 
 function SidebarBody({

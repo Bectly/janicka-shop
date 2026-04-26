@@ -108,8 +108,8 @@ const nextConfig: NextConfig = {
               "img-src 'self' data: blob: https://pub-88d95c0ca85d4cb999122434d83fb3c9.r2.dev https://images1.vinted.net https://images2.vinted.net https://www.facebook.com https://ct.pinterest.com",
               "font-src 'self' data:",
               // connect-src: R2 uploads + GA4 data collection + Pinterest + Meta Pixel events
-              "connect-src 'self' https://pub-88d95c0ca85d4cb999122434d83fb3c9.r2.dev https://payments.comgate.cz https://payments.comgate.eu https://widget.packeta.com https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net https://ct.pinterest.com https://www.facebook.com https://jarvis-janicka.jvsatnik.cz wss://jarvis-janicka.jvsatnik.cz",
-              "frame-src 'self' https://payments.comgate.cz https://payments.comgate.eu https://widget.packeta.com https://jarvis-janicka.jvsatnik.cz",
+              "connect-src 'self' https://pub-88d95c0ca85d4cb999122434d83fb3c9.r2.dev https://payments.comgate.cz https://payments.comgate.eu https://widget.packeta.com https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net https://ct.pinterest.com https://www.facebook.com",
+              "frame-src 'self' https://payments.comgate.cz https://payments.comgate.eu https://widget.packeta.com",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",
@@ -117,15 +117,6 @@ const nextConfig: NextConfig = {
               "upgrade-insecure-requests",
             ].join("; "),
           },
-        ],
-      },
-      {
-        // SEC-3: admin JARVIS console embeds a cross-origin iframe —
-        // suppress the Referer entirely so the tunnel can't learn admin pathnames.
-        // Must come AFTER the catch-all so this value wins on header merge.
-        source: "/admin/jarvis",
-        headers: [
-          { key: "Referrer-Policy", value: "no-referrer" },
         ],
       },
     ];
