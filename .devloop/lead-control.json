@@ -1,7 +1,27 @@
 {
-  "last_bolt_commit_cycle": 4956,
+  "last_bolt_commit_cycle": 4957,
   "pause": {},
   "paused_at_bolt_cycle": 4870,
+  "cycle_4959_directive": {
+    "context": "T-4 days to Apr 30 hard gate (Doppl shutdown + VTO into Search/Shopping). Bolt running #615 E2E Phase9 since 05:10. Sage running #616 email visual snapshot grid. Trace dispatched fresh this cycle (back after 1 idle day). Workers all healthy.",
+    "next_cycle_directives": {
+      "bolt_p0": "Continue #615 [E2E-COVERAGE-PHASE9-BUNDLE] guest→registered + admin bulk-ship. Land then immediately pivot to #618 [GMC-FEED-2026-SPEC-COMPAT] — Apr30 hard gate (4 days), Doppl-into-Search VTO eligibility depends on /api/feed/google-merchant matching 2026 GMC spec. Audit + ship any spec gaps in single PR. tsc 0 / lint 0.",
+      "bolt_p1": "If #618 lands quickly: pivot to #587 [SEC-WISHLIST-BULK-RL] but ONLY after manual review of 2× fabrication flag — re-grep lib/rate-limit.ts + bulk subscribe handler to confirm gap exists. If fabricated, close as duplicate.",
+      "sage_p0": "Continue #616 [BRAND-EMAIL-VISUAL-SNAPSHOT-GRID] — 14 BRAND-PASSED templates Litmus-style preview grid. Single-cycle delivery target.",
+      "sage_p1": "If #616 lands: file fresh task on /products + /cart mobile launch-readiness re-snap (post-#580 FAB fix verified C4955) at 393x852 to extend C4955 LAUNCH-READY confirmation across remaining critical-path screens. Cheap pre-Apr30 insurance.",
+      "trace_p0": "#614 [E2E-PROD-RICH-RESULTS] — Apr30 hard gate (4 days). Validate JSON-LD on 5 jvsatnik.cz URLs (home, /products, PDP available, PDP sold, /collections/<seo>) via PROD_RICH_RESULTS=1 gate. Use Google Rich Results Test API or schema.org validator. MD report → if any FAIL, file targeted Bolt follow-up immediately. This unblocks GMC #14 + Pinterest catalog gate confidence.",
+      "trace_p1": "If #614 PASS clean: pivot to #617 [PERF-FIELD-DATA-VERCEL-INSIGHTS] — pull 7-day Vercel Speed Insights field RUM for admin + /account routes. Closes Phase 4 verification debt. Vercel API token in JARVIS api_keys (name='vercel').",
+      "guard_deferred": "#366/#368/#330 still deferred — Remote Console security audit re-evaluate after Apr 30 launch gate clears."
+    },
+    "monitors_status": "All three fresh (30.8h since check, well within 168h/720h windows). NONE DUE this cycle. comgate-version next due ~138h, cz-competitors ~138h, vinted-cz-media ~690h.",
+    "bectly_gates_aging": {
+      "#14_gmc_registration": "T-4 DAYS to Apr 30 Doppl VTO consolidation. DEFCON-0 final-warning. Code path defended by C4927 #577 e2e schema spec + Trace #614 prod JSON-LD validation this cycle + Bolt #618 GMC feed 2026 spec audit this cycle. Only blocker: bectly self-registration at merchants.google.com (~10 min).",
+      "#553_pinterest_self_registration": "Code complete; T-4 days. ~30-45 min self-serve. docs/pinterest-catalog-setup.md walkthrough.",
+      "#534_smtp_creds": "Still missing SMTP_HOST/SMTP_USER/SMTP_PASSWORD for @vryp.cz. Route.ts:143-148 returns 503 — infra ready, creds blocker."
+    },
+    "priority_rationale": "T-4 days to Apr 30 = highest leverage is closing the GMC/Doppl gate confidence: Bolt #618 (feed spec compat) + Trace #614 (live JSON-LD validation) defend the same launch path from two angles (server-side feed correctness + on-page structured data). Sage #616 finishes brand-pass program visual artifact. #615 E2E Phase9 in-flight provides ongoing regression coverage on guest→registered + admin bulk-ship critical paths. Three landings expected this cycle if all in-flight close cleanly.",
+    "feedback_acked": "[2236] from Bolt cycle #4920 (RESEARCH MODE grep methodology) — saved feedback memory. 11-cycle ack streak (C4920-C4929 + C4958)."
+  },
   "cycle_4929_directive": {
     "bolt_completed_this_cycle": "#580 [FAB-POSITION-MOBILE-COLLISION] (8462286) — src/components/shop/shuffle-button.tsx: route-aware hide on /products/<slug> (PDP sticky CTA collision) + mobile centering via left-1/2 -translate-x-1/2 (closes /products Vše chip + home card badge collisions). Desktop kept at lg:left-4 lg:translate-x-0. 7-line surgical diff. Closes all three Sage #579 P1 findings with single positioning change as planned. tsc 0 / lint 0.",
     "sage_completed_this_cycle": "No Sage commit this cycle — #579 launch-readiness audit landed last cycle (78e932d, C4928). Re-verification of Bolt #580 fix queued as #581 for next cycle (single-cycle Bolt-Sage handoff, not collapsable into one cycle since #580 lands the fix Sage needs to verify).",
