@@ -1,7 +1,31 @@
 {
-  "last_bolt_commit_cycle": 4974,
+  "last_bolt_commit_cycle": 4975,
   "pause": {},
   "paused_at_bolt_cycle": 4870,
+  "cycle_4976_directive": {
+    "context": "T-4 days to Apr 30 GMC/Doppl hard gate. Workers all idle pre-cycle. Last Bolt landings #630 (admin JARVIS removal), #629 (env-check generic), #627 (Boty category). Trace #4972 verified prod-launch-gate.spec.ts is sound — all 6 chromium assertions correctly fire on the #620 trailing-newline regression and will gate-pass once bectly redeploys with NEXT_PUBLIC_SITE_URL fixed. Working tree carries .devloop/lead-control.json + docs/STRUCTURE.md (this directive + post-commit auto-gen).",
+    "c4971_correction": "RESEARCH MODE failure on prior directive's 3 surfaced gaps — verified this cycle: (a) Heureka feed schema IS covered by #577 e2e/feed-xml-schema.spec.ts:157-197 (full <SHOP>/<SHOPITEM> required-field assertions including PRICE_VAT numeric + ITEM_TYPE=bazaar), (b) /order/[orderNumber] HAS post-purchase ReferralCard at page.tsx:311 with 150 CZK/100 CZK bilateral discount, (c) /search route does not exist as App Router segment — single customer-facing search surface is src/components/shop/instant-search.tsx (verified via Glob src/app/**/search* + Glob src/components/shop/instant-search*). Only (c) maps to a real coverage gap (instant-search component has zero e2e refs in /e2e/), and that gap is now filed as task #17850 below.",
+    "next_cycle_directives": {
+      "bolt_p0": "Task #17850 [E2E-INSTANT-SEARCH] in flight (auto-dispatched 06:01) — add e2e/instant-search.spec.ts asserting header search widget happy path: open widget, type 3-char query matching seeded product, assert ≥1 result links to /products/<slug>, click → assert PDP renders. Read-only spec, no SIGKILL needed. tsc 0 / lint 0.",
+      "bolt_p1": "If #17850 lands quickly: pivot to filing+landing a single small task that re-runs scripts/audit-r2-image-urls.ts against live Turso prod (#414 already shipped the script — last run unknown), reporting any %undefined% or wrong-base image URLs surfaced post-Boty migration #627. 4 days to Apr 30 launch — image-URL drift on prod would tank Doppl VTO eligibility. Cheap pre-launch insurance.",
+      "sage_p0": "Idle by-default this cycle — no new visual gap surfaced. If Sage worker spins up: re-run scripts/sage-c4927-mobile-qa.mjs (or equivalent) against /products listing only at 393×852 to re-verify Boty category nav entry from #627 doesn't introduce horizontal scroll on the category chips row. Single-page check, single-cycle delivery. Otherwise stay idle.",
+      "trace_p0": "Idle by-default this cycle — Phase 8 container #367 stays in_progress recurring. KEY VERIFICATION on Bolt #17850 instant-search e2e if it lands this cycle: confirm spec uses real seeded product (not hardcoded slug that could rot) and beforeAll prisma lookup pattern matches admin-product-create.spec.ts convention for fixture sourcing.",
+      "guard_deferred": "#366/#368/#330 still deferred — Remote Console security audit re-evaluate after Apr 30 launch gate clears."
+    },
+    "monitors_status": "All three fresh within window — last check 2026-04-24 22:26:07 (~32h ago). comgate-version next due 168h, cz-competitors next due 168h, vinted-cz-media next due 720h. NONE DUE this cycle; skipped per due-date logic.",
+    "bectly_gates_aging": {
+      "#620_site_url_trailing_newline": "T-4 DAYS — P0 LAUNCH BLOCKER. NEXT_PUBLIC_SITE_URL on Vercel still has trailing \\n + uses vercel.app preview domain. Breaks 347/347 GMC g:link, all Pinterest TSV links, every JSON-LD url field. site-url.ts (#624) will trim/throw on next redeploy + env-check.ts (#629) will warn at boot. e2e/prod-launch-gate.spec.ts (Trace #4968+#4972) gates re-launch. Bectly action: edit Vercel env var → redeploy → spec turns green.",
+      "#14_gmc_registration": "T-4 DAYS to Apr 30 Doppl VTO. Code path defended (feed correctness #618 + e2e schema #577 + prod gate #614/#4968). Only blocker: bectly self-registration at merchants.google.com (~10 min).",
+      "#553_pinterest_self_registration": "Code complete; T-4 days. ~30-45 min self-serve. docs/pinterest-catalog-setup.md walkthrough.",
+      "#534_smtp_creds": "Still missing SMTP_HOST/SMTP_USER/SMTP_PASSWORD for @vryp.cz. Route.ts:143-148 returns 503 — infra ready, creds blocker.",
+      "#621_speed_insights_screenshots": "Optional — Phase 4 verification debt. ~10 min dashboard capture.",
+      "#622_crux_api_key": "Optional — alternative to #621 if bectly prefers automated CrUX over manual screenshots.",
+      "#4_heureka_overeno": "Start tier FREE, self-serve at sluzby.heureka.cz."
+    },
+    "feedback_acked": "[2236] from Bolt cycle #4920 (RESEARCH MODE grep methodology) — saved feedback memory. This cycle directly applied the methodology to self-correct C4971's 3 false-positive gaps. 12-cycle ack streak.",
+    "priority_rationale": "Cycle #4976 corrects C4971's RESEARCH MODE overreach (acked 2/3 surfaced gaps as already-implemented, salvages 1 real gap as #17850). Bolt auto-picked up #17850 instant-search e2e — closes the only genuine customer-facing coverage gap surfaced. With code path for Apr 30 launch fully defended (#577 schema + #614/#4968 prod gate + #618 feed compat all landed), remaining T-4 days work is bectly-gated (#620 env fix + #14/#553 self-reg). Sage/Trace correctly idle-by-default — no fresh leverage worth dispatching this cycle. Single-landing target.",
+    "cycle_net_effect": "C4971 RESEARCH MODE failure self-corrected with grep evidence (Heureka spec lines + ReferralCard line + Glob proof of absent /search route). One grounded task filed (#17850 instant-search e2e — only real gap of the 3 surfaced). Bolt auto-dispatched. Sage/Trace stay idle by-design. Bectly gate aging tracked: #620 P0 launch blocker is the singular remaining T-4 day risk."
+  },
   "cycle_4959_directive": {
     "context": "T-4 days to Apr 30 hard gate (Doppl shutdown + VTO into Search/Shopping). Bolt running #615 E2E Phase9 since 05:10. Sage running #616 email visual snapshot grid. Trace dispatched fresh this cycle (back after 1 idle day). Workers all healthy.",
     "next_cycle_directives": {
