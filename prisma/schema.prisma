@@ -646,6 +646,7 @@ model ManagerSession {
   status          String              @default("running") // requested|running|paused|done|aborted|failed
   triggeredBy     String?             // 'cli'|'tauri'|'janicka-admin'
   openingMessage  String?             // user's opening prompt when triggered from UI
+  attachmentUrls  String?             // JSON array of R2 URLs for image attachments (Janička posts screenshots)
   requestedAt     DateTime?           // set when status='requested', cleared when claimed
   startedAt       DateTime            @default(now())
   endedAt         DateTime?

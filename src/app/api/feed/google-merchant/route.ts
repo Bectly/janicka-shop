@@ -39,6 +39,7 @@ const GOOGLE_CATEGORY_MAP: Record<string, string> = {
   "topy-halenky": "212",    // Apparel & Accessories > Clothing > Shirts & Tops
   "kalhoty-sukne": "204",   // Apparel & Accessories > Clothing > Pants
   "bundy-kabaty": "5598",   // Apparel & Accessories > Clothing > Outerwear > Coats & Jackets
+  boty: "187",              // Apparel & Accessories > Shoes
   doplnky: "167",           // Apparel & Accessories
 };
 

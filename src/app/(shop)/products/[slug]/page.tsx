@@ -579,7 +579,7 @@ export default async function ProductDetailPage({ params }: Props) {
   const SIZE_SENTINELS = new Set(["Jiná", "Jina", "Univerzální", "Univerzalni", "UNI"]);
   const filteredSizes = sizes.filter((s) => !SIZE_SENTINELS.has(s));
   // Accessories + all-sentinel cases: no size block at all.
-  const NON_SIZED_CATEGORIES = new Set(["doplnky"]);
+  const NON_SIZED_CATEGORIES = new Set(["doplnky"]); // boty are sized
   const showSize =
     !NON_SIZED_CATEGORIES.has(product.category.slug) && filteredSizes.length > 0;
   const hasDiscount = product.compareAt && product.compareAt > product.price;

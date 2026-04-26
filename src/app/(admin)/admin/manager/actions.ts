@@ -87,10 +87,10 @@ export async function changeArtifactStatusAction(
  */
 export async function requestSessionAction(
   openingMessage?: string,
+  attachmentUrls?: string[],
 ): Promise<{ ok: boolean; error?: string; sessionId?: string }> {
   await requireAdmin();
   const prisma = await getDb();
-  // Block if there's already an active session (running/requested/claimed)
   const existing = await prisma.managerSession.findFirst({
     where: {
       projectId: JANICKA_PROJECT_ID,
@@ -103,17 +103,49 @@ export async function requestSessionAction(
       error: "Manažerka už běží (nebo je ve frontě). Počkej až dokončí.",
     };
   }
+  const cleanAttachments = (attachmentUrls ?? [])
+    .map((u) => u.trim())
+    .filter((u) => /^https:\/\//.test(u))
+    .slice(0, 5);
   const session = await prisma.managerSession.create({
     data: {
       projectId: JANICKA_PROJECT_ID,
       status: "requested",
       triggeredBy: "janicka-admin",
       openingMessage: openingMessage?.trim() || null,
+      attachmentUrls: cleanAttachments.length > 0 ? JSON.stringify(cleanAttachments) : null,
       requestedAt: new Date(),
     },
   });
   revalidatePath("/admin/manager");
   return { ok: true, sessionId: session.id };
+}
+
+/**
+ * Upload an image attachment to R2 for use in the next manager session opening
+ * message. Returns the public URL — the form keeps the URLs in local state and
+ * passes them to requestSessionAction on submit.
+ *
+ * Limits: 5 MB per image, png/jpg/webp only. Folder `manager-uploads/`.
+ */
+export async function uploadManagerAttachmentAction(
+  formData: FormData,
+): Promise<{ ok: boolean; url?: string; error?: string }> {
+  await requireAdmin();
+  const file = formData.get("file");
+  if (!(file instanceof File)) return { ok: false, error: "Žádný soubor" };
+  const allowed = ["image/png", "image/jpeg", "image/webp"];
+  if (!allowed.includes(file.type)) {
+    return { ok: false, error: "Povoleny jen PNG/JPG/WEBP" };
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    return { ok: false, error: "Max 5 MB" };
+  }
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const { uploadToR2 } = await import("@/lib/r2");
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-").slice(0, 60);
+  const result = await uploadToR2(buffer, safeName, file.type, "manager-uploads");
+  return { ok: true, url: result.url };
 }
 
 /**

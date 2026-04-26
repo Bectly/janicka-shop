@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Sparkles, Shirt, Layers, Wind, Gem, Tag, type LucideIcon } from "lucide-react";
+import { Sparkles, Shirt, Layers, Wind, Gem, Footprints, Tag, type LucideIcon } from "lucide-react";
 
 interface CategoryCardProps {
   name: string;
@@ -13,6 +13,7 @@ const categoryIcons: Record<string, LucideIcon> = {
   "topy-halenky": Shirt,
   "kalhoty-sukne": Layers,
   "bundy-kabaty": Wind,
+  boty: Footprints,
   doplnky: Gem,
 };
 
@@ -45,6 +46,12 @@ const categoryThemes: Record<string, {
     iconBg: "bg-champagne",
     hoverBorder: "hover:border-champagne-dark/30",
     hoverShadow: "hover:shadow-lg",
+  },
+  boty: {
+    cardFrom: "from-blush-light/40",
+    iconBg: "bg-blush-light",
+    hoverBorder: "hover:border-blush-dark/30",
+    hoverShadow: "hover:shadow-[0_8px_24px_-6px_oklch(0.85_0.06_350_/_0.16)]",
   },
   doplnky: {
     cardFrom: "from-champagne-light/60",

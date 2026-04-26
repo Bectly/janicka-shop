@@ -21,6 +21,7 @@ const categories = [
   { name: "Topy & Halenky", href: "/products?category=topy-halenky" },
   { name: "Kalhoty & Sukně", href: "/products?category=kalhoty-sukne" },
   { name: "Bundy & Kabáty", href: "/products?category=bundy-kabaty" },
+  { name: "Boty", href: "/products?category=boty" },
   { name: "Doplňky", href: "/products?category=doplnky" },
 ];
 

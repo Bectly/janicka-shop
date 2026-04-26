@@ -10,6 +10,7 @@ const navLinks = [
   { name: "Topy & Halenky", href: "/products?category=topy-halenky", checkParam: "topy-halenky", slug: "topy-halenky" },
   { name: "Kalhoty & Sukně", href: "/products?category=kalhoty-sukne", checkParam: "kalhoty-sukne", slug: "kalhoty-sukne" },
   { name: "Bundy & Kabáty", href: "/products?category=bundy-kabaty", checkParam: "bundy-kabaty", slug: "bundy-kabaty" },
+  { name: "Boty", href: "/products?category=boty", checkParam: "boty", slug: "boty" },
   { name: "Doplňky", href: "/products?category=doplnky", checkParam: "doplnky", slug: "doplnky" },
 ];
 

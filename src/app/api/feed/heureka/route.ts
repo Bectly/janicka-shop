@@ -23,6 +23,7 @@ const HEUREKA_CATEGORIES: Record<string, string> = {
     "Oblečení a móda | Dámské oblečení | Topy, trička a halenky",
   "kalhoty-sukne": "Oblečení a móda | Dámské oblečení | Kalhoty",
   "bundy-kabaty": "Oblečení a móda | Dámské oblečení | Bundy a kabáty",
+  boty: "Oblečení a móda | Dámská obuv",
   doplnky: "Oblečení a móda | Módní doplňky",
 };
 

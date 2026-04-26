@@ -197,7 +197,8 @@ const CATEGORY_SIZE_GROUPS: Record<string, SizeGroupKey[]> = {
     "one_size",
   ],
   "bundy-kabaty": ["clothing_letter", "clothing_eu", "one_size"],
-  doplnky: ["shoe", "one_size"],
+  boty: ["shoe", "one_size"],
+  doplnky: ["one_size"],
 };
 
 const DEFAULT_GROUPS: SizeGroupKey[] = [
@@ -260,9 +261,9 @@ export function normalizeSize(raw: string): string | null {
 /**
  * Reduce a list of equivalent size notations to ONE canonical entry.
  *
- * Priority: letter > bra > (shoe, if category=doplnky) > waist→letter > EU→letter.
+ * Priority: letter > bra > (shoe, if category=boty) > waist→letter > EU→letter.
  * Examples: ["M","38"] → ["M"]; ["4XL","48"] → ["4XL"]; ["W32"] → ["L"];
- * ["50"] (clothing) → ["5XL"]; ["37"] (doplnky) → ["37"]; ["75B"] → ["75B"].
+ * ["50"] (clothing) → ["5XL"]; ["37"] (boty) → ["37"]; ["75B"] → ["75B"].
  */
 export function collapseToPrimary(
   sizes: string[],
@@ -278,7 +279,7 @@ export function collapseToPrimary(
   const bra = sizes.find((s) => bras.includes(s));
   if (bra) return [bra];
 
-  if (categorySlug === "doplnky") {
+  if (categorySlug === "boty") {
     const shoes = SHOE_SIZES as readonly string[];
     const shoe = sizes.find((s) => shoes.includes(s));
     if (shoe) return [shoe];

@@ -8,6 +8,7 @@ import {
   Layers,
   Wind,
   Gem,
+  Footprints,
   Tag,
   type LucideIcon,
 } from "lucide-react";
@@ -60,6 +61,13 @@ const CATEGORY_MOODS: Record<
     accent: "text-charcoal-dark",
     icon: Wind,
     tagline: "Pro každé počasí, s osobitým stylem",
+    watermark: "B",
+  },
+  boty: {
+    gradient: "from-blush-light/60 via-champagne-light/40 to-blush",
+    accent: "text-brand-dark",
+    icon: Footprints,
+    tagline: "Každý pár vyprávějící svůj příběh",
     watermark: "B",
   },
   doplnky: {

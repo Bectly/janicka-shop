@@ -29,7 +29,8 @@ async function main() {
       { name: "Topy & Halenky", slug: "topy-halenky", description: "Stylové topy, halenky a trička", sortOrder: 2 },
       { name: "Kalhoty & Sukně", slug: "kalhoty-sukne", description: "Pohodlné kalhoty a elegantní sukně", sortOrder: 3 },
       { name: "Bundy & Kabáty", slug: "bundy-kabaty", description: "Svrchní oblečení pro každé počasí", sortOrder: 4 },
-      { name: "Doplňky", slug: "doplnky", description: "Šperky, kabelky, šátky a další doplňky", sortOrder: 5 },
+      { name: "Boty", slug: "boty", description: "Lodičky, tenisky, kotníčky — každý pár unikát", sortOrder: 5 },
+      { name: "Doplňky", slug: "doplnky", description: "Šperky, kabelky, šátky a další doplňky", sortOrder: 6 },
     ];
 
     for (const cat of categoryData) {
@@ -95,10 +96,18 @@ async function main() {
     }),
     prisma.category.create({
       data: {
+        name: "Boty",
+        slug: "boty",
+        description: "Lodičky, tenisky, kotníčky — každý pár unikát",
+        sortOrder: 5,
+      },
+    }),
+    prisma.category.create({
+      data: {
         name: "Doplňky",
         slug: "doplnky",
         description: "Šperky, kabelky, šátky a další doplňky",
-        sortOrder: 5,
+        sortOrder: 6,
       },
     }),
   ]);
