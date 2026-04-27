@@ -1,7 +1,7 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 510 files, ~82,970 LOC.
-**Drill-down dropped** — full render was 54,591 chars > cap 10,000 (~18% shown). Grep source files directly for symbol-level detail.
+Auto-generated. Total: 511 files, ~83,214 LOC.
+**Drill-down dropped** — full render was 54,675 chars > cap 10,000 (~18% shown). Grep source files directly for symbol-level detail.
 
 ---
 
@@ -59,7 +59,7 @@ Auto-generated. Total: 510 files, ~82,970 LOC.
 - scripts/workers/packeta.ts (7 LOC)
 - scripts/workers/test-queue-integration.ts (482 LOC)
 
-## `src/` (467 files)
+## `src/` (468 files)
 
 - src/app/(admin)/admin/abandoned-carts/loading.tsx (6 LOC)
 - src/app/(admin)/admin/abandoned-carts/page.tsx (214 LOC)
@@ -138,7 +138,8 @@ Auto-generated. Total: 510 files, ~82,970 LOC.
 - src/app/(admin)/admin/products/quick-add/quick-add-form.tsx (458 LOC)
 - src/app/(admin)/admin/referrals/loading.tsx (6 LOC)
 - src/app/(admin)/admin/referrals/page.tsx (463 LOC)
-- src/app/(admin)/admin/reports/profit/page.tsx (240 LOC)
+- src/app/(admin)/admin/reports/profit/page.tsx (238 LOC)
+- src/app/(admin)/admin/reports/profit/profit-tabs.tsx (244 LOC)
 - src/app/(admin)/admin/returns/[id]/credit-note-section.tsx (158 LOC)
 - src/app/(admin)/admin/returns/[id]/page.tsx (327 LOC)
 - src/app/(admin)/admin/returns/[id]/refund-button.tsx (101 LOC)
@@ -187,7 +188,6 @@ Auto-generated. Total: 510 files, ~82,970 LOC.
 - src/app/(shop)/account/change-email/page.tsx (65 LOC)
 - src/app/(shop)/account/layout.tsx (36 LOC)
 - src/app/(shop)/account/loading.tsx (6 LOC)
-- src/app/(shop)/account/nastaveni/actions.ts (116 LOC)
-- src/app/(shop)/account/nasta
+- src/app/(shop)/acco
 
-... [truncated at 10,000 chars; compact render was 26,030. Use git ls-files for full file list.]
+... [truncated at 10,000 chars; compact render was 26,095. Use git ls-files for full file list.]

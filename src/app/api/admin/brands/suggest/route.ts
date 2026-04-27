@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { getDb } from "@/lib/db"
+import { readDraftSession } from "@/lib/draft-session"
 
 export async function GET(req: NextRequest) {
   const session = await auth()
-  if (!session?.user?.id || session.user.role !== "admin") {
-    return NextResponse.json({ brands: [] }, { status: 401 })
+  const isAdmin = session?.user?.id && session.user.role === "admin"
+  if (!isAdmin) {
+    // Allow mobile draft-session (QR-paired) clients — same admin scope, just different cookie.
+    const draftSession = await readDraftSession()
+    if (!draftSession) {
+      return NextResponse.json({ brands: [] }, { status: 401 })
+    }
   }
 
   const q = req.nextUrl.searchParams.get("q")?.trim() ?? ""

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Image from "next/image";
 import {
   Camera,
@@ -17,15 +17,47 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { CONDITION_LABELS } from "@/lib/constants";
 import { uploadFiles } from "@/lib/upload-client";
 import { compressPhoto, runWithLimit } from "@/lib/image-compress";
 
-interface MobileAddFormProps {
-  batchId: string;
+interface CategoryOption {
+  id: string;
+  name: string;
+  slug: string;
 }
 
-const QUICK_SIZES = ["XS", "S", "M", "L", "XL", "XXL"] as const;
+interface MobileAddFormProps {
+  batchId: string;
+  categories: CategoryOption[];
+}
+
+// 5 condition options (segmented), shorter labels for mobile chips.
+const CONDITIONS = [
+  { value: "new_with_tags", label: "Nové se štítkem" },
+  { value: "new_without_tags", label: "Nové bez štítku" },
+  { value: "excellent", label: "Výborný" },
+  { value: "good", label: "Dobrý" },
+  { value: "visible_wear", label: "Viditelné opotřebení" },
+] as const;
+
+const CLOTHES_SIZES = ["XS", "S", "M", "L", "XL", "XXL"] as const;
+const SHOE_SIZES = [
+  "35",
+  "36",
+  "37",
+  "38",
+  "39",
+  "40",
+  "41",
+  "42",
+  "43",
+  "44",
+  "45",
+  "46",
+] as const;
+
+const RECENT_CATS_KEY = "janicka-mobile-recent-cats";
+const RECENT_CATS_MAX = 3;
 
 const MEASUREMENTS = [
   ["chest", "Prsa"],
@@ -41,6 +73,7 @@ interface DraftPayload {
   price: number | null;
   brand: string;
   condition: string;
+  categoryId: string | null;
   sizes: string[];
   images: string[];
   description?: string;
@@ -50,13 +83,44 @@ interface DraftPayload {
 
 const EMPTY_MEASUREMENTS: Measurements = {};
 
-export function MobileAddForm({ batchId }: MobileAddFormProps) {
+function isShoeCategory(slug: string | null | undefined): boolean {
+  if (!slug) return false;
+  return slug === "boty" || slug.startsWith("boty-");
+}
+
+function readRecentCats(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(RECENT_CATS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed)
+      ? parsed.filter((s): s is string => typeof s === "string")
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeRecentCats(ids: string[]): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(RECENT_CATS_KEY, JSON.stringify(ids));
+  } catch {
+    // ignore quota / privacy mode errors
+  }
+}
+
+export function MobileAddForm({ batchId, categories }: MobileAddFormProps) {
   const [images, setImages] = useState<string[]>([]);
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [brand, setBrand] = useState("");
   const [condition, setCondition] = useState("excellent");
+  const [categoryId, setCategoryId] = useState<string | null>(null);
   const [sizes, setSizes] = useState<string[]>([]);
+
+  const [recentCatIds, setRecentCatIds] = useState<string[]>([]);
 
   const [showExtras, setShowExtras] = useState(false);
   const [description, setDescription] = useState("");
@@ -74,17 +138,53 @@ export function MobileAddForm({ batchId }: MobileAddFormProps) {
   const [isSaving, startSaving] = useTransition();
   const [isSealing, startSealing] = useTransition();
 
+  // Hydrate recent-category cache once on mount.
+  useEffect(() => {
+    setRecentCatIds(readRecentCats());
+  }, []);
+
+  // Sort categories: most-recent 3 first, then alphabetical.
+  const orderedCategories = useMemo(() => {
+    const byId = new Map(categories.map((c) => [c.id, c]));
+    const recent: CategoryOption[] = [];
+    for (const id of recentCatIds) {
+      const c = byId.get(id);
+      if (c) recent.push(c);
+    }
+    const recentSet = new Set(recent.map((c) => c.id));
+    const rest = categories.filter((c) => !recentSet.has(c.id));
+    return [...recent, ...rest];
+  }, [categories, recentCatIds]);
+
+  const selectedCategory = useMemo(
+    () => categories.find((c) => c.id === categoryId) ?? null,
+    [categories, categoryId]
+  );
+
+  // Smart velikost: shoes 35-46 if shoe category, else clothes XS-XXL.
+  const sizeOptions = useMemo<readonly string[]>(
+    () =>
+      isShoeCategory(selectedCategory?.slug) ? SHOE_SIZES : CLOTHES_SIZES,
+    [selectedCategory]
+  );
+
+  // When category switches between clothes/shoes, drop sizes that no longer apply.
+  useEffect(() => {
+    setSizes((prev) => prev.filter((s) => sizeOptions.includes(s)));
+  }, [sizeOptions]);
+
+  // Reset between saves: keep Stav + Kategorie (sticky), clear name/price/sizes/photos.
   function resetForm() {
     setImages([]);
     setName("");
     setPrice("");
     setBrand("");
-    setCondition("excellent");
     setSizes([]);
     setDescription("");
     setDefectsNote("");
     setMeasurements(EMPTY_MEASUREMENTS);
     setShowExtras(false);
+    // intentionally NOT resetting `condition` and `categoryId` — pre-fill from last save
   }
 
   function toggleSize(size: string) {
@@ -128,6 +228,7 @@ export function MobileAddForm({ batchId }: MobileAddFormProps) {
     const priceNum = Number(price);
     if (!price || Number.isNaN(priceNum) || priceNum <= 0)
       return "Vyplň cenu (větší než 0).";
+    if (!categoryId) return "Vyber kategorii.";
     if (sizes.length === 0) return "Vyber alespoň jednu velikost.";
     return null;
   }
@@ -145,6 +246,7 @@ export function MobileAddForm({ batchId }: MobileAddFormProps) {
       price: Number(price),
       brand: brand.trim(),
       condition,
+      categoryId,
       sizes,
       images,
     };
@@ -174,6 +276,17 @@ export function MobileAddForm({ batchId }: MobileAddFormProps) {
           throw new Error(data.error ?? "Uložení se nepodařilo");
         }
         setCount((c) => c + 1);
+        // Bump the picked category to the front of the recent list before reset.
+        if (categoryId) {
+          setRecentCatIds((prev) => {
+            const next = [
+              categoryId,
+              ...prev.filter((id) => id !== categoryId),
+            ].slice(0, RECENT_CATS_MAX);
+            writeRecentCats(next);
+            return next;
+          });
+        }
         resetForm();
         setSavedFlash(true);
         window.setTimeout(() => setSavedFlash(false), 1500);

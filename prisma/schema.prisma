@@ -851,6 +851,7 @@ model ProductDraftBatch {
   bundleLineId   String?                             // J5: specific line/category within the bundle
   bundleLine     SupplierBundleLine? @relation(fields: [bundleLineId], references: [id])
   defaultWeightG Int?                                // J5: pre-filled piece weight (grams) for QR session
+  notifyOnPublish Boolean        @default(false)     // J10-B4: send admin email when bulk-publish completes
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
   drafts         ProductDraft[]

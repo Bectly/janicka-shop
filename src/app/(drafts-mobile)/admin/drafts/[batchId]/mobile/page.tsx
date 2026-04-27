@@ -1,7 +1,9 @@
 import { Suspense } from "react";
-import { cookies } from "next/headers";
 import { connection } from "next/server";
 import type { Metadata } from "next";
+
+import { getDb } from "@/lib/db";
+import { requireDraftSessionForBatch } from "@/lib/draft-session";
 
 import { MobileAddForm } from "./mobile-add-form";
 
@@ -17,12 +19,9 @@ interface PageProps {
 async function MobileGate({ params }: { params: Promise<{ batchId: string }> }) {
   await connection();
   const { batchId } = await params;
-  const cookieStore = await cookies();
-  const session = cookieStore.get("draft_session")?.value ?? "";
-  const [sessionBatchId] = session.split(":");
-  const authorized = sessionBatchId === batchId && batchId.length > 0;
+  const session = await requireDraftSessionForBatch(batchId);
 
-  if (!authorized) {
+  if (!session) {
     return (
       <main
         className="mx-auto flex min-h-[100dvh] max-w-md flex-col items-center justify-center gap-4 px-6 py-12 text-center"
@@ -41,7 +40,13 @@ async function MobileGate({ params }: { params: Promise<{ batchId: string }> }) 
     );
   }
 
-  return <MobileAddForm batchId={batchId} />;
+  const db = await getDb();
+  const categories = await db.category.findMany({
+    orderBy: { sortOrder: "asc" },
+    select: { id: true, name: true, slug: true },
+  });
+
+  return <MobileAddForm batchId={batchId} categories={categories} />;
 }
 
 export default function MobileDraftAddPage({ params }: PageProps) {

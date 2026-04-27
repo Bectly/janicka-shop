@@ -2980,6 +2980,151 @@ export function renderEmailPreview(templateKey: string): EmailPreviewResult | nu
   }
 }
 
+// ---------------------------------------------------------------------------
+// Draft batch admin notifications (J10-B4)
+// ---------------------------------------------------------------------------
+
+export interface DraftBatchSealedItem {
+  name: string;
+  price: number | null;
+}
+
+export interface DraftBatchSealedData {
+  batchId: string;
+  batchLabel: string; // human label (e.g. bundle name or batch id short)
+  count: number;
+  items: DraftBatchSealedItem[];
+}
+
+function resolveAdminNotifyEmail(): string | null {
+  return (
+    process.env.ADMIN_NOTIFY_EMAIL ??
+    process.env.ADMIN_NOTIFICATION_EMAIL ??
+    null
+  );
+}
+
+/**
+ * Notify admin that a mobile QR draft batch has been sealed and is ready for PC review.
+ * Fire-and-forget: never throws.
+ */
+export async function sendBatchSealedAdminEmail(data: DraftBatchSealedData): Promise<void> {
+  const mailer = getMailer();
+  if (!mailer) {
+    logger.warn("[Email] SMTP not configured — skipping batch-sealed notification");
+    return;
+  }
+  const to = resolveAdminNotifyEmail();
+  if (!to) {
+    logger.warn("[Email] No ADMIN_NOTIFY_EMAIL configured — skipping batch-sealed notification");
+    return;
+  }
+
+  const baseUrl = getBaseUrl();
+  const reviewUrl = `${baseUrl}/admin/drafts/${encodeURIComponent(data.batchId)}`;
+  const subject = `Janička hotová — batch ${data.batchLabel}, ${data.count} ${pluralKousek(data.count)} čeká na revizi`;
+
+  const itemsHtml = data.items
+    .map((item) => `
+      <tr>
+        <td style="padding:8px 0;border-top:1px solid ${BRAND.borderSoft};font-family:${FONTS.serif};font-size:15px;color:${BRAND.charcoal};">${escapeHtml(item.name || "(bez názvu)")}</td>
+        <td style="padding:8px 0;border-top:1px solid ${BRAND.borderSoft};text-align:right;white-space:nowrap;font-family:${FONTS.sans};font-size:14px;color:${BRAND.charcoal};">${item.price != null ? formatPriceCzk(item.price) : "—"}</td>
+      </tr>`)
+    .join("");
+
+  const content = `
+    ${renderEyebrow("Mobilní zápis hotový")}
+    ${renderDisplayHeading(`Batch ${escapeHtml(data.batchLabel)}`)}
+    <p style="margin:0 0 14px;font-family:${FONTS.sans};font-size:14px;line-height:1.6;color:${BRAND.charcoalSoft};">
+      Janička dokončila mobilní zápis. ${data.count} ${pluralKousek(data.count)} čeká na revizi a publikaci na PC.
+    </p>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:8px 0 14px;">
+      ${itemsHtml}
+    </table>
+    <div style="margin:24px 0 4px;">
+      ${renderButton({ href: reviewUrl, label: "Otevřít revizi", variant: "dark" })}
+    </div>`;
+
+  const html = renderLayout({
+    preheader: subject,
+    contentHtml: content,
+    showTagline: false,
+  });
+
+  try {
+    await mailer.sendMail({
+      from: FROM_SUPPORT,
+      replyTo: REPLY_TO,
+      to,
+      subject,
+      html,
+    });
+  } catch (error) {
+    logger.error(`[Email] Failed to send batch-sealed notification for batch ${data.batchId}:`, error);
+  }
+}
+
+export interface DraftBatchPublishedData {
+  batchId: string;
+  batchLabel: string;
+  publishedCount: number;
+  skippedCount: number;
+}
+
+/**
+ * Notify admin that a draft batch has been bulk-published.
+ * Only sent when batch.notifyOnPublish=true. Fire-and-forget.
+ */
+export async function sendBatchPublishedAdminEmail(data: DraftBatchPublishedData): Promise<void> {
+  const mailer = getMailer();
+  if (!mailer) return;
+  const to = resolveAdminNotifyEmail();
+  if (!to) return;
+
+  const baseUrl = getBaseUrl();
+  const adminUrl = `${baseUrl}/admin/drafts/${encodeURIComponent(data.batchId)}`;
+  const subject = `Batch ${data.batchLabel} publikován — ${data.publishedCount} ${pluralKousek(data.publishedCount)} v eshopu`;
+
+  const skippedLine = data.skippedCount > 0
+    ? `<p style="margin:0 0 14px;font-family:${FONTS.sans};font-size:14px;color:${BRAND.charcoalSoft};">Přeskočeno: ${data.skippedCount} ${pluralKousek(data.skippedCount)} (chybějící údaje).</p>`
+    : "";
+
+  const content = `
+    ${renderEyebrow("Batch publikován")}
+    ${renderDisplayHeading(`Batch ${escapeHtml(data.batchLabel)}`)}
+    <p style="margin:0 0 14px;font-family:${FONTS.sans};font-size:14px;line-height:1.6;color:${BRAND.charcoalSoft};">
+      ${data.publishedCount} ${pluralKousek(data.publishedCount)} bylo úspěšně publikováno v eshopu.
+    </p>
+    ${skippedLine}
+    <div style="margin:24px 0 4px;">
+      ${renderButton({ href: adminUrl, label: "Otevřít batch", variant: "dark" })}
+    </div>`;
+
+  const html = renderLayout({
+    preheader: subject,
+    contentHtml: content,
+    showTagline: false,
+  });
+
+  try {
+    await mailer.sendMail({
+      from: FROM_SUPPORT,
+      replyTo: REPLY_TO,
+      to,
+      subject,
+      html,
+    });
+  } catch (error) {
+    logger.error(`[Email] Failed to send batch-published notification for batch ${data.batchId}:`, error);
+  }
+}
+
+function pluralKousek(n: number): string {
+  if (n === 1) return "kousek";
+  if (n >= 2 && n <= 4) return "kousky";
+  return "kousků";
+}
+
 /** List of template keys exposed to the admin preview UI. */
 export const EMAIL_PREVIEW_TEMPLATES: { key: string; label: string; group: string }[] = [
   { key: "order-confirmation", label: "Potvrzení objednávky (Comgate)", group: "Objednávka" },

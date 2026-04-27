@@ -7,6 +7,7 @@ import { getDb } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { moveDraftImageToProducts } from "@/lib/r2";
 import { invalidateProductCaches } from "@/lib/redis";
+import { sendBatchPublishedAdminEmail } from "@/lib/email";
 
 interface RouteContext {
   params: Promise<{ batchId: string }>;
@@ -120,6 +121,8 @@ export async function POST(req: Request, context: RouteContext) {
       bundleId: true,
       bundleLineId: true,
       defaultWeightG: true,
+      notifyOnPublish: true,
+      bundle: { select: { invoiceNumber: true } },
       bundleLine: { select: { pricePerKg: true } },
     },
   });
@@ -233,6 +236,19 @@ export async function POST(req: Request, context: RouteContext) {
 
   revalidatePath(`/admin/drafts/${batchId}`);
   revalidatePath("/admin/products");
+
+  // J10-B4: optional admin notification on bulk publish.
+  if (batch.notifyOnPublish && published.length > 0) {
+    const label = batch.bundle?.invoiceNumber?.trim() || `#${batch.id.slice(-6).toUpperCase()}`;
+    void sendBatchPublishedAdminEmail({
+      batchId: batch.id,
+      batchLabel: label,
+      publishedCount: published.length,
+      skippedCount: errors.length,
+    }).catch((err) => {
+      logger.error("[drafts/publish] admin email failed:", err);
+    });
+  }
 
   return NextResponse.json({
     published: published.length,
