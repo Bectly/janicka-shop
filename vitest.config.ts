@@ -8,7 +8,7 @@ export default defineConfig({
     },
   },
   test: {
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "tests/**/*.test.ts"],
     exclude: ["node_modules", "e2e", ".next", "src/**/*.integration.test.ts"],
     environment: "node",
   },

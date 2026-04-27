@@ -43,6 +43,12 @@ model Product {
   stock         Int            @default(1) // second-hand: each piece is unique
   featured      Boolean        @default(false)
   active        Boolean        @default(true)
+  bundleId       String?              // J5: which SupplierBundle this piece came from
+  bundleLineId   String?              // J5: which line/category within the bundle
+  bundle         SupplierBundle?     @relation(fields: [bundleId], references: [id])
+  bundleLine     SupplierBundleLine? @relation(fields: [bundleLineId], references: [id])
+  weightG        Int?                 // J5: piece weight in grams (for cost basis math)
+  costBasis      Float?               // J5: snapshot at unpack — weightG/1000 * line.pricePerKg, or fallback line.totalPrice / piecesUnpacked
   sold          Boolean        @default(false) // marks item as sold (unavailable)
   reservedUntil DateTime? // reservation expiry — null means not reserved
   reservedBy    String? // visitor ID who reserved this item
@@ -69,6 +75,8 @@ model Product {
   @@index([price])
   @@index([active, sold, createdAt]) // Most common listing query
   @@index([active, sold, featured]) // Featured products query
+  @@index([bundleId])
+  @@index([bundleLineId])
 }
 
 model Customer {
@@ -735,4 +743,91 @@ model ManagerComment {
 
   @@index([parentType, parentId, createdAt])
   @@index([projectId, createdAt])
+}
+
+// J5: Suppliers + Bundles — cost basis pipeline for second-hand inventory.
+// One supplier (e.g. OPATEX) issues monthly pricelists with category codes + Kč/kg.
+// A bundle = one wholesale order from supplier; lines = per-category breakdown.
+// Each Product (piece) links back to a bundle + line for cost basis math.
+
+model Supplier {
+  id           String              @id @default(cuid())
+  name         String              @unique // e.g. "OPATEX"
+  url          String?
+  contactEmail String?
+  contactPhone String?
+  active       Boolean             @default(true)
+  notes        String?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  pricelists   SupplierPricelist[]
+  bundles      SupplierBundle[]
+}
+
+model SupplierPricelist {
+  id            String                  @id @default(cuid())
+  supplierId    String
+  supplier      Supplier                @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  effectiveDate DateTime                // first day of pricelist month
+  sourceFile    String?                 // .ods/.pdf path (for re-runs)
+  scrapedAt     DateTime?               // null = manually entered
+  createdAt     DateTime                @default(now())
+  items         SupplierPricelistItem[]
+
+  @@unique([supplierId, effectiveDate])
+  @@index([supplierId])
+}
+
+model SupplierPricelistItem {
+  id          String            @id @default(cuid())
+  pricelistId String
+  pricelist   SupplierPricelist @relation(fields: [pricelistId], references: [id], onDelete: Cascade)
+  code        String            // e.g. "1714"
+  name        String            // e.g. "Trička krátký rukáv A"
+  pricePerKg  Float
+  unit        String            @default("kg") // future: piece | bag
+  category    String?           // optional mapping to shop Category slug
+
+  @@unique([pricelistId, code])
+  @@index([code])
+}
+
+model SupplierBundle {
+  id            String               @id @default(cuid())
+  supplierId    String
+  supplier      Supplier             @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  orderDate     DateTime             // when ordered
+  receivedDate  DateTime?            // when arrived
+  invoiceNumber String?
+  invoiceFile   String?              // path to PDF/scan
+  sourceFile    String?              // .ods source (for idempotent re-import)
+  totalKg       Float
+  totalPrice    Float                // with VAT (Kč vč. DPH)
+  notes         String?
+  status        String               @default("ordered") // ordered | received | unpacked | done
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  lines         SupplierBundleLine[]
+  products      Product[]
+
+  @@unique([supplierId, sourceFile])
+  @@index([supplierId])
+  @@index([status])
+}
+
+model SupplierBundleLine {
+  id              String          @id @default(cuid())
+  bundleId        String
+  bundle          SupplierBundle  @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  pricelistItemId String?
+  code            String          // snapshot of code at order time
+  name            String          // snapshot
+  kg              Float
+  pricePerKg      Float           // snapshot
+  totalPrice      Float
+  products        Product[]
+
+  @@unique([bundleId, code])
+  @@index([bundleId])
+  @@index([pricelistItemId])
 }
