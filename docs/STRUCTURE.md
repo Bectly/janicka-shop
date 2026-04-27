@@ -1,7 +1,7 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 495 files, ~79,660 LOC.
-**Drill-down dropped** — full render was 53,008 chars > cap 10,000 (~19% shown). Grep source files directly for symbol-level detail.
+Auto-generated. Total: 498 files, ~80,384 LOC.
+**Drill-down dropped** — full render was 53,376 chars > cap 10,000 (~19% shown). Grep source files directly for symbol-level detail.
 
 ---
 
@@ -59,7 +59,7 @@ Auto-generated. Total: 495 files, ~79,660 LOC.
 - scripts/workers/packeta.ts (7 LOC)
 - scripts/workers/test-queue-integration.ts (482 LOC)
 
-## `src/` (452 files)
+## `src/` (455 files)
 
 - src/app/(admin)/admin/abandoned-carts/loading.tsx (6 LOC)
 - src/app/(admin)/admin/abandoned-carts/page.tsx (214 LOC)
@@ -155,7 +155,10 @@ Auto-generated. Total: 495 files, ~79,660 LOC.
 - src/app/(admin)/admin/subscribers/mothers-day-campaign-button.tsx (121 LOC)
 - src/app/(admin)/admin/subscribers/page.tsx (264 LOC)
 - src/app/(admin)/admin/subscribers/subscriber-toggle.tsx (32 LOC)
-- src/app/(admin)/admin/suppliers/actions.ts (151 LOC)
+- src/app/(admin)/admin/suppliers/[id]/active-bundle-toggle.tsx (66 LOC)
+- src/app/(admin)/admin/suppliers/[id]/bundle-form-sheet.tsx (186 LOC)
+- src/app/(admin)/admin/suppliers/[id]/page.tsx (375 LOC)
+- src/app/(admin)/admin/suppliers/actions.ts (248 LOC)
 - src/app/(admin)/admin/suppliers/loading.tsx (6 LOC)
 - src/app/(admin)/admin/suppliers/page.tsx (108 LOC)
 - src/app/(admin)/admin/suppliers/supplier-form-sheet.tsx (224 LOC)
@@ -186,9 +189,6 @@ Auto-generated. Total: 495 files, ~79,660 LOC.
 - src/app/(shop)/account/oblibene/loading.tsx (6 LOC)
 - src/app/(shop)/account/oblibene/merge-client.tsx (46 LOC)
 - src/app/(shop)/account/oblibene/page.tsx (72 LOC)
-- src/app/(shop)/account/oblibene/wishlist-grid.tsx (167 LOC)
-- src/app/(shop)/account/order-status-badge.tsx (45 LOC)
-- src/app/(shop)/account/orders/[orderNumber]/page.tsx (238 LOC)
-- src/app/(shop)/acco
+- s
 
-... [truncated at 10,000 chars; compact render was 25,194. Use git ls-files for full file list.]
+... [truncated at 10,000 chars; compact render was 25,396. Use git ls-files for full file list.]
