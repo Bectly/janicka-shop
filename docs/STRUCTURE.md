@@ -1,7 +1,7 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 471 files, ~75,567 LOC.
-**Drill-down dropped** — full render was 50,384 chars > cap 10,000 (~20% shown). Grep source files directly for symbol-level detail.
+Auto-generated. Total: 472 files, ~75,808 LOC.
+**Drill-down dropped** — full render was 50,467 chars > cap 10,000 (~20% shown). Grep source files directly for symbol-level detail.
 
 ---
 
@@ -58,7 +58,7 @@ Auto-generated. Total: 471 files, ~75,567 LOC.
 - scripts/workers/packeta.ts (7 LOC)
 - scripts/workers/test-queue-integration.ts (482 LOC)
 
-## `src/` (429 files)
+## `src/` (430 files)
 
 - src/app/(admin)/admin/abandoned-carts/loading.tsx (6 LOC)
 - src/app/(admin)/admin/abandoned-carts/page.tsx (214 LOC)
@@ -123,7 +123,7 @@ Auto-generated. Total: 471 files, ~75,567 LOC.
 - src/app/(admin)/admin/products/bulk-price.ts (21 LOC)
 - src/app/(admin)/admin/products/loading.tsx (6 LOC)
 - src/app/(admin)/admin/products/new/page.tsx (44 LOC)
-- src/app/(admin)/admin/products/page.tsx (328 LOC)
+- src/app/(admin)/admin/products/page.tsx (332 LOC)
 - src/app/(admin)/admin/products/quick-add/loading.tsx (6 LOC)
 - src/app/(admin)/admin/products/quick-add/page.tsx (44 LOC)
 - src/app/(admin)/admin/products/quick-add/quick-add-form.tsx (458 LOC)
@@ -193,4 +193,4 @@ Auto-generated. Total: 471 files, ~75,567 LOC.
 - src/app/(shop)/checkout/error.tsx (50 LOC)
 - src/app/(shop)/checkout/mock-payment/mock-paymen
 
-... [truncated at 10,000 chars; compact render was 23,842. Use git ls-files for full file list.]
+... [truncated at 10,000 chars; compact render was 23,894. Use git ls-files for full file list.]
