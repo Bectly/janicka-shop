@@ -5,7 +5,7 @@ import { cacheLife, cacheTag } from "next/cache";
 import type { Metadata } from "next";
 import { ArrowLeft, Package, PackageOpen, AlertTriangle } from "lucide-react";
 import { getDb } from "@/lib/db";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice } from "@/lib/format";
 import { StatusButtons } from "./status-buttons";
 
 export async function generateMetadata({
