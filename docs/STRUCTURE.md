@@ -1,6 +1,6 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 471 files, ~75,512 LOC.
+Auto-generated. Total: 471 files, ~75,567 LOC.
 **Drill-down dropped** — full render was 50,384 chars > cap 10,000 (~20% shown). Grep source files directly for symbol-level detail.
 
 ---
@@ -119,14 +119,14 @@ Auto-generated. Total: 471 files, ~75,512 LOC.
 - src/app/(admin)/admin/orders/orders-table.tsx (379 LOC)
 - src/app/(admin)/admin/orders/page.tsx (178 LOC)
 - src/app/(admin)/admin/products/[id]/edit/page.tsx (116 LOC)
-- src/app/(admin)/admin/products/actions.ts (957 LOC)
+- src/app/(admin)/admin/products/actions.ts (965 LOC)
 - src/app/(admin)/admin/products/bulk-price.ts (21 LOC)
 - src/app/(admin)/admin/products/loading.tsx (6 LOC)
 - src/app/(admin)/admin/products/new/page.tsx (44 LOC)
 - src/app/(admin)/admin/products/page.tsx (328 LOC)
 - src/app/(admin)/admin/products/quick-add/loading.tsx (6 LOC)
 - src/app/(admin)/admin/products/quick-add/page.tsx (44 LOC)
-- src/app/(admin)/admin/products/quick-add/quick-add-form.tsx (411 LOC)
+- src/app/(admin)/admin/products/quick-add/quick-add-form.tsx (458 LOC)
 - src/app/(admin)/admin/referrals/loading.tsx (6 LOC)
 - src/app/(admin)/admin/referrals/page.tsx (463 LOC)
 - src/app/(admin)/admin/returns/[id]/credit-note-section.tsx (158 LOC)
