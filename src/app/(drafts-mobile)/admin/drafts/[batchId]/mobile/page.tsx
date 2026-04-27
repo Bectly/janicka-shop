@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { connection } from "next/server";
 import type { Metadata } from "next";
@@ -9,16 +10,12 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export const dynamic = "force-dynamic";
-
 interface PageProps {
   params: Promise<{ batchId: string }>;
 }
 
-export default async function MobileDraftAddPage({ params }: PageProps) {
+async function MobileGate({ batchId }: { batchId: string }) {
   await connection();
-  const { batchId } = await params;
-
   const cookieStore = await cookies();
   const session = cookieStore.get("draft_session")?.value ?? "";
   const [sessionBatchId] = session.split(":");
@@ -38,4 +35,20 @@ export default async function MobileDraftAddPage({ params }: PageProps) {
   }
 
   return <MobileAddForm batchId={batchId} />;
+}
+
+export default async function MobileDraftAddPage({ params }: PageProps) {
+  const { batchId } = await params;
+
+  return (
+    <Suspense
+      fallback={
+        <main className="mx-auto flex min-h-[100dvh] max-w-md items-center justify-center px-6 py-12">
+          <p className="text-sm text-muted-foreground">Načítám…</p>
+        </main>
+      }
+    >
+      <MobileGate batchId={batchId} />
+    </Suspense>
+  );
 }

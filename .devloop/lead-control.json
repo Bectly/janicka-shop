@@ -1,5 +1,5 @@
 {
-  "last_bolt_commit_cycle": 5023,
+  "last_bolt_commit_cycle": 5025,
   "pause": {},
   "paused_at_bolt_cycle": 4870,
   "last_lead_cycle": 5024,
@@ -13,7 +13,10 @@
     },
     "j4_output": {
       "doc": "docs/qr-bulk-upload-spec.md",
-      "new_models": ["ProductDraftBatch", "ProductDraft"],
+      "new_models": [
+        "ProductDraftBatch",
+        "ProductDraft"
+      ],
       "new_api_endpoints": [
         "POST /api/admin/drafts/start",
         "GET /api/admin/drafts/auth",
@@ -27,7 +30,15 @@
         "/admin/drafts/[batchId]/mobile",
         "/admin/drafts/[batchId]"
       ],
-      "tasks_filed": [786, 787, 788, 789, 790, 791, 792]
+      "tasks_filed": [
+        786,
+        787,
+        788,
+        789,
+        790,
+        791,
+        792
+      ]
     },
     "bectly_gates_aging": {
       "#14_gmc_registration": "OVERDUE — Apr 30 Doppl VTO deadline passed. Self-reg at merchants.google.com.",

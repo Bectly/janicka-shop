@@ -1,7 +1,7 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 473 files, ~76,171 LOC.
-**Drill-down dropped** — full render was 50,601 chars > cap 10,000 (~20% shown). Grep source files directly for symbol-level detail.
+Auto-generated. Total: 474 files, ~76,213 LOC.
+**Drill-down dropped** — full render was 50,739 chars > cap 10,000 (~20% shown). Grep source files directly for symbol-level detail.
 
 ---
 
@@ -59,7 +59,7 @@ Auto-generated. Total: 473 files, ~76,171 LOC.
 - scripts/workers/packeta.ts (7 LOC)
 - scripts/workers/test-queue-integration.ts (482 LOC)
 
-## `src/` (430 files)
+## `src/` (431 files)
 
 - src/app/(admin)/admin/abandoned-carts/loading.tsx (6 LOC)
 - src/app/(admin)/admin/abandoned-carts/page.tsx (214 LOC)
@@ -155,6 +155,7 @@ Auto-generated. Total: 473 files, ~76,171 LOC.
 - src/app/(admin)/error.tsx (56 LOC)
 - src/app/(admin-auth)/admin/login/page.tsx (91 LOC)
 - src/app/(admin-onboarding)/admin/welcome/page.tsx (114 LOC)
+- src/app/(drafts-mobile)/admin/drafts/[batchId]/mobile/page.tsx (42 LOC)
 - src/app/(shop)/about/page.tsx (116 LOC)
 - src/app/(shop)/account/account-nav.tsx (56 LOC)
 - src/app/(shop)/account/account-skeletons.tsx (81 LOC)
@@ -190,8 +191,6 @@ Auto-generated. Total: 473 files, ~76,171 LOC.
 - src/app/(shop)/account/sign-out-button.tsx (16 LOC)
 - src/app/(shop)/actions.ts (304 LOC)
 - src/app/(shop)/cart/page.tsx (408 LOC)
-- src/app/(shop)/checkout/actions.ts (823 LOC)
-- src/app/(shop)/checkout/error.tsx (50 LOC)
-- src/app/(sh
+- src/app/(shop)/checkout/actio
 
-... [truncated at 10,000 chars; compact render was 23,931. Use git ls-files for full file list.]
+... [truncated at 10,000 chars; compact render was 24,005. Use git ls-files for full file list.]
