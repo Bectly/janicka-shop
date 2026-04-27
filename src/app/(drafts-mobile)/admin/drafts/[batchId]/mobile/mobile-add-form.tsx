@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CONDITION_LABELS } from "@/lib/constants";
 import { uploadFiles } from "@/lib/upload-client";
+import { compressPhoto, runWithLimit } from "@/lib/image-compress";
 
 interface MobileAddFormProps {
   batchId: string;
@@ -100,7 +101,19 @@ export function MobileAddForm({ batchId }: MobileAddFormProps) {
     setIsUploading(true);
     setUploadError(null);
     try {
-      const urls = await uploadFiles(slice);
+      const urls = await runWithLimit(slice, 3, async (file, idx) => {
+        const { main, thumb } = await compressPhoto(file);
+        const baseName = file.name.replace(/\.[^.]+$/, "") || `photo-${idx}`;
+        const ext = main.type === "image/webp" ? "webp" : "jpg";
+        const mainFile = new File([main], `${baseName}.${ext}`, {
+          type: main.type,
+        });
+        const thumbFile = new File([thumb], `${baseName}-thumb.${ext}`, {
+          type: thumb.type,
+        });
+        const [mainUrl] = await uploadFiles([mainFile, thumbFile]);
+        return mainUrl;
+      });
       setImages((prev) => [...prev, ...urls]);
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : "Nahrávání selhalo");
@@ -199,7 +212,13 @@ export function MobileAddForm({ batchId }: MobileAddFormProps) {
 
   if (sealed) {
     return (
-      <main className="mx-auto flex min-h-[100dvh] max-w-md flex-col items-center justify-center gap-4 px-6 py-12 text-center">
+      <main
+        className="mx-auto flex min-h-[100dvh] max-w-md flex-col items-center justify-center gap-4 px-6 py-12 text-center"
+        style={{
+          paddingTop: "max(3rem, env(safe-area-inset-top))",
+          paddingBottom: "max(3rem, env(safe-area-inset-bottom))",
+        }}
+      >
         <div className="flex size-16 items-center justify-center rounded-full bg-primary/10">
           <Check className="size-8 text-primary" aria-hidden />
         </div>
@@ -215,8 +234,14 @@ export function MobileAddForm({ batchId }: MobileAddFormProps) {
   }
 
   return (
-    <main className="mx-auto min-h-[100dvh] max-w-md bg-background pb-32">
-      <header className="sticky top-0 z-20 flex items-center justify-between border-b bg-background/95 px-4 py-3 backdrop-blur">
+    <main
+      className="mx-auto min-h-[100dvh] max-w-md bg-background"
+      style={{ paddingBottom: "calc(8rem + env(safe-area-inset-bottom))" }}
+    >
+      <header
+        className="sticky top-0 z-20 flex items-center justify-between border-b bg-background/95 px-4 pb-3 backdrop-blur"
+        style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
+      >
         <h1 className="font-heading text-base font-semibold text-foreground">
           Janička Shop
         </h1>
@@ -514,8 +539,11 @@ export function MobileAddForm({ batchId }: MobileAddFormProps) {
         </Button>
       </div>
 
-      {/* Sticky HOTOVO bar */}
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 p-3 backdrop-blur">
+      {/* Sticky HOTOVO bar — pb math accounts for iOS home indicator (env safe-area-inset-bottom) */}
+      <div
+        className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 px-3 pt-3 backdrop-blur"
+        style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+      >
         <div className="mx-auto flex max-w-md items-center gap-3">
           <span className="text-sm text-muted-foreground">
             {count} {count === 1 ? "kousek" : count < 5 ? "kousky" : "kousků"} v

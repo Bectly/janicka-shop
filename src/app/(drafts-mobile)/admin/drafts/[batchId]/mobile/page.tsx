@@ -24,7 +24,13 @@ async function MobileGate({ params }: { params: Promise<{ batchId: string }> }) 
 
   if (!authorized) {
     return (
-      <main className="mx-auto flex min-h-[100dvh] max-w-md flex-col items-center justify-center gap-4 px-6 py-12 text-center">
+      <main
+        className="mx-auto flex min-h-[100dvh] max-w-md flex-col items-center justify-center gap-4 px-6 py-12 text-center"
+        style={{
+          paddingTop: "max(3rem, env(safe-area-inset-top))",
+          paddingBottom: "max(3rem, env(safe-area-inset-bottom))",
+        }}
+      >
         <h1 className="font-heading text-2xl font-bold text-foreground">
           Relace vypršela
         </h1>
