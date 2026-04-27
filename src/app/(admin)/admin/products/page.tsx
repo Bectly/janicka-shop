@@ -8,6 +8,7 @@ import { Plus, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductSearch } from "@/components/admin/product-search";
 import { BulkProductTable } from "@/components/admin/bulk-product-table";
+import { QuickAddToast } from "@/components/admin/quick-add-toast";
 import { Pagination, PaginationSkeleton } from "@/components/shop/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Metadata } from "next";
@@ -209,6 +210,9 @@ export default async function AdminProductsPage({
 
   return (
     <>
+      <Suspense fallback={null}>
+        <QuickAddToast />
+      </Suspense>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-heading text-2xl font-bold text-foreground">

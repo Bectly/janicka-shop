@@ -472,7 +472,7 @@ export async function quickCreateProduct(formData: FormData) {
   revalidatePath("/admin/products");
   revalidatePath("/products");
   revalidatePath("/");
-  redirect("/admin/products");
+  redirect("/admin/products?added=1");
 }
 
 export async function duplicateProduct(id: string) {
