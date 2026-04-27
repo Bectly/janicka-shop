@@ -3,8 +3,41 @@ import {
   PutObjectCommand,
   CopyObjectCommand,
   DeleteObjectCommand,
+  ListObjectsV2Command,
+  type ListObjectsV2CommandOutput,
 } from "@aws-sdk/client-s3";
 import { randomUUID } from "crypto";
+
+export type R2ListedObject = { key: string; lastModified: Date | null };
+
+/**
+ * Paginated listing of R2 objects under a prefix. Returns key + lastModified.
+ * Used by the drafts cleanup cron to find stale orphaned uploads.
+ */
+export async function listR2Objects(
+  prefix: string,
+  maxKeys = 1000
+): Promise<R2ListedObject[]> {
+  const R2 = getR2Client();
+  const bucket = process.env.R2_BUCKET_NAME!;
+  const out: R2ListedObject[] = [];
+  let continuationToken: string | undefined = undefined;
+  do {
+    const cmd = new ListObjectsV2Command({
+      Bucket: bucket,
+      Prefix: prefix,
+      MaxKeys: maxKeys,
+      ContinuationToken: continuationToken,
+    });
+    const res = (await R2.send(cmd)) as ListObjectsV2CommandOutput;
+    for (const c of res.Contents ?? []) {
+      if (!c.Key) continue;
+      out.push({ key: c.Key, lastModified: c.LastModified ?? null });
+    }
+    continuationToken = res.IsTruncated ? res.NextContinuationToken : undefined;
+  } while (continuationToken);
+  return out;
+}
 
 export function getR2Client(): S3Client {
   return new S3Client({
