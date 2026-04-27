@@ -1,7 +1,7 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 498 files, ~80,384 LOC.
-**Drill-down dropped** — full render was 53,376 chars > cap 10,000 (~19% shown). Grep source files directly for symbol-level detail.
+Auto-generated. Total: 501 files, ~80,896 LOC.
+**Drill-down dropped** — full render was 53,682 chars > cap 10,000 (~19% shown). Grep source files directly for symbol-level detail.
 
 ---
 
@@ -59,12 +59,15 @@ Auto-generated. Total: 498 files, ~80,384 LOC.
 - scripts/workers/packeta.ts (7 LOC)
 - scripts/workers/test-queue-integration.ts (482 LOC)
 
-## `src/` (455 files)
+## `src/` (458 files)
 
 - src/app/(admin)/admin/abandoned-carts/loading.tsx (6 LOC)
 - src/app/(admin)/admin/abandoned-carts/page.tsx (214 LOC)
 - src/app/(admin)/admin/browse-abandonment/loading.tsx (6 LOC)
 - src/app/(admin)/admin/browse-abandonment/page.tsx (191 LOC)
+- src/app/(admin)/admin/bundles/[id]/actions.ts (45 LOC)
+- src/app/(admin)/admin/bundles/[id]/page.tsx (408 LOC)
+- src/app/(admin)/admin/bundles/[id]/status-buttons.tsx (59 LOC)
 - src/app/(admin)/admin/categories/[id]/edit/page.tsx (52 LOC)
 - src/app/(admin)/admin/categories/actions.ts (166 LOC)
 - src/app/(admin)/admin/categories/category-form.tsx (140 LOC)
@@ -185,10 +188,6 @@ Auto-generated. Total: 498 files, ~80,384 LOC.
 - src/app/(shop)/account/nastaveni/loading.tsx (6 LOC)
 - src/app/(shop)/account/nastaveni/page.tsx (79 LOC)
 - src/app/(shop)/account/nastaveni/settings-form.tsx (181 LOC)
-- src/app/(shop)/account/oblibene/actions.ts (31 LOC)
-- src/app/(shop)/account/oblibene/loading.tsx (6 LOC)
-- src/app/(shop)/account/oblibene/merge-client.tsx (46 LOC)
-- src/app/(shop)/account/oblibene/page.tsx (72 LOC)
-- s
+- src/app/(shop)/account/oblibene/actions.ts 
 
-... [truncated at 10,000 chars; compact render was 25,396. Use git ls-files for full file list.]
+... [truncated at 10,000 chars; compact render was 25,574. Use git ls-files for full file list.]
