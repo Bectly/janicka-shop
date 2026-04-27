@@ -1,7 +1,7 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 478 files, ~76,947 LOC.
-**Drill-down dropped** — full render was 51,168 chars > cap 10,000 (~20% shown). Grep source files directly for symbol-level detail.
+Auto-generated. Total: 480 files, ~77,291 LOC.
+**Drill-down dropped** — full render was 51,326 chars > cap 10,000 (~19% shown). Grep source files directly for symbol-level detail.
 
 ---
 
@@ -59,7 +59,7 @@ Auto-generated. Total: 478 files, ~76,947 LOC.
 - scripts/workers/packeta.ts (7 LOC)
 - scripts/workers/test-queue-integration.ts (482 LOC)
 
-## `src/` (435 files)
+## `src/` (437 files)
 
 - src/app/(admin)/admin/abandoned-carts/loading.tsx (6 LOC)
 - src/app/(admin)/admin/abandoned-carts/page.tsx (214 LOC)
@@ -124,7 +124,7 @@ Auto-generated. Total: 478 files, ~76,947 LOC.
 - src/app/(admin)/admin/products/bulk-price.ts (21 LOC)
 - src/app/(admin)/admin/products/loading.tsx (6 LOC)
 - src/app/(admin)/admin/products/new/page.tsx (44 LOC)
-- src/app/(admin)/admin/products/page.tsx (341 LOC)
+- src/app/(admin)/admin/products/page.tsx (343 LOC)
 - src/app/(admin)/admin/products/quick-add/loading.tsx (6 LOC)
 - src/app/(admin)/admin/products/quick-add/page.tsx (44 LOC)
 - src/app/(admin)/admin/products/quick-add/quick-add-form.tsx (458 LOC)
@@ -156,7 +156,7 @@ Auto-generated. Total: 478 files, ~76,947 LOC.
 - src/app/(admin-auth)/admin/login/page.tsx (91 LOC)
 - src/app/(admin-onboarding)/admin/welcome/page.tsx (114 LOC)
 - src/app/(drafts-mobile)/admin/drafts/[batchId]/mobile/mobile-add-form.tsx (544 LOC)
-- src/app/(drafts-mobile)/admin/drafts/[batchId]/mobile/page.tsx (55 LOC)
+- src/app/(drafts-mobile)/admin/drafts/[batchId]/mobile/page.tsx (54 LOC)
 - src/app/(shop)/about/page.tsx (116 LOC)
 - src/app/(shop)/account/account-nav.tsx (56 LOC)
 - src/app/(shop)/account/account-skeletons.tsx (81 LOC)
@@ -192,4 +192,4 @@ Auto-generated. Total: 478 files, ~76,947 LOC.
 - src/app/(shop)/account/sign-out-button.tsx (16 LOC)
 - src/app/(shop)/actions
 
-... [truncated at 10,000 chars; compact render was 24,223. Use git ls-files for full file list.]
+... [truncated at 10,000 chars; compact render was 24,330. Use git ls-files for full file list.]
