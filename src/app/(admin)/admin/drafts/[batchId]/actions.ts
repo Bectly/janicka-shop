@@ -213,6 +213,40 @@ function validateDraftForPublish(draft: DraftRow): string | null {
   return null;
 }
 
+export async function bulkUpdateDraftsAction(
+  batchId: string,
+  draftIds: string[],
+  patch: {
+    categoryId?: string | null;
+    compareAt?: number | null;
+    bundleId?: string | null;
+  },
+): Promise<{ updatedCount: number }> {
+  const adminId = await requireAdmin();
+
+  if (!Array.isArray(draftIds) || draftIds.length === 0 || draftIds.length > 100) {
+    throw new Error("Neplatné ID");
+  }
+
+  const db = await getDb();
+
+  const batch = await db.productDraftBatch.findUnique({
+    where: { id: batchId },
+    select: { adminId: true },
+  });
+  if (!batch || batch.adminId !== adminId) {
+    throw new Error("Unauthorized");
+  }
+
+  const result = await db.productDraft.updateMany({
+    where: { id: { in: draftIds }, batchId },
+    data: patch,
+  });
+
+  revalidatePath(`/admin/drafts/${batchId}`);
+  return { updatedCount: result.count };
+}
+
 export async function deleteBatchAction(batchId: string): Promise<{ success: true }> {
   const adminId = await requireAdmin();
   const db = await getDb();
