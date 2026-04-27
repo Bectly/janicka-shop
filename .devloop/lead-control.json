@@ -1,7 +1,9 @@
 {
   "last_bolt_commit_cycle": 5030,
-  "pause": {},
-  "paused_at_bolt_cycle": 4870,
+  "pause": {
+    "sage": "until_next_bolt_commit"
+  },
+  "paused_at_bolt_cycle": 5030,
   "last_lead_cycle": 5024,
   "cycle_5024_directive": {
     "context": "C5024 J4 DESIGN COMPLETE. docs/qr-bulk-upload-spec.md committed (93002da). 7 tasks filed: #786 Bolt (Prisma migration), #787 Bolt (QR auth API), #788 Bolt (Draft CRUD API), #789 Sage (mobile add UI), #790 Sage (PC QR modal + review page), #791 Bolt (R2 cleanup cron), #792 Trace (E2E). Task #770 marked done. J-series MVP: #786-#790 are P1. J7 profit dashboard (#779) + J8 mobile fields (#780) remain open. J5 (#777) Trace task now done (5023 cycle).",
@@ -679,8 +681,8 @@
     "priority_rationale": "Major state shift (#620 ✅) acknowledged C4987; subsequent hold cycles confirm steady-state stability. Quality-of-pause IS the work. Code path CODE-COMPLETE pre-Apr30 — only bectly self-registration + verification debt remain. HT#1 SMTP today-due is singular bectly action.",
     "cycle_net_effect": "Hybrid hold-the-line cycle #3 post-#620: zero new Lead tasks filed, zero workers dispatched, monitors skipped per fresh-window logic, Guard queue stays zero. Workers stay correctly idle by-design. State unchanged from C4988. Apr 30 launch path remains CODE-COMPLETE — only bectly self-reg steps + optional verification debt remain."
   },
-  "last_updated": "2026-04-26 13:05:00",
-  "direction": "C5011 Hold-the-line #19. HEAD 48ded70 stable 23 cycles. No monitors due (next 2026-05-03). Workers idle by design. GMC deadline T-3 (Apr 30). All remaining tasks bectly-gated. Zero dispatch — correct posture.",
+  "last_updated": "2026-04-27 18:45:00",
+  "direction": "C5033: J5 directive #777 complete. docs/suppliers-pipeline-spec.md committed. 7 impl tasks filed (#796-802): Bolt J5-M1 (Turso migration SQL + SiteSetting), Sage J5-M2/M3/M4/M5/M6 (suppliers/bundles admin UI + profit dashboard), Trace J5-M7 (E2E costBasis assertion). Dispatch: Bolt #796 first (migration SQL blocks all UI work). J4 pipeline fully shipped (C5025-C5031). Monitors skipped — all fresh-window.",
   "cycle_log": [
     {
       "cycle": 5001,
@@ -691,6 +693,11 @@
       "cycle": 5011,
       "ts": "2026-04-26 13:05:00",
       "summary": "Hold-the-line #19. HEAD 48ded70 stable 23 cycles. No monitors due (next 2026-05-03). GMC T-3. All tasks bectly-gated. Zero dispatch."
+    },
+    {
+      "cycle": 5033,
+      "ts": "2026-04-27 18:45:00",
+      "summary": "J5 directive #777: docs/suppliers-pipeline-spec.md written, 7 tasks #796-802 filed. Bolt #796 first (migration SQL + SiteSetting blocks all UI). J4 pipeline closed."
     }
   ]
 }
