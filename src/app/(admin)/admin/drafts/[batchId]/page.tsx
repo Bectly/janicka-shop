@@ -31,6 +31,17 @@ export default async function BatchReviewPage({ params }: PageProps) {
       drafts: {
         orderBy: { createdAt: "asc" },
       },
+      bundle: {
+        select: {
+          id: true,
+          invoiceNumber: true,
+          orderDate: true,
+          supplier: { select: { name: true } },
+        },
+      },
+      bundleLine: {
+        select: { name: true, kg: true, pricePerKg: true, totalPrice: true },
+      },
     },
   });
 
@@ -47,6 +58,8 @@ export default async function BatchReviewPage({ params }: PageProps) {
     id: d.id,
     name: d.name,
     price: d.price,
+    compareAt: d.compareAt,
+    featured: d.featured,
     categoryId: d.categoryId,
     brand: d.brand,
     condition: d.condition,
@@ -57,10 +70,24 @@ export default async function BatchReviewPage({ params }: PageProps) {
     fitNote: d.fitNote,
     defectsNote: d.defectsNote,
     internalNote: d.internalNote,
+    metaTitle: d.metaTitle,
+    metaDescription: d.metaDescription,
+    videoUrl: d.videoUrl,
+    weightG: d.weightG,
     status: d.status,
     publishedProductId: d.publishedProductId,
     createdAt: d.createdAt.toISOString(),
   }));
+
+  const bundleForClient = batch.bundle
+    ? {
+        id: batch.bundle.id,
+        name: [
+          batch.bundle.supplier.name,
+          batch.bundle.invoiceNumber ?? formatDay(batch.bundle.orderDate),
+        ].join(" — "),
+      }
+    : null;
 
   return (
     <BatchReviewClient
@@ -68,10 +95,17 @@ export default async function BatchReviewPage({ params }: PageProps) {
       status={batch.status}
       sealedAt={batch.sealedAt?.toISOString() ?? null}
       createdAt={batch.createdAt.toISOString()}
+      defaultWeightG={batch.defaultWeightG}
       drafts={drafts}
       categories={categories}
+      bundle={bundleForClient}
+      bundleLine={batch.bundleLine}
     />
   );
+}
+
+function formatDay(date: Date): string {
+  return date.toLocaleDateString("cs-CZ", { day: "numeric", month: "numeric", year: "numeric" });
 }
 
 function parseStringArray(raw: string): string[] {

@@ -11,6 +11,9 @@ import {
   Trash2,
   ExternalLink,
   AlertCircle,
+  CheckSquare,
+  Square,
+  Star,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -20,6 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { CONDITION_LABELS } from "@/lib/constants";
 
 import {
+  deleteBatchAction,
   discardDraftAction,
   publishDraftsAction,
   updateDraftAction,
@@ -29,6 +33,8 @@ interface DraftRow {
   id: string;
   name: string | null;
   price: number | null;
+  compareAt: number | null;
+  featured: boolean;
   categoryId: string | null;
   brand: string | null;
   condition: string | null;
@@ -39,9 +45,13 @@ interface DraftRow {
   fitNote: string | null;
   defectsNote: string | null;
   internalNote: string | null;
+  metaTitle: string | null;
+  metaDescription: string | null;
+  videoUrl: string | null;
   status: string;
   publishedProductId: string | null;
   createdAt: string;
+  weightG: number | null;
 }
 
 interface Category {
@@ -49,13 +59,28 @@ interface Category {
   name: string;
 }
 
+interface BundleInfo {
+  id: string;
+  name: string;
+}
+
+interface BundleLineInfo {
+  name: string;
+  kg: number;
+  pricePerKg: number;
+  totalPrice: number;
+}
+
 interface BatchReviewClientProps {
   batchId: string;
   status: string;
   sealedAt: string | null;
   createdAt: string;
+  defaultWeightG: number | null | undefined;
   drafts: DraftRow[];
   categories: Category[];
+  bundle: BundleInfo | null;
+  bundleLine: BundleLineInfo | null;
 }
 
 const QUICK_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "34", "36", "38", "40", "42"] as const;
@@ -67,19 +92,84 @@ const STATUS_BADGES: Record<string, { label: string; className: string }> = {
   expired: { label: "Vypršený", className: "bg-muted text-muted-foreground" },
 };
 
+// --- Completeness scoring ---
+
+function scoreDraft(d: DraftRow): { complete: boolean; missing: string[] } {
+  const missing: string[] = [];
+  if (!d.name) missing.push("název");
+  if (!d.price) missing.push("cena");
+  if (!d.categoryId) missing.push("kategorie");
+  if (!d.brand) missing.push("značka");
+  if (!d.condition) missing.push("stav");
+  if (!d.sizes.length) missing.push("velikost");
+  return { complete: missing.length === 0, missing };
+}
+
+function CompleteBadge({ draft }: { draft: DraftRow }) {
+  const { complete, missing } = scoreDraft(draft);
+  if (complete) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800">
+        <Check className="size-3" aria-hidden />
+        kompletní
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+      <AlertCircle className="size-3" aria-hidden />
+      chybí: {missing.slice(0, 2).join(", ")}
+      {missing.length > 2 && ` +${missing.length - 2}`}
+    </span>
+  );
+}
+
+// --- Cost basis helper ---
+
+function computeCostBasis(
+  draft: DraftRow,
+  defaultWeightG: number | null | undefined,
+  bundleLine: BundleLineInfo | null,
+): number | null {
+  if (!bundleLine) return null;
+  const weight = draft.weightG ?? defaultWeightG ?? null;
+  if (!weight) return null;
+  return (bundleLine.pricePerKg / 1000) * weight;
+}
+
+function marginColor(pct: number): string {
+  if (pct > 50) return "text-emerald-700";
+  if (pct >= 20) return "text-amber-700";
+  return "text-red-600";
+}
+
+// ============================================================================
+// Main client component
+// ============================================================================
+
 export function BatchReviewClient({
   batchId,
   status,
   sealedAt,
   createdAt,
+  defaultWeightG,
   drafts: initialDrafts,
   categories,
+  bundle,
+  bundleLine,
 }: BatchReviewClientProps) {
   const router = useRouter();
   const [drafts, setDrafts] = useState(initialDrafts);
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [errorByDraft, setErrorByDraft] = useState<Record<string, string>>({});
   const [isBulkPublishing, startBulkPublish] = useTransition();
+  const [isDeleting, startDelete] = useTransition();
+
+  // 2-pane: which draft is shown in right panel
+  const [activeDraftId, setActiveDraftId] = useState<string | null>(null);
+
+  // Checkbox selection state
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const visibleDrafts = useMemo(
     () => drafts.filter((d) => d.status !== "discarded"),
@@ -90,6 +180,35 @@ export function BatchReviewClient({
     () => visibleDrafts.filter((d) => d.status === "pending" || d.status === "ready"),
     [visibleDrafts],
   );
+
+  // Set default active draft on first render
+  useEffect(() => {
+    if (activeDraftId === null && visibleDrafts.length > 0) {
+      setActiveDraftId(visibleDrafts[0].id);
+    }
+  }, [activeDraftId, visibleDrafts]);
+
+  // If active draft gets removed, move to first available
+  useEffect(() => {
+    if (activeDraftId && !visibleDrafts.find((d) => d.id === activeDraftId)) {
+      setActiveDraftId(visibleDrafts[0]?.id ?? null);
+    }
+  }, [activeDraftId, visibleDrafts]);
+
+  const activeDraft = visibleDrafts.find((d) => d.id === activeDraftId) ?? null;
+
+  const selectedPending = useMemo(
+    () => pendingDrafts.filter((d) => selected.has(d.id)),
+    [pendingDrafts, selected],
+  );
+
+  const publishableSelected = useMemo(
+    () => selectedPending.filter((d) => scoreDraft(d).complete),
+    [selectedPending],
+  );
+
+  const hasIncompleteSelected =
+    selectedPending.length > 0 && selectedPending.some((d) => !scoreDraft(d).complete);
 
   function patchDraft(id: string, patch: Partial<DraftRow>) {
     setDrafts((prev) => prev.map((d) => (d.id === id ? { ...d, ...patch } : d)));
@@ -108,30 +227,61 @@ export function BatchReviewClient({
     setErrorByDraft((prev) => ({ ...prev, [id]: msg }));
   }
 
-  function handleBulkPublish() {
+  // Selection helpers
+  function selectAll() {
+    setSelected(new Set(pendingDrafts.map((d) => d.id)));
+  }
+  function selectNone() {
+    setSelected(new Set());
+  }
+  function selectComplete() {
+    setSelected(new Set(pendingDrafts.filter((d) => scoreDraft(d).complete).map((d) => d.id)));
+  }
+  function toggleSelect(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function handleBulkPublishSelected() {
     setGlobalError(null);
     setErrorByDraft({});
-    if (pendingDrafts.length === 0) return;
+    const ids = publishableSelected.map((d) => d.id);
+    if (ids.length === 0) return;
     startBulkPublish(async () => {
       try {
-        const result = await publishDraftsAction(batchId, "all");
+        const result = await publishDraftsAction(batchId, ids);
         setDrafts((prev) =>
           prev.map((d) =>
-            result.publishedIds.includes(d.id)
-              ? { ...d, status: "published" }
-              : d,
+            result.publishedIds.includes(d.id) ? { ...d, status: "published" } : d,
           ),
         );
         const errs: Record<string, string> = {};
         for (const e of result.errors) errs[e.draftId] = e.reason;
         setErrorByDraft(errs);
-        if (result.errors.length === 0) {
-          router.refresh();
-        }
+        setSelected((prev) => {
+          const next = new Set(prev);
+          for (const id of result.publishedIds) next.delete(id);
+          return next;
+        });
+        if (result.errors.length === 0) router.refresh();
       } catch (err) {
-        setGlobalError(
-          err instanceof Error ? err.message : "Hromadná publikace selhala",
-        );
+        setGlobalError(err instanceof Error ? err.message : "Hromadná publikace selhala");
+      }
+    });
+  }
+
+  function handleDeleteBatch() {
+    if (!confirm(`Smazat celý batch se všemi kousky (${visibleDrafts.length})?`)) return;
+    startDelete(async () => {
+      try {
+        await deleteBatchAction(batchId);
+        router.push("/admin/drafts");
+      } catch (err) {
+        setGlobalError(err instanceof Error ? err.message : "Smazání selhalo");
       }
     });
   }
@@ -144,96 +294,254 @@ export function BatchReviewClient({
     router.push(url);
   }
 
+  const publishButtonDisabled =
+    isBulkPublishing ||
+    selectedPending.length === 0 ||
+    hasIncompleteSelected;
+
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="font-heading text-2xl font-bold text-foreground">
-              Batch #{batchId.slice(-6).toUpperCase()}
-            </h1>
-            <StatusBadge status={status} />
+    <div className="flex h-full flex-col">
+      {/* Top bar */}
+      <header className="border-b bg-card px-4 py-3">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="font-heading text-xl font-bold text-foreground">
+                Batch #{batchId.slice(-6).toUpperCase()}
+              </h1>
+              <StatusBadge status={status} />
+            </div>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Vytvořeno {formatDateTime(createdAt)}
+              {sealedAt && (
+                <>
+                  {" · "}
+                  Janička dokončila {formatDateTime(sealedAt)}
+                </>
+              )}
+              {" · "}
+              {visibleDrafts.length}{" "}
+              {visibleDrafts.length === 1
+                ? "kousek"
+                : visibleDrafts.length < 5
+                  ? "kousky"
+                  : "kousků"}
+            </p>
           </div>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Vytvořeno {formatDateTime(createdAt)}
-            {sealedAt && (
-              <>
-                {" · "}
-                Janička dokončila {formatDateTime(sealedAt)}
-              </>
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Selection controls */}
+            {pendingDrafts.length > 0 && (
+              <div className="flex items-center gap-1 rounded-md border bg-background px-2 py-1">
+                <button
+                  type="button"
+                  onClick={selectAll}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Vybrat vše
+                </button>
+                <span className="text-muted-foreground/50">·</span>
+                <button
+                  type="button"
+                  onClick={selectNone}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Žádný
+                </button>
+                <span className="text-muted-foreground/50">·</span>
+                <button
+                  type="button"
+                  onClick={selectComplete}
+                  className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  <Star className="size-3" aria-hidden />
+                  Jen kompletní
+                </button>
+              </div>
             )}
-            {" · "}
-            {visibleDrafts.length}{" "}
-            {visibleDrafts.length === 1
-              ? "kousek"
-              : visibleDrafts.length < 5
-                ? "kousky"
-                : "kousků"}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleManagerHandoff}
-            disabled={visibleDrafts.length === 0}
-          >
-            <MessageCircle className="size-4" />
-            Probrat s manažerkou
-          </Button>
-          <Button
-            type="button"
-            onClick={handleBulkPublish}
-            disabled={isBulkPublishing || pendingDrafts.length === 0}
-          >
-            {isBulkPublishing ? (
-              <Loader2 className="size-4 animate-spin" aria-hidden />
-            ) : (
-              <Check className="size-4" aria-hidden />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleManagerHandoff}
+              disabled={visibleDrafts.length === 0}
+            >
+              <MessageCircle className="size-3.5" />
+              Manažerka
+            </Button>
+            {status !== "published" && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleDeleteBatch}
+                disabled={isDeleting}
+                className="text-destructive hover:text-destructive"
+              >
+                {isDeleting ? (
+                  <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                ) : (
+                  <Trash2 className="size-3.5" aria-hidden />
+                )}
+                Smazat batch
+              </Button>
             )}
-            Publikovat vše ({pendingDrafts.length})
-          </Button>
+            <div className="relative">
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleBulkPublishSelected}
+                disabled={publishButtonDisabled}
+              >
+                {isBulkPublishing ? (
+                  <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                ) : (
+                  <Check className="size-3.5" aria-hidden />
+                )}
+                Publikovat vybrané ({publishableSelected.length})
+              </Button>
+              {hasIncompleteSelected && (
+                <p className="absolute right-0 top-full z-10 mt-1 whitespace-nowrap rounded-md border bg-popover px-2 py-1 text-xs text-amber-700 shadow-sm">
+                  Nejprve dokonči neúplné kousky
+                </p>
+              )}
+            </div>
+          </div>
         </div>
+
+        {globalError && (
+          <div
+            role="alert"
+            className="mt-3 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
+          >
+            <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />
+            {globalError}
+          </div>
+        )}
       </header>
 
-      {globalError && (
-        <div
-          role="alert"
-          className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
-        >
-          <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />
-          {globalError}
+      {/* Body */}
+      {visibleDrafts.length === 0 ? (
+        <div className="flex flex-1 items-center justify-center p-8 text-center text-sm text-muted-foreground">
+          <div className="rounded-lg border border-dashed bg-muted/30 p-8">
+            V tomto batchi nejsou žádné kousky. Pokud Janička právě přidává, počkej na sealnutí
+            — nebo otevři{" "}
+            <Link href="/admin/products" className="underline">
+              seznam produktů
+            </Link>
+            .
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-1 overflow-hidden lg:flex-row flex-col">
+          {/* LEFT PANEL — 320px on desktop, full-width stacked on mobile */}
+          <aside className="w-full shrink-0 overflow-y-auto border-r bg-background lg:w-80">
+            <div className="space-y-0.5 p-2">
+              {visibleDrafts.map((draft, idx) => {
+                const isActive = draft.id === activeDraftId;
+                const isPending =
+                  draft.status === "pending" || draft.status === "ready";
+                const isPublished = draft.status === "published";
+
+                return (
+                  <button
+                    key={draft.id}
+                    type="button"
+                    onClick={() => setActiveDraftId(draft.id)}
+                    className={`group w-full rounded-lg px-3 py-2 text-left transition-colors ${
+                      isActive
+                        ? "bg-primary/10 ring-1 ring-primary/30"
+                        : "hover:bg-muted/60"
+                    } ${isPublished ? "opacity-60" : ""}`}
+                  >
+                    <div className="flex items-start gap-2">
+                      {/* Checkbox — only for pending drafts */}
+                      {isPending ? (
+                        <span
+                          role="checkbox"
+                          aria-checked={selected.has(draft.id)}
+                          tabIndex={0}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleSelect(draft.id);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === " " || e.key === "Enter") {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              toggleSelect(draft.id);
+                            }
+                          }}
+                          className="mt-0.5 shrink-0 cursor-pointer text-muted-foreground hover:text-primary focus:outline-none"
+                        >
+                          {selected.has(draft.id) ? (
+                            <CheckSquare className="size-4 text-primary" aria-hidden />
+                          ) : (
+                            <Square className="size-4" aria-hidden />
+                          )}
+                        </span>
+                      ) : (
+                        <span className="mt-0.5 size-4 shrink-0" />
+                      )}
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline justify-between gap-1">
+                          <span className="truncate text-sm font-medium">
+                            {idx + 1}. {draft.name ?? "Bez názvu"}
+                          </span>
+                          {draft.price != null ? (
+                            <span className="shrink-0 text-xs text-muted-foreground">
+                              {draft.price} Kč
+                            </span>
+                          ) : null}
+                        </div>
+                        <div className="mt-0.5 text-xs text-muted-foreground">
+                          {[draft.brand, draft.sizes[0]].filter(Boolean).join(" · ") || "—"}
+                        </div>
+                        <div className="mt-1">
+                          {isPublished ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800">
+                              <Check className="size-3" aria-hidden />
+                              publikováno
+                            </span>
+                          ) : (
+                            <CompleteBadge draft={draft} />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </aside>
+
+          {/* RIGHT PANEL — flex-1 */}
+          <main className="flex-1 overflow-y-auto p-4">
+            {activeDraft ? (
+              <DraftDetail
+                key={activeDraft.id}
+                index={visibleDrafts.findIndex((d) => d.id === activeDraft.id) + 1}
+                total={visibleDrafts.length}
+                draft={activeDraft}
+                categories={categories}
+                errorMessage={errorByDraft[activeDraft.id] ?? null}
+                disabled={isBulkPublishing}
+                defaultWeightG={defaultWeightG ?? null}
+                bundleLine={bundleLine}
+                bundle={bundle}
+                onPatch={(patch) => patchDraft(activeDraft.id, patch)}
+                onClearError={() => clearError(activeDraft.id)}
+                onSetError={(msg) => setError(activeDraft.id, msg)}
+                batchId={batchId}
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                Vyber kousek vlevo
+              </div>
+            )}
+          </main>
         </div>
       )}
-
-      {visibleDrafts.length === 0 && (
-        <div className="rounded-lg border border-dashed bg-muted/30 p-8 text-center text-sm text-muted-foreground">
-          V tomto batchi nejsou žádné kousky. Pokud Janička právě přidává, počkej
-          na sealnutí — nebo otevři{" "}
-          <Link href="/admin/products" className="underline">
-            seznam produktů
-          </Link>
-          .
-        </div>
-      )}
-
-      <div className="space-y-4">
-        {visibleDrafts.map((draft, idx) => (
-          <DraftCard
-            key={draft.id}
-            index={idx + 1}
-            total={visibleDrafts.length}
-            draft={draft}
-            categories={categories}
-            errorMessage={errorByDraft[draft.id] ?? null}
-            disabled={isBulkPublishing}
-            onPatch={(patch) => patchDraft(draft.id, patch)}
-            onClearError={() => clearError(draft.id)}
-            onSetError={(msg) => setError(draft.id, msg)}
-            batchId={batchId}
-          />
-        ))}
-      </div>
     </div>
   );
 }
@@ -249,31 +557,41 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-interface DraftCardProps {
+// ============================================================================
+// Draft detail (right panel)
+// ============================================================================
+
+interface DraftDetailProps {
   index: number;
   total: number;
   draft: DraftRow;
   categories: Category[];
   errorMessage: string | null;
   disabled: boolean;
+  defaultWeightG: number | null;
+  bundleLine: BundleLineInfo | null;
+  bundle: BundleInfo | null;
   onPatch: (patch: Partial<DraftRow>) => void;
   onClearError: () => void;
   onSetError: (msg: string) => void;
   batchId: string;
 }
 
-function DraftCard({
+function DraftDetail({
   index,
   total,
   draft,
   categories,
   errorMessage,
   disabled,
+  defaultWeightG,
+  bundleLine,
+  bundle,
   onPatch,
   onClearError,
   onSetError,
   batchId,
-}: DraftCardProps) {
+}: DraftDetailProps) {
   const [isSaving, startSave] = useTransition();
   const [isPublishing, startPublish] = useTransition();
   const [isDiscarding, startDiscard] = useTransition();
@@ -287,6 +605,13 @@ function DraftCard({
 
   const isPublished = draft.status === "published";
   const cardDisabled = disabled || isPublished;
+
+  // Cost basis + margin
+  const costBasisValue = computeCostBasis(draft, defaultWeightG, bundleLine);
+  const marginPct =
+    costBasisValue != null && draft.price != null && draft.price > 0
+      ? Math.round(((draft.price - costBasisValue) / draft.price) * 100)
+      : null;
 
   function commitField<K extends keyof DraftRow>(field: K, value: DraftRow[K]) {
     if (cardDisabled) return;
@@ -306,9 +631,7 @@ function DraftCard({
         await updateDraftAction(batchId, draft.id, patch);
         setShowSaved(true);
       } catch (err) {
-        onSetError(
-          err instanceof Error ? err.message : "Uložení změny selhalo",
-        );
+        onSetError(err instanceof Error ? err.message : "Uložení změny selhalo");
       }
     });
   }
@@ -331,9 +654,7 @@ function DraftCard({
           onSetError(result.errors[0].reason);
         }
       } catch (err) {
-        onSetError(
-          err instanceof Error ? err.message : "Publikace selhala",
-        );
+        onSetError(err instanceof Error ? err.message : "Publikace selhala");
       }
     });
   }
@@ -346,20 +667,15 @@ function DraftCard({
         await discardDraftAction(batchId, draft.id);
         onPatch({ status: "discarded" });
       } catch (err) {
-        onSetError(
-          err instanceof Error ? err.message : "Zahodit se nepodařilo",
-        );
+        onSetError(err instanceof Error ? err.message : "Zahodit se nepodařilo");
       }
     });
   }
 
   return (
-    <article
-      className={`rounded-xl border bg-card p-4 shadow-sm ${
-        isPublished ? "opacity-60" : ""
-      }`}
-    >
-      <header className="mb-3 flex items-center justify-between gap-2">
+    <article className={`space-y-4 ${isPublished ? "opacity-70" : ""}`}>
+      {/* Draft header */}
+      <div className="flex items-center justify-between gap-2">
         <h2 className="font-heading text-sm font-semibold text-muted-foreground">
           Draft {index}/{total}
           {isSaving && (
@@ -381,9 +697,7 @@ function DraftCard({
               type="button"
               variant="outline"
               size="sm"
-              render={
-                <Link href={`/admin/products/${draft.publishedProductId}`} />
-              }
+              render={<Link href={`/admin/products/${draft.publishedProductId}`} />}
             >
               Otevřít produkt
               <ExternalLink className="size-3.5" aria-hidden />
@@ -407,12 +721,14 @@ function DraftCard({
             </Button>
           )}
         </div>
-      </header>
+      </div>
 
-      <div className="grid gap-4 sm:grid-cols-[140px_1fr]">
+      {/* Images + fields grid */}
+      <div className="grid gap-4 sm:grid-cols-[160px_1fr]">
         <DraftImages images={draft.images} />
 
         <div className="space-y-3">
+          {/* Name + Price */}
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor={`${draft.id}-name`}>Název</Label>
@@ -443,7 +759,16 @@ function DraftCard({
                   );
                 }}
               />
+              {marginPct !== null && (
+                <p className={`text-xs ${marginColor(marginPct)}`}>
+                  Zisk ~{Math.round((draft.price ?? 0) - (costBasisValue ?? 0))} Kč ({marginPct}%)
+                </p>
+              )}
             </div>
+          </div>
+
+          {/* Brand + Category */}
+          <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor={`${draft.id}-brand`}>Značka</Label>
               <Input
@@ -471,6 +796,10 @@ function DraftCard({
                 ))}
               </select>
             </div>
+          </div>
+
+          {/* Condition + Sizes */}
+          <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor={`${draft.id}-condition`}>Stav</Label>
               <select
@@ -491,16 +820,16 @@ function DraftCard({
               <Label>Velikosti</Label>
               <div className="flex flex-wrap gap-1.5">
                 {QUICK_SIZES.map((size) => {
-                  const selected = draft.sizes.includes(size);
+                  const active = draft.sizes.includes(size);
                   return (
                     <button
                       key={size}
                       type="button"
                       disabled={cardDisabled}
                       onClick={() => toggleSize(size)}
-                      aria-pressed={selected}
+                      aria-pressed={active}
                       className={`flex h-8 min-w-9 items-center justify-center rounded-md border px-2 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
-                        selected
+                        active
                           ? "border-primary bg-primary text-primary-foreground"
                           : "border-border bg-background text-foreground hover:bg-muted"
                       }`}
@@ -513,6 +842,40 @@ function DraftCard({
             </div>
           </div>
 
+          {/* Compare at + Featured */}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor={`${draft.id}-compareAt`}>Původní cena (Kč)</Label>
+              <Input
+                id={`${draft.id}-compareAt`}
+                type="number"
+                inputMode="numeric"
+                min={0}
+                defaultValue={draft.compareAt ?? ""}
+                placeholder="499"
+                disabled={cardDisabled}
+                onBlur={(e) => {
+                  const v = e.target.value.trim();
+                  const num = v === "" ? null : Number(v);
+                  commitField("compareAt", num != null && !Number.isNaN(num) && num >= 0 ? num : null);
+                }}
+              />
+            </div>
+            <div className="flex items-end pb-1.5">
+              <label className="flex cursor-pointer items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={draft.featured}
+                  disabled={cardDisabled}
+                  onChange={(e) => commitField("featured", e.target.checked)}
+                  className="h-4 w-4 rounded border-input"
+                />
+                Doporučeno na homepage
+              </label>
+            </div>
+          </div>
+
+          {/* Description */}
           <div className="space-y-1.5">
             <Label htmlFor={`${draft.id}-description`}>Popis</Label>
             <Textarea
@@ -521,12 +884,11 @@ function DraftCard({
               rows={2}
               placeholder="Krátký popis kousku (volitelné — pokud chybí, použije se název)."
               disabled={cardDisabled}
-              onBlur={(e) =>
-                commitField("description", e.target.value.trim() || null)
-              }
+              onBlur={(e) => commitField("description", e.target.value.trim() || null)}
             />
           </div>
 
+          {/* Defects / fit note */}
           {(draft.defectsNote || draft.fitNote) && (
             <dl className="grid gap-1 rounded-md bg-muted/40 p-2 text-xs">
               {draft.defectsNote && (
@@ -544,6 +906,104 @@ function DraftCard({
             </dl>
           )}
 
+          {/* Bundle cost basis section */}
+          {bundleLine && (
+            <div className="rounded-md border bg-muted/30 p-3 text-xs">
+              <p className="mb-1.5 font-semibold text-muted-foreground">Z balíčku</p>
+              {bundle && (
+                <p className="text-foreground">
+                  Balíček:{" "}
+                  <Link
+                    href={`/admin/bundles/${bundle.id}`}
+                    className="underline hover:text-primary"
+                  >
+                    {bundle.name}
+                  </Link>
+                </p>
+              )}
+              <p className="text-muted-foreground">Kategorie: {bundleLine.name}</p>
+              {costBasisValue !== null && (
+                <p className="text-muted-foreground">
+                  Kupní cena:{" "}
+                  <span className="font-medium text-foreground">
+                    ~{costBasisValue.toFixed(0)} Kč
+                  </span>{" "}
+                  (při {draft.weightG ?? defaultWeightG}g,{" "}
+                  {bundleLine.pricePerKg.toFixed(0)} Kč/kg)
+                </p>
+              )}
+              <div className="mt-2 flex items-center gap-2">
+                <Label htmlFor={`${draft.id}-weightG`} className="shrink-0 text-xs">
+                  Váha kusu (g)
+                </Label>
+                <Input
+                  id={`${draft.id}-weightG`}
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  defaultValue={draft.weightG ?? ""}
+                  placeholder={defaultWeightG != null ? String(defaultWeightG) : ""}
+                  disabled={cardDisabled}
+                  className="h-7 w-24 text-xs"
+                  onBlur={(e) => {
+                    const v = e.target.value.trim();
+                    const num = v === "" ? null : Number(v);
+                    commitField(
+                      "weightG",
+                      num != null && !Number.isNaN(num) && num > 0 ? num : null,
+                    );
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* SEO + Video — collapsed */}
+          <details className="rounded-md border border-border">
+            <summary className="cursor-pointer select-none px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground">
+              SEO + Video
+            </summary>
+            <div className="space-y-3 border-t border-border px-3 pb-3 pt-3">
+              <div className="space-y-1.5">
+                <Label htmlFor={`${draft.id}-metaTitle`}>Meta název</Label>
+                <Input
+                  id={`${draft.id}-metaTitle`}
+                  defaultValue={draft.metaTitle ?? ""}
+                  placeholder="Výstižný název pro vyhledávače"
+                  disabled={cardDisabled}
+                  onBlur={(e) => commitField("metaTitle", e.target.value.trim() || null)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor={`${draft.id}-metaDescription`}>Meta popis</Label>
+                <Textarea
+                  id={`${draft.id}-metaDescription`}
+                  defaultValue={draft.metaDescription ?? ""}
+                  rows={2}
+                  maxLength={160}
+                  placeholder="Max. 160 znaků"
+                  disabled={cardDisabled}
+                  onBlur={(e) => commitField("metaDescription", e.target.value.trim() || null)}
+                />
+                <p className="text-right text-xs text-muted-foreground">
+                  {(draft.metaDescription ?? "").length}/160
+                </p>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor={`${draft.id}-videoUrl`}>Video URL</Label>
+                <Input
+                  id={`${draft.id}-videoUrl`}
+                  type="url"
+                  defaultValue={draft.videoUrl ?? ""}
+                  placeholder="https://..."
+                  disabled={cardDisabled}
+                  onBlur={(e) => commitField("videoUrl", e.target.value.trim() || null)}
+                />
+              </div>
+            </div>
+          </details>
+
+          {/* Error */}
           {errorMessage && (
             <div
               role="alert"
@@ -554,6 +1014,7 @@ function DraftCard({
             </div>
           )}
 
+          {/* Publish button */}
           {!isPublished && (
             <div className="flex justify-end">
               <Button
@@ -594,7 +1055,7 @@ function DraftImages({ images }: { images: string[] }) {
           alt="Hlavní foto"
           fill
           className="object-cover"
-          sizes="140px"
+          sizes="160px"
         />
       </div>
       {images.length > 1 && (
@@ -609,7 +1070,7 @@ function DraftImages({ images }: { images: string[] }) {
                 alt={`Foto ${idx + 2}`}
                 fill
                 className="object-cover"
-                sizes="48px"
+                sizes="56px"
               />
             </div>
           ))}

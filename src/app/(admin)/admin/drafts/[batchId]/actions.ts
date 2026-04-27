@@ -35,12 +35,18 @@ function slugify(text: string): string {
 const draftEditSchema = z.object({
   name: z.string().max(200).optional(),
   price: z.coerce.number().nonnegative().nullable().optional(),
+  compareAt: z.coerce.number().nonnegative().nullable().optional(),
+  featured: z.boolean().optional(),
   brand: z.string().max(100).nullable().optional(),
   categoryId: z.string().max(100).nullable().optional(),
   condition: z.enum(CONDITION_VALUES).optional(),
   description: z.string().max(5000).nullable().optional(),
   sizes: z.array(z.string().max(40)).max(20).optional(),
   internalNote: z.string().max(2000).nullable().optional(),
+  metaTitle: z.string().max(200).nullable().optional(),
+  metaDescription: z.string().max(160).nullable().optional(),
+  videoUrl: z.union([z.string().url(), z.literal(""), z.null()]).optional(),
+  weightG: z.coerce.number().int().positive().nullable().optional(),
 });
 
 export async function updateDraftAction(
@@ -65,13 +71,19 @@ export async function updateDraftAction(
     where: { id: draftId, batchId },
     data: {
       name: parsed.name ?? undefined,
-      price: parsed.price ?? undefined,
-      brand: parsed.brand ?? undefined,
-      categoryId: parsed.categoryId ?? undefined,
+      price: parsed.price !== undefined ? parsed.price : undefined,
+      compareAt: parsed.compareAt !== undefined ? parsed.compareAt : undefined,
+      featured: parsed.featured ?? undefined,
+      brand: parsed.brand !== undefined ? parsed.brand : undefined,
+      categoryId: parsed.categoryId !== undefined ? parsed.categoryId : undefined,
       condition: parsed.condition ?? undefined,
-      description: parsed.description ?? undefined,
+      description: parsed.description !== undefined ? parsed.description : undefined,
       sizes: parsed.sizes ? JSON.stringify(parsed.sizes) : undefined,
-      internalNote: parsed.internalNote ?? undefined,
+      internalNote: parsed.internalNote !== undefined ? parsed.internalNote : undefined,
+      metaTitle: parsed.metaTitle !== undefined ? parsed.metaTitle : undefined,
+      metaDescription: parsed.metaDescription !== undefined ? parsed.metaDescription : undefined,
+      videoUrl: parsed.videoUrl !== undefined ? (parsed.videoUrl === "" ? null : parsed.videoUrl) : undefined,
+      weightG: parsed.weightG !== undefined ? parsed.weightG : undefined,
     },
   });
 
@@ -199,6 +211,28 @@ function validateDraftForPublish(draft: DraftRow): string | null {
   }
   if (!Array.isArray(images) || images.length === 0) return "Chybí fotky";
   return null;
+}
+
+export async function deleteBatchAction(batchId: string): Promise<{ success: true }> {
+  const adminId = await requireAdmin();
+  const db = await getDb();
+
+  const batch = await db.productDraftBatch.findUnique({
+    where: { id: batchId },
+    select: { adminId: true, status: true },
+  });
+  if (!batch || batch.adminId !== adminId) {
+    throw new Error("Batch nenalezen");
+  }
+  if (batch.status === "published") {
+    throw new Error("Publikovaný batch nelze smazat");
+  }
+
+  // Cascade deletes drafts (onDelete: Cascade in schema)
+  await db.productDraftBatch.delete({ where: { id: batchId } });
+
+  revalidatePath("/admin/drafts");
+  return { success: true };
 }
 
 async function publishOne(draft: DraftRow) {
