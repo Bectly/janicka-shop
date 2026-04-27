@@ -2,7 +2,33 @@
   "last_bolt_commit_cycle": 4986,
   "pause": {},
   "paused_at_bolt_cycle": 4870,
-  "last_lead_cycle": 5012,
+  "last_lead_cycle": 5013,
+  "cycle_5013_directive": {
+    "context": "C5013 J3 COMPLETE. Task #769 (product-add pipeline audit) done — docs/admin-product-pipeline.md committed. 6 new devloop_tasks filed (#771-#773 BOLT, #775-#776 SAGE, #777 TRACE) covering: SKU auto-gen, Quick-Add extras, success toast, mobile image reorder, Quick-Add FAB, E2E for quick-add. Workers should pick up J-series tasks (#767-#770 + new #771-#777). HEAD 48ded70 (stable 25 cycles). GMC Apr 30 deadline T-3. Monitors all fresh (next 2026-05-03).",
+    "no_dispatch_rationale": "J-series tasks are now decomposed. Workers (#767-#777) are actionable without bectly gate. Bolt can start on #771 (SKU auto-gen, low risk). Sage on #775 (tap-to-swap) or #776 (FAB). Trace on #777 (E2E). J4 design (#770) is next Lead task — depends on J3 audit now complete.",
+    "next_cycle_directives": {
+      "bolt_p0": "Dispatch #771 (SKU auto-gen full form) — low risk, isolated to createProduct action + form placeholder. Then #772 (Quick-Add extras: featured + SEO meta). Then #773 (success toast).",
+      "sage_p0": "Dispatch #776 (Quick-Add FAB on product list mobile) — purely additive. Then #775 (tap-to-swap image reorder — more complex, needs touch testing).",
+      "trace_p0": "Dispatch #777 (E2E Quick-Add spec) — can run in parallel with Bolt/Sage.",
+      "lead_next": "Run J4 (#770): design QR bulk-upload mobile pipeline. Use docs/admin-product-pipeline.md as input. Design should cover: QR-code per-batch session, phone camera capture flow, server-side batch creation API, admin review/publish step."
+    },
+    "monitors_status": "All fresh — comgate-version/cz-competitors/vinted-cz-media next due 2026-05-03. NONE DUE.",
+    "bectly_gates_aging": {
+      "#14_gmc_registration": "T-3 DAYS to Apr 30 Doppl VTO DEADLINE. URGENT: self-reg at merchants.google.com (~10 min).",
+      "#553_pinterest_self_registration": "Code complete. ~30-45 min self-serve. docs/pinterest-catalog-setup.md.",
+      "#534_smtp_creds_HT1": "SMTP_HOST/SMTP_USER/SMTP_PASSWORD needed for 21-template smoke.",
+      "#4_heureka_overeno": "Free Start tier. Self-serve at sluzby.heureka.cz.",
+      "#621_speed_insights_screenshots": "Optional — Phase 4 verification debt.",
+      "#622_crux_api_key": "Optional — Chrome UX Report API key."
+    },
+    "j3_output": {
+      "doc": "docs/admin-product-pipeline.md",
+      "mobile_rating": "5/10",
+      "top_friction": ["SKU manual entry blocks quick desktop add", "No bulk CSV import", "Drag-to-reorder broken on mobile", "No Quick-Add FAB on product list", "No success toast after Quick-Add"],
+      "tasks_filed": [771, 772, 773, 775, 776, 777]
+    },
+    "cycle_net_effect": "J3 audit complete. 6 actionable tasks decomposed. Unblocks J4 design. Workers can now dispatch on J-series."
+  },
   "cycle_5012_directive": {
     "context": "C5012 Hold-the-line #20. HEAD 48ded70 stable 24 cycles (Bolt C4986 #655 SEO). T-4 days to Apr 30 GMC/Doppl hard gate. All monitors fresh — next due 2026-05-03. ZERO dispatch correct posture.",
     "no_dispatch_rationale": "All open tasks bectly-gated. Code-complete pre-Apr30. Workers idle by design. ZERO-dispatch warnings are expected.",
