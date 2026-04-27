@@ -8,6 +8,7 @@ import {
   hashDraftToken,
   signDraftQrToken,
 } from "@/lib/draft-qr";
+import { getSiteSetting } from "@/lib/site-settings";
 
 export async function POST() {
   const session = await auth();
@@ -36,9 +37,13 @@ export async function POST() {
   );
   const tokenHash = hashDraftToken(token);
 
+  const activeBundleId = await getSiteSetting("activeBundleId");
+  const bundleId =
+    activeBundleId && activeBundleId !== "none" ? activeBundleId : undefined;
+
   await db.productDraftBatch.update({
     where: { id: batch.id },
-    data: { tokenHash },
+    data: { tokenHash, ...(bundleId ? { bundleId } : {}) },
   });
 
   const qrUrl = `${getSiteUrl()}/api/admin/drafts/auth?token=${encodeURIComponent(token)}`;

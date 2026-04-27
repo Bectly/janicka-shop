@@ -1,8 +1,6 @@
 {
   "last_bolt_commit_cycle": 5030,
-  "pause": {
-    "sage": "until_next_bolt_commit"
-  },
+  "pause": {},
   "paused_at_bolt_cycle": 5030,
   "last_lead_cycle": 5024,
   "cycle_5024_directive": {

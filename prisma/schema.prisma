@@ -809,6 +809,7 @@ model SupplierBundle {
   updatedAt     DateTime             @updatedAt
   lines         SupplierBundleLine[]
   products      Product[]
+  batches       ProductDraftBatch[]
 
   @@unique([supplierId, sourceFile])
   @@index([supplierId])
@@ -826,6 +827,7 @@ model SupplierBundleLine {
   pricePerKg      Float           // snapshot
   totalPrice      Float
   products        Product[]
+  batches         ProductDraftBatch[]
 
   @@unique([bundleId, code])
   @@index([bundleId])
@@ -837,16 +839,21 @@ model SupplierBundleLine {
 // posts ProductDrafts → batch sealed → PC reviews + publishes drafts as Products.
 
 model ProductDraftBatch {
-  id          String         @id @default(cuid())
-  adminId     String                              // Admin who created the QR
-  tokenHash   String         @unique              // sha256(rawJwt) — raw JWT lives only in QR URL
-  expiresAt   DateTime                            // QR link expiry (createdAt + 15min)
-  status      String         @default("open")     // open | sealed | published | expired
-  sealedAt    DateTime?
-  publishedAt DateTime?
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-  drafts      ProductDraft[]
+  id             String         @id @default(cuid())
+  adminId        String                              // Admin who created the QR
+  tokenHash      String         @unique              // sha256(rawJwt) — raw JWT lives only in QR URL
+  expiresAt      DateTime                            // QR link expiry (createdAt + 15min)
+  status         String         @default("open")     // open | sealed | published | expired
+  sealedAt       DateTime?
+  publishedAt    DateTime?
+  bundleId       String?                             // J5: which bundle this batch is unpacking
+  bundle         SupplierBundle?  @relation(fields: [bundleId], references: [id])
+  bundleLineId   String?                             // J5: specific line/category within the bundle
+  bundleLine     SupplierBundleLine? @relation(fields: [bundleLineId], references: [id])
+  defaultWeightG Int?                                // J5: pre-filled piece weight (grams) for QR session
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  drafts         ProductDraft[]
 
   @@index([adminId])
   @@index([status])
@@ -882,4 +889,11 @@ model ProductDraft {
 
   @@index([batchId])
   @@index([status])
+}
+
+// J5-M1: key-value admin config store (e.g. activeBundleId → cuid or "none")
+model SiteSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
 }
