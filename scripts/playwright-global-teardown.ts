@@ -144,11 +144,15 @@ export default async function globalTeardown() {
     }
 
     // W-10: sweep orphan E2E products. Match BOTH sku prefix AND name prefix
-    // (double-key) to avoid hitting any real seller listings. Three prefix
+    // (double-key) to avoid hitting any real seller listings. Four prefix
     // pairs are recognised: the original create-spec pair (`E2E-` / `E2E Test
     // Product `, C4922), the edit-spec pair (`E2E-EDIT-` / `E2E Edit
-    // Product `, C4927 #578), and the bulk-ship-spec pair (`E2E-BULK-` /
-    // `E2E Bulk Product `, Phase 9 bundle).
+    // Product `, C4927 #578), the bulk-ship-spec pair (`E2E-BULK-` /
+    // `E2E Bulk Product `, Phase 9 bundle), and the quick-add-spec pair
+    // (`JN-` / `E2E Quick Add Product `, Task #777). Quick-Add auto-generates
+    // SKUs as `JN-<base36>` so we can't custom-prefix the SKU; the name
+    // prefix double-key still neutralises false-positive risk because real
+    // sellers never name products `E2E Quick Add Product <ts>-…`.
     const e2eProductFilter = {
       OR: [
         {
@@ -167,6 +171,12 @@ export default async function globalTeardown() {
           AND: [
             { sku: { startsWith: "E2E-BULK-" } },
             { name: { startsWith: "E2E Bulk Product " } },
+          ],
+        },
+        {
+          AND: [
+            { sku: { startsWith: "JN-" } },
+            { name: { startsWith: "E2E Quick Add Product " } },
           ],
         },
       ],
