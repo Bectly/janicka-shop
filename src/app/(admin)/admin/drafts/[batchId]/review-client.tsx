@@ -200,12 +200,55 @@ export function BatchReviewClient({
 
   // Poll for new drafts every 15s — handles Janička adding from mobile while bectly reviews on PC
   useEffect(() => {
-    if (status === "published") return
+    if (status === "published") return;
     const interval = setInterval(() => {
-      startPollingTransition(() => { router.refresh() })
-    }, 15_000)
-    return () => clearInterval(interval)
-  }, [status, router, startPollingTransition])
+      startPollingTransition(() => {
+        router.refresh();
+      });
+    }, 15_000);
+    return () => clearInterval(interval);
+  }, [status, router, startPollingTransition]);
+
+  // Merge incoming server drafts into local state. Local edits go through
+  // commitField (which writes to server before patching local), so local rows
+  // are canonical for field values. We pull two things from the server:
+  //   1. Brand-new drafts (added from mobile while bectly reviews on PC)
+  //   2. Status / publishedProductId changes (e.g. another tab published)
+  // Existing local field values are preserved — uncommitted text in inputs
+  // stays put because Inputs use defaultValue and don't read from state.
+  useEffect(() => {
+    setDrafts((prev) => {
+      const localById = new Map(prev.map((d) => [d.id, d]));
+      const serverIds = new Set(initialDrafts.map((d) => d.id));
+      let changed = false;
+      const next: DraftRow[] = [];
+
+      for (const server of initialDrafts) {
+        const local = localById.get(server.id);
+        if (!local) {
+          next.push(server);
+          changed = true;
+        } else if (
+          local.status !== server.status ||
+          local.publishedProductId !== server.publishedProductId
+        ) {
+          next.push({
+            ...local,
+            status: server.status,
+            publishedProductId: server.publishedProductId,
+          });
+          changed = true;
+        } else {
+          next.push(local);
+        }
+      }
+
+      // Drop local drafts that no longer exist server-side (deleted elsewhere)
+      if (prev.some((d) => !serverIds.has(d.id))) changed = true;
+
+      return changed ? next : prev;
+    });
+  }, [initialDrafts]);
 
   // Set default active draft on first render
   useEffect(() => {
