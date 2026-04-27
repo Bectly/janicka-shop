@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ProductSearch } from "@/components/admin/product-search";
 import { BulkProductTable } from "@/components/admin/bulk-product-table";
 import { QuickAddToast } from "@/components/admin/quick-add-toast";
+import { QrBatchModal } from "@/components/admin/qr-batch-modal";
 import { Pagination, PaginationSkeleton } from "@/components/shop/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Metadata } from "next";
@@ -231,6 +232,7 @@ export default async function AdminProductsPage({
           </p>
         </div>
         <div className="flex gap-2">
+          <QrBatchModal />
           <Button variant="outline" render={<Link href="/admin/products/quick-add" />}>
             <Zap className="size-4" />
             <span className="hidden sm:inline">Rychlé přidání</span>

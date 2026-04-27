@@ -14,8 +14,9 @@ interface PageProps {
   params: Promise<{ batchId: string }>;
 }
 
-async function MobileGate({ batchId }: { batchId: string }) {
+async function MobileGate({ params }: { params: Promise<{ batchId: string }> }) {
   await connection();
+  const { batchId } = await params;
   const cookieStore = await cookies();
   const session = cookieStore.get("draft_session")?.value ?? "";
   const [sessionBatchId] = session.split(":");
@@ -37,9 +38,7 @@ async function MobileGate({ batchId }: { batchId: string }) {
   return <MobileAddForm batchId={batchId} />;
 }
 
-export default async function MobileDraftAddPage({ params }: PageProps) {
-  const { batchId } = await params;
-
+export default function MobileDraftAddPage({ params }: PageProps) {
   return (
     <Suspense
       fallback={
@@ -48,7 +47,7 @@ export default async function MobileDraftAddPage({ params }: PageProps) {
         </main>
       }
     >
-      <MobileGate batchId={batchId} />
+      <MobileGate params={params} />
     </Suspense>
   );
 }
