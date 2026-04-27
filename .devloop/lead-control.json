@@ -1,8 +1,23 @@
 {
   "last_bolt_commit_cycle": 5078,
+  "last_sage_commit_cycle": 5083,
   "pause": {},
   "paused_at_bolt_cycle": 5046,
-  "last_lead_cycle": 5024,
+  "last_lead_cycle": 5083,
+  "cycle_5083_directive": {
+    "context": "C5083 J8-S2 done (55560f2, Sage C5083, task #807). Bolt running J10-B2 (offline upload queue, task #821, tq_id=18933). Sage dispatched J9-S2 (#810, tq_id=18935) + J14 (#809 inline). Trace dispatched J7-T1 (#819, tq_id=18936). J9-T1 (#815) waits for J9-S2 done. J10-B3/#822 + J10-B5/#824 queue after Bolt finishes J10-B2.",
+    "next_cycle_directives": {
+      "bolt_p0": "Continue J10-B2 (#821 offline queue). After: J10-B3 (#822 resume/archive cron), then J10-B5 (#824 timing telemetry).",
+      "sage_p0": "J9-S2 (#810) bulk actions dialog + J14 (#809) pink FAB. After: pick up J12-A1 (#825 PWA) or J13-S1 (#829 bundles list).",
+      "trace_p0": "J7-T1 (#819) profit dashboard E2E. After: J9-T1 (#815) — wait for J9-S2 Sage commit first.",
+      "lead_next": "Cycle #5084: verify J10-B2 committed, J9-S2 committed, J7-T1 E2E green. Unlock J9-T1 (#815). Check J13 unblock (J12 tasks need bectly: #825 PWA). Monitor zero-dispatch state — workers ARE dispatched this cycle."
+    },
+    "tasks_in_flight": {
+      "bolt": {"task_id": 821, "tq_id": 18933, "desc": "J10-B2 offline upload queue"},
+      "sage": {"task_id": 810, "tq_id": 18935, "desc": "J9-S2 bulk actions + J14 pink button"},
+      "trace": {"task_id": 819, "tq_id": 18936, "desc": "J7-T1 profit dashboard E2E"}
+    }
+  },
   "cycle_5024_directive": {
     "context": "C5024 J4 DESIGN COMPLETE. docs/qr-bulk-upload-spec.md committed (93002da). 7 tasks filed: #786 Bolt (Prisma migration), #787 Bolt (QR auth API), #788 Bolt (Draft CRUD API), #789 Sage (mobile add UI), #790 Sage (PC QR modal + review page), #791 Bolt (R2 cleanup cron), #792 Trace (E2E). Task #770 marked done. J-series MVP: #786-#790 are P1. J7 profit dashboard (#779) + J8 mobile fields (#780) remain open. J5 (#777) Trace task now done (5023 cycle).",
     "next_cycle_directives": {

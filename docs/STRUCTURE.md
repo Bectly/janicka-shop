@@ -1,7 +1,7 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 512 files, ~83,972 LOC.
-**Drill-down dropped** — full render was 54,866 chars > cap 10,000 (~18% shown). Grep source files directly for symbol-level detail.
+Auto-generated. Total: 512 files, ~84,699 LOC.
+**Drill-down dropped** — full render was 54,868 chars > cap 10,000 (~18% shown). Grep source files directly for symbol-level detail.
 
 ---
 
@@ -101,8 +101,8 @@ Auto-generated. Total: 512 files, ~83,972 LOC.
 - src/app/(admin)/admin/dashboard/page.tsx (631 LOC)
 - src/app/(admin)/admin/dashboard/period-selector.tsx (57 LOC)
 - src/app/(admin)/admin/drafts/[batchId]/actions.ts (340 LOC)
-- src/app/(admin)/admin/drafts/[batchId]/page.tsx (138 LOC)
-- src/app/(admin)/admin/drafts/[batchId]/review-client.tsx (1318 LOC)
+- src/app/(admin)/admin/drafts/[batchId]/page.tsx (139 LOC)
+- src/app/(admin)/admin/drafts/[batchId]/review-client.tsx (1320 LOC)
 - src/app/(admin)/admin/email-templates/actions.ts (133 LOC)
 - src/app/(admin)/admin/email-templates/email-editor.tsx (255 LOC)
 - src/app/(admin)/admin/email-templates/loading.tsx (6 LOC)
@@ -173,7 +173,7 @@ Auto-generated. Total: 512 files, ~83,972 LOC.
 - src/app/(admin)/error.tsx (56 LOC)
 - src/app/(admin-auth)/admin/login/page.tsx (91 LOC)
 - src/app/(admin-onboarding)/admin/welcome/page.tsx (114 LOC)
-- src/app/(drafts-mobile)/admin/drafts/[batchId]/mobile/mobile-add-form.tsx (685 LOC)
+- src/app/(drafts-mobile)/admin/drafts/[batchId]/mobile/mobile-add-form.tsx (1374 LOC)
 - src/app/(drafts-mobile)/admin/drafts/[batchId]/mobile/page.tsx (65 LOC)
 - src/app/(shop)/about/page.tsx (116 LOC)
 - src/app/(shop)/account/account-nav.tsx (56 LOC)
@@ -188,6 +188,6 @@ Auto-generated. Total: 512 files, ~83,972 LOC.
 - src/app/(shop)/account/change-email/page.tsx (65 LOC)
 - src/app/(shop)/account/layout.tsx (36 LOC)
 - src/app/(shop)/account/loading.tsx (6 LOC)
-- src/app/(shop)/acco
+- src/app/(shop)/acc
 
-... [truncated at 10,000 chars; compact render was 26,131. Use git ls-files for full file list.]
+... [truncated at 10,000 chars; compact render was 26,133. Use git ls-files for full file list.]

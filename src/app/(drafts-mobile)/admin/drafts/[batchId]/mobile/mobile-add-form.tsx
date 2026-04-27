@@ -322,6 +322,16 @@ export function MobileAddForm({ batchId, categories }: MobileAddFormProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [isUploadingDefect, setIsUploadingDefect] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+
+  // J10-B2 offline upload queue. We enqueue compressed Blobs into IndexedDB, then
+  // a background worker drains the queue (with retry-on-`online`). The form holds:
+  //   - `queueItems`: filtered snapshot for this batch (drives banner + tiles)
+  //   - mainIds/defectIds: which queue items belong to which slot (encoded via baseName prefix
+  //     so the assignment survives a page reload that re-hydrates the queue)
+  const [queueItems, setQueueItems] = useState<UploadQueueItem[]>([]);
+  const queueRef = useRef(typeof window !== "undefined" ? getUploadQueue() : null);
+  const thumbUrlsRef = useRef<Map<string, string>>(new Map());
+  const handledUploadsRef = useRef<Set<string>>(new Set());
   const [saveError, setSaveError] = useState<string | null>(null);
   const [savedFlash, setSavedFlash] = useState(false);
   const [sealed, setSealed] = useState(false);
@@ -352,6 +362,77 @@ export function MobileAddForm({ batchId, categories }: MobileAddFormProps) {
     setRecentCatIds(readRecentCats());
     setCatDefaults(readCategoryDefaults());
   }, []);
+
+  // Subscribe to upload queue. Two responsibilities:
+  //  1) Keep `queueItems` in sync (banner counts + tile statuses).
+  //  2) On `onUploaded`, route the resulting URL into images/defectImages by slot.
+  useEffect(() => {
+    const q = queueRef.current;
+    if (!q) return;
+    const unsubA = q.subscribe((items) => {
+      setQueueItems(items.filter((it) => it.batchId === batchId));
+    });
+    const unsubB = q.onUploaded((item) => {
+      if (item.batchId !== batchId || !item.mainUrl) return;
+      if (handledUploadsRef.current.has(item.id)) return;
+      handledUploadsRef.current.add(item.id);
+      if (item.baseName.startsWith("defect__")) {
+        setDefectImages((prev) =>
+          prev.includes(item.mainUrl!) ? prev : [...prev, item.mainUrl!]
+        );
+      } else {
+        setImages((prev) =>
+          prev.includes(item.mainUrl!) ? prev : [...prev, item.mainUrl!]
+        );
+      }
+    });
+    return () => {
+      unsubA();
+      unsubB();
+    };
+  }, [batchId]);
+
+  // Revoke object URLs for queue items that have left the queue.
+  useEffect(() => {
+    const live = new Set(queueItems.map((it) => it.id));
+    for (const [id, url] of thumbUrlsRef.current) {
+      if (!live.has(id)) {
+        URL.revokeObjectURL(url);
+        thumbUrlsRef.current.delete(id);
+      }
+    }
+  }, [queueItems]);
+
+  useEffect(() => {
+    const cache = thumbUrlsRef.current;
+    return () => {
+      for (const url of cache.values()) URL.revokeObjectURL(url);
+      cache.clear();
+    };
+  }, []);
+
+  function thumbUrlFor(item: UploadQueueItem): string {
+    const cached = thumbUrlsRef.current.get(item.id);
+    if (cached) return cached;
+    const url = URL.createObjectURL(item.thumb);
+    thumbUrlsRef.current.set(item.id, url);
+    return url;
+  }
+
+  const mainQueueItems = queueItems.filter(
+    (it) => !it.baseName.startsWith("defect__")
+  );
+  const defectQueueItems = queueItems.filter((it) =>
+    it.baseName.startsWith("defect__")
+  );
+  const inFlightCount = queueItems.filter(
+    (it) =>
+      it.status === "pending" ||
+      it.status === "uploading" ||
+      it.status === "retry"
+  ).length;
+  const failedCount = queueItems.filter((it) => it.status === "failed").length;
+  const hasInFlight = inFlightCount > 0;
 
   // Sort categories: most-recent first, then alphabetical.
   const orderedCategories = useMemo(() => {
@@ -457,35 +538,53 @@ export function MobileAddForm({ batchId, categories }: MobileAddFormProps) {
     );
   }
 
-  async function uploadCompressed(files: FileList | null, max: number, current: string[]): Promise<string[] | null> {
-    if (!files || files.length === 0) return null;
-    const remaining = max - current.length;
-    if (remaining <= 0) return null;
+  // Compress + enqueue. Actual upload happens in the background queue; this returns
+  // as soon as items are persisted to IndexedDB, so weak-signal sessions don't block
+  // the user from continuing to add more pieces.
+  async function compressAndEnqueue(
+    files: FileList | null,
+    slot: "main" | "defect",
+    max: number
+  ): Promise<void> {
+    if (!files || files.length === 0) return;
+    const queue = queueRef.current;
+    if (!queue) {
+      setUploadError("Frontu pro nahrávání se nepodařilo inicializovat.");
+      return;
+    }
+    const currentUploaded =
+      slot === "main" ? images.length : defectImages.length;
+    const slotQueueCount =
+      slot === "main" ? mainQueueItems.length : defectQueueItems.length;
+    const remaining = max - currentUploaded - slotQueueCount;
+    if (remaining <= 0) return;
     const slice = Array.from(files).slice(0, remaining);
-    const urls = await runWithLimit(slice, 3, async (file, idx) => {
+    await runWithLimit(slice, 3, async (file, idx) => {
       const { main, thumb } = await compressPhoto(file);
-      const baseName = file.name.replace(/\.[^.]+$/, "") || `photo-${idx}`;
-      const ext = main.type === "image/webp" ? "webp" : "jpg";
-      const mainFile = new File([main], `${baseName}.${ext}`, {
-        type: main.type,
+      const safeBase = file.name.replace(/\.[^.]+$/, "") || `photo-${idx}`;
+      const baseName = `${slot === "defect" ? "defect__" : "main__"}${safeBase}_${Date.now().toString(
+        36
+      )}_${idx}`;
+      await queue.enqueue({
+        batchId,
+        main,
+        thumb,
+        baseName,
+        fieldName: "files",
       });
-      const thumbFile = new File([thumb], `${baseName}-thumb.${ext}`, {
-        type: thumb.type,
-      });
-      const [mainUrl] = await uploadFiles([mainFile, thumbFile]);
-      return mainUrl;
     });
-    return urls;
+    void queue.processAll();
   }
 
   async function handleFiles(files: FileList | null) {
     setIsUploading(true);
     setUploadError(null);
     try {
-      const urls = await uploadCompressed(files, 10, images);
-      if (urls) setImages((prev) => [...prev, ...urls]);
+      await compressAndEnqueue(files, "main", 10);
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : "Nahrávání selhalo");
+      setUploadError(
+        err instanceof Error ? err.message : "Komprese fotky selhala"
+      );
     } finally {
       setIsUploading(false);
     }
@@ -495,13 +594,26 @@ export function MobileAddForm({ batchId, categories }: MobileAddFormProps) {
     setIsUploadingDefect(true);
     setUploadError(null);
     try {
-      const urls = await uploadCompressed(files, 10, defectImages);
-      if (urls) setDefectImages((prev) => [...prev, ...urls]);
+      await compressAndEnqueue(files, "defect", 10);
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : "Nahrávání selhalo");
+      setUploadError(
+        err instanceof Error ? err.message : "Komprese fotky selhala"
+      );
     } finally {
       setIsUploadingDefect(false);
     }
+  }
+
+  async function removeQueueItem(id: string) {
+    const q = queueRef.current;
+    if (!q) return;
+    await q.remove(id);
+  }
+
+  async function retryAllFailed() {
+    const q = queueRef.current;
+    if (!q) return;
+    await q.retryAll(batchId);
   }
 
   function applyCategoryDefaults() {
@@ -514,6 +626,8 @@ export function MobileAddForm({ batchId, categories }: MobileAddFormProps) {
   }
 
   function validate(): string | null {
+    if (hasInFlight)
+      return "Počkej, až se fotky nahrají, ať tu kus nezůstane bez obrázků.";
     if (images.length === 0) return "Přidej alespoň jednu fotku.";
     if (!name.trim()) return "Vyplň název kousku.";
     const priceNum = Number(price);
@@ -754,11 +868,63 @@ export function MobileAddForm({ batchId, categories }: MobileAddFormProps) {
       )}
 
       <div className="space-y-5 px-4 pt-4">
+        {/* Upload-queue banner — only when something is queued or has failed */}
+        {(inFlightCount > 0 || failedCount > 0) && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="flex flex-col gap-2 rounded-lg border border-amber-300/60 bg-amber-50/70 px-3 py-2 text-sm dark:bg-amber-950/30"
+          >
+            <div className="flex items-center gap-2 text-foreground">
+              {inFlightCount > 0 ? (
+                <Loader2 className="size-4 animate-spin text-amber-700" aria-hidden />
+              ) : (
+                <CloudOff className="size-4 text-destructive" aria-hidden />
+              )}
+              <span>
+                {inFlightCount > 0 && (
+                  <>
+                    {inFlightCount}{" "}
+                    {inFlightCount === 1
+                      ? "fotka čeká na nahrání"
+                      : inFlightCount < 5
+                      ? "fotky čekají na nahrání"
+                      : "fotek čeká na nahrání"}
+                  </>
+                )}
+                {inFlightCount > 0 && failedCount > 0 && " · "}
+                {failedCount > 0 && (
+                  <span className="text-destructive">
+                    {failedCount}{" "}
+                    {failedCount === 1
+                      ? "selhala"
+                      : failedCount < 5
+                      ? "selhaly"
+                      : "selhalo"}
+                  </span>
+                )}
+              </span>
+            </div>
+            {failedCount > 0 && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={retryAllFailed}
+                className="self-start gap-2"
+              >
+                <RefreshCw className="size-4" aria-hidden />
+                Zkusit znovu
+              </Button>
+            )}
+          </div>
+        )}
+
         {/* Photos */}
         <section className="space-y-2">
           <Label className="text-base font-semibold">Fotky</Label>
 
-          {images.length > 0 && (
+          {(images.length > 0 || mainQueueItems.length > 0) && (
             <div className="grid grid-cols-3 gap-2">
               {images.map((url, idx) => (
                 <div
@@ -789,6 +955,14 @@ export function MobileAddForm({ batchId, categories }: MobileAddFormProps) {
                   </button>
                 </div>
               ))}
+              {mainQueueItems.map((it) => (
+                <QueueTile
+                  key={it.id}
+                  item={it}
+                  src={thumbUrlFor(it)}
+                  onRemove={() => removeQueueItem(it.id)}
+                />
+              ))}
             </div>
           )}
 
@@ -805,7 +979,10 @@ export function MobileAddForm({ batchId, categories }: MobileAddFormProps) {
               capture="environment"
               multiple
               className="sr-only"
-              disabled={isUploading || images.length >= 10}
+              disabled={
+                isUploading ||
+                images.length + mainQueueItems.length >= 10
+              }
               onChange={(e) => {
                 handleFiles(e.target.files);
                 e.target.value = "";
@@ -814,14 +991,14 @@ export function MobileAddForm({ batchId, categories }: MobileAddFormProps) {
             {isUploading ? (
               <>
                 <Loader2 className="size-7 animate-spin" aria-hidden />
-                <span>Nahrávám fotky…</span>
+                <span>Připravuju fotky…</span>
               </>
             ) : (
               <>
                 <Camera className="size-7" aria-hidden />
                 <span>Vyfotit kousek</span>
                 <span className="text-xs font-normal text-muted-foreground">
-                  {images.length}/10 fotek
+                  {images.length + mainQueueItems.length}/10 fotek
                 </span>
               </>
             )}
@@ -952,7 +1129,7 @@ export function MobileAddForm({ batchId, categories }: MobileAddFormProps) {
               )}
             </div>
 
-            {defectImages.length > 0 && (
+            {(defectImages.length > 0 || defectQueueItems.length > 0) && (
               <div className="grid grid-cols-3 gap-2">
                 {defectImages.map((url, idx) => (
                   <div
@@ -980,6 +1157,14 @@ export function MobileAddForm({ batchId, categories }: MobileAddFormProps) {
                     </button>
                   </div>
                 ))}
+                {defectQueueItems.map((it) => (
+                  <QueueTile
+                    key={it.id}
+                    item={it}
+                    src={thumbUrlFor(it)}
+                    onRemove={() => removeQueueItem(it.id)}
+                  />
+                ))}
               </div>
             )}
 
@@ -996,7 +1181,10 @@ export function MobileAddForm({ batchId, categories }: MobileAddFormProps) {
                 capture="environment"
                 multiple
                 className="sr-only"
-                disabled={isUploadingDefect || defectImages.length >= 10}
+                disabled={
+                  isUploadingDefect ||
+                  defectImages.length + defectQueueItems.length >= 10
+                }
                 onChange={(e) => {
                   handleDefectFiles(e.target.files);
                   e.target.value = "";
@@ -1005,14 +1193,14 @@ export function MobileAddForm({ batchId, categories }: MobileAddFormProps) {
               {isUploadingDefect ? (
                 <>
                   <Loader2 className="size-5 animate-spin" aria-hidden />
-                  <span>Nahrávám…</span>
+                  <span>Připravuju…</span>
                 </>
               ) : (
                 <>
                   <Camera className="size-5" aria-hidden />
                   <span>Vyfotit vadu</span>
                   <span className="text-xs font-normal text-muted-foreground">
-                    {defectImages.length}/10
+                    {defectImages.length + defectQueueItems.length}/10
                   </span>
                 </>
               )}
@@ -1329,7 +1517,9 @@ export function MobileAddForm({ batchId, categories }: MobileAddFormProps) {
           size="lg"
           variant="default"
           onClick={handleAddAnother}
-          disabled={isSaving || isSealing || isUploading}
+          disabled={
+            isSaving || isSealing || isUploading || isUploadingDefect || hasInFlight
+          }
           className="h-14 w-full gap-2 text-base font-semibold"
         >
           {isSaving ? (
@@ -1337,7 +1527,11 @@ export function MobileAddForm({ batchId, categories }: MobileAddFormProps) {
           ) : (
             <Plus className="size-5" aria-hidden />
           )}
-          {isSaving ? "Ukládám…" : "Přidat další kousek"}
+          {isSaving
+            ? "Ukládám…"
+            : hasInFlight
+            ? "Čekám na nahrání fotek…"
+            : "Přidat další kousek"}
         </Button>
       </div>
 
@@ -1356,7 +1550,7 @@ export function MobileAddForm({ batchId, categories }: MobileAddFormProps) {
             size="lg"
             variant="secondary"
             onClick={handleSeal}
-            disabled={isSealing || isSaving || count === 0}
+            disabled={isSealing || isSaving || count === 0 || hasInFlight}
             className="ml-auto h-12 min-w-32 font-semibold"
           >
             {isSealing ? (
@@ -1369,5 +1563,64 @@ export function MobileAddForm({ batchId, categories }: MobileAddFormProps) {
         </div>
       </div>
     </main>
+  );
+}
+
+interface QueueTileProps {
+  item: UploadQueueItem;
+  src: string;
+  onRemove: () => void;
+}
+
+function QueueTile({ item, src, onRemove }: QueueTileProps) {
+  const ringClass =
+    item.status === "failed"
+      ? "ring-2 ring-destructive"
+      : item.status === "retry"
+      ? "ring-2 ring-amber-500"
+      : item.status === "uploading"
+      ? "ring-2 ring-amber-500/70"
+      : "ring-2 ring-muted-foreground/30";
+
+  const label =
+    item.status === "uploading"
+      ? "Nahrávám…"
+      : item.status === "retry"
+      ? `Zkouším znovu (${item.retryCount}/3)`
+      : item.status === "failed"
+      ? "Nahrání selhalo"
+      : "Ve frontě";
+
+  return (
+    <div
+      className={`relative aspect-square overflow-hidden rounded-lg border bg-muted ${ringClass}`}
+      role="status"
+      aria-live="polite"
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt={label}
+        className="size-full object-cover opacity-70"
+      />
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-background/40 text-[11px] font-medium text-foreground">
+        {item.status === "uploading" || item.status === "pending" ? (
+          <Loader2 className="size-5 animate-spin" aria-hidden />
+        ) : item.status === "failed" ? (
+          <CloudOff className="size-5 text-destructive" aria-hidden />
+        ) : (
+          <RefreshCw className="size-5 text-amber-600" aria-hidden />
+        )}
+        <span className="px-1 text-center leading-tight">{label}</span>
+      </div>
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label="Odstranit z fronty"
+        className="absolute top-1 right-1 flex size-7 items-center justify-center rounded-full bg-background/90 text-foreground shadow"
+      >
+        <X className="size-3.5" />
+      </button>
+    </div>
   );
 }
