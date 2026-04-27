@@ -1,5 +1,5 @@
 {
-  "last_bolt_commit_cycle": 4986,
+  "last_bolt_commit_cycle": 5015,
   "pause": {},
   "paused_at_bolt_cycle": 4870,
   "last_lead_cycle": 5013,
@@ -24,8 +24,21 @@
     "j3_output": {
       "doc": "docs/admin-product-pipeline.md",
       "mobile_rating": "5/10",
-      "top_friction": ["SKU manual entry blocks quick desktop add", "No bulk CSV import", "Drag-to-reorder broken on mobile", "No Quick-Add FAB on product list", "No success toast after Quick-Add"],
-      "tasks_filed": [771, 772, 773, 775, 776, 777]
+      "top_friction": [
+        "SKU manual entry blocks quick desktop add",
+        "No bulk CSV import",
+        "Drag-to-reorder broken on mobile",
+        "No Quick-Add FAB on product list",
+        "No success toast after Quick-Add"
+      ],
+      "tasks_filed": [
+        771,
+        772,
+        773,
+        775,
+        776,
+        777
+      ]
     },
     "cycle_net_effect": "J3 audit complete. 6 actionable tasks decomposed. Unblocks J4 design. Workers can now dispatch on J-series."
   },

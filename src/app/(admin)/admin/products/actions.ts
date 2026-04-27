@@ -356,6 +356,9 @@ const quickProductSchema = z.object({
   sizes: sizesSchema,
   colors: z.string().max(500),
   description: z.string().max(5000),
+  featured: z.boolean().default(false),
+  metaTitle: z.string().max(70).nullable(),
+  metaDescription: z.string().max(160).nullable(),
 }).refine(
   (data) => !data.compareAt || data.compareAt > data.price,
   { message: "Původní cena musí být vyšší než aktuální cena", path: ["compareAt"] },
@@ -376,6 +379,9 @@ export async function quickCreateProduct(formData: FormData) {
     sizes: (formData.get("sizes") as string) || "",
     colors: (formData.get("colors") as string) || "",
     description: (formData.get("description") as string) || "",
+    featured: formData.get("featured") === "on" || formData.get("featured") === "true",
+    metaTitle: ((formData.get("metaTitle") as string) || "").trim() || null,
+    metaDescription: ((formData.get("metaDescription") as string) || "").trim() || null,
   };
 
   const parsed = quickProductSchema.parse(raw);
@@ -435,8 +441,10 @@ export async function quickCreateProduct(formData: FormData) {
       fitNote,
       videoUrl,
       stock: 1,
-      featured: false,
+      featured: parsed.featured,
       active: true,
+      metaTitle: parsed.metaTitle,
+      metaDescription: parsed.metaDescription,
     },
   });
 

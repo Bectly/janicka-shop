@@ -34,6 +34,8 @@ export function QuickAddForm({ categories, action }: QuickAddFormProps) {
   const [videoUrl, setVideoUrl] = useState<string>("");
   const [isVideoUploading, setIsVideoUploading] = useState(false);
   const [videoUploadError, setVideoUploadError] = useState<string | null>(null);
+  const [metaTitle, setMetaTitle] = useState<string>("");
+  const [metaDescription, setMetaDescription] = useState<string>("");
 
   const selectedCategorySlug = categories.find((c) => c.id === categoryId)?.slug;
   const sizeGroups = getSizeGroupsForCategory(selectedCategorySlug);
@@ -247,7 +249,7 @@ export function QuickAddForm({ categories, action }: QuickAddFormProps) {
         onClick={() => setShowExtras(!showExtras)}
         className="flex w-full items-center justify-between rounded-lg border border-dashed border-muted-foreground/30 px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:border-muted-foreground/50 hover:text-foreground"
       >
-        <span>Další údaje (značka, míry, popis)</span>
+        <span>Další údaje (značka, míry, popis, SEO)</span>
         {showExtras ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
       </button>
 
@@ -392,6 +394,51 @@ export function QuickAddForm({ categories, action }: QuickAddFormProps) {
               </>
             )}
             <p className="text-xs text-muted-foreground">Nepovinné — 9:16, 15–30 s</p>
+          </div>
+
+          {/* Featured on homepage */}
+          <div className="flex items-start gap-2 rounded-md border border-border/50 bg-muted/30 px-3 py-2.5">
+            <input
+              id="qa-featured"
+              name="featured"
+              type="checkbox"
+              className="mt-0.5 size-4 cursor-pointer rounded border-input accent-primary"
+            />
+            <div className="space-y-0.5">
+              <Label htmlFor="qa-featured" className="cursor-pointer text-sm font-medium">
+                Doporučený kousek
+              </Label>
+              <p className="text-xs text-muted-foreground">Zobrazit na homepage v sekci doporučené</p>
+            </div>
+          </div>
+
+          {/* SEO meta */}
+          <div className="space-y-2">
+            <Label htmlFor="qa-metaTitle">SEO titulek</Label>
+            <Input
+              id="qa-metaTitle"
+              name="metaTitle"
+              maxLength={70}
+              value={metaTitle}
+              onChange={(e) => setMetaTitle(e.target.value)}
+              placeholder="Volitelný — výchozí je název produktu"
+              className="text-base"
+            />
+            <p className="text-xs text-muted-foreground">{metaTitle.length}/70 znaků</p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="qa-metaDescription">SEO popis</Label>
+            <Textarea
+              id="qa-metaDescription"
+              name="metaDescription"
+              maxLength={160}
+              rows={2}
+              value={metaDescription}
+              onChange={(e) => setMetaDescription(e.target.value)}
+              placeholder="Volitelný — výchozí je popis produktu"
+              className="text-base"
+            />
+            <p className="text-xs text-muted-foreground">{metaDescription.length}/160 znaků</p>
           </div>
         </div>
       )}

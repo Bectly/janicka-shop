@@ -1,6 +1,6 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 471 files, ~75,510 LOC.
+Auto-generated. Total: 471 files, ~75,512 LOC.
 **Drill-down dropped** — full render was 50,384 chars > cap 10,000 (~20% shown). Grep source files directly for symbol-level detail.
 
 ---
@@ -119,7 +119,7 @@ Auto-generated. Total: 471 files, ~75,510 LOC.
 - src/app/(admin)/admin/orders/orders-table.tsx (379 LOC)
 - src/app/(admin)/admin/orders/page.tsx (178 LOC)
 - src/app/(admin)/admin/products/[id]/edit/page.tsx (116 LOC)
-- src/app/(admin)/admin/products/actions.ts (954 LOC)
+- src/app/(admin)/admin/products/actions.ts (957 LOC)
 - src/app/(admin)/admin/products/bulk-price.ts (21 LOC)
 - src/app/(admin)/admin/products/loading.tsx (6 LOC)
 - src/app/(admin)/admin/products/new/page.tsx (44 LOC)
