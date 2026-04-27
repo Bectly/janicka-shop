@@ -362,8 +362,7 @@ export function ProductForm({ categories, product, action }: ProductFormProps) {
             id="sku"
             name="sku"
             defaultValue={product?.sku}
-            required
-            placeholder="SAT-001"
+            placeholder="auto-generated if empty"
           />
         </div>
 

@@ -157,13 +157,16 @@ export async function createProduct(formData: FormData) {
   const rl = await rateLimitAdmin();
   if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
 
+  const rawSku = ((formData.get("sku") as string) || "").trim();
+  const sku = rawSku || `JN-${Date.now().toString(36).toUpperCase()}`;
+
   const raw = {
     name: formData.get("name") as string,
     slug: slugify(formData.get("name") as string),
     description: formData.get("description") as string,
     price: formData.get("price"),
     compareAt: formData.get("compareAt") || null,
-    sku: formData.get("sku") as string,
+    sku,
     categoryId: formData.get("categoryId") as string,
     brand: (formData.get("brand") as string) || null,
     condition: formData.get("condition") as string,
