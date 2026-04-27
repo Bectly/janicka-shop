@@ -1,8 +1,42 @@
 {
-  "last_bolt_commit_cycle": 5020,
+  "last_bolt_commit_cycle": 5023,
   "pause": {},
   "paused_at_bolt_cycle": 4870,
-  "last_lead_cycle": 5013,
+  "last_lead_cycle": 5024,
+  "cycle_5024_directive": {
+    "context": "C5024 J4 DESIGN COMPLETE. docs/qr-bulk-upload-spec.md committed (93002da). 7 tasks filed: #786 Bolt (Prisma migration), #787 Bolt (QR auth API), #788 Bolt (Draft CRUD API), #789 Sage (mobile add UI), #790 Sage (PC QR modal + review page), #791 Bolt (R2 cleanup cron), #792 Trace (E2E). Task #770 marked done. J-series MVP: #786-#790 are P1. J7 profit dashboard (#779) + J8 mobile fields (#780) remain open. J5 (#777) Trace task now done (5023 cycle).",
+    "next_cycle_directives": {
+      "bolt_p0": "Start #786 (Prisma migration — ProductDraftBatch + ProductDraft). After migration passes, chain #787 (QR auth API). Spec is in docs/qr-bulk-upload-spec.md §3-4.",
+      "sage_p0": "Start #789 (mobile add UI) after #786 Prisma migration lands. Spec §5.2. Then #790 (PC QR modal + review page).",
+      "trace_p0": "Hold on #792 (E2E) until #786-#790 are complete. Can prep test skeleton in the meantime.",
+      "lead_next": "Cycle #5025: verify #786 Prisma migration green. If done, dispatch #787+#789 in parallel. Check J7 (#779) profit dashboard for next Lead design task."
+    },
+    "j4_output": {
+      "doc": "docs/qr-bulk-upload-spec.md",
+      "new_models": ["ProductDraftBatch", "ProductDraft"],
+      "new_api_endpoints": [
+        "POST /api/admin/drafts/start",
+        "GET /api/admin/drafts/auth",
+        "POST /api/admin/drafts/[batchId]/items",
+        "PATCH /api/admin/drafts/[batchId]/items/[draftId]",
+        "POST /api/admin/drafts/[batchId]/seal",
+        "POST /api/admin/drafts/[batchId]/publish",
+        "GET /api/admin/drafts"
+      ],
+      "new_pages": [
+        "/admin/drafts/[batchId]/mobile",
+        "/admin/drafts/[batchId]"
+      ],
+      "tasks_filed": [786, 787, 788, 789, 790, 791, 792]
+    },
+    "bectly_gates_aging": {
+      "#14_gmc_registration": "OVERDUE — Apr 30 Doppl VTO deadline passed. Self-reg at merchants.google.com.",
+      "#553_pinterest_self_registration": "Code complete. docs/pinterest-catalog-setup.md.",
+      "#534_smtp_creds": "SMTP_HOST/SMTP_USER/SMTP_PASSWORD needed for 21-template smoke.",
+      "#4_heureka_overeno": "Free Start tier at sluzby.heureka.cz.",
+      "DRAFT_QR_SECRET": "NEW — must add 32-byte random secret to .env.local for J4 QR auth."
+    }
+  },
   "cycle_5013_directive": {
     "context": "C5013 J3 COMPLETE. Task #769 (product-add pipeline audit) done — docs/admin-product-pipeline.md committed. 6 new devloop_tasks filed (#771-#773 BOLT, #775-#776 SAGE, #777 TRACE) covering: SKU auto-gen, Quick-Add extras, success toast, mobile image reorder, Quick-Add FAB, E2E for quick-add. Workers should pick up J-series tasks (#767-#770 + new #771-#777). HEAD 48ded70 (stable 25 cycles). GMC Apr 30 deadline T-3. Monitors all fresh (next 2026-05-03).",
     "no_dispatch_rationale": "J-series tasks are now decomposed. Workers (#767-#777) are actionable without bectly gate. Bolt can start on #771 (SKU auto-gen, low risk). Sage on #775 (tap-to-swap) or #776 (FAB). Trace on #777 (E2E). J4 design (#770) is next Lead task — depends on J3 audit now complete.",
