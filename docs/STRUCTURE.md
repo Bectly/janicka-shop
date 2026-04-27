@@ -1,7 +1,7 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 489 files, ~79,021 LOC.
-**Drill-down dropped** — full render was 52,394 chars > cap 10,000 (~19% shown). Grep source files directly for symbol-level detail.
+Auto-generated. Total: 495 files, ~79,660 LOC.
+**Drill-down dropped** — full render was 53,008 chars > cap 10,000 (~19% shown). Grep source files directly for symbol-level detail.
 
 ---
 
@@ -59,7 +59,7 @@ Auto-generated. Total: 489 files, ~79,021 LOC.
 - scripts/workers/packeta.ts (7 LOC)
 - scripts/workers/test-queue-integration.ts (482 LOC)
 
-## `src/` (446 files)
+## `src/` (452 files)
 
 - src/app/(admin)/admin/abandoned-carts/loading.tsx (6 LOC)
 - src/app/(admin)/admin/abandoned-carts/page.tsx (214 LOC)
@@ -155,6 +155,11 @@ Auto-generated. Total: 489 files, ~79,021 LOC.
 - src/app/(admin)/admin/subscribers/mothers-day-campaign-button.tsx (121 LOC)
 - src/app/(admin)/admin/subscribers/page.tsx (264 LOC)
 - src/app/(admin)/admin/subscribers/subscriber-toggle.tsx (32 LOC)
+- src/app/(admin)/admin/suppliers/actions.ts (151 LOC)
+- src/app/(admin)/admin/suppliers/loading.tsx (6 LOC)
+- src/app/(admin)/admin/suppliers/page.tsx (108 LOC)
+- src/app/(admin)/admin/suppliers/supplier-form-sheet.tsx (224 LOC)
+- src/app/(admin)/admin/suppliers/supplier-row.tsx (126 LOC)
 - src/app/(admin)/error.tsx (56 LOC)
 - src/app/(admin-auth)/admin/login/page.tsx (91 LOC)
 - src/app/(admin-onboarding)/admin/welcome/page.tsx (114 LOC)
@@ -184,12 +189,6 @@ Auto-generated. Total: 489 files, ~79,021 LOC.
 - src/app/(shop)/account/oblibene/wishlist-grid.tsx (167 LOC)
 - src/app/(shop)/account/order-status-badge.tsx (45 LOC)
 - src/app/(shop)/account/orders/[orderNumber]/page.tsx (238 LOC)
-- src/app/(shop)/account/orders/loading.tsx (6 LOC)
-- src/app/(shop)/account/orders/page.tsx (95 LOC)
-- src/app/(shop)/account/page.tsx (191 LOC)
-- src/app/(shop)/account/profile/actions.ts (153 LOC)
-- src/app/(shop)/account/profile/loading.tsx (6 LOC)
-- src/app/(shop)/account/profile/page.tsx (108 LOC)
-- src/a
+- src/app/(shop)/acco
 
-... [truncated at 10,000 chars; compact render was 24,867. Use git ls-files for full file list.]
+... [truncated at 10,000 chars; compact render was 25,194. Use git ls-files for full file list.]
