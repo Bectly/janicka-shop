@@ -9,8 +9,6 @@ export const metadata: Metadata = {
   title: "Reporty — Zisk",
 };
 
-export const dynamic = "force-dynamic";
-
 type BundleRow = {
   bundleId: string;
   bundleName: string;

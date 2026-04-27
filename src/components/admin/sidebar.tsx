@@ -26,6 +26,7 @@ import {
   Briefcase,
   Menu,
   Truck,
+  TrendingUp,
 } from "lucide-react";
 import {
   Sheet,
@@ -57,6 +58,7 @@ const navItems: NavItem[] = [
   { href: "/admin/email-templates", label: "E-mail editor", icon: PenLine },
   { divider: true },
   { href: "/admin/suppliers", label: "Dodavatelé", icon: Truck },
+  { href: "/admin/reports/profit", label: "Reporty", icon: TrendingUp },
   { href: "/admin/manager", label: "Manažerka", icon: Briefcase },
   { href: "/admin/settings", label: "Nastavení", icon: Settings },
 ];
