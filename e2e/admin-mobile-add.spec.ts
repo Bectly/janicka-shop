@@ -112,7 +112,7 @@ test.describe("J8-T1 — mobile add happy path (base fields)", () => {
     //    requireDraftSessionForBatch parses "${batchId}:${adminId}" and the
     //    items/seal routes only check that the parsed batchId matches the URL
     //    param + the batch's adminId matches.
-    const baseUrl = new URL(page.context().pages()[0]?.url() || "http://localhost:3000");
+    const baseUrl = new URL(page.url());
     await context.addCookies([
       {
         name: "draft_session",
