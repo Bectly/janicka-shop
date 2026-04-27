@@ -27,6 +27,12 @@ const itemSchema = z.object({
   defectsNote: z.string().max(2000).nullable().optional(),
   defectImages: z.array(z.string().url().max(2000)).max(10).optional(),
   internalNote: z.string().max(2000).nullable().optional(),
+  videoUrl: z.string().url().max(2000).nullable().optional(),
+  compareAt: z.coerce.number().nonnegative().nullable().optional(),
+  featured: z.boolean().optional(),
+  metaTitle: z.string().max(70).nullable().optional(),
+  metaDescription: z.string().max(160).nullable().optional(),
+  weightG: z.coerce.number().int().positive().nullable().optional(),
 });
 
 interface RouteContext {
@@ -90,6 +96,12 @@ export async function POST(req: Request, context: RouteContext) {
       defectsNote: data.defectsNote?.trim() || null,
       defectImages: data.defectImages ? JSON.stringify(data.defectImages) : "[]",
       internalNote: data.internalNote?.trim() || null,
+      videoUrl: data.videoUrl ?? null,
+      compareAt: data.compareAt ?? null,
+      featured: data.featured ?? false,
+      metaTitle: data.metaTitle?.trim() || null,
+      metaDescription: data.metaDescription?.trim() || null,
+      weightG: data.weightG ?? null,
     },
     select: { id: true },
   });

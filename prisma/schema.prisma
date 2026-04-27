@@ -881,6 +881,13 @@ model ProductDraft {
   defectImages String             @default("[]")
   internalNote String?
 
+  videoUrl        String?
+  compareAt       Float?
+  featured        Boolean  @default(false)
+  metaTitle       String?
+  metaDescription String?
+  weightG         Int?     // per-draft override; batch.defaultWeightG is the fallback
+
   // Draft lifecycle
   status             String    @default("pending") // pending | ready | published | discarded
   publishedProductId String?   @unique             // set when promoted to Product

@@ -32,6 +32,12 @@ interface DraftRow {
   defectsNote: string | null;
   defectImages: string;
   internalNote: string | null;
+  videoUrl: string | null;
+  compareAt: number | null;
+  featured: boolean;
+  metaTitle: string | null;
+  metaDescription: string | null;
+  weightG: number | null;
 }
 
 function slugify(text: string): string {
@@ -108,7 +114,14 @@ export async function POST(req: Request, context: RouteContext) {
   const db = await getDb();
   const batch = await db.productDraftBatch.findUnique({
     where: { id: batchId },
-    select: { id: true, adminId: true },
+    select: {
+      id: true,
+      adminId: true,
+      bundleId: true,
+      bundleLineId: true,
+      defaultWeightG: true,
+      bundleLine: { select: { pricePerKg: true } },
+    },
   });
   if (!batch || batch.adminId !== adminId) {
     return NextResponse.json({ error: "Batch nenalezen" }, { status: 404 });
@@ -169,9 +182,22 @@ export async function POST(req: Request, context: RouteContext) {
           defectsNote: draft.defectsNote,
           defectImages: JSON.stringify(movedDefectUrls),
           internalNote: draft.internalNote?.trim() || null,
+          videoUrl: draft.videoUrl ?? null,
+          compareAt: draft.compareAt ?? null,
+          featured: draft.featured,
+          metaTitle: draft.metaTitle ?? null,
+          metaDescription: draft.metaDescription ?? null,
           stock: 1,
-          featured: false,
           active: true,
+          bundleId: batch.bundleId ?? null,
+          bundleLineId: batch.bundleLineId ?? null,
+          weightG: draft.weightG ?? batch.defaultWeightG ?? null,
+          costBasis: (() => {
+            const wg = draft.weightG ?? batch.defaultWeightG ?? null;
+            return batch.bundleLineId && wg && batch.bundleLine
+              ? (wg / 1000) * batch.bundleLine.pricePerKg
+              : null;
+          })(),
         },
         select: { id: true, slug: true, price: true },
       });

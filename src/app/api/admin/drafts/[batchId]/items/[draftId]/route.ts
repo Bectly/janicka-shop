@@ -29,6 +29,12 @@ const patchSchema = z.object({
   defectImages: z.array(z.string().url().max(2000)).max(10).optional(),
   internalNote: z.string().max(2000).nullable().optional(),
   status: z.enum(["pending", "ready", "discarded"]).optional(),
+  videoUrl: z.string().url().max(2000).nullable().optional(),
+  compareAt: z.coerce.number().nonnegative().nullable().optional(),
+  featured: z.boolean().optional(),
+  metaTitle: z.string().max(70).nullable().optional(),
+  metaDescription: z.string().max(160).nullable().optional(),
+  weightG: z.coerce.number().int().positive().nullable().optional(),
 });
 
 interface RouteContext {
@@ -121,6 +127,12 @@ export async function PATCH(req: Request, context: RouteContext) {
   if (d.defectImages !== undefined) data.defectImages = JSON.stringify(d.defectImages);
   if (d.internalNote !== undefined) data.internalNote = d.internalNote?.trim() || null;
   if (d.status !== undefined) data.status = d.status;
+  if (d.videoUrl !== undefined) data.videoUrl = d.videoUrl ?? null;
+  if (d.compareAt !== undefined) data.compareAt = d.compareAt ?? null;
+  if (d.featured !== undefined) data.featured = d.featured;
+  if (d.metaTitle !== undefined) data.metaTitle = d.metaTitle?.trim() || null;
+  if (d.metaDescription !== undefined) data.metaDescription = d.metaDescription?.trim() || null;
+  if (d.weightG !== undefined) data.weightG = d.weightG ?? null;
 
   await db.productDraft.update({
     where: { id: draftId },
