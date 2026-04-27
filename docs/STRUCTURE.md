@@ -1,7 +1,7 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 472 files, ~75,827 LOC.
-**Drill-down dropped** — full render was 50,467 chars > cap 10,000 (~20% shown). Grep source files directly for symbol-level detail.
+Auto-generated. Total: 473 files, ~76,171 LOC.
+**Drill-down dropped** — full render was 50,601 chars > cap 10,000 (~20% shown). Grep source files directly for symbol-level detail.
 
 ---
 
@@ -17,7 +17,7 @@ Auto-generated. Total: 472 files, ~75,827 LOC.
 
 - prisma/seed.ts (157 LOC)
 
-## `scripts/` (38 files)
+## `scripts/` (39 files)
 
 - scripts/audit-r2-image-urls.ts (140 LOC)
 - scripts/backfill-alt-text.ts (127 LOC)
@@ -35,6 +35,7 @@ Auto-generated. Total: 472 files, ~75,827 LOC.
 - scripts/cron/order-status-sync.ts (132 LOC)
 - scripts/extract-defects-from-descriptions.ts (308 LOC)
 - scripts/extract-measurements-from-descriptions.ts (158 LOC)
+- scripts/import-opatex.ts (344 LOC)
 - scripts/import-vinted-products.ts (405 LOC)
 - scripts/lighthouse-perf.ts (285 LOC)
 - scripts/migrate-vinted-images.ts (397 LOC)
@@ -191,6 +192,6 @@ Auto-generated. Total: 472 files, ~75,827 LOC.
 - src/app/(shop)/cart/page.tsx (408 LOC)
 - src/app/(shop)/checkout/actions.ts (823 LOC)
 - src/app/(shop)/checkout/error.tsx (50 LOC)
-- src/app/(shop)/checkout/mock-payment/mock-paymen
+- src/app/(sh
 
-... [truncated at 10,000 chars; compact render was 23,894. Use git ls-files for full file list.]
+... [truncated at 10,000 chars; compact render was 23,931. Use git ls-files for full file list.]
