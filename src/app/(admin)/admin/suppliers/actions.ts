@@ -5,6 +5,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { getDb } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { rateLimitAdmin } from "@/lib/rate-limit";
+import { setSiteSetting } from "@/lib/site-settings";
 
 const supplierSchema = z.object({
   name: z
@@ -56,6 +57,13 @@ function parseFromForm(formData: FormData) {
 function invalidate() {
   revalidateTag("admin-suppliers", "max");
   revalidatePath("/admin/suppliers");
+}
+
+function invalidateSupplier(id: string) {
+  revalidateTag("admin-suppliers", "max");
+  revalidateTag(`admin-supplier:${id}`, "max");
+  revalidatePath("/admin/suppliers");
+  revalidatePath(`/admin/suppliers/${id}`);
 }
 
 export async function createSupplier(formData: FormData) {
@@ -128,6 +136,95 @@ export async function toggleSupplierActive(id: string) {
   });
 
   invalidate();
+}
+
+const bundleSchema = z.object({
+  orderDate: z
+    .string()
+    .min(1, "Datum objednávky je povinné")
+    .refine((s) => !Number.isNaN(Date.parse(s)), "Neplatné datum")
+    .transform((s) => new Date(s)),
+  totalKg: z
+    .coerce.number({ error: "Hmotnost musí být číslo" })
+    .positive("Hmotnost musí být kladná")
+    .max(100000, "Hmotnost je příliš velká"),
+  totalPrice: z
+    .coerce.number({ error: "Cena musí být číslo" })
+    .nonnegative("Cena nesmí být záporná")
+    .max(100000000, "Cena je příliš velká"),
+  invoiceNumber: z
+    .string()
+    .max(100, "Číslo faktury je příliš dlouhé")
+    .nullable()
+    .or(z.literal("").transform(() => null)),
+  notes: z
+    .string()
+    .max(8000, "Poznámky jsou příliš dlouhé")
+    .nullable()
+    .or(z.literal("").transform(() => null)),
+});
+
+export async function createBundle(supplierId: string, formData: FormData) {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
+
+  const data = bundleSchema.parse({
+    orderDate: (formData.get("orderDate") as string) ?? "",
+    totalKg: (formData.get("totalKg") as string) ?? "",
+    totalPrice: (formData.get("totalPrice") as string) ?? "",
+    invoiceNumber: (formData.get("invoiceNumber") as string) || null,
+    notes: (formData.get("notes") as string) || null,
+  });
+
+  const db = await getDb();
+
+  const supplier = await db.supplier.findUnique({
+    where: { id: supplierId },
+    select: { id: true },
+  });
+  if (!supplier) throw new Error("Dodavatel nenalezen");
+
+  await db.supplierBundle.create({
+    data: {
+      supplierId,
+      orderDate: data.orderDate,
+      totalKg: data.totalKg,
+      totalPrice: data.totalPrice,
+      invoiceNumber: data.invoiceNumber,
+      notes: data.notes,
+      status: "ordered",
+    },
+  });
+
+  invalidateSupplier(supplierId);
+}
+
+export async function setActiveBundle(bundleId: string) {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
+
+  const db = await getDb();
+  const bundle = await db.supplierBundle.findUnique({
+    where: { id: bundleId },
+    select: { id: true, supplierId: true },
+  });
+  if (!bundle) throw new Error("Balík nenalezen");
+
+  await setSiteSetting("activeBundleId", bundleId);
+
+  invalidateSupplier(bundle.supplierId);
+}
+
+export async function clearActiveBundle() {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) throw new Error("Příliš mnoho požadavků. Zkuste to za chvíli.");
+
+  await setSiteSetting("activeBundleId", "none");
+  revalidateTag("admin-suppliers", "max");
+  revalidatePath("/admin/suppliers", "layout");
 }
 
 export async function deleteSupplier(id: string) {
