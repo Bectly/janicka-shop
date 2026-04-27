@@ -1,6 +1,6 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 472 files, ~75,808 LOC.
+Auto-generated. Total: 472 files, ~75,818 LOC.
 **Drill-down dropped** — full render was 50,467 chars > cap 10,000 (~20% shown). Grep source files directly for symbol-level detail.
 
 ---
@@ -40,7 +40,7 @@ Auto-generated. Total: 472 files, ~75,808 LOC.
 - scripts/migrate-vinted-images.ts (397 LOC)
 - scripts/move-defect-warnings-from-description.ts (134 LOC)
 - scripts/normalize-sizes.ts (154 LOC)
-- scripts/playwright-global-teardown.ts (196 LOC)
+- scripts/playwright-global-teardown.ts (206 LOC)
 - scripts/push-defects-to-turso.ts (86 LOC)
 - scripts/restore-vinted-data.ts (444 LOC)
 - scripts/restore-vinted-originals.ts (275 LOC)
