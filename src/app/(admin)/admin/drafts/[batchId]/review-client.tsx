@@ -8,6 +8,7 @@ import {
   Check,
   Loader2,
   MessageCircle,
+  Sparkles,
   Trash2,
   ExternalLink,
   AlertCircle,
@@ -20,9 +21,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { CONDITION_LABELS } from "@/lib/constants";
 
 import {
+  bulkUpdateDraftsAction,
   deleteBatchAction,
   discardDraftAction,
   publishDraftsAction,
@@ -164,12 +173,20 @@ export function BatchReviewClient({
   const [errorByDraft, setErrorByDraft] = useState<Record<string, string>>({});
   const [isBulkPublishing, startBulkPublish] = useTransition();
   const [isDeleting, startDelete] = useTransition();
+  const [, startPollingTransition] = useTransition();
 
   // 2-pane: which draft is shown in right panel
   const [activeDraftId, setActiveDraftId] = useState<string | null>(null);
 
   // Checkbox selection state
   const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  // Bulk edit dialog
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [bulkCategory, setBulkCategory] = useState<string>("");
+  const [isBulkApplying, startBulkApply] = useTransition();
+  const [isBulkAiFilling, setIsBulkAiFilling] = useState(false);
+  const [bulkAiResult, setBulkAiResult] = useState<string | null>(null);
 
   const visibleDrafts = useMemo(
     () => drafts.filter((d) => d.status !== "discarded"),
@@ -180,6 +197,15 @@ export function BatchReviewClient({
     () => visibleDrafts.filter((d) => d.status === "pending" || d.status === "ready"),
     [visibleDrafts],
   );
+
+  // Poll for new drafts every 15s — handles Janička adding from mobile while bectly reviews on PC
+  useEffect(() => {
+    if (status === "published") return
+    const interval = setInterval(() => {
+      startPollingTransition(() => { router.refresh() })
+    }, 15_000)
+    return () => clearInterval(interval)
+  }, [status, router, startPollingTransition])
 
   // Set default active draft on first render
   useEffect(() => {
@@ -286,6 +312,75 @@ export function BatchReviewClient({
     });
   }
 
+  function handleBulkApply() {
+    if (!bulkCategory) {
+      setBulkDialogOpen(false);
+      return;
+    }
+    startBulkApply(async () => {
+      try {
+        const ids = Array.from(selected);
+        const result = await bulkUpdateDraftsAction(batchId, ids, {
+          categoryId: bulkCategory || undefined,
+        });
+        setDrafts((prev) =>
+          prev.map((d) =>
+            ids.includes(d.id)
+              ? { ...d, categoryId: bulkCategory || d.categoryId }
+              : d,
+          ),
+        );
+        setBulkDialogOpen(false);
+        setBulkCategory("");
+        alert(`Aktualizováno ${result.updatedCount} kousků`);
+      } catch (err) {
+        setGlobalError(err instanceof Error ? err.message : "Hromadná aktualizace selhala");
+        setBulkDialogOpen(false);
+      }
+    });
+  }
+
+  async function handleBulkAiFill() {
+    setBulkAiResult(null);
+    setIsBulkAiFilling(true);
+    try {
+      const ids = Array.from(selected);
+      const res = await fetch("/api/admin/ai/draft-fill", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ draftIds: ids, batchId }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = (await res.json()) as {
+        results: Array<{
+          draftId: string;
+          description: string;
+          metaTitle: string;
+          metaDescription: string;
+        }>;
+      };
+      setDrafts((prev) =>
+        prev.map((d) => {
+          const fill = data.results.find((r) => r.draftId === d.id);
+          if (!fill) return d;
+          return {
+            ...d,
+            description: fill.description,
+            metaTitle: fill.metaTitle,
+            metaDescription: fill.metaDescription,
+          };
+        }),
+      );
+      setBulkAiResult(`Vyplněno ${data.results.length} kousků`);
+    } catch (err) {
+      setBulkAiResult(
+        `Chyba: ${err instanceof Error ? err.message : "AI vyplnění selhalo"}`,
+      );
+    } finally {
+      setIsBulkAiFilling(false);
+    }
+  }
+
   function handleManagerHandoff() {
     const ids = pendingDrafts.map((d) => d.id).join(",");
     const url = `/admin/manager?batchId=${encodeURIComponent(batchId)}${
@@ -358,6 +453,20 @@ export function BatchReviewClient({
                 </button>
               </div>
             )}
+            {selected.size >= 2 && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setBulkAiResult(null);
+                  setBulkDialogOpen(true);
+                }}
+              >
+                <Sparkles className="size-3.5" />
+                Hromadně upravit ({selected.size})
+              </Button>
+            )}
             <Button
               type="button"
               variant="outline"
@@ -418,6 +527,71 @@ export function BatchReviewClient({
           </div>
         )}
       </header>
+
+      {/* Bulk edit dialog */}
+      <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Hromadné úpravy ({selected.size} kousků)</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            {/* Category */}
+            <div className="space-y-1.5">
+              <Label htmlFor="bulk-category">Kategorie</Label>
+              <select
+                id="bulk-category"
+                value={bulkCategory}
+                onChange={(e) => setBulkCategory(e.target.value)}
+                className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <option value="">— ponechat beze změny —</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* AI fill */}
+            <div className="space-y-1.5">
+              <Label>Auto-vyplnit popis přes AI</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleBulkAiFill}
+                disabled={isBulkAiFilling}
+                className="w-full"
+              >
+                {isBulkAiFilling ? (
+                  <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                ) : (
+                  <Sparkles className="size-3.5" aria-hidden />
+                )}
+                Auto-vyplnit popis přes AI
+              </Button>
+              {bulkAiResult && (
+                <p className="text-xs text-muted-foreground">{bulkAiResult}</p>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter showCloseButton>
+            <Button
+              type="button"
+              onClick={handleBulkApply}
+              disabled={isBulkApplying || !bulkCategory}
+            >
+              {isBulkApplying && (
+                <Loader2 className="size-3.5 animate-spin" aria-hidden />
+              )}
+              Použít
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Body */}
       {visibleDrafts.length === 0 ? (

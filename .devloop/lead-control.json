@@ -1,7 +1,9 @@
 {
   "last_bolt_commit_cycle": 5046,
-  "pause": {},
-  "paused_at_bolt_cycle": 5037,
+  "pause": {
+    "sage": "until_next_bolt_commit"
+  },
+  "paused_at_bolt_cycle": 5046,
   "last_lead_cycle": 5024,
   "cycle_5024_directive": {
     "context": "C5024 J4 DESIGN COMPLETE. docs/qr-bulk-upload-spec.md committed (93002da). 7 tasks filed: #786 Bolt (Prisma migration), #787 Bolt (QR auth API), #788 Bolt (Draft CRUD API), #789 Sage (mobile add UI), #790 Sage (PC QR modal + review page), #791 Bolt (R2 cleanup cron), #792 Trace (E2E). Task #770 marked done. J-series MVP: #786-#790 are P1. J7 profit dashboard (#779) + J8 mobile fields (#780) remain open. J5 (#777) Trace task now done (5023 cycle).",

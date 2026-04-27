@@ -1,7 +1,7 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 504 files, ~81,168 LOC.
-**Drill-down dropped** — full render was 54,005 chars > cap 10,000 (~19% shown). Grep source files directly for symbol-level detail.
+Auto-generated. Total: 507 files, ~82,410 LOC.
+**Drill-down dropped** — full render was 54,273 chars > cap 10,000 (~18% shown). Grep source files directly for symbol-level detail.
 
 ---
 
@@ -59,7 +59,7 @@ Auto-generated. Total: 504 files, ~81,168 LOC.
 - scripts/workers/packeta.ts (7 LOC)
 - scripts/workers/test-queue-integration.ts (482 LOC)
 
-## `src/` (461 files)
+## `src/` (464 files)
 
 - src/app/(admin)/admin/abandoned-carts/loading.tsx (6 LOC)
 - src/app/(admin)/admin/abandoned-carts/page.tsx (214 LOC)
@@ -98,11 +98,11 @@ Auto-generated. Total: 504 files, ~81,168 LOC.
 - src/app/(admin)/admin/customers/tag-editor.tsx (152 LOC)
 - src/app/(admin)/admin/dashboard/analytics-data.ts (236 LOC)
 - src/app/(admin)/admin/dashboard/loading.tsx (6 LOC)
-- src/app/(admin)/admin/dashboard/page.tsx (617 LOC)
+- src/app/(admin)/admin/dashboard/page.tsx (631 LOC)
 - src/app/(admin)/admin/dashboard/period-selector.tsx (57 LOC)
-- src/app/(admin)/admin/drafts/[batchId]/actions.ts (272 LOC)
-- src/app/(admin)/admin/drafts/[batchId]/page.tsx (104 LOC)
-- src/app/(admin)/admin/drafts/[batchId]/review-client.tsx (640 LOC)
+- src/app/(admin)/admin/drafts/[batchId]/actions.ts (340 LOC)
+- src/app/(admin)/admin/drafts/[batchId]/page.tsx (138 LOC)
+- src/app/(admin)/admin/drafts/[batchId]/review-client.tsx (1275 LOC)
 - src/app/(admin)/admin/email-templates/actions.ts (133 LOC)
 - src/app/(admin)/admin/email-templates/email-editor.tsx (255 LOC)
 - src/app/(admin)/admin/email-templates/loading.tsx (6 LOC)
@@ -188,6 +188,6 @@ Auto-generated. Total: 504 files, ~81,168 LOC.
 - src/app/(shop)/account/loading.tsx (6 LOC)
 - src/app/(shop)/account/nastaveni/actions.ts (116 LOC)
 - src/app/(shop)/account/nastaveni/loading.tsx (6 LOC)
-- src/app/(shop)/account/nastaveni
+- src/app/(shop)/account/nastaven
 
-... [truncated at 10,000 chars; compact render was 25,735. Use git ls-files for full file list.]
+... [truncated at 10,000 chars; compact render was 25,896. Use git ls-files for full file list.]

@@ -32,6 +32,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { PeriodSelector } from "./period-selector";
 import { EnvHealthBanner } from "@/components/admin/env-health-banner";
+import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
   title: "Přehled",
@@ -242,6 +243,19 @@ export default async function AdminDashboardPage({
           </p>
         </div>
         <PeriodSelector activePeriod={period} />
+      </div>
+
+      {/* Quick action — add new batch */}
+      <div className="mt-4 rounded-xl border-2 border-pink-200 bg-pink-50 p-4 flex items-center justify-between gap-4">
+        <div>
+          <p className="font-semibold text-pink-900">Přidávej kousky</p>
+          <p className="text-sm text-pink-700">Začni nový batch a foť z mobilu</p>
+        </div>
+        <Link href="/admin/drafts/new">
+          <Button className="bg-pink-500 hover:bg-pink-600 text-white font-semibold px-6 py-3 text-base shadow-md">
+            📸 Jdu fotit a přidávat
+          </Button>
+        </Link>
       </div>
 
       {/* Stats grid */}
