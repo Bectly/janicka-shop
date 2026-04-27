@@ -1,7 +1,7 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 508 files, ~82,630 LOC.
-**Drill-down dropped** — full render was 54,429 chars > cap 10,000 (~18% shown). Grep source files directly for symbol-level detail.
+Auto-generated. Total: 509 files, ~82,730 LOC.
+**Drill-down dropped** — full render was 54,471 chars > cap 10,000 (~18% shown). Grep source files directly for symbol-level detail.
 
 ---
 
@@ -59,7 +59,7 @@ Auto-generated. Total: 508 files, ~82,630 LOC.
 - scripts/workers/packeta.ts (7 LOC)
 - scripts/workers/test-queue-integration.ts (482 LOC)
 
-## `src/` (465 files)
+## `src/` (466 files)
 
 - src/app/(admin)/admin/abandoned-carts/loading.tsx (6 LOC)
 - src/app/(admin)/admin/abandoned-carts/page.tsx (214 LOC)
@@ -102,7 +102,7 @@ Auto-generated. Total: 508 files, ~82,630 LOC.
 - src/app/(admin)/admin/dashboard/period-selector.tsx (57 LOC)
 - src/app/(admin)/admin/drafts/[batchId]/actions.ts (340 LOC)
 - src/app/(admin)/admin/drafts/[batchId]/page.tsx (138 LOC)
-- src/app/(admin)/admin/drafts/[batchId]/review-client.tsx (1275 LOC)
+- src/app/(admin)/admin/drafts/[batchId]/review-client.tsx (1318 LOC)
 - src/app/(admin)/admin/email-templates/actions.ts (133 LOC)
 - src/app/(admin)/admin/email-templates/email-editor.tsx (255 LOC)
 - src/app/(admin)/admin/email-templates/loading.tsx (6 LOC)
@@ -190,4 +190,4 @@ Auto-generated. Total: 508 files, ~82,630 LOC.
 - src/app/(shop)/account/nastaveni/loading.tsx (6 LOC)
 - src/app/(shop)/account/nastaven
 
-... [truncated at 10,000 chars; compact render was 25,934. Use git ls-files for full file list.]
+... [truncated at 10,000 chars; compact render was 25,972. Use git ls-files for full file list.]
