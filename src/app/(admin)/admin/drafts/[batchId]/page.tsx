@@ -96,6 +96,7 @@ export default async function BatchReviewPage({ params }: PageProps) {
       sealedAt={batch.sealedAt?.toISOString() ?? null}
       createdAt={batch.createdAt.toISOString()}
       defaultWeightG={batch.defaultWeightG}
+      timingsJson={batch.timingsJson}
       drafts={drafts}
       categories={categories}
       bundle={bundleForClient}

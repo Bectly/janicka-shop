@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 import { getDb } from "@/lib/db";
 import { requireDraftSessionForBatch } from "@/lib/draft-session";
@@ -9,11 +10,41 @@ interface RouteContext {
   params: Promise<{ batchId: string }>;
 }
 
-export async function POST(_req: Request, context: RouteContext) {
+// J10-B5: timing telemetry shape captured client-side on mobile-add-form.
+const timingsSchema = z.object({
+  sessionStart: z.string().max(40).optional(),
+  pieces: z
+    .array(
+      z.object({
+        draftId: z.string().max(40).nullable().optional(),
+        startedAt: z.string().max(40),
+        submittedAt: z.string().max(40),
+        durationMs: z.number().int().nonnegative().max(24 * 60 * 60 * 1000),
+      })
+    )
+    .max(500)
+    .optional(),
+});
+
+export async function POST(req: Request, context: RouteContext) {
   const { batchId } = await context.params;
   const session = await requireDraftSessionForBatch(batchId);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Body is optional — older clients post nothing. Parse leniently.
+  let timingsJson: string | null = null;
+  try {
+    const raw = await req.text();
+    if (raw && raw.trim().length > 0) {
+      const parsed = timingsSchema.safeParse(JSON.parse(raw));
+      if (parsed.success) {
+        timingsJson = JSON.stringify(parsed.data);
+      }
+    }
+  } catch {
+    // ignore — seal must not fail because of malformed telemetry
   }
 
   const db = await getDb();
@@ -51,7 +82,11 @@ export async function POST(_req: Request, context: RouteContext) {
 
   await db.productDraftBatch.update({
     where: { id: batchId },
-    data: { status: "sealed", sealedAt: new Date() },
+    data: {
+      status: "sealed",
+      sealedAt: new Date(),
+      ...(timingsJson ? { timingsJson } : {}),
+    },
   });
 
   // Fire-and-forget admin notification — never block seal on email failure.

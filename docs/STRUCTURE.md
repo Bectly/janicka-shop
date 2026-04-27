@@ -1,7 +1,7 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 511 files, ~83,214 LOC.
-**Drill-down dropped** — full render was 54,675 chars > cap 10,000 (~18% shown). Grep source files directly for symbol-level detail.
+Auto-generated. Total: 512 files, ~83,972 LOC.
+**Drill-down dropped** — full render was 54,866 chars > cap 10,000 (~18% shown). Grep source files directly for symbol-level detail.
 
 ---
 
@@ -59,7 +59,7 @@ Auto-generated. Total: 511 files, ~83,214 LOC.
 - scripts/workers/packeta.ts (7 LOC)
 - scripts/workers/test-queue-integration.ts (482 LOC)
 
-## `src/` (468 files)
+## `src/` (469 files)
 
 - src/app/(admin)/admin/abandoned-carts/loading.tsx (6 LOC)
 - src/app/(admin)/admin/abandoned-carts/page.tsx (214 LOC)
@@ -173,8 +173,8 @@ Auto-generated. Total: 511 files, ~83,214 LOC.
 - src/app/(admin)/error.tsx (56 LOC)
 - src/app/(admin-auth)/admin/login/page.tsx (91 LOC)
 - src/app/(admin-onboarding)/admin/welcome/page.tsx (114 LOC)
-- src/app/(drafts-mobile)/admin/drafts/[batchId]/mobile/mobile-add-form.tsx (572 LOC)
-- src/app/(drafts-mobile)/admin/drafts/[batchId]/mobile/page.tsx (60 LOC)
+- src/app/(drafts-mobile)/admin/drafts/[batchId]/mobile/mobile-add-form.tsx (685 LOC)
+- src/app/(drafts-mobile)/admin/drafts/[batchId]/mobile/page.tsx (65 LOC)
 - src/app/(shop)/about/page.tsx (116 LOC)
 - src/app/(shop)/account/account-nav.tsx (56 LOC)
 - src/app/(shop)/account/account-skeletons.tsx (81 LOC)
@@ -190,4 +190,4 @@ Auto-generated. Total: 511 files, ~83,214 LOC.
 - src/app/(shop)/account/loading.tsx (6 LOC)
 - src/app/(shop)/acco
 
-... [truncated at 10,000 chars; compact render was 26,095. Use git ls-files for full file list.]
+... [truncated at 10,000 chars; compact render was 26,131. Use git ls-files for full file list.]

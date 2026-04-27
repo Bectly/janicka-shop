@@ -86,6 +86,7 @@ interface BatchReviewClientProps {
   sealedAt: string | null;
   createdAt: string;
   defaultWeightG: number | null | undefined;
+  timingsJson: string;
   drafts: DraftRow[];
   categories: Category[];
   bundle: BundleInfo | null;
@@ -162,6 +163,7 @@ export function BatchReviewClient({
   sealedAt,
   createdAt,
   defaultWeightG,
+  timingsJson,
   drafts: initialDrafts,
   categories,
   bundle,
