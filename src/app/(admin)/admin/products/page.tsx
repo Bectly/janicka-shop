@@ -326,6 +326,15 @@ export default async function AdminProductsPage({
           basePath="/admin/products"
         />
       </Suspense>
+
+      {/* Mobile-only Quick-Add FAB — one-tap access from product list on phones */}
+      <Link
+        href="/admin/products/quick-add"
+        aria-label="Rychlé přidání produktu"
+        className="fixed bottom-6 right-6 z-40 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 transition-transform hover:scale-105 active:scale-95 sm:hidden"
+      >
+        <Zap className="size-6" />
+      </Link>
     </>
   );
 }
