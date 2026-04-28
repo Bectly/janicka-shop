@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { uploadToR2 } from "@/lib/r2";
+import { uploadImage } from "@/lib/image-storage";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 const ALLOWED_IMAGE_TYPES = [
@@ -142,7 +142,7 @@ export async function POST(req: NextRequest) {
     }
 
     const folder = isVideo ? "videos" : "products";
-    const { url } = await uploadToR2(buffer, file.name, file.type, folder);
+    const { url } = await uploadImage(buffer, file.name, file.type, folder);
     urls.push(url);
   }
 
