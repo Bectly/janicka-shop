@@ -97,8 +97,20 @@ Whenever a secret rotates or a new env var is added, **both** envs need it. The 
    in Phase 5 prep, see `harden-phase5.sh` step 11.)
 2. **Hetzner sync**: `scripts/hetzner/sync-env-hetzner.sh` runs hourly (Phase 5 systemd timer)
    and writes `/opt/janicka-shop/.env` on the VPS atomically.
+
+   **Step 5b — standalone copy must be re-synced after every outer edit.** Next.js
+   standalone bundle reads env from `.next/standalone/.env.production`, not the outer file
+   the hourly timer just rewrote. The `janicka-env-standalone-sync.path` watcher (cycle
+   #5155 task #934) catches the inotify event and runs
+   `scripts/hetzner/sync-env-standalone.sh --apply` + `pm2 reload --update-env`
+   automatically. **Verify it's enabled** before declaring DR-ready:
+   `systemctl is-enabled janicka-env-standalone-sync.path` should report `enabled`.
+   Manual fallback: `sync-env-standalone.sh --apply` then restart pm2.
+   Failure mode this prevents: silent stale config (caused 2026-04-28 auth outage).
+   See `docs/runbooks/env-standalone-trap.md`.
 3. **Vercel sync**: still manual — Vercel dashboard or `vercel env pull / vercel env add`.
    For Phase 6 we accept this as a known operational debt; revisit if it becomes painful.
+   Vercel does not use `output: "standalone"`, so the standalone-sync hook is Hetzner-only.
 
 Concretely on Vercel for Option A:
 

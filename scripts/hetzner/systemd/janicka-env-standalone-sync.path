@@ -1,0 +1,15 @@
+[Unit]
+Description=Watch /opt/janicka-shop/.env.production → trigger janicka-env-standalone-sync.service
+Documentation=file:///opt/janicka-shop/docs/runbooks/env-standalone-trap.md
+
+[Path]
+# IN_MODIFY (PathModified) covers in-place edits (sed -i, sync-env-hetzner.sh
+# atomic mv, manual nano save). PathChanged also catches editor write-then-
+# rename behavior. Both are listed so we don't miss any common mutation pattern.
+PathModified=/opt/janicka-shop/.env.production
+PathChanged=/opt/janicka-shop/.env.production
+# Trigger the matching .service of the same stem.
+Unit=janicka-env-standalone-sync.service
+
+[Install]
+WantedBy=multi-user.target

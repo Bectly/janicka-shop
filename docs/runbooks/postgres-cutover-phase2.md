@@ -105,6 +105,15 @@ Turso stays around for a 7-day cooldown (read-only safety net). Vercel will be r
 6. **Switch app config**:
    - On the VPS: edit `/opt/janicka-shop/.env.production`, set `DATABASE_URL=postgresql://janicka:PASS@127.0.0.1:5432/janicka_shop`. Keep `TURSO_DATABASE_URL`/`TURSO_AUTH_TOKEN` for the rollback window.
    - Replace `prisma/schema.prisma` with the postgres provider (or switch the build to use `schema.postgres.prisma` as the canonical schema). **Code change required** — `src/lib/db.ts` currently constructs a libsql adapter; under Postgres it must drop the adapter and use the default Prisma client.
+
+   **Step 5b — sync standalone env (post-build edits):** if the rebuild in step 7 has *already* run and you then re-edit `/opt/janicka-shop/.env.production`, the standalone bundle's copy at `.next/standalone/.env.production` is stale and the runtime ignores your change (caused the 2026-04-28 auth outage). Run:
+
+   ```bash
+   /opt/janicka-shop/scripts/hetzner/sync-env-standalone.sh --apply
+   pm2 reload janicka-shop --update-env
+   ```
+
+   The systemd `janicka-env-standalone-sync.path` watcher (cycle #5155 task #934) makes this automatic, but `--apply` is the manual fallback if the unit isn't enabled yet. See `docs/runbooks/env-standalone-trap.md`.
 7. **Rebuild + restart** the Hetzner app:
    ```bash
    cd /opt/janicka-shop

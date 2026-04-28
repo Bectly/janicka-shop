@@ -82,6 +82,15 @@ Same supervised window as Phase 3 — these run together:
 3. Confirm nginx `/uploads/*` block deployed and `curl -I https://janicka-shop.cz/uploads/<known-key>.webp` returns 200 + 1y immutable cache (Phase 3 § 7).
 4. Confirm `janicka-backup-images.timer` is enabled and ran at least once (so today's writes will be in the next mirror window).
 5. Set `IMAGE_STORAGE_BACKEND=local` and `IMAGE_PUBLIC_URL_BASE=https://janicka-shop.cz/uploads` in `/opt/janicka-shop/.env.production` via `scripts/hetzner/sync-env-hetzner.sh` (Phase 5 # 922 idempotent sync). `LOCAL_IMAGES_DIR` defaults to `/opt/janicka-shop-images` and only needs to be set if the path differs.
+
+   **Step 5b — sync standalone env (CRITICAL post-build):** The Next.js standalone bundle reads env from `.next/standalone/.env.production`, NOT the outer file you just edited. Without this step the runtime ignores `IMAGE_STORAGE_BACKEND=local` and keeps serving from R2 — exactly the failure mode that bit us during the 2026-04-28 cutover (auth side, same root cause). Run:
+
+   ```bash
+   /opt/janicka-shop/scripts/hetzner/sync-env-standalone.sh --apply
+   ```
+
+   The systemd `janicka-env-standalone-sync.path` watcher (cycle #5155 task #934) does this automatically on every modify of the outer file. `--apply` is the manual fallback. See `docs/runbooks/env-standalone-trap.md`.
+
 6. `pm2 restart janicka-shop` (or `systemctl restart janicka-shop` depending on Phase 2 supervisor choice).
 
 ## Deploy steps (T-0)

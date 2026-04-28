@@ -1,0 +1,24 @@
+[Unit]
+Description=Janička Shop — sync outer .env.production into Next.js standalone copy + reload pm2
+Documentation=file:///opt/janicka-shop/docs/runbooks/env-standalone-trap.md
+# Triggered by janicka-env-standalone-sync.path on IN_MODIFY of the source file.
+
+[Service]
+Type=oneshot
+# Coalesce rapid edits (e.g. an editor that writes-then-renames): wait briefly,
+# then act once on the settled state.
+ExecStartPre=/bin/sleep 1
+ExecStart=/opt/janicka-shop/scripts/hetzner/sync-env-standalone.sh --apply
+# Reload pm2 with --update-env so the running Node process picks up the new
+# values from the now-synced standalone .env.production. Non-fatal if pm2 is
+# absent (e.g. supervisor migrated to systemd later).
+ExecStartPost=-/usr/bin/env bash -c 'command -v pm2 >/dev/null 2>&1 && pm2 reload janicka-shop --update-env >/dev/null 2>&1 || true'
+TimeoutStartSec=30s
+Nice=10
+# Run as root: source/target are root-owned and target needs chown to www-data.
+User=root
+StandardOutput=append:/var/log/sync-env-standalone.log
+StandardError=append:/var/log/sync-env-standalone.log
+
+[Install]
+WantedBy=multi-user.target
