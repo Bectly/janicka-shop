@@ -1,6 +1,6 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 534 files, ~88,281 LOC.
+Auto-generated. Total: 534 files, ~88,294 LOC.
 **Drill-down dropped** — full render was 57,352 chars > cap 10,000 (~17% shown). Grep source files directly for symbol-level detail.
 
 ---
@@ -105,7 +105,7 @@ Auto-generated. Total: 534 files, ~88,281 LOC.
 - src/app/(admin)/admin/customers/tag-editor.tsx (152 LOC)
 - src/app/(admin)/admin/dashboard/analytics-data.ts (236 LOC)
 - src/app/(admin)/admin/dashboard/loading.tsx (6 LOC)
-- src/app/(admin)/admin/dashboard/page.tsx (623 LOC)
+- src/app/(admin)/admin/dashboard/page.tsx (641 LOC)
 - src/app/(admin)/admin/dashboard/period-selector.tsx (57 LOC)
 - src/app/(admin)/admin/drafts/[batchId]/actions.ts (407 LOC)
 - src/app/(admin)/admin/drafts/[batchId]/page.tsx (139 LOC)
@@ -158,7 +158,7 @@ Auto-generated. Total: 534 files, ~88,281 LOC.
 - src/app/(admin)/admin/returns/loading.tsx (6 LOC)
 - src/app/(admin)/admin/returns/page.tsx (214 LOC)
 - src/app/(admin)/admin/scan/page.tsx (35 LOC)
-- src/app/(admin)/admin/scan/scanner-client.tsx (236 LOC)
+- src/app/(admin)/admin/scan/scanner-client.tsx (231 LOC)
 - src/app/(admin)/admin/settings/actions.ts (282 LOC)
 - src/app/(admin)/admin/settings/loading.tsx (6 LOC)
 - src/app/(admin)/admin/settings/measurements-backfill.tsx (124 LOC)
