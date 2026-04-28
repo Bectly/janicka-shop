@@ -53,6 +53,7 @@ async function MobileStartGate({ searchParams }: PageProps) {
   const newBatchId = rawNewBatchId && rawNewBatchId === session.batchId ? rawNewBatchId : session.batchId;
 
   const db = await getDb();
+  // eslint-disable-next-line react-hooks/purity -- request-time read in RSC, not cached
   const cutoff = new Date(Date.now() - RESUME_WINDOW_MS);
 
   // Look for ANOTHER open batch by the same admin with recent activity and at least one draft.
