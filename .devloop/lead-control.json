@@ -1,5 +1,5 @@
 {
-  "last_bolt_commit_cycle": 5078,
+  "last_bolt_commit_cycle": 5088,
   "last_sage_commit_cycle": 5083,
   "pause": {},
   "paused_at_bolt_cycle": 5046,
@@ -13,9 +13,21 @@
       "lead_next": "Cycle #5084: verify J10-B2 committed, J9-S2 committed, J7-T1 E2E green. Unlock J9-T1 (#815). Check J13 unblock (J12 tasks need bectly: #825 PWA). Monitor zero-dispatch state — workers ARE dispatched this cycle."
     },
     "tasks_in_flight": {
-      "bolt": {"task_id": 821, "tq_id": 18933, "desc": "J10-B2 offline upload queue"},
-      "sage": {"task_id": 810, "tq_id": 18935, "desc": "J9-S2 bulk actions + J14 pink button"},
-      "trace": {"task_id": 819, "tq_id": 18936, "desc": "J7-T1 profit dashboard E2E"}
+      "bolt": {
+        "task_id": 821,
+        "tq_id": 18933,
+        "desc": "J10-B2 offline upload queue"
+      },
+      "sage": {
+        "task_id": 810,
+        "tq_id": 18935,
+        "desc": "J9-S2 bulk actions + J14 pink button"
+      },
+      "trace": {
+        "task_id": 819,
+        "tq_id": 18936,
+        "desc": "J7-T1 profit dashboard E2E"
+      }
     }
   },
   "cycle_5024_directive": {

@@ -10,6 +10,7 @@ import { ProductSearch } from "@/components/admin/product-search";
 import { BulkProductTable } from "@/components/admin/bulk-product-table";
 import { QuickAddToast } from "@/components/admin/quick-add-toast";
 import { QrBatchModal } from "@/components/admin/qr-batch-modal";
+import { PhotoAddCTA } from "@/components/admin/photo-add-cta";
 import { Pagination, PaginationSkeleton } from "@/components/shop/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Metadata } from "next";
@@ -233,17 +234,17 @@ export default async function AdminProductsPage({
         </div>
         <div className="flex gap-2">
           <QrBatchModal />
-          <Button variant="outline" render={<Link href="/admin/products/quick-add" />}>
-            <Zap className="size-4" />
-            <span className="hidden sm:inline">Rychlé přidání</span>
-            <span className="sm:hidden">Rychle</span>
-          </Button>
           <Button render={<Link href="/admin/products/new" />}>
             <Plus className="size-4" />
             <span className="hidden sm:inline">Přidat produkt</span>
             <span className="sm:hidden">Přidat</span>
           </Button>
         </div>
+      </div>
+
+      {/* J14 — pink jumbo CTA: prominent mobile-first entry to quick-add */}
+      <div className="mt-5">
+        <PhotoAddCTA />
       </div>
 
       {/* Search & Filters */}

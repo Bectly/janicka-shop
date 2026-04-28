@@ -77,6 +77,11 @@ export async function POST(req: Request, context: RouteContext) {
   }
 
   const data = parsed.data;
+  await db.productDraftBatch.update({
+    where: { id: batchId },
+    data: { lastActivityAt: new Date() },
+  });
+
   const draft = await db.productDraft.create({
     data: {
       batchId,

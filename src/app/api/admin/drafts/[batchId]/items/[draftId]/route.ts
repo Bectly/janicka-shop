@@ -138,6 +138,10 @@ export async function PATCH(req: Request, context: RouteContext) {
     where: { id: draftId },
     data,
   });
+  await db.productDraftBatch.update({
+    where: { id: batchId },
+    data: { lastActivityAt: new Date() },
+  });
 
   return NextResponse.json({ ok: true });
 }

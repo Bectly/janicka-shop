@@ -15,7 +15,9 @@ import {
   CheckSquare,
   Square,
   Star,
+  Smartphone,
 } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +30,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { CONDITION_LABELS } from "@/lib/constants";
 
 import {
@@ -35,6 +44,7 @@ import {
   deleteBatchAction,
   discardDraftAction,
   publishDraftsAction,
+  reopenBatchAction,
   updateDraftAction,
 } from "./actions";
 
@@ -186,9 +196,20 @@ export function BatchReviewClient({
   // Bulk edit dialog
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [bulkCategory, setBulkCategory] = useState<string>("");
+  const [bulkDiscount, setBulkDiscount] = useState<string>("");
   const [isBulkApplying, startBulkApply] = useTransition();
   const [isBulkAiFilling, setIsBulkAiFilling] = useState(false);
   const [bulkAiResult, setBulkAiResult] = useState<string | null>(null);
+
+  // Mobile QR sheet
+  const [qrSheetOpen, setQrSheetOpen] = useState(false);
+  const [qrUrl, setQrUrl] = useState<string | null>(null);
+  const [qrExpiresAt, setQrExpiresAt] = useState<string | null>(null);
+  const [qrError, setQrError] = useState<string | null>(null);
+  const [isLoadingQr, setIsLoadingQr] = useState(false);
+
+  // Manager drawer
+  const [managerSheetOpen, setManagerSheetOpen] = useState(false);
 
   const visibleDrafts = useMemo(
     () => drafts.filter((d) => d.status !== "discarded"),
@@ -358,7 +379,12 @@ export function BatchReviewClient({
   }
 
   function handleBulkApply() {
-    if (!bulkCategory) {
+    const discountNum = bulkDiscount.trim() === "" ? null : Number(bulkDiscount);
+    const validDiscount =
+      discountNum != null && !Number.isNaN(discountNum) && discountNum > 0 && discountNum < 100
+        ? discountNum
+        : null;
+    if (!bulkCategory && validDiscount == null) {
       setBulkDialogOpen(false);
       return;
     }
@@ -367,22 +393,48 @@ export function BatchReviewClient({
         const ids = Array.from(selected);
         const result = await bulkUpdateDraftsAction(batchId, ids, {
           categoryId: bulkCategory || undefined,
+          discountPct: validDiscount ?? undefined,
         });
         setDrafts((prev) =>
-          prev.map((d) =>
-            ids.includes(d.id)
-              ? { ...d, categoryId: bulkCategory || d.categoryId }
-              : d,
-          ),
+          prev.map((d) => {
+            if (!ids.includes(d.id)) return d;
+            const next = { ...d };
+            if (bulkCategory) next.categoryId = bulkCategory;
+            if (validDiscount != null && d.price != null && d.price > 0) {
+              const original = d.compareAt ?? d.price;
+              next.price = Math.max(1, Math.round(d.price * (1 - validDiscount / 100)));
+              next.compareAt = d.compareAt ?? original;
+            }
+            return next;
+          }),
         );
         setBulkDialogOpen(false);
         setBulkCategory("");
+        setBulkDiscount("");
+        router.refresh();
         alert(`Aktualizováno ${result.updatedCount} kousků`);
       } catch (err) {
         setGlobalError(err instanceof Error ? err.message : "Hromadná aktualizace selhala");
         setBulkDialogOpen(false);
       }
     });
+  }
+
+  async function handleOpenQrSheet() {
+    setQrSheetOpen(true);
+    if (qrUrl && qrExpiresAt && new Date(qrExpiresAt).getTime() > Date.now()) return;
+    setIsLoadingQr(true);
+    setQrError(null);
+    try {
+      const result = await reopenBatchAction(batchId);
+      setQrUrl(result.qrUrl);
+      setQrExpiresAt(result.expiresAt);
+      router.refresh();
+    } catch (err) {
+      setQrError(err instanceof Error ? err.message : "Nepodařilo se vytvořit QR kód");
+    } finally {
+      setIsLoadingQr(false);
+    }
   }
 
   async function handleBulkAiFill() {
@@ -426,13 +478,12 @@ export function BatchReviewClient({
     }
   }
 
-  function handleManagerHandoff() {
+  const managerUrl = useMemo(() => {
     const ids = pendingDrafts.map((d) => d.id).join(",");
-    const url = `/admin/manager?batchId=${encodeURIComponent(batchId)}${
+    return `/admin/manager?batchId=${encodeURIComponent(batchId)}${
       ids ? `&drafts=${encodeURIComponent(ids)}` : ""
     }`;
-    router.push(url);
-  }
+  }, [batchId, pendingDrafts]);
 
   const publishButtonDisabled =
     isBulkPublishing ||
@@ -516,7 +567,17 @@ export function BatchReviewClient({
               type="button"
               variant="outline"
               size="sm"
-              onClick={handleManagerHandoff}
+              onClick={() => void handleOpenQrSheet()}
+              disabled={status === "published"}
+            >
+              <Smartphone className="size-3.5" />
+              Z mobilu
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setManagerSheetOpen(true)}
               disabled={visibleDrafts.length === 0}
             >
               <MessageCircle className="size-3.5" />
@@ -599,6 +660,24 @@ export function BatchReviewClient({
               </select>
             </div>
 
+            {/* Discount % */}
+            <div className="space-y-1.5">
+              <Label htmlFor="bulk-discount">Sleva (%)</Label>
+              <Input
+                id="bulk-discount"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={99}
+                value={bulkDiscount}
+                onChange={(e) => setBulkDiscount(e.target.value)}
+                placeholder="např. 20"
+              />
+              <p className="text-xs text-muted-foreground">
+                Sníží cenu a původní cenu zachová jako přeškrtnutou.
+              </p>
+            </div>
+
             {/* AI fill */}
             <div className="space-y-1.5">
               <Label>Auto-vyplnit popis přes AI</Label>
@@ -627,7 +706,7 @@ export function BatchReviewClient({
             <Button
               type="button"
               onClick={handleBulkApply}
-              disabled={isBulkApplying || !bulkCategory}
+              disabled={isBulkApplying || (!bulkCategory && !bulkDiscount.trim())}
             >
               {isBulkApplying && (
                 <Loader2 className="size-3.5 animate-spin" aria-hidden />
@@ -637,6 +716,101 @@ export function BatchReviewClient({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* QR Sheet — Z mobilu */}
+      <Sheet open={qrSheetOpen} onOpenChange={setQrSheetOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <Smartphone className="size-4" aria-hidden />
+              Přidat z mobilu
+            </SheetTitle>
+            <SheetDescription>
+              Naskenuj QR telefonem Janičky — otevře se mobilní formulář a kousky se přidají
+              do tohoto batche. Odkaz platí 15 minut.
+            </SheetDescription>
+          </SheetHeader>
+          <div className="px-4 pb-4">
+            {isLoadingQr && (
+              <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
+                <Loader2 className="size-5 animate-spin" aria-hidden />
+              </div>
+            )}
+            {qrError && !isLoadingQr && (
+              <div
+                role="alert"
+                className="mb-3 flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive"
+              >
+                <AlertCircle className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+                {qrError}
+              </div>
+            )}
+            {qrUrl && !isLoadingQr && (
+              <div className="space-y-3">
+                <div className="flex justify-center rounded-xl bg-white p-4 ring-1 ring-foreground/10">
+                  <QRCodeSVG
+                    value={qrUrl}
+                    size={208}
+                    level="M"
+                    marginSize={2}
+                    aria-label="QR kód pro mobilní přidávání"
+                  />
+                </div>
+                <p className="text-center text-xs text-muted-foreground">
+                  Po naskenování přidávej dál — nové kousky se objeví v levém panelu.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => void handleOpenQrSheet()}
+                >
+                  Vygenerovat nový QR kód
+                </Button>
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Manager Sheet — side drawer */}
+      <Sheet open={managerSheetOpen} onOpenChange={setManagerSheetOpen}>
+        <SheetContent
+          side="right"
+          className="w-full p-0 sm:max-w-[480px]"
+        >
+          <SheetHeader className="border-b">
+            <SheetTitle className="flex items-center gap-2">
+              <MessageCircle className="size-4" aria-hidden />
+              Manažerka
+            </SheetTitle>
+            <SheetDescription>
+              Konzultace s AI manažerkou nad vybranými kousky.
+            </SheetDescription>
+            <div className="pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                render={
+                  <Link href={managerUrl} target="_blank" rel="noopener noreferrer" />
+                }
+              >
+                Otevřít v nové záložce
+                <ExternalLink className="size-3.5" aria-hidden />
+              </Button>
+            </div>
+          </SheetHeader>
+          <div className="flex-1 overflow-hidden">
+            <iframe
+              src={managerUrl}
+              title="Manažerka"
+              className="h-full w-full border-0"
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Body */}
       {visibleDrafts.length === 0 ? (

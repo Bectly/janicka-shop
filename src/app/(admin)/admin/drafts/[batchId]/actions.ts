@@ -220,6 +220,7 @@ export async function bulkUpdateDraftsAction(
     categoryId?: string | null;
     compareAt?: number | null;
     bundleId?: string | null;
+    discountPct?: number | null;
   },
 ): Promise<{ updatedCount: number }> {
   const adminId = await requireAdmin();
@@ -238,13 +239,79 @@ export async function bulkUpdateDraftsAction(
     throw new Error("Unauthorized");
   }
 
-  const result = await db.productDraft.updateMany({
-    where: { id: { in: draftIds }, batchId },
-    data: patch,
+  const { discountPct, ...rest } = patch;
+
+  let updatedCount = 0;
+
+  if (discountPct != null && discountPct > 0 && discountPct < 100) {
+    const drafts = await db.productDraft.findMany({
+      where: { id: { in: draftIds }, batchId },
+      select: { id: true, price: true, compareAt: true },
+    });
+    for (const d of drafts) {
+      if (d.price == null || d.price <= 0) continue;
+      const original = d.compareAt ?? d.price;
+      const newPrice = Math.max(1, Math.round(d.price * (1 - discountPct / 100)));
+      await db.productDraft.update({
+        where: { id: d.id },
+        data: {
+          price: newPrice,
+          compareAt: d.compareAt ?? original,
+          ...rest,
+        },
+      });
+      updatedCount += 1;
+    }
+  } else {
+    const result = await db.productDraft.updateMany({
+      where: { id: { in: draftIds }, batchId },
+      data: rest,
+    });
+    updatedCount = result.count;
+  }
+
+  revalidatePath(`/admin/drafts/${batchId}`);
+  return { updatedCount };
+}
+
+export async function reopenBatchAction(batchId: string): Promise<{
+  qrUrl: string;
+  expiresAt: string;
+}> {
+  const adminId = await requireAdmin();
+  const db = await getDb();
+
+  const batch = await db.productDraftBatch.findUnique({
+    where: { id: batchId },
+    select: { adminId: true, status: true },
+  });
+  if (!batch || batch.adminId !== adminId) {
+    throw new Error("Batch nenalezen");
+  }
+  if (batch.status === "published") {
+    throw new Error("Publikovaný batch nelze znovu otevřít");
+  }
+
+  const { signDraftQrToken, hashDraftToken, DRAFT_QR_TTL_SECONDS } = await import(
+    "@/lib/draft-qr"
+  );
+  const { getSiteUrl } = await import("@/lib/site-url");
+
+  const expiresAt = new Date(Date.now() + DRAFT_QR_TTL_SECONDS * 1000);
+  const token = await signDraftQrToken({ batchId, adminId }, DRAFT_QR_TTL_SECONDS);
+  const tokenHash = hashDraftToken(token);
+
+  await db.productDraftBatch.update({
+    where: { id: batchId },
+    data: { status: "open", tokenHash, expiresAt, sealedAt: null },
   });
 
   revalidatePath(`/admin/drafts/${batchId}`);
-  return { updatedCount: result.count };
+
+  return {
+    qrUrl: `${getSiteUrl()}/api/admin/drafts/auth?token=${encodeURIComponent(token)}`,
+    expiresAt: expiresAt.toISOString(),
+  };
 }
 
 export async function deleteBatchAction(batchId: string): Promise<{ success: true }> {

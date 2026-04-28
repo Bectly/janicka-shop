@@ -51,7 +51,10 @@ export async function GET(request: NextRequest) {
   if (batch.status !== "open") return expiredResponse(`batch status=${batch.status}`);
   if (batch.expiresAt.getTime() <= Date.now()) return expiredResponse("batch expired");
 
-  const redirectUrl = new URL(`/admin/drafts/${batch.id}/mobile`, request.nextUrl.origin);
+  const redirectUrl = new URL(
+    `/admin/drafts/mobile-start?batchId=${encodeURIComponent(batch.id)}`,
+    request.nextUrl.origin
+  );
   const response = NextResponse.redirect(redirectUrl, { status: 303 });
   response.cookies.set({
     name: DRAFT_SESSION_COOKIE,

@@ -843,9 +843,10 @@ model ProductDraftBatch {
   adminId        String                              // Admin who created the QR
   tokenHash      String         @unique              // sha256(rawJwt) — raw JWT lives only in QR URL
   expiresAt      DateTime                            // QR link expiry (createdAt + 15min)
-  status         String         @default("open")     // open | sealed | published | expired
+  status         String         @default("open")     // open | sealed | published | expired | archived
   sealedAt       DateTime?
   publishedAt    DateTime?
+  archivedAt     DateTime?                           // J10-B3: when auto-archive cron set status=archived
   bundleId       String?                             // J5: which bundle this batch is unpacking
   bundle         SupplierBundle?  @relation(fields: [bundleId], references: [id])
   bundleLineId   String?                             // J5: specific line/category within the bundle
@@ -853,6 +854,7 @@ model ProductDraftBatch {
   defaultWeightG Int?                                // J5: pre-filled piece weight (grams) for QR session
   notifyOnPublish Boolean        @default(false)     // J10-B4: send admin email when bulk-publish completes
   timingsJson    String         @default("{}")       // J10-B5: { sessionStart: ISO, pieces: [{draftId, startedAt, submittedAt, durationMs}] }
+  lastActivityAt DateTime       @default(now())      // J10-B3: bumped on every draft add/edit; drives 24h resume + 7d archive
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
   drafts         ProductDraft[]
@@ -860,6 +862,8 @@ model ProductDraftBatch {
   @@index([adminId])
   @@index([status])
   @@index([expiresAt])
+  @@index([lastActivityAt])
+  @@index([adminId, status, lastActivityAt])
 }
 
 model ProductDraft {
