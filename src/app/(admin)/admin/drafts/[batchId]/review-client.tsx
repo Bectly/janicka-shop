@@ -6,6 +6,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Check,
+  ChevronDown,
+  ChevronUp,
+  Clock,
   Loader2,
   MessageCircle,
   Sparkles,
@@ -161,6 +164,134 @@ function marginColor(pct: number): string {
   if (pct > 50) return "text-emerald-700";
   if (pct >= 20) return "text-amber-700";
   return "text-red-600";
+}
+
+// --- Timings stats (J10-B5) ---
+
+interface TimingPiece {
+  draftId: string | null;
+  startedAt: string;
+  submittedAt: string;
+  durationMs: number;
+}
+
+function parseTimings(raw: string): { sessionStart: string | null; pieces: TimingPiece[] } {
+  try {
+    const v = JSON.parse(raw);
+    if (!v || typeof v !== "object") return { sessionStart: null, pieces: [] };
+    const sessionStart =
+      typeof (v as { sessionStart?: unknown }).sessionStart === "string"
+        ? ((v as { sessionStart: string }).sessionStart)
+        : null;
+    const piecesRaw = (v as { pieces?: unknown }).pieces;
+    if (!Array.isArray(piecesRaw)) return { sessionStart, pieces: [] };
+    const pieces: TimingPiece[] = [];
+    for (const p of piecesRaw) {
+      if (!p || typeof p !== "object") continue;
+      const r = p as Record<string, unknown>;
+      const startedAt = typeof r.startedAt === "string" ? r.startedAt : null;
+      const submittedAt = typeof r.submittedAt === "string" ? r.submittedAt : null;
+      const durationMs =
+        typeof r.durationMs === "number" && Number.isFinite(r.durationMs)
+          ? r.durationMs
+          : null;
+      if (!startedAt || !submittedAt || durationMs === null) continue;
+      const draftId = typeof r.draftId === "string" ? r.draftId : null;
+      pieces.push({ draftId, startedAt, submittedAt, durationMs });
+    }
+    return { sessionStart, pieces };
+  } catch {
+    return { sessionStart: null, pieces: [] };
+  }
+}
+
+function formatDuration(ms: number): string {
+  if (ms < 1000) return `${ms} ms`;
+  const seconds = ms / 1000;
+  if (seconds < 60) return `${seconds.toFixed(1)} s`;
+  const minutes = Math.floor(seconds / 60);
+  const remainder = Math.round(seconds - minutes * 60);
+  return remainder === 0 ? `${minutes} min` : `${minutes} min ${remainder} s`;
+}
+
+function median(values: number[]): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  const n = sorted.length;
+  if (n === 0) return 0;
+  const mid = Math.floor(n / 2);
+  return n % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+}
+
+function TimingsStats({ timingsJson }: { timingsJson: string }) {
+  const [open, setOpen] = useState(false);
+  const stats = useMemo(() => {
+    const { pieces } = parseTimings(timingsJson);
+    if (pieces.length === 0) return null;
+    const durations = pieces.map((p) => p.durationMs);
+    const med = median(durations);
+    const min = Math.min(...durations);
+    const max = Math.max(...durations);
+    const goalHit = med <= 30_000;
+    return { count: pieces.length, median: med, min, max, goalHit };
+  }, [timingsJson]);
+
+  if (!stats) return null;
+
+  return (
+    <div className="mt-3 rounded-md border bg-muted/30">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-xs font-medium text-muted-foreground hover:text-foreground"
+      >
+        <span className="inline-flex items-center gap-1.5">
+          <Clock className="size-3.5" aria-hidden />
+          Statistiky · {stats.count}{" "}
+          {stats.count === 1 ? "kousek" : stats.count < 5 ? "kousky" : "kousků"} ·
+          medián {formatDuration(stats.median)}/kus
+          <span
+            className={
+              stats.goalHit ? "text-emerald-700" : "text-amber-700"
+            }
+          >
+            {stats.goalHit ? "✓ pod 30 s" : "nad 30 s"}
+          </span>
+        </span>
+        {open ? (
+          <ChevronUp className="size-3.5" aria-hidden />
+        ) : (
+          <ChevronDown className="size-3.5" aria-hidden />
+        )}
+      </button>
+      {open && (
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-1 border-t bg-background/60 px-3 py-2 text-xs sm:grid-cols-4">
+          <div>
+            <dt className="text-muted-foreground">Počet kousků</dt>
+            <dd className="font-medium text-foreground">{stats.count}</dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">Medián / kus</dt>
+            <dd className="font-medium text-foreground">
+              {formatDuration(stats.median)}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">Nejrychlejší</dt>
+            <dd className="font-medium text-emerald-700">
+              {formatDuration(stats.min)}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">Nejpomalejší</dt>
+            <dd className="font-medium text-amber-700">
+              {formatDuration(stats.max)}
+            </dd>
+          </div>
+        </dl>
+      )}
+    </div>
+  );
 }
 
 // ============================================================================
@@ -632,6 +763,8 @@ export function BatchReviewClient({
             {globalError}
           </div>
         )}
+
+        <TimingsStats timingsJson={timingsJson} />
       </header>
 
       {/* Bulk edit dialog */}
