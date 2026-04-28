@@ -65,22 +65,44 @@ const subscribeSchema = z.object({
 export async function subscribeWishlistNotifications(input: {
   email: string;
   productIds: string[];
-}): Promise<{ ok: boolean; count: number }> {
+}): Promise<{ ok: boolean; count: number; reason?: "invalid" | "rate_limited" | "error" }> {
   const parsed = subscribeSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, count: 0 };
+  if (!parsed.success) return { ok: false, count: 0, reason: "invalid" };
 
   const { email, productIds } = parsed.data;
   const normalizedEmail = email.toLowerCase();
 
-  // Defense-in-depth: signed-in customers exempt; unauth callers capped at
-  // 10/min/IP so an attacker can't weaponize bulk subscribe (up to 100 ids
-  // per call, no double-opt-in) against a third-party email.
+  // Defense-in-depth (task #911): three-layer rate guard so a single
+  // bulk-subscribe call (up to 100 productIds, no double-opt-in) cannot be
+  // weaponised to flood third-party inboxes or to brute-force enumerate
+  // wishlistable products.
+  //   1. IP guard — always-on hard cap (covers unauth + customer sessions
+  //      sharing one egress IP, e.g. compromised account on a botnet)
+  //   2. Unauth strict cap — anonymous callers limited tighter
+  //   3. Per-user cap — signed-in customers limited per accountId so a
+  //      stolen JWT can't bypass the IP cap by hopping IPs
   const session = await auth();
   const isCustomer = session?.user?.role === "customer";
+  const customerId = isCustomer ? session?.user?.id ?? null : null;
+  const ip = await getClientIp();
+
+  if (!isCustomer && ip === "unknown") {
+    return { ok: false, count: 0, reason: "rate_limited" };
+  }
+
+  const ipGuard = checkRateLimit(`wishlist-bulk-ip:${ip}`, 20, 60_000);
+  if (!ipGuard.success) return { ok: false, count: 0, reason: "rate_limited" };
+
   if (!isCustomer) {
-    const ip = await getClientIp();
     const rl = checkRateLimit(`wishlist-bulk:${ip}`, 10, 60_000);
-    if (!rl.success) return { ok: false, count: 0 };
+    if (!rl.success) return { ok: false, count: 0, reason: "rate_limited" };
+  } else if (customerId) {
+    const userRl = checkRateLimit(
+      `wishlist-bulk-user:${customerId}`,
+      30,
+      60_000,
+    );
+    if (!userRl.success) return { ok: false, count: 0, reason: "rate_limited" };
   }
 
   try {
@@ -107,7 +129,7 @@ export async function subscribeWishlistNotifications(input: {
     return { ok: true, count };
   } catch (err) {
     logger.error("[Wishlist] Subscribe failed:", err);
-    return { ok: false, count: 0 };
+    return { ok: false, count: 0, reason: "error" };
   }
 }
 
