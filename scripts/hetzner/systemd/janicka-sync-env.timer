@@ -1,0 +1,13 @@
+[Unit]
+Description=Janička Shop — hourly env sync from JARVIS to Hetzner
+Documentation=file:///home/bectly/development/projects/janicka-shop/docs/runbooks/hetzner-hardening-phase5.md
+
+[Timer]
+OnBootSec=2m
+OnUnitActiveSec=1h
+RandomizedDelaySec=2m
+Persistent=true
+Unit=janicka-sync-env.service
+
+[Install]
+WantedBy=timers.target

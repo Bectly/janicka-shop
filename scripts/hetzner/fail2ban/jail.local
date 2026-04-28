@@ -1,0 +1,40 @@
+# /etc/fail2ban/jail.d/janicka.local
+#
+# Phase 5 hardening — sshd + nginx jails for janicka-shop on Hetzner.
+# Drop-in (in jail.d), not main jail.local — does not override distro defaults.
+#
+# bantime  = how long an IP stays banned
+# findtime = sliding window for counting failures
+# maxretry = failures within findtime → ban
+# backend  = systemd reads journald (Ubuntu 22.04 default for ssh)
+
+[DEFAULT]
+bantime  = 1h
+findtime = 10m
+maxretry = 5
+backend  = systemd
+banaction = ufw
+# Ignore Tailscale CIDR + localhost — operator should never lock themselves out
+ignoreip = 127.0.0.1/8 ::1 100.64.0.0/10
+
+[sshd]
+enabled  = true
+port     = 2222
+maxretry = 3
+bantime  = 24h
+
+[nginx-bad-bot]
+enabled  = true
+port     = http,https
+filter   = nginx-bad-bot
+logpath  = /var/log/nginx/access.log
+maxretry = 1
+bantime  = 7d
+
+[nginx-noscript]
+enabled  = true
+port     = http,https
+filter   = nginx-noscript
+logpath  = /var/log/nginx/access.log
+maxretry = 6
+bantime  = 1d

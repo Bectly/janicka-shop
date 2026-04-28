@@ -1,0 +1,17 @@
+[Unit]
+Description=Janička Shop — daily auditd digest to Telegram
+After=auditd.service network-online.target
+Wants=network-online.target
+Documentation=file:///opt/janicka-shop/docs/runbooks/hetzner-hardening-phase5.md
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/local/bin/janicka-audit-scan.sh
+Nice=10
+TimeoutStartSec=5m
+StandardOutput=append:/var/log/janicka-audit-scan.log
+StandardError=append:/var/log/janicka-audit-scan.log
+
+[Install]
+WantedBy=multi-user.target

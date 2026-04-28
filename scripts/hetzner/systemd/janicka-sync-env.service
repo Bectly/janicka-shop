@@ -1,0 +1,17 @@
+[Unit]
+Description=Janička Shop — pull production env from JARVIS api_keys to Hetzner
+After=network-online.target
+Wants=network-online.target
+Documentation=file:///home/bectly/development/projects/janicka-shop/docs/runbooks/hetzner-hardening-phase5.md
+
+[Service]
+Type=oneshot
+User=bectly
+ExecStart=/home/bectly/development/projects/janicka-shop/scripts/hetzner/sync-env-hetzner.sh
+Nice=10
+TimeoutStartSec=5m
+StandardOutput=append:/var/log/janicka-sync-env.log
+StandardError=append:/var/log/janicka-sync-env.log
+
+[Install]
+WantedBy=multi-user.target
