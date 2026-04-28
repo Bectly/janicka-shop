@@ -322,6 +322,7 @@ function CartItemRow({
             width={80}
             height={80}
             className="size-full object-cover"
+            unoptimized
           />
         ) : (
           <div className="flex size-full items-center justify-center text-lg text-muted-foreground/30">

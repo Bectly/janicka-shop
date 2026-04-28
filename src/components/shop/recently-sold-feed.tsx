@@ -55,6 +55,7 @@ export function RecentlySoldFeed({ products }: RecentlySoldFeedProps) {
                     fill
                     className="object-cover opacity-60 grayscale transition-all duration-300 group-hover:opacity-80 group-hover:grayscale-0"
                     sizes="140px"
+                    unoptimized
                   />
                 ) : (
                   <div className="flex size-full items-center justify-center opacity-60 grayscale">

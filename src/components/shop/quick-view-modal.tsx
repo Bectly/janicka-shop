@@ -118,6 +118,7 @@ export function QuickViewButton({ productId }: QuickViewButtonProps) {
                     fill
                     className="object-cover transition-transform duration-150 hover:scale-105"
                     sizes="(max-width: 640px) 90vw, 300px"
+                    unoptimized
                   />
                 ) : (
                   <div className="flex size-full items-center justify-center">

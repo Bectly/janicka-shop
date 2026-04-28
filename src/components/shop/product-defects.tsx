@@ -117,6 +117,7 @@ export function ProductDefects({ note, images, condition }: ProductDefectsProps)
                 fill
                 className="object-cover transition-transform duration-200 group-hover:scale-105"
                 sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, 20vw"
+                unoptimized
               />
               <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors duration-200 group-hover:bg-black/25">
                 <ZoomIn className="size-5 text-white opacity-0 drop-shadow transition-opacity duration-200 group-hover:opacity-100" />

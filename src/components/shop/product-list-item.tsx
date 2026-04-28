@@ -90,6 +90,7 @@ export function ProductListItem({
             priority={priority}
             placeholder="blur"
             blurDataURL={BLUR_DATA_URL}
+            unoptimized
           />
         ) : (
           <div className="flex size-full items-center justify-center bg-gradient-to-br from-muted to-muted/50">

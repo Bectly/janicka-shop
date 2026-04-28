@@ -394,7 +394,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                 fetchPriority={activeIndex === 0 ? "high" : "auto"}
                 placeholder="blur"
                 blurDataURL={BLUR_DATA_URL}
-                quality={90}
+                unoptimized
                 onAnimationEnd={() => setSlideDirection(null)}
               />
             </>
@@ -501,6 +501,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                     loading="lazy"
                     className="object-cover"
                     sizes="80px"
+                    unoptimized
                   />
                 </button>
               );
@@ -661,7 +662,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                     : undefined,
               }}
               sizes="(max-width: 640px) 80vw, 32rem"
-              quality={95}
+              unoptimized
             />
           </div>
 
@@ -695,6 +696,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                       loading="lazy"
                       className="object-cover"
                       sizes="56px"
+                      unoptimized
                     />
                   </button>
                 );

@@ -367,6 +367,7 @@ export function InstantSearch({ variant = "icon", defaultOpen = false }: Instant
                       width={48}
                       height={48}
                       className="size-12 shrink-0 rounded-md object-cover"
+                      unoptimized
                     />
                   ) : (
                     <div className="size-12 shrink-0 rounded-md bg-muted" />

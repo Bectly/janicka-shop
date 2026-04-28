@@ -1221,6 +1221,7 @@ export default function CheckoutPage() {
                           fill
                           sizes="48px"
                           className="object-cover"
+                          unoptimized
                         />
                       </div>
                     )}
@@ -1336,6 +1337,7 @@ export default function CheckoutPage() {
                           fill
                           sizes="48px"
                           className="object-cover"
+                          unoptimized
                         />
                       </div>
                     )}

@@ -63,6 +63,7 @@ export function CollectionCard({
               }
               className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
               priority={priority}
+              quality={90}
             />
             {/* Editorial gradient — ensures text legibility */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />

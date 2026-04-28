@@ -54,7 +54,7 @@ export function CollectionHero({
             className="object-cover object-center"
             sizes="100vw"
             priority
-            quality={85}
+            quality={95}
           />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-brand/10 via-champagne-light/50 to-sage-light/30" />

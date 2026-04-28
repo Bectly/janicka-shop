@@ -408,8 +408,8 @@ export default async function ProductDetailPage({ params }: Props) {
   // Computed ABOVE the sold/live fork so BOTH branches emit the preload; without it,
   // the <Image priority> inside the client-component gallery only emits its preload
   // during hydration, pushing resourceLoadDelay past 3s on mobile fresh-cache runs
-  // (regressed 2710→3206ms per C4867 #484). getImageProps mirrors next/image's
-  // optimized srcset so the preload matches the exact candidate <img> will request.
+  // (regressed 2710→3206ms per C4867 #484). unoptimized: true matches the gallery
+  // (#935) which now bypasses /_next/image so nginx /uploads serves with CF Edge HIT.
   const heroImage = productImages[0];
   const heroPreload = heroImage
     ? getImageProps({
@@ -418,7 +418,7 @@ export default async function ProductDetailPage({ params }: Props) {
         width: 800,
         height: 1067,
         sizes: "(max-width: 1024px) 100vw, 50vw",
-        quality: 90,
+        unoptimized: true,
       }).props
     : null;
 

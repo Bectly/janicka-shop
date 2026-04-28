@@ -87,6 +87,7 @@ export function CartExitIntent() {
                   width={64}
                   height={64}
                   className="size-full object-cover"
+                  unoptimized
                 />
               ) : (
                 <div className="flex size-full items-center justify-center text-sm text-muted-foreground/40">

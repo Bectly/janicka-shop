@@ -554,6 +554,7 @@ function ShuffleCard({
           className="object-cover"
           priority={!peek}
           draggable={false}
+          unoptimized
         />
       ) : (
         <div className="flex size-full items-center justify-center text-muted-foreground">
