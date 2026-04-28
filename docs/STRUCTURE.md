@@ -1,7 +1,7 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 555 files, ~92,255 LOC.
-**Drill-down dropped** — full render was 59,598 chars > cap 10,000 (~17% shown). Grep source files directly for symbol-level detail.
+Auto-generated. Total: 556 files, ~92,417 LOC.
+**Drill-down dropped** — full render was 59,788 chars > cap 10,000 (~17% shown). Grep source files directly for symbol-level detail.
 
 ---
 
@@ -60,7 +60,7 @@ Auto-generated. Total: 555 files, ~92,255 LOC.
 - scripts/workers/packeta.ts (7 LOC)
 - scripts/workers/test-queue-integration.ts (482 LOC)
 
-## `src/` (511 files)
+## `src/` (512 files)
 
 - src/app/(admin)/admin/abandoned-carts/loading.tsx (6 LOC)
 - src/app/(admin)/admin/abandoned-carts/page.tsx (214 LOC)
@@ -188,4 +188,4 @@ Auto-generated. Total: 555 files, ~92,255 LOC.
 - src/app/(admin-onboarding)/admin/welcome/page.tsx (114 LOC)
 - src/app/(drafts-mobile)/admi
 
-... [truncated at 10,000 chars; compact render was 28,598. Use git ls-files for full file list.]
+... [truncated at 10,000 chars; compact render was 28,635. Use git ls-files for full file list.]
