@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { cacheLife, cacheTag } from "next/cache";
-import { connection } from "next/server";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { customerTag } from "@/lib/customer-cache";
@@ -47,7 +46,6 @@ async function getCustomerWishlist(customerId: string): Promise<WishlistRow[]> {
 }
 
 export default async function AccountWishlistPage() {
-  await connection();
   const session = await auth();
   if (!session?.user || session.user.role !== "customer") {
     redirect("/login?redirect=/account/oblibene");

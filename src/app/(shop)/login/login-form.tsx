@@ -7,6 +7,28 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { useWishlistStore } from "@/lib/wishlist-store";
+
+async function mergeAnonWishlist() {
+  // SSoT shift: when an anon visitor signs in, push their localStorage wishlist
+  // to DB and replace Zustand with the canonical merged set so DB === Zustand
+  // from this point forward.
+  const local = useWishlistStore.getState().items;
+  try {
+    const res = await fetch("/api/wishlist/sync", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productIds: local.slice(0, 200) }),
+    });
+    if (!res.ok) return;
+    const data = (await res.json()) as { ok: boolean; all?: string[] };
+    if (Array.isArray(data.all)) {
+      useWishlistStore.getState().setItems(data.all);
+    }
+  } catch {
+    // Offline — Zustand stays as-is; next /account/oblibene visit retries via merge-client.
+  }
+}
 
 type Tab = "login" | "register";
 
@@ -30,11 +52,13 @@ export function LoginForm() {
       redirect: false,
     });
 
-    setLoading(false);
     if (result?.error) {
+      setLoading(false);
       setError("Nesprávný email nebo heslo.");
       return;
     }
+    await mergeAnonWishlist();
+    setLoading(false);
     router.push(redirect);
     router.refresh();
   }
@@ -70,12 +94,14 @@ export function LoginForm() {
       redirect: false,
     });
 
-    setLoading(false);
     if (signInResult?.error) {
+      setLoading(false);
       setError("Registrace proběhla, ale přihlášení selhalo. Zkuste se přihlásit.");
       setTab("login");
       return;
     }
+    await mergeAnonWishlist();
+    setLoading(false);
     router.push(redirect);
     router.refresh();
   }

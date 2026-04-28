@@ -2,8 +2,10 @@
 
 import { Heart, Check } from "lucide-react";
 import { useWishlistStore } from "@/lib/wishlist-store";
-import { useSyncExternalStore, useCallback, useState } from "react";
+import { useAuthStore } from "@/lib/auth-store";
+import { useSyncExternalStore, useCallback, useState, useTransition } from "react";
 import { subscribeSingleWishlistNotification } from "@/app/(shop)/oblibene/actions";
+import { toggleWishlist as toggleWishlistDb } from "@/app/(shop)/account/oblibene/actions";
 
 const emptySubscribe = () => () => {};
 
@@ -28,10 +30,12 @@ export function WishlistButton({
 }: WishlistButtonProps) {
   const toggle = useWishlistStore((s) => s.toggle);
   const has = useWishlistStore((s) => s.has);
+  const role = useAuthStore((s) => s.role);
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const [animating, setAnimating] = useState(false);
   const [notify, setNotify] = useState<NotifyState>({ kind: "hidden" });
   const [email, setEmail] = useState("");
+  const [, startTransition] = useTransition();
 
   const isWishlisted = mounted ? has(productId) : false;
 
@@ -40,9 +44,28 @@ export function WishlistButton({
       e.preventDefault();
       e.stopPropagation();
       const willBeWishlisted = !isWishlisted;
+
+      // Optimistic local toggle — Zustand mirror updates immediately for badge feedback.
       toggle(productId);
       setAnimating(true);
       setTimeout(() => setAnimating(false), 500);
+
+      // For signed-in customers DB is the source of truth — fire the server action.
+      // If it disagrees with our optimistic state, reconcile by toggling local back.
+      if (role === "customer") {
+        startTransition(async () => {
+          try {
+            const res = await toggleWishlistDb(productId);
+            if (!res.ok) {
+              toggle(productId);
+            } else if (res.added !== willBeWishlisted) {
+              toggle(productId);
+            }
+          } catch {
+            toggle(productId);
+          }
+        });
+      }
 
       // Only attempt server-side subscribe on ADD for the PDP detail variant.
       if (variant !== "detail" || !willBeWishlisted) return;
@@ -61,7 +84,7 @@ export function WishlistButton({
         // Silent — wishlist add itself succeeded client-side.
       });
     },
-    [toggle, productId, isWishlisted, variant],
+    [toggle, productId, isWishlisted, variant, role],
   );
 
   const handleNotifySubmit = useCallback(

@@ -28,43 +28,51 @@ export async function POST(req: Request) {
   }
 
   const ids = [...new Set(parsed.data.productIds)];
-  if (ids.length === 0) {
-    return NextResponse.json({ ok: true, merged: 0 });
-  }
-
   const db = await getDb();
   const customerId = session.user.id;
 
-  // Only keep product IDs that exist and are active. Filter silently.
-  const valid = (
-    await db.product.findMany({
-      where: { id: { in: ids }, active: true },
-      select: { id: true },
-    })
-  ).map((p) => p.id);
-
   let merged = 0;
-  for (const productId of valid) {
-    try {
-      await db.customerWishlist.upsert({
-        where: { customerId_productId: { customerId, productId } },
-        create: { customerId, productId },
-        update: {},
+  if (ids.length > 0) {
+    // Only keep product IDs that exist and are active. Filter silently.
+    const valid = (
+      await db.product.findMany({
+        where: { id: { in: ids }, active: true },
+        select: { id: true },
+      })
+    ).map((p) => p.id);
+
+    // Parallel upserts — each row is independent and the unique index dedupes.
+    const results = await Promise.all(
+      valid.map((productId) =>
+        db.customerWishlist
+          .upsert({
+            where: { customerId_productId: { customerId, productId } },
+            create: { customerId, productId },
+            update: {},
+          })
+          .then(() => true)
+          .catch(() => false),
+      ),
+    );
+    merged = results.filter(Boolean).length;
+
+    if (merged > 0) {
+      await logEvent({
+        customerId,
+        action: "wishlist_add",
+        metadata: { merged, source: "localStorage_sync" },
       });
-      merged++;
-    } catch {
-      // skip duplicates/race conditions
+      invalidateCustomerScope(customerId, "wishlist");
     }
   }
 
-  if (merged > 0) {
-    await logEvent({
-      customerId,
-      action: "wishlist_add",
-      metadata: { merged, source: "localStorage_sync" },
-    });
-    invalidateCustomerScope(customerId, "wishlist");
-  }
+  // Return full DB wishlist so the caller can mirror it into Zustand atomically.
+  const all = (
+    await db.customerWishlist.findMany({
+      where: { customerId },
+      select: { productId: true },
+    })
+  ).map((r) => r.productId);
 
-  return NextResponse.json({ ok: true, merged });
+  return NextResponse.json({ ok: true, merged, all });
 }

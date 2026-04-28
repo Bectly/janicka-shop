@@ -9,6 +9,7 @@ import { BottomNav } from "@/components/shop/bottom-nav";
 import { PullToRefresh } from "@/components/shop/pull-to-refresh";
 import { ShuffleOverlay } from "@/components/shop/shuffle-overlay";
 import { ShuffleButton } from "@/components/shop/shuffle-button";
+import { WishlistAuthHydrator } from "@/components/shop/wishlist-auth-hydrator";
 
 export default function ShopLayout({
   children,
@@ -42,6 +43,9 @@ export default function ShopLayout({
       </Suspense>
       <Suspense>
         <ReferralTracker />
+      </Suspense>
+      <Suspense>
+        <WishlistAuthHydrator />
       </Suspense>
       <Suspense>
         <ShuffleButton />
