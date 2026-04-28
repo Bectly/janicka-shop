@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
-import { cacheLife, cacheTag } from "next/cache";
 import { Heart } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { customerTag } from "@/lib/customer-cache";
 import { AccountNav } from "../account/account-nav";
 import { WishlistContent } from "./wishlist-content";
 import { WishlistGrid, type WishlistRow } from "./wishlist-grid";
@@ -15,11 +13,12 @@ export const metadata: Metadata = {
   description: "Vaše oblíbené kousky na jednom místě.",
 };
 
+// HOTFIX 2026-04-28: removed "use cache" + cacheLife + cacheTag wrapping —
+// Next.js 16 cacheComponents + Node 22.22.1 TransformStream API mismatch
+// (controller[kState].transformAlgorithm undefined) caused SSR Suspense boundary
+// to error → React #419 → blank /oblibene for auth users. Restore once upstream
+// Next.js issue resolved or Node downgraded to v20 LTS.
 async function getCustomerWishlist(customerId: string): Promise<WishlistRow[]> {
-  "use cache";
-  cacheLife("minutes");
-  cacheTag(customerTag(customerId, "wishlist"));
-
   const db = await getDb();
   const rows = await db.customerWishlist.findMany({
     where: { customerId },

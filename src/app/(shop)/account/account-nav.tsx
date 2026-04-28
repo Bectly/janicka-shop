@@ -21,7 +21,7 @@ export function AccountNav() {
 
   return (
     <nav aria-label="Účet — navigace" className="md:sticky md:top-20 md:self-start">
-      <ul className="flex gap-1 overflow-x-auto md:flex-col md:gap-1">
+      <ul className="flex flex-wrap gap-1 md:flex-col md:flex-nowrap md:gap-1">
         {NAV_ITEMS.map(({ href, icon: Icon, label, exact }) => {
           const isActive = exact ? pathname === href : pathname.startsWith(href);
           return (
