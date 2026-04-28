@@ -129,14 +129,17 @@ async function uploadToLocal(
   const safeName = sanitizeFilename(fileName);
   const key = explicitKey ?? `${safeFolder}/${randomUUID()}-${safeName}`;
 
-  const root = path.resolve(getLocalImagesDir());
-  const target = path.resolve(root, key);
+  // Turbopack NFT-trace these as runtime-only — without the hint, the static
+  // analyzer treats path.resolve(process.cwd(), ...) as "trace whole project"
+  // and the lambda balloons past Vercel's 300 MB limit (Phase 7 build break).
+  const root = path.resolve(/*turbopackIgnore: true*/ getLocalImagesDir());
+  const target = path.resolve(/*turbopackIgnore: true*/ root, key);
   if (!target.startsWith(root + path.sep)) {
     throw new Error(`image-storage: refusing to write outside images dir (${key})`);
   }
 
-  await fs.mkdir(path.dirname(target), { recursive: true });
-  await fs.writeFile(target, fileBuffer);
+  await fs.mkdir(/*turbopackIgnore: true*/ path.dirname(target), { recursive: true });
+  await fs.writeFile(/*turbopackIgnore: true*/ target, fileBuffer);
 
   return { key, url: buildImageUrl(key) };
 }

@@ -1,10 +1,16 @@
 import Link from "next/link";
 import Image from "next/image";
+import { connection } from "next/server";
 import { CookieSettingsButton } from "@/components/shop/cookie-settings-button";
 import { NewsletterForm } from "@/components/shop/newsletter-form";
 import { getDb } from "@/lib/db";
 
-const footerLinks = {
+// EU customs duty messaging — link visible from June 15, 2026.
+// Threshold computed at runtime; gating happens inside the async Footer below
+// so that Next.js 16 strict-cache prerender does not flag `new Date()` here.
+const NAKUPUJ_CESKY_LIVE_AT = Date.parse("2026-06-15T00:00:00+02:00");
+
+const baseFooterLinks = {
   nakupovani: {
     title: "Nakupování",
     links: [
@@ -21,11 +27,7 @@ const footerLinks = {
       { name: "Doprava a platba", href: "/shipping" },
       { name: "Obchodní podmínky", href: "/terms" },
       { name: "Ochrana osobních údajů", href: "/privacy" },
-      // Date-gated: visible from June 15, 2026 (EU customs duty messaging)
-      ...(new Date() >= new Date("2026-06-15T00:00:00+02:00")
-        ? [{ name: "Nakupuj česky", href: "/nakupuj-cesky" }]
-        : []),
-    ],
+    ] as Array<{ name: string; href: string }>,
   },
   kontakt: {
     title: "Kontakt",
@@ -164,6 +166,12 @@ function CherryBlossomPattern() {
 }
 
 export async function Footer() {
+  // Opt out of static prerender. Footer reads `new Date()` (year + EU-duty
+  // gating link) which Next.js 16 strict-cache flags as uncached IO. Calling
+  // connection() here makes the footer a dynamic island — Suspense in the
+  // surrounding layouts keeps the rest of each page statically prerenderable.
+  await connection();
+
   let instagram = "";
   let facebook = "";
 
@@ -178,6 +186,17 @@ export async function Footer() {
   } catch {
     // DB unavailable during build — render with defaults
   }
+
+  const now = Date.now();
+  const informaceLinks = [...baseFooterLinks.informace.links];
+  if (now >= NAKUPUJ_CESKY_LIVE_AT) {
+    informaceLinks.push({ name: "Nakupuj česky", href: "/nakupuj-cesky" });
+  }
+  const footerLinks = {
+    ...baseFooterLinks,
+    informace: { ...baseFooterLinks.informace, links: informaceLinks },
+  };
+  const currentYear = new Date(now).getFullYear();
 
   return (
     <footer className="relative mt-auto bg-charcoal text-white" role="contentinfo">
@@ -320,7 +339,7 @@ export async function Footer() {
             </span>
           </div>
           <p className="text-center text-xs text-white/20">
-            &copy; {new Date().getFullYear()} Janička. Všechna práva vyhrazena.
+            &copy; {currentYear} Janička. Všechna práva vyhrazena.
           </p>
         </div>
       </div>
