@@ -72,17 +72,34 @@ Status: **GREEN** — janicka-shop is live on the VPS, served via nginx, accessi
 
 ## Repro / rollback
 
-Rebuild on VPS:
+Rebuild on VPS — use the canonical deploy script (added in #937 after the
+2026-04-28 13:55 ChunkLoadError outage caused by missing standalone static
+sync):
+```bash
+ssh kryxon
+sudo /opt/janicka-shop/scripts/hetzner/deploy.sh
+```
+
+The script does: `git pull` → `npm ci` → `npm run build` → rsync
+`.next/static/` and `public/` into `.next/standalone/` (with `--delete` on
+static so stale chunks can't ChunkLoadError) → `chown www-data` → run
+`sync-env-standalone.sh --apply` defensively → `pm2 reload janicka-shop
+--update-env`. Idempotent. Supports `--skip-pull` (use working tree) and
+`--sync-only` (skip pull/install/build, only re-run the post-build sync).
+
+Manual equivalent (do NOT use unless deploy.sh is unavailable — it's missing
+the `--delete` and the chunk-count acceptance gate):
 ```bash
 ssh kryxon
 cd /opt/janicka-shop
 git pull
 npm ci --no-audit --no-fund
 NODE_ENV=production npm run build
-cp -r public .next/standalone/
-cp -r .next/static .next/standalone/.next/
+rsync -a --delete .next/static/ .next/standalone/.next/static/
+rsync -a public/ .next/standalone/public/
+chown -R www-data:www-data .next/standalone/.next/static .next/standalone/public
 cp .env.production .next/standalone/.env.production
-pm2 restart janicka-shop
+pm2 reload janicka-shop --update-env
 ```
 
 Rollback (route traffic back to Vercel — this isn't live anyway):

@@ -101,8 +101,15 @@ export default function RootLayout({
         <Suspense>
           <AnalyticsProvider />
         </Suspense>
-        <Analytics />
-        <SpeedInsights />
+        {/* Vercel runtime auto-resolves /_vercel/insights/* and /_vercel/speed-insights/*.
+            On Hetzner those endpoints don't exist → console 404 + MIME errors. The
+            VERCEL env is set to "1" automatically on Vercel deploys (incl. preview). */}
+        {process.env.VERCEL === "1" && (
+          <>
+            <Analytics />
+            <SpeedInsights />
+          </>
+        )}
         {children}
       </body>
     </html>
