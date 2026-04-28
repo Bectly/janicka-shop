@@ -745,6 +745,51 @@ model ManagerComment {
   @@index([projectId, createdAt])
 }
 
+// J22: Manager Tabs — conversation paradigm (separate from full ManagerSession)
+// docs/manager-tabs-spec.md — Janička <-> manager threaded chat with typed block answers.
+
+model ManagerThread {
+  id        String                 @id @default(cuid())
+  projectId Int
+  subject   String?                // auto-extracted from first user message (≤80 chars)
+  status    String                 @default("pending") // pending | processing | answered | awaiting_user | closed
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @updatedAt
+  messages  ManagerThreadMessage[]
+
+  @@index([projectId, status])
+  @@index([projectId, updatedAt])
+}
+
+model ManagerThreadMessage {
+  id          String                @id @default(cuid())
+  threadId    String
+  thread      ManagerThread         @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  role        String                // "user" | "manager" | "system"
+  contentJson String                @default("[]") // JSON array of typed blocks (text/chart/image/actions/poll/table/product_grid)
+  imageKeys   String                @default("[]") // JSON: string[] of R2 attachment keys (manager-uploads/...)
+  createdAt   DateTime              @default(now())
+  readAt      DateTime?             // null = unread by recipient
+  actions     ManagerThreadAction[]
+
+  @@index([threadId, createdAt])
+  @@index([threadId, readAt])
+}
+
+model ManagerThreadAction {
+  id          String               @id @default(cuid())
+  messageId   String
+  message     ManagerThreadMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  blockId     String               // id of the block within message.contentJson that this action belongs to
+  buttonId    String               // id of the specific button within the actions/poll block
+  actionType  String               // publish_discount | open_url | spawn_task | poll_vote | free_text | ...
+  status      String               @default("idle") // idle | executed | failed
+  executedAt  DateTime?
+
+  @@index([messageId])
+  @@index([status])
+}
+
 // J5: Suppliers + Bundles — cost basis pipeline for second-hand inventory.
 // One supplier (e.g. OPATEX) issues monthly pricelists with category codes + Kč/kg.
 // A bundle = one wholesale order from supplier; lines = per-category breakdown.
