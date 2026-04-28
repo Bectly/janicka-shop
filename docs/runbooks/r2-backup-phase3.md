@@ -2,6 +2,33 @@
 
 **Status: SCRIPTS LANDED IN REPO, NOT YET DEPLOYED.** Phase 3 is gated on the [Phase 2 Postgres cutover](./postgres-cutover-phase2.md) — without local Postgres, the nightly `pg_basebackup` step in this runbook has nothing to dump. Image-CDN cutover (R2-public → nginx static) is a separate codebase change that must land in the same maintenance window.
 
+## Live pre-flight probe — 2026-04-28 (C5147 task #931)
+
+Probed `root@46.224.219.3` read-only before deciding go/no-go. Result: **NO-GO without supervised window**.
+
+| Check | State | Blocker? |
+|---|---|---|
+| Postgres service active | ✅ active | — |
+| Phase 2 app cutover (Turso → Postgres) | ❌ app still on Turso | YES (Phase 2 #930 must close first) |
+| Phase 2 fallback `pg-backup-janicka` cron | ✅ `/etc/cron.d/pg-backup-janicka`, 03:15 daily | — (keep until +30d Phase 3 green) |
+| `rclone` binary on VPS | ❌ not installed | YES (`apt install rclone` + interactive `rclone config`) |
+| `r2:` rclone remote → backup account | ❌ no `r2:` remote configured | YES (interactive — needs supervised window) |
+| R2 bucket `janicka-shop-backups-db` | ❌ not in JARVIS `api_keys` (only public image bucket present) | YES (create via CF dashboard) |
+| R2 bucket `janicka-shop-backups-images` | ❌ same | YES (create via CF dashboard) |
+| `/opt/janicka-shop-images` exists | ❌ does not exist | YES (one-time `rclone copy` migration) |
+| Telegram `BACKUP_*` env vars in `.env.production` | ❌ not synced | YES (sync via JARVIS api_keys → .env.production) |
+
+**Conclusion**: pushing scripts/units now would land timers that fail every run (no rclone, no remote, no buckets) and pollute journal until disabled. Hold execution for supervised window.
+
+**Cutover prerequisites in order**:
+1. Close Phase 2 #930 (app DATABASE_URL → Hetzner Postgres, validated under traffic).
+2. `apt install rclone` on VPS.
+3. Create both backup buckets in Cloudflare R2 (different region than public image bucket).
+4. Add backup-scoped R2 access key to JARVIS `api_keys` (`r2-janicka-backups`).
+5. Interactive `rclone config` on VPS → `r2:` remote pointing at backup account.
+6. Append `BACKUP_TELEGRAM_BOT_TOKEN` + `BACKUP_TELEGRAM_CHAT_ID` to `.env.production`.
+7. Then proceed with the **Deploy steps (T-0)** section below.
+
 This document is the deploy + acceptance + rollback plan for cycle #5141 task #920. The deliverables in the repo at this commit are:
 
 ```
