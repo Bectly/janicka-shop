@@ -1,0 +1,958 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  image       String?
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+}
+
+model Product {
+  id            String         @id @default(cuid())
+  name          String
+  slug          String         @unique
+  description   String
+  price         Float
+  compareAt     Float?
+  sku           String         @unique
+  categoryId    String
+  category      Category       @relation(fields: [categoryId], references: [id])
+  brand         String?
+  condition     String         @default("excellent") // new_with_tags | new_without_tags | excellent | good | visible_wear
+  sizes         String         @default("[]")
+  colors        String         @default("[]")
+  images        String         @default("[]")
+  measurements  String         @default("{}") // JSON: {chest?, waist?, hips?, length?} in cm
+  fitNote       String? // Human-readable fit note, max 120 chars
+  videoUrl      String? // Product video URL (15-30s, portrait 9:16)
+  defectsNote   String? // Free-text description of flaws/imperfections
+  defectImages  String         @default("[]") // JSON: string[] of defect-detail photo URLs
+  stock         Int            @default(1) // second-hand: each piece is unique
+  featured      Boolean        @default(false)
+  active        Boolean        @default(true)
+  bundleId       String?              // J5: which SupplierBundle this piece came from
+  bundleLineId   String?              // J5: which line/category within the bundle
+  bundle         SupplierBundle?     @relation(fields: [bundleId], references: [id])
+  bundleLine     SupplierBundleLine? @relation(fields: [bundleLineId], references: [id])
+  weightG        Int?                 // J5: piece weight in grams (for cost basis math)
+  costBasis      Float?               // J5: snapshot at unpack — weightG/1000 * line.pricePerKg, or fallback line.totalPrice / piecesUnpacked
+  sold          Boolean        @default(false) // marks item as sold (unavailable)
+  reservedUntil DateTime? // reservation expiry — null means not reserved
+  reservedBy    String? // visitor ID who reserved this item
+  vintedId      String?        @unique // Vinted source item ID (for re-import matching)
+  originalDescription String? // Untouched original Vinted description (never overwrite after import)
+  originalVintedData  String? // Full original Vinted record as JSON string (permanent backup)
+  metaTitle        String? // SEO: custom <title> override (<=70 chars); falls back to name when null
+  metaDescription  String? // SEO: custom meta description (<=160 chars); falls back to description when null
+  internalNote     String? // Admin-only private note (not visible to customer)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  orderItems    OrderItem[]
+  priceHistory  PriceHistory[]
+  wishlistedBy  CustomerWishlist[]
+
+  @@index([categoryId])
+  @@index([featured])
+  @@index([active])
+  @@index([sold])
+  @@index([reservedUntil])
+  @@index([reservedBy])
+  @@index([brand])
+  @@index([createdAt])
+  @@index([price])
+  @@index([active, sold, createdAt]) // Most common listing query
+  @@index([active, sold, featured]) // Featured products query
+  @@index([bundleId])
+  @@index([bundleLineId])
+}
+
+model Customer {
+  id                     String             @id @default(cuid())
+  email                  String             @unique
+  password               String?
+  firstName              String
+  lastName               String
+  phone                  String?
+  street                 String?
+  city                   String?
+  zip                    String?
+  country                String             @default("CZ")
+  winBackSentAt          DateTime?
+  internalNote           String?
+  tags                   String             @default("[]")
+  notifyMarketing        Boolean            @default(true)
+  deletedAt              DateTime?
+  disabled               Boolean            @default(false)
+  emailVerified          DateTime?
+  loginAttempts          Int                @default(0)
+  lockedUntil            DateTime?
+  lastLoginAt            DateTime?
+  pendingEmail           String?
+  pendingEmailToken      String?            @unique
+  pendingEmailExpiresAt  DateTime?
+  lastEmailChangeAt      DateTime?
+  lastDataExportAt       DateTime?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+  orders                 Order[]
+  returns                Return[]
+  addresses              CustomerAddress[]
+  wishlist               CustomerWishlist[]
+  auditLogs              CustomerAuditLog[]
+
+  @@index([deletedAt])
+  @@index([disabled])
+  @@index([pendingEmailToken])
+}
+
+model CustomerAuditLog {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  action     String // login | logout | login_failed | password_change | password_reset | email_change_request | email_change_confirmed | profile_update | address_add | address_update | address_delete | wishlist_add | wishlist_remove | gdpr_export | account_delete | admin_unlock | admin_disable | admin_enable | admin_anonymize | admin_force_reset | admin_profile_edit
+  ip         String?
+  userAgent  String?
+  metadata   String   @default("{}") // JSON
+  createdAt  DateTime @default(now())
+
+  @@index([customerId])
+  @@index([customerId, createdAt])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model CustomerAddress {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  label      String   @default("Adresa")
+  firstName  String
+  lastName   String
+  street     String
+  city       String
+  zip        String
+  country    String   @default("CZ")
+  phone      String?
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([customerId])
+}
+
+model CustomerWishlist {
+  id         String   @id @default(cuid())
+  customerId String
+  productId  String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([customerId, productId])
+  @@index([customerId])
+  @@index([productId])
+}
+
+model Order {
+  id                       String      @id @default(cuid())
+  orderNumber              String      @unique
+  accessToken              String?
+  customerId               String
+  customer                 Customer    @relation(fields: [customerId], references: [id])
+  status                   String      @default("pending")
+  paymentMethod            String?
+  paymentId                String?
+  paymentMethodAttempt     String? // Last Comgate method attempted (CARD/APPLE_PAY/GOOGLE_PAY) — for detecting method switches
+  paymentRedirect          String? // Comgate redirect URL (inline iframe src for CARD, hosted page otherwise)
+  subtotal                 Float
+  shipping                 Float       @default(0)
+  total                    Float
+  note                     String?
+  internalNote             String?     // Admin-only private note (not visible to customer)
+  shippingName             String?
+  shippingStreet           String?
+  shippingCity             String?
+  shippingZip              String?
+  shippingCountry          String      @default("CZ")
+  shippingMethod           String?
+  shippingPointId          String?
+  trackingNumber           String?
+  packetId                 String? // Packeta/Zásilkovna packet ID (from SOAP createPacket)
+  packetaStatus            String? // Last observed Packeta codeText (e.g. "received data", "delivered") — set by order-status-sync cron
+  packetaStatusCheckedAt   DateTime? // When order-status-sync last polled Packeta for this packet
+  shippedAt                DateTime? // Set when admin changes status to "shipped"
+  reviewEmailSentAt        DateTime? // Set when review request email is sent (prevents duplicates)
+  deliveryCheckEmailSentAt DateTime? // Set when delivery check-in email is sent (ship+4d)
+  crossSellEmailSentAt     DateTime? // Set when T+14 cross-sell follow-up email is sent
+  expectedDeliveryDate     DateTime? // Czech law: 30 days from order for delivery (§2159 NOZ)
+  referralCode             String? // Referral code used at checkout (e.g. "REF-A1B2C3D4")
+  referralDiscount         Float     @default(0) // Discount from referral code in CZK
+  storeCreditUsed          Float     @default(0) // Store credit applied in CZK
+  createdAt                DateTime    @default(now())
+  updatedAt                DateTime    @updatedAt
+  items                    OrderItem[]
+  invoices                 Invoice[]
+  returns                  Return[]
+
+  @@index([customerId])
+  @@index([status])
+  @@index([orderNumber])
+  @@index([createdAt])
+  @@index([status, createdAt])
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  name      String
+  price     Float
+  quantity  Int
+  size      String?
+  color     String?
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model Admin {
+  id          String    @id @default(cuid())
+  email       String    @unique
+  password    String
+  name        String
+  role        String    @default("admin")
+  onboardedAt DateTime? // Set on first admin welcome page CTA click
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Invoice {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  number      String   @unique
+  issuedAt    DateTime @default(now())
+  pdfUrl      String?
+  totalAmount Float
+  createdAt   DateTime @default(now())
+
+  @@index([orderId])
+}
+
+model NewsletterSubscriber {
+  id                    String    @id @default(cuid())
+  email                 String    @unique
+  active                Boolean   @default(true)
+  firstName             String?
+  preferredSizes        String    @default("[]") // JSON array of size strings e.g. ["S","M","38"]
+  preferredCategories   String    @default("[]") // JSON array of category IDs
+  preferredBrands       String    @default("[]") // JSON array of brand name strings
+  source                String    @default("website") // website, checkout, import
+  preferenceFilter      String? // Filter type: "new_arrivals" | "discounts" | null (all)
+  pausedUntil           DateTime? // If set and > now(), skip this subscriber in crons
+  lastNewArrivalEmailAt DateTime? // Last time a new-arrival email was sent (prevents spam)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @default(now()) @updatedAt
+}
+
+model PriceHistory {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  price     Float
+  changedAt DateTime @default(now())
+
+  @@index([productId])
+  @@index([changedAt])
+}
+
+model ProductNotifyRequest {
+  id         String   @id @default(cuid())
+  email      String
+  categoryId String
+  sizes      String   @default("[]") // JSON array of preferred sizes
+  brand      String? // optional brand preference
+  notified   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([categoryId])
+  @@index([email])
+  @@index([notified])
+}
+
+model WishlistSubscription {
+  id         String   @id @default(cuid())
+  email      String
+  productId  String
+  notifiedAt DateTime? // Set when sold-item email was sent (prevents duplicates)
+  createdAt  DateTime @default(now())
+
+  @@unique([email, productId])
+  @@index([productId])
+  @@index([email])
+  @@index([notifiedAt])
+}
+
+// Cross-pipeline notify dedup gate (#556). The three product-notify pipelines
+// (BackInStockSubscription cron, WishlistSubscription on sold, ProductNotifyRequest
+// similar-item cron) can each fire for the same (email, productId) when one event
+// matches multiple criteria. Without a gate the recipient gets 2-3 near-identical
+// emails in a few hours — trust + spam-flag risk. checkAndRecordEmailDispatch
+// looks up this table for any prior dispatch within 24h before sending.
+model EmailDedupLog {
+  id        String   @id @default(cuid())
+  email     String
+  productId String
+  eventType String // back-in-stock | wishlist-sold | similar-item-arrived
+  sentAt    DateTime @default(now())
+
+  @@unique([email, productId, eventType])
+  @@index([email, productId, sentAt])
+  @@index([sentAt])
+}
+
+// Back-in-stock subscription for second-hand unique-inventory model.
+// Unlike ProductNotifyRequest (category-level match), this targets the exact
+// (brand + category + size + condition) tuple of a sold item — the cron matches
+// NEW products against these tuples, not exact SKUs, since every piece is unique.
+model BackInStockSubscription {
+  id            String    @id @default(cuid())
+  email         String
+  customerId    String? // set when subscriber is an authenticated Customer
+  categoryId    String
+  brand         String? // null means "any brand"
+  size          String? // single preferred size, null means "any size"
+  condition     String? // condition filter, null means "any condition"
+  sourceProductId String? // the sold product that triggered the opt-in (audit/attribution)
+  notifiedAt    DateTime? // set when a match email was sent (prevents duplicates)
+  notifiedProductId String? // product id that triggered the notification
+  createdAt     DateTime  @default(now())
+
+  @@index([email])
+  @@index([categoryId])
+  @@index([notifiedAt])
+  @@index([categoryId, brand, size, condition])
+}
+
+model AbandonedCart {
+  id               String    @id @default(cuid())
+  email            String
+  customerName     String?
+  cartItems        String    @default("[]") // JSON: [{productId, name, price, size, color, image, slug}]
+  cartTotal        Float     @default(0)
+  pageUrl          String? // page where cart was abandoned (checkout, cart, etc.)
+  visitorId        String? // visitor ID for dedup
+  marketingConsent Boolean   @default(false) // GDPR: opt-in for recovery emails (Czech law requires explicit consent for marketing)
+  email1SentAt     DateTime? // 30-60 min reminder
+  email2SentAt     DateTime? // 12-24h follow-up
+  email3SentAt     DateTime? // 48-72h final
+  recoveredOrderId String? // set when customer completes order
+  status           String    @default("pending") // pending | recovered | expired
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([email])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model BrowseAbandonment {
+  id           String    @id @default(cuid())
+  email        String
+  productId    String
+  productSlug  String
+  productName  String
+  productImage String? // First image URL for email
+  productPrice Float
+  productBrand String?
+  productSize  String? // Primary size string for email copy
+  sentAt       DateTime? // Set when email is sent (null = pending)
+  status       String    @default("pending") // pending | sent | sold | cart_added
+  createdAt    DateTime  @default(now())
+
+  @@index([email])
+  @@index([status])
+  @@index([createdAt])
+  @@index([productId])
+}
+
+model Collection {
+  id          String    @id @default(cuid())
+  title       String
+  description String    @default("")
+  slug        String    @unique
+  image       String? // featured image URL
+  productIds  String    @default("[]") // JSON array of product IDs
+  featured    Boolean   @default(false) // show on homepage
+  sortOrder   Int       @default(0)
+  active      Boolean   @default(true)
+  startDate   DateTime? // optional: collection visibility start
+  endDate     DateTime? // optional: collection visibility end
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([slug])
+  @@index([featured])
+  @@index([active])
+}
+
+model Return {
+  id           String    @id @default(cuid())
+  returnNumber String    @unique // VRT-YYYY-NNNN
+  orderId      String
+  order        Order     @relation(fields: [orderId], references: [id])
+  customerId   String
+  customer     Customer  @relation(fields: [customerId], references: [id])
+  status       String    @default("pending") // pending | approved | rejected | completed
+  reason       String // withdrawal_14d | defect | wrong_item | other
+  reasonDetail String? // free-text explanation
+  refundAmount Float // full or partial refund amount
+  refundMethod String? // original_method | bank_transfer | store_credit
+  adminNote    String? // internal note from admin
+  resolvedAt   DateTime? // when status changed to approved/rejected/completed
+  completedAt  DateTime? // when refund was actually processed
+  refundedAt   DateTime? // when Comgate refund API call succeeded
+  refundProcessedAmount Float? // actual amount refunded via gateway (for partial refunds)
+  refundTransId String? // Comgate transId used for the refund (copy of Order.paymentId at time of refund)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  items       ReturnItem[]
+  creditNotes CreditNote[]
+
+  @@index([orderId])
+  @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model ReturnItem {
+  id          String  @id @default(cuid())
+  returnId    String
+  return      Return  @relation(fields: [returnId], references: [id], onDelete: Cascade)
+  orderItemId String
+  productId   String
+  productName String
+  price       Float
+  size        String?
+  color       String?
+
+  @@index([returnId])
+}
+
+model CreditNote {
+  id            String   @id @default(cuid())
+  returnId      String
+  return        Return   @relation(fields: [returnId], references: [id], onDelete: Cascade)
+  number        String   @unique // DOP-YYYY-NNNN
+  invoiceNumber String // Reference to original invoice number
+  issuedAt      DateTime @default(now())
+  totalAmount   Float // Negative amount (refund)
+  createdAt     DateTime @default(now())
+
+  @@index([returnId])
+}
+
+model DevPick {
+  id             String    @id @default(cuid())
+  slug           String    @unique
+  title          String
+  description    String    @default("")
+  pickType       String    @default("choice") // choice | text | rating | image_choice
+  options        String    @default("[]") // JSON array of options
+  selectedOption String? // Selected option value
+  customText     String? // Free-text answer (for text type or comments)
+  status         String    @default("pending") // pending | answered | expired | superseded
+  createdBy      String    @default("lead")
+  createdAt      DateTime  @default(now())
+  answeredAt     DateTime?
+  expiresAt      DateTime?
+
+  @@index([status])
+  @@index([slug])
+}
+
+model ReferralCode {
+  id                String    @id @default(cuid())
+  code              String    @unique // e.g. "REF-A1B2C3D4"
+  orderNumber       String // order that generated this referral code
+  customerEmail     String // email of the referrer (code owner)
+  creditAmount      Int       @default(15000) // referrer reward in hellers (150 CZK)
+  discountAmount    Int       @default(10000) // friend discount in hellers (100 CZK)
+  usedByOrderNumber String? // order that redeemed this code
+  status            String    @default("pending") // pending | redeemed | expired
+  createdAt         DateTime  @default(now())
+  redeemedAt        DateTime?
+  expiresAt         DateTime // +90 days from creation
+
+  @@index([code])
+  @@index([orderNumber])
+  @@index([customerEmail])
+  @@index([status])
+}
+
+model StoreCredit {
+  id                 String    @id @default(cuid())
+  customerEmail      String
+  amount             Int // total amount in hellers
+  remainingAmount    Int // remaining balance in hellers
+  reason             String // e.g. "Referral reward for order JN-..."
+  sourceOrderNumber  String? // order that triggered this credit
+  createdAt          DateTime  @default(now())
+  expiresAt          DateTime // +180 days from creation
+  usedAt             DateTime? // set when fully consumed
+
+  @@index([customerEmail])
+  @@index([expiresAt])
+}
+
+model CampaignLog {
+  id           String   @id @default(cuid())
+  subject      String
+  previewText  String   @default("")
+  collectionId String?  // linked collection ID (null = custom message)
+  sentCount    Int      @default(0)
+  failedCount  Int      @default(0)
+  status       String   @default("sending") // sending | completed | failed
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+// Atomic lock table preventing double-send of a campaign across serverless
+// instances. Row insert under unique(campaignKey) is the claim; only one
+// concurrent Vercel invocation wins. expiresAt lets us GC stale locks so a
+// given campaignKey can be re-sent after the window elapses.
+model CampaignSendLock {
+  campaignKey String   @id
+  claimedAt   DateTime @default(now())
+  expiresAt   DateTime
+
+  @@index([expiresAt])
+}
+
+model JarvisConsoleLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  userEmail String
+  command   String
+  kind      String? // info | ok | warn | err
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([userId])
+}
+
+model ShopSettings {
+  id                    String   @id @default("singleton")
+  shopName              String   @default("Janička")
+  description           String   @default("")
+  contactEmail          String   @default("")
+  contactPhone          String   @default("")
+  street                String   @default("")
+  city                  String   @default("")
+  zip                   String   @default("")
+  ico                   String   @default("")
+  dic                   String   @default("")
+  instagram             String   @default("")
+  facebook              String   @default("")
+  notifyOnNewOrder      Boolean  @default(true)
+  notifyOnReturn        Boolean  @default(true)
+  notifyOnReviewFailed  Boolean  @default(true)
+  soundNotifications    Boolean  @default(false)
+  updatedAt             DateTime @updatedAt
+}
+
+// --- Admin mailbox (task #496) ---
+// Inbound pipeline stores raw messages pulled from IMAP and groups them into threads.
+// Threading key: Message-ID header + In-Reply-To / References chain (RFC 5322).
+
+model EmailThread {
+  id               String         @id @default(cuid())
+  subject          String
+  participants     String         @default("[]") // JSON array of addresses seen in this thread
+  lastMessageAt    DateTime
+  messageCount     Int            @default(0)
+  unreadCount      Int            @default(0)
+  archived         Boolean        @default(false)
+  flagged          Boolean        @default(false)
+  trashed          Boolean        @default(false)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  messages         EmailMessage[]
+
+  @@index([lastMessageAt])
+  @@index([archived, trashed, lastMessageAt])
+}
+
+model EmailMessage {
+  id           String             @id @default(cuid())
+  threadId     String
+  thread       EmailThread        @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  messageId    String             @unique // RFC Message-ID header, used for dedup
+  inReplyTo    String?            // parent Message-ID
+  referencesIds String?           // JSON array of referenced Message-IDs
+  direction    String             @default("inbound") // "inbound" | "outbound"
+  fromAddress  String
+  fromName     String?
+  toAddresses  String             @default("[]") // JSON array
+  ccAddresses  String             @default("[]") // JSON array
+  bccAddresses String             @default("[]") // JSON array (outbound only)
+  subject      String
+  bodyText     String?
+  bodyHtml     String?
+  headersRaw   String?            // optional raw headers dump for debug
+  receivedAt   DateTime
+  readAt       DateTime?
+  spamScore    Float?
+  createdAt    DateTime           @default(now())
+  attachments  EmailAttachment[]
+
+  @@index([threadId, receivedAt])
+  @@index([receivedAt])
+  @@index([fromAddress])
+}
+
+model EmailAttachment {
+  id         String       @id @default(cuid())
+  messageId  String
+  message    EmailMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  filename   String
+  contentType String
+  sizeBytes  Int
+  r2Key      String       // object key in R2 bucket
+  checksumSha256 String?
+  createdAt  DateTime     @default(now())
+
+  @@index([messageId])
+}
+
+// ============================================================================
+// Manager Framework — strategic agent per project (~/.claude/plans/piped-orbiting-fox.md)
+// ============================================================================
+
+model ManagerSession {
+  id              String              @id @default(cuid())
+  projectId       Int                 // 15 = janicka-shop in JARVIS DB
+  workerName      String?             // 'mgr-janicka-shop-N' on bectly's machine
+  taskId          Int?                // task_queue.id in JARVIS DB
+  status          String              @default("running") // requested|running|paused|done|aborted|failed
+  triggeredBy     String?             // 'cli'|'tauri'|'janicka-admin'
+  openingMessage  String?             // user's opening prompt when triggered from UI
+  attachmentUrls  String?             // JSON array of R2 URLs for image attachments (Janička posts screenshots)
+  requestedAt     DateTime?           // set when status='requested', cleared when claimed
+  startedAt       DateTime            @default(now())
+  endedAt         DateTime?
+  endReason       String?
+  summaryMd       String?
+  costUsd         Float               @default(0.0)
+  tokensTotal     Int                 @default(0)
+  claudeSessionId String?
+  artifacts       ManagerArtifact[]
+  tasks           ManagerTask[]
+  comments        ManagerComment[]
+
+  @@index([projectId, status])
+  @@index([startedAt])
+  @@index([status, requestedAt])
+}
+
+model ManagerArtifact {
+  id                String          @id @default(cuid())
+  sessionId         String
+  session           ManagerSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  projectId         Int
+  kind              String          // note|chart|report|task_ai|task_human|access_request|amendment|action_proposal|screenshot
+  title             String?
+  bodyMd            String?
+  bodyJson          String?         // Raw JSON for kind-specific structured payload
+  status            String          @default("open") // open|accepted|rejected|done|merged|expired
+  mood              String?         // positive|concern|urgent
+  parentArtifactId  String?
+  parent            ManagerArtifact? @relation("ArtifactReplies", fields: [parentArtifactId], references: [id], onDelete: SetNull)
+  replies           ManagerArtifact[] @relation("ArtifactReplies")
+  comments          ManagerComment[]
+  createdAt         DateTime        @default(now())
+  acceptedAt        DateTime?
+  acceptedBy        String?
+  promotedTask      ManagerTask?    @relation(fields: [promotedTaskId], references: [id], onDelete: SetNull)
+  promotedTaskId    String?         @unique
+
+  @@index([sessionId, createdAt])
+  @@index([projectId, kind, status])
+}
+
+model ManagerTask {
+  id                String              @id @default(cuid())
+  sessionId         String?
+  session           ManagerSession?     @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  projectId         Int
+  category          String              // sales|marketing|tech|analytics|people|strategy|admin|other
+  priority          String              @default("medium") // urgent|high|medium|low
+  assigneeHint      String?             // bectly|shop owner|marketer|...
+  title             String
+  descriptionMd     String
+  rationaleMd       String?
+  expectedOutcome   String?
+  dueAt             DateTime?
+  status            String              @default("open") // open|accepted|in_progress|blocked|done|rejected|stale
+  acceptedAt        DateTime?
+  startedAt         DateTime?
+  completedAt       DateTime?
+  completionNotes   String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  sourceArtifact    ManagerArtifact?
+  comments          ManagerComment[]
+
+  @@index([projectId, status, priority])
+  @@index([assigneeHint, status])
+  @@index([dueAt])
+}
+
+model ManagerComment {
+  id           String           @id @default(cuid())
+  projectId    Int
+  parentType   String           // 'session' | 'task' | 'artifact'
+  parentId     String           // id of session / task / artifact (denormalized for fast queries)
+  authorRole   String           // 'shop owner' | 'bectly' | 'manager' | 'system'
+  authorName   String?
+  bodyMd       String
+  createdAt    DateTime         @default(now())
+  taskId       String?
+  task         ManagerTask?     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  artifactId   String?
+  artifact     ManagerArtifact? @relation(fields: [artifactId], references: [id], onDelete: Cascade)
+  sessionId    String?
+  session      ManagerSession?  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([parentType, parentId, createdAt])
+  @@index([projectId, createdAt])
+}
+
+// J22: Manager Tabs — conversation paradigm (separate from full ManagerSession)
+// docs/manager-tabs-spec.md — Janička <-> manager threaded chat with typed block answers.
+
+model ManagerThread {
+  id        String                 @id @default(cuid())
+  projectId Int
+  subject   String?                // auto-extracted from first user message (≤80 chars)
+  status    String                 @default("pending") // pending | processing | answered | awaiting_user | closed
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @updatedAt
+  messages  ManagerThreadMessage[]
+
+  @@index([projectId, status])
+  @@index([projectId, updatedAt])
+}
+
+model ManagerThreadMessage {
+  id          String                @id @default(cuid())
+  threadId    String
+  thread      ManagerThread         @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  role        String                // "user" | "manager" | "system"
+  contentJson String                @default("[]") // JSON array of typed blocks (text/chart/image/actions/poll/table/product_grid)
+  imageKeys   String                @default("[]") // JSON: string[] of R2 attachment keys (manager-uploads/...)
+  createdAt   DateTime              @default(now())
+  readAt      DateTime?             // null = unread by recipient
+  actions     ManagerThreadAction[]
+
+  @@index([threadId, createdAt])
+  @@index([threadId, readAt])
+}
+
+model ManagerThreadAction {
+  id          String               @id @default(cuid())
+  messageId   String
+  message     ManagerThreadMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  blockId     String               // id of the block within message.contentJson that this action belongs to
+  buttonId    String               // id of the specific button within the actions/poll block
+  actionType  String               // publish_discount | open_url | spawn_task | poll_vote | free_text | ...
+  status      String               @default("idle") // idle | executed | failed
+  executedAt  DateTime?
+
+  @@index([messageId])
+  @@index([status])
+}
+
+// J5: Suppliers + Bundles — cost basis pipeline for second-hand inventory.
+// One supplier (e.g. OPATEX) issues monthly pricelists with category codes + Kč/kg.
+// A bundle = one wholesale order from supplier; lines = per-category breakdown.
+// Each Product (piece) links back to a bundle + line for cost basis math.
+
+model Supplier {
+  id           String              @id @default(cuid())
+  name         String              @unique // e.g. "OPATEX"
+  url          String?
+  contactEmail String?
+  contactPhone String?
+  active       Boolean             @default(true)
+  notes        String?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  pricelists   SupplierPricelist[]
+  bundles      SupplierBundle[]
+}
+
+model SupplierPricelist {
+  id            String                  @id @default(cuid())
+  supplierId    String
+  supplier      Supplier                @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  effectiveDate DateTime                // first day of pricelist month
+  sourceFile    String?                 // .ods/.pdf path (for re-runs)
+  scrapedAt     DateTime?               // null = manually entered
+  createdAt     DateTime                @default(now())
+  items         SupplierPricelistItem[]
+
+  @@unique([supplierId, effectiveDate])
+  @@index([supplierId])
+}
+
+model SupplierPricelistItem {
+  id          String            @id @default(cuid())
+  pricelistId String
+  pricelist   SupplierPricelist @relation(fields: [pricelistId], references: [id], onDelete: Cascade)
+  code        String            // e.g. "1714"
+  name        String            // e.g. "Trička krátký rukáv A"
+  pricePerKg  Float
+  unit        String            @default("kg") // future: piece | bag
+  category    String?           // optional mapping to shop Category slug
+
+  @@unique([pricelistId, code])
+  @@index([code])
+}
+
+model SupplierBundle {
+  id            String               @id @default(cuid())
+  supplierId    String
+  supplier      Supplier             @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  orderDate     DateTime             // when ordered
+  receivedDate  DateTime?            // when arrived
+  invoiceNumber String?
+  invoiceFile   String?              // path to PDF/scan
+  sourceFile    String?              // .ods source (for idempotent re-import)
+  totalKg       Float
+  totalPrice    Float                // with VAT (Kč vč. DPH)
+  notes         String?
+  status        String               @default("ordered") // ordered | received | unpacked | done
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  lines         SupplierBundleLine[]
+  products      Product[]
+  batches       ProductDraftBatch[]
+
+  @@unique([supplierId, sourceFile])
+  @@index([supplierId])
+  @@index([status])
+}
+
+model SupplierBundleLine {
+  id              String          @id @default(cuid())
+  bundleId        String
+  bundle          SupplierBundle  @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  pricelistItemId String?
+  code            String          // snapshot of code at order time
+  name            String          // snapshot
+  kg              Float
+  pricePerKg      Float           // snapshot
+  totalPrice      Float
+  products        Product[]
+  batches         ProductDraftBatch[]
+
+  @@unique([bundleId, code])
+  @@index([bundleId])
+  @@index([pricelistItemId])
+}
+
+// J4: QR bulk-upload mobile pipeline (docs/qr-bulk-upload-spec.md).
+// PC admin starts a batch → QR token → Janička scans on phone → mobile add UI
+// posts ProductDrafts → batch sealed → PC reviews + publishes drafts as Products.
+
+model ProductDraftBatch {
+  id             String         @id @default(cuid())
+  adminId        String                              // Admin who created the QR
+  tokenHash      String         @unique              // sha256(rawJwt) — raw JWT lives only in QR URL
+  expiresAt      DateTime                            // QR link expiry (createdAt + 15min)
+  status         String         @default("open")     // open | sealed | published | expired | archived
+  sealedAt       DateTime?
+  publishedAt    DateTime?
+  archivedAt     DateTime?                           // J10-B3: when auto-archive cron set status=archived
+  bundleId       String?                             // J5: which bundle this batch is unpacking
+  bundle         SupplierBundle?  @relation(fields: [bundleId], references: [id])
+  bundleLineId   String?                             // J5: specific line/category within the bundle
+  bundleLine     SupplierBundleLine? @relation(fields: [bundleLineId], references: [id])
+  defaultWeightG Int?                                // J5: pre-filled piece weight (grams) for QR session
+  notifyOnPublish Boolean        @default(false)     // J10-B4: send admin email when bulk-publish completes
+  timingsJson    String         @default("{}")       // J10-B5: { sessionStart: ISO, pieces: [{draftId, startedAt, submittedAt, durationMs}] }
+  lastActivityAt DateTime       @default(now())      // J10-B3: bumped on every draft add/edit; drives 24h resume + 7d archive
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  drafts         ProductDraft[]
+
+  @@index([adminId])
+  @@index([status])
+  @@index([expiresAt])
+  @@index([lastActivityAt])
+  @@index([adminId, status, lastActivityAt])
+}
+
+model ProductDraft {
+  id          String             @id @default(cuid())
+  batchId     String
+  batch       ProductDraftBatch  @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  // Core product fields (mirror Product, all optional until publish)
+  name         String?
+  price        Float?
+  categoryId   String?
+  brand        String?
+  condition    String?            // new_with_tags | excellent | good | visible_wear
+  sizes        String             @default("[]") // JSON string[]
+  colors       String             @default("[]")
+  images       String             @default("[]") // R2 keys (drafts/ prefix)
+  description  String?
+  measurements String             @default("{}")
+  fitNote      String?
+  defectsNote  String?
+  defectImages String             @default("[]")
+  internalNote String?
+
+  videoUrl        String?
+  compareAt       Float?
+  featured        Boolean  @default(false)
+  metaTitle       String?
+  metaDescription String?
+  weightG         Int?     // per-draft override; batch.defaultWeightG is the fallback
+  costBasis       Float?   // J12-D1: cost basis Kč — weight-distributed share of bundle total
+
+  // Draft lifecycle
+  status             String    @default("pending") // pending | ready | published | discarded
+  publishedProductId String?   @unique             // set when promoted to Product
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([batchId])
+  @@index([status])
+}
+
+// J5-M1: key-value admin config store (e.g. activeBundleId → cuid or "none")
+model SiteSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
