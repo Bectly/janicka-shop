@@ -33,10 +33,20 @@ function attachQueryListener(client: PrismaClient) {
 }
 
 async function createClient(): Promise<PrismaClient> {
+  const dbUrl = process.env.DATABASE_URL ?? "";
   const tursoUrl = process.env.TURSO_DATABASE_URL;
   const tursoToken = process.env.TURSO_AUTH_TOKEN;
   const logConfig = buildLogConfig();
 
+  // Postgres: native connection (Phase 2 cutover, primary path).
+  if (dbUrl.startsWith("postgres")) {
+    const client = new PrismaClient(logConfig);
+    attachQueryListener(client);
+    return client;
+  }
+
+  // Turso/libsql legacy path — only functional when schema.prisma provider
+  // is "sqlite". Kept for emergency rollback (revert schema + this branch).
   if (tursoUrl && tursoToken) {
     const { PrismaLibSQL } = await import("@prisma/adapter-libsql/web");
     const adapter = new PrismaLibSQL({
@@ -49,15 +59,13 @@ async function createClient(): Promise<PrismaClient> {
     return client;
   }
 
-  // Local SQLite — enable WAL mode for concurrent readers during build
-  // (prevents SQLITE_CANTOPEN / lock errors when Next.js build workers run in parallel)
-  // Wrapped in try-catch: WAL pragma can fail in Next.js Cache env (different CWD) — non-fatal
+  // Local SQLite dev — only valid with sqlite-provider schema.
   const client = new PrismaClient(logConfig);
   attachQueryListener(client);
   try {
     await client.$executeRaw`PRAGMA journal_mode = WAL`;
   } catch {
-    // Non-fatal — WAL mode is a perf optimization, not required for correctness
+    // Non-fatal — postgres rejects PRAGMA, sqlite WAL is a perf optimization.
   }
   return client;
 }

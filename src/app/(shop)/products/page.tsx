@@ -7,6 +7,7 @@ import { buildBreadcrumbSchema, jsonLdString } from "@/lib/structured-data";
 import { ProductsClient, type CatalogProduct } from "./products-client";
 import type { Metadata } from "next";
 import { getSiteUrl } from "@/lib/site-url";
+import { parseProductImages } from "@/lib/images";
 
 const BASE_URL = getSiteUrl();
 
@@ -106,15 +107,15 @@ async function getCachedCatalog(): Promise<{
   const lowestPricesMap = await getLowestPrices30d(productsRaw.map((p) => p.id));
 
   const products: CatalogProduct[] = productsRaw.map((p) => {
-    let trimmedImages = p.images;
-    try {
-      const arr = JSON.parse(p.images);
-      if (Array.isArray(arr) && arr.length > 2) {
-        trimmedImages = JSON.stringify(arr.slice(0, 2));
-      }
-    } catch {
-      // leave as-is on malformed JSON
-    }
+    // Phase 7: parseProductImages rewrites legacy r2.dev URLs → /uploads when
+    // IMAGE_STORAGE_BACKEND=local. Re-serialize as the legacy {url, alt}[] shape
+    // (or string[] fallback if all alts are empty) so the client component's
+    // existing parser keeps working.
+    const parsed = parseProductImages(p.images).slice(0, 2);
+    const allEmpty = parsed.every((img) => !img.alt && !img.caption);
+    const trimmedImages = allEmpty
+      ? JSON.stringify(parsed.map((img) => img.url))
+      : JSON.stringify(parsed);
     const desc = p.description ?? "";
     const descSnippet = desc.length > 160 ? `${desc.slice(0, 157)}...` : desc;
     return {

@@ -1,6 +1,52 @@
 # Hetzner Phase 2 — Postgres Cutover Runbook
 
-**Status: PROVISIONED, NOT CUT OVER.** Local Postgres 16 is live on the Hetzner VPS as of 2026-04-28 (cycle #5140 task #919). Application traffic still hits Turso. The cutover itself is the bectly-supervised step described below.
+**Status: CUT OVER 2026-04-28T11:45 UTC (cycle #5152 task #930).** Production app at `https://www.jvsatnik.cz` now reads/writes local Postgres on Hetzner. Turso left in place as 7-day read-only safety net (rollback path at bottom).
+
+### Verified post-cutover (2026-04-28T11:46 UTC)
+- `/api/health` → `{"ok":true,"db":"ok"}` on PG.
+- Row parity: Product 347 / PriceHistory 347 / Order 2 / OrderItem 4 / Customer 7 / Category 6 / Admin 1 / ManagerArtifact 31 / ShopSettings 1 — matches Turso source.
+- Postgres `xact_commit` = 1593 within 90 s of restart, 9 idle pool conns from app.
+- Smoke: `/`, `/products`, 3× PDP, `/admin/login` all returned 200.
+- pm2 error log: zero new entries since restart at `2026-04-28T11:45:28`.
+
+### Code that landed (this cycle)
+- `prisma/schema.prisma` → datasource provider `sqlite` → `postgresql`.
+- `src/lib/db.ts` → adds postgres branch (native `new PrismaClient()`); libsql/sqlite branches kept for rollback documentation.
+- `scripts/migrate-turso-to-postgres.ts` → timestamp coercion (epoch ms → Date) + bulk-TRUNCATE up-front (per-table CASCADE was wiping tables already migrated alphabetically earlier).
+
+### What was actually executed
+1. Local: `provider = "sqlite"` → `"postgresql"` in `prisma/schema.prisma`.
+2. Local: opened SSH tunnel `localhost:15432 → root@46.224.219.3:5432`.
+3. Local: `prisma db push --skip-generate` → 47 tables created in `janicka_shop`.
+4. VPS: `ALTER ROLE janicka SUPERUSER` (temporary — required for `session_replication_role = replica`).
+5. Local: `npx tsx scripts/migrate-turso-to-postgres.ts --reset` — bulk-TRUNCATE + copy 825 rows across 47 tables, drift = 0.
+6. VPS: `ALTER ROLE janicka NOSUPERUSER` (revoked after migration).
+7. VPS: rsynced `db.ts`, `schema.prisma`, `schema.postgres.prisma`, migration script into `/opt/janicka-shop`.
+8. VPS: backed up `.env.production` and `.next/standalone/.env.production` as `*.bak.preC5152`.
+9. VPS: `sed` `DATABASE_URL=` to postgres URL; commented `TURSO_*` vars with `# C5152-cutover` prefix.
+10. VPS: `npx prisma generate` regenerated client for postgres provider.
+11. VPS: `npm run build` (~71 s) — standalone bundle now postgres-bound.
+12. VPS: `pm2 restart janicka-shop --update-env`.
+13. Smoke + acceptance gate (see above).
+
+### Rollback (within 7-day Turso window)
+30-second revert if anything goes wrong:
+```bash
+ssh root@46.224.219.3
+cd /opt/janicka-shop
+cp .env.production.bak.preC5152 .env.production
+cp .next/standalone/.env.production.bak.preC5152 .next/standalone/.env.production
+# Repo schema.prisma must also be reverted (provider postgresql → sqlite)
+# and src/lib/db.ts will fall through to its libsql branch automatically when
+# DATABASE_URL is libsql://, but a clean rebuild after the schema revert is required.
+git -C /opt/janicka-shop checkout HEAD~1 -- prisma/schema.prisma src/lib/db.ts  # or however orchestrator tracks it
+DATABASE_URL=libsql://... npx prisma generate
+npm run build
+pm2 restart janicka-shop --update-env
+```
+Postgres cluster + dataset stay on the VPS; rollback only flips the app reader. Turso has been untouched since 2026-04-28T11:43 UTC (last read by the migration script).
+
+### Original prep (kept for context)
 
 ## Why
 [Audit #904](../audits/) attributed 50–60% of the Hetzner-side 3–5 s section-switch latency to Turso transatlantic RTT (aws-eu-west-1, ~100–160 ms per round-trip). The Hetzner app instance is talking to a database on another continent. Moving the authoritative DB to a local Postgres on the same box drops that to <1 ms.

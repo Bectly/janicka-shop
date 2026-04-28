@@ -23,6 +23,7 @@ import { ProductInfoAccordion } from "@/components/shop/product-info-accordion";
 import { ProductDefects } from "@/components/shop/product-defects";
 import { ProductDescription } from "@/components/shop/product-description";
 import { parseDefectImages } from "@/lib/defects";
+import { rewriteImagesJson } from "@/lib/images";
 import { getSiteUrl } from "@/lib/site-url";
 import { FreeShippingBar } from "@/components/shop/free-shipping-bar";
 import { NotifyMeForm } from "@/components/shop/notify-me-form";
@@ -209,7 +210,7 @@ async function RelatedProductsSection({
               slug={p.slug}
               price={p.price}
               compareAt={p.compareAt}
-              images={p.images}
+              images={rewriteImagesJson(p.images)}
               categoryName={p.category.name}
               brand={p.brand}
               condition={p.condition}
@@ -245,7 +246,7 @@ async function RelatedProductsSection({
             slug={p.slug}
             price={p.price}
             compareAt={p.compareAt}
-            images={p.images}
+            images={rewriteImagesJson(p.images)}
             categoryName={p.category.name}
             brand={p.brand}
             condition={p.condition}
@@ -561,7 +562,7 @@ export default async function ProductDetailPage({ params }: Props) {
     name: product.name,
     price: product.price,
     compareAt: product.compareAt,
-    images: product.images,
+    images: rewriteImagesJson(product.images),
     categoryName: product.category.name,
     brand: product.brand,
     condition: product.condition,
@@ -836,7 +837,7 @@ export default async function ProductDetailPage({ params }: Props) {
               name: product.name,
               price: product.price,
               slug: product.slug,
-              images: product.images,
+              images: rewriteImagesJson(product.images),
               sizes: filteredSizes,
               colors,
               stock: product.stock,

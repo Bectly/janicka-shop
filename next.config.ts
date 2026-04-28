@@ -29,9 +29,31 @@ const nextConfig: NextConfig = {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [
       {
-        // Cloudflare R2 public bucket — janicka-shop-images
+        // Cloudflare R2 public bucket — janicka-shop-images (legacy, kept until
+        // 7-day R2 cooldown elapses so historical URLs in indexes still resolve)
         protocol: "https",
         hostname: "pub-88d95c0ca85d4cb999122434d83fb3c9.r2.dev",
+      },
+      {
+        // Phase 7 cutover: nginx /uploads/* serves from /opt/janicka-shop-images
+        protocol: "https",
+        hostname: "www.jvsatnik.cz",
+        pathname: "/uploads/**",
+      },
+      {
+        protocol: "https",
+        hostname: "jvsatnik.cz",
+        pathname: "/uploads/**",
+      },
+      {
+        protocol: "https",
+        hostname: "www.janicka-shop.cz",
+        pathname: "/uploads/**",
+      },
+      {
+        protocol: "https",
+        hostname: "janicka-shop.cz",
+        pathname: "/uploads/**",
       },
       {
         protocol: "https",

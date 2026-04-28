@@ -128,6 +128,18 @@ async function getBooleanColumns(table: string): Promise<Set<string>> {
   return new Set(r.rows.map((row) => row.column_name as string));
 }
 
+// SQLite stores DateTime as epoch ms int (Prisma libsql adapter convention).
+// Postgres timestamp columns need ISO strings or Date objects.
+async function getTimestampColumns(table: string): Promise<Set<string>> {
+  const r = await pg.query(
+    `SELECT column_name FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = $1
+         AND data_type IN ('timestamp without time zone','timestamp with time zone','date')`,
+    [table],
+  );
+  return new Set(r.rows.map((row) => row.column_name as string));
+}
+
 async function getColumns(table: string): Promise<string[]> {
   const r = await pg.query(
     `SELECT column_name FROM information_schema.columns
@@ -148,8 +160,20 @@ async function pgCount(table: string): Promise<number> {
   return r.rows[0]?.c ?? 0;
 }
 
-function coerceValue(v: unknown, isBool: boolean): unknown {
+function coerceValue(v: unknown, isBool: boolean, isTimestamp = false): unknown {
   if (v === null || v === undefined) return null;
+  if (isTimestamp) {
+    // libsql returns epoch ms (number/bigint/string) or ISO strings depending on column.
+    if (v instanceof Date) return v;
+    if (typeof v === "number") return new Date(v);
+    if (typeof v === "bigint") return new Date(Number(v));
+    if (typeof v === "string") {
+      // Numeric string → epoch ms; otherwise pass through (ISO).
+      if (/^\d+$/.test(v)) return new Date(Number(v));
+      return v;
+    }
+    return v;
+  }
   if (isBool) {
     // libsql returns 0/1 numbers (or sometimes string "0"/"1")
     if (typeof v === "boolean") return v;
@@ -170,15 +194,17 @@ async function migrateTable(table: string): Promise<{
   const sourceCount = await tursoCount(table);
   const cols = await getColumns(table);
   const boolCols = await getBooleanColumns(table);
+  const tsCols = await getTimestampColumns(table);
 
   if (cols.length === 0) {
     console.log(`[skip] ${table}: no columns in destination (table missing?)`);
     return { source: sourceCount, copied: 0, dest: 0 };
   }
 
-  if (RESET && !DRY) {
-    await pg.query(`TRUNCATE TABLE ${quote(table)} CASCADE`);
-  }
+  // NOTE: per-table TRUNCATE CASCADE was removed because cascading wiped
+  // already-populated tables (e.g. truncating Product cascaded into
+  // PriceHistory which had been migrated alphabetically just before).
+  // Bulk reset is now done up-front in main() before the loop starts.
 
   let offset = 0;
   let copied = 0;
@@ -197,7 +223,7 @@ async function migrateTable(table: string): Promise<{
       for (const row of r.rows) {
         const ph: string[] = [];
         for (const c of cols) {
-          values.push(coerceValue((row as Record<string, unknown>)[c], boolCols.has(c)));
+          values.push(coerceValue((row as Record<string, unknown>)[c], boolCols.has(c), tsCols.has(c)));
           ph.push(`$${p++}`);
         }
         placeholders.push(`(${ph.join(", ")})`);
@@ -222,6 +248,13 @@ async function main() {
 
   if (!DRY) {
     await pg.query("SET session_replication_role = 'replica'");
+  }
+
+  if (RESET && !DRY) {
+    // One-shot bulk truncate so cascades don't wipe tables we'll populate later.
+    const tableList = TABLES.map(quote).join(", ");
+    await pg.query(`TRUNCATE TABLE ${tableList} CASCADE`);
+    console.log(`[info] bulk-truncated ${TABLES.length} tables`);
   }
 
   const targetTables = ONLY_TABLE ? [ONLY_TABLE] : TABLES;
