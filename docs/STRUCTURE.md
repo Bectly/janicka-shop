@@ -1,13 +1,13 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 556 files, ~92,417 LOC.
-**Drill-down dropped** — full render was 59,788 chars > cap 10,000 (~17% shown). Grep source files directly for symbol-level detail.
+Auto-generated. Total: 556 files, ~92,535 LOC.
+**Drill-down dropped** — full render was 59,808 chars > cap 10,000 (~17% shown). Grep source files directly for symbol-level detail.
 
 ---
 
 ## `next.config.ts/` (1 files)
 
-- next.config.ts (139 LOC)
+- next.config.ts (161 LOC)
 
 ## `playwright.config.ts/` (1 files)
 
@@ -38,7 +38,7 @@ Auto-generated. Total: 556 files, ~92,417 LOC.
 - scripts/import-opatex.ts (344 LOC)
 - scripts/import-vinted-products.ts (405 LOC)
 - scripts/lighthouse-perf.ts (285 LOC)
-- scripts/migrate-turso-to-postgres.ts (275 LOC)
+- scripts/migrate-turso-to-postgres.ts (308 LOC)
 - scripts/migrate-vinted-images.ts (397 LOC)
 - scripts/move-defect-warnings-from-description.ts (134 LOC)
 - scripts/normalize-sizes.ts (154 LOC)
@@ -188,4 +188,4 @@ Auto-generated. Total: 556 files, ~92,417 LOC.
 - src/app/(admin-onboarding)/admin/welcome/page.tsx (114 LOC)
 - src/app/(drafts-mobile)/admi
 
-... [truncated at 10,000 chars; compact render was 28,635. Use git ls-files for full file list.]
+... [truncated at 10,000 chars; compact render was 28,636. Use git ls-files for full file list.]

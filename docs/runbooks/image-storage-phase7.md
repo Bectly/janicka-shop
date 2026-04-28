@@ -1,6 +1,24 @@
-# Hetzner Phase 7 — Image storage cutover R2 → /opt/janicka-shop-images (PREP)
+# Hetzner Phase 7 — Image storage cutover R2 → /opt/janicka-shop-images (CUT OVER)
 
-**Status: ABSTRACTION LANDED, CUTOVER GATED.** Phase 7 is gated on Phases 2 (Postgres cutover #930), 3 (R2-as-backup #920), and 5 (hardening #922) closing — without the app actually running on Hetzner there is no local nginx to serve `/uploads/*`, and without rclone + backup buckets there is no nightly `/opt/janicka-shop-images → R2` mirror to act as the disaster-recovery copy.
+**Status: CUT OVER 2026-04-28 (cycle #5154 task #933).** All product imagery on `https://www.jvsatnik.cz` now served from local SSD via nginx `/uploads/*`. R2 retained as backup target only.
+
+Verified acceptance counts (curl-from-laptop, 2026-04-28):
+
+| Page | `r2.dev` URLs | `jvsatnik.cz/uploads` URLs |
+|---|---:|---:|
+| `/` | 0 | 132 |
+| `/products` | 0 | 734 |
+| `/products/<sample-PDP>` | 0 | 83 |
+
+Endpoint timing (cold):
+
+| Source | TTFB | Total | Notes |
+|---|---:|---:|---|
+| `https://www.jvsatnik.cz/uploads/<key>.webp` (nginx local) | 57 ms | 70 ms | 200 image/webp, `cache-control: public, max-age=31536000, immutable` |
+| `https://pub-88d95c0ca85d4cb999122434d83fb3c9.r2.dev/<key>.webp` | 144 ms | 157 ms | 200, kept warm for 7-day cooldown |
+| `/_next/image?url=<local>&w=640&q=75` | — | 342 ms | 200 image/jpeg (AVIF→JPEG fallback negotiation) |
+
+Net: **2.5× faster TTFB** vs R2 round-trip, DB image keys unchanged (env-flag driven via `image-storage.ts` `buildImageUrl`).
 
 This document is the deploy + acceptance + rollback plan for cycle #5149 task #933. The deliverables in the repo at this commit are:
 
@@ -12,20 +30,20 @@ docs/runbooks/image-storage-phase7.md # this file
 
 The Phase 3 prep already shipped `scripts/hetzner/nginx-uploads.conf` (server block snippet) and `scripts/hetzner/janicka-backup-images.sh` (weekly mirror). Phase 7 wires the application to actually use them.
 
-## Live pre-flight probe — 2026-04-28 (C5149 task #933)
+## Post-cutover state — 2026-04-28 (C5154 task #933)
 
-Same `root@46.224.219.3` blockers as Phase 3 (#920) — Phase 7 cannot execute until Phase 3 unblocks.
+| Check | State |
+|---|---|
+| Phase 2 app cutover (Turso → Hetzner Postgres) | ✅ executed C5154 (commit 263f1fd, task #930) |
+| `/opt/janicka-shop-images/products` populated | ✅ 1988 files / 406 MB (rclone sync from `r2:janicka-shop-images`) |
+| nginx `/uploads/*` block live | ✅ deployed in `/etc/nginx/sites-available/janicka-shop.conf` (HTTP + HTTPS server blocks); `.bak.phase7` retained for revert |
+| `.env.production` env vars | ✅ `IMAGE_STORAGE_BACKEND=local`, `LOCAL_IMAGES_DIR=/opt/janicka-shop-images`, `IMAGE_PUBLIC_URL_BASE=https://www.jvsatnik.cz/uploads` |
+| `next.config.ts` `images.remotePatterns` | ✅ `www.jvsatnik.cz/uploads/**` (and `jvsatnik.cz`, `www.janicka-shop.cz`, `janicka-shop.cz` mirrors) added; `*.r2.dev` retained for 7-day cooldown of historical URLs |
+| pm2 process | ✅ `janicka-shop` online (uptime fresh after env-flip restart) |
+| Smoke (`/`, `/products`, sample PDP) | ✅ 200, all in-page product images now `https://www.jvsatnik.cz/uploads/...` (0 r2.dev) |
+| Drafts pipeline | ⚠ still on `src/lib/r2.ts` (intentional — see § Out of scope) |
 
-| Check | State | Blocker? |
-|---|---|---|
-| Phase 2 app cutover (Turso → Hetzner Postgres) | ❌ app still on Turso/Vercel | YES (#930) |
-| Phase 3 image migration (`/opt/janicka-shop-images` populated) | ❌ dir does not exist | YES (Phase 3 step 5) |
-| Phase 3 nginx `/uploads/*` block deployed | ❌ snippet in repo, not in `/etc/nginx/sites-available/janicka-shop.conf` | YES (Phase 3 step 7) |
-| Phase 3 backup-images timer healthy | ❌ unit not enabled | YES (Phase 3 § Deploy) |
-| `IMAGE_STORAGE_BACKEND` env var present | ❌ not set in Vercel or Hetzner `.env.production` | NO at code level (default `r2`) — YES at cutover |
-| Drafts pipeline still on R2 | ✅ intentional — see § Out of scope | — |
-
-**Conclusion**: code abstraction is safe to land today (default backend = `r2` = exact current behavior). Cutover is a single env-var flip + nginx reload, gated on Phases 2/3/5.
+**R2 retention**: bucket `janicka-shop-images` kept warm for 7 days as rollback target. Set calendar reminder for 2026-05-05 to flip nginx config back to `.bak.phase7` and restore Vercel `R2_PUBLIC_URL` if regression surfaces.
 
 ## Why
 
