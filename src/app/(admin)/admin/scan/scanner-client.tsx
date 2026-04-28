@@ -36,15 +36,10 @@ export function QrScannerClient() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const rafRef = useRef<number | null>(null);
-  const [state, setState] = useState<DetectorState>("idle");
+  const [state, setState] = useState<DetectorState>("supported");
   const [error, setError] = useState<string | null>(null);
   const [manualId, setManualId] = useState("");
   const [lastDecoded, setLastDecoded] = useState<string | null>(null);
-
-  useEffect(() => {
-    const Ctor = getDetectorCtor();
-    setState(Ctor ? "supported" : "unsupported");
-  }, []);
 
   function stopStream() {
     if (rafRef.current !== null) {

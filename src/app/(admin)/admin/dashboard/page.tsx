@@ -27,6 +27,7 @@ import {
   AlertTriangle,
   Video,
   Shirt,
+  ScanLine,
 } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -246,8 +247,25 @@ export default async function AdminDashboardPage({
       </div>
 
       {/* J14 — pink hero CTA: prominent entry to mobile add flow */}
-      <div className="mt-5">
+      <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto]">
         <PhotoAddCTA />
+        <Link
+          href="/admin/scan"
+          aria-label="Skenovat štítek"
+          className="group flex min-h-[120px] items-center gap-3 rounded-2xl border bg-card p-5 text-foreground shadow-sm transition-all hover:border-primary/40 hover:shadow-md active:scale-[0.98] sm:min-h-24 sm:flex-col sm:items-start sm:justify-center sm:px-6"
+        >
+          <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+            <ScanLine className="size-6 text-primary" aria-hidden />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-base font-semibold leading-tight">
+              Skenovat štítek
+            </p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Otevři produkt podle QR
+            </p>
+          </div>
+        </Link>
       </div>
 
       {/* Stats grid */}
