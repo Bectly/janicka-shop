@@ -1,12 +1,11 @@
 import { ImapFlow, type FetchMessageObject } from "imapflow";
 import { simpleParser, type ParsedMail, type AddressObject } from "mailparser";
-import { revalidateTag } from "next/cache";
-import { getDb } from "@/lib/db";
-import { uploadToR2 } from "@/lib/r2";
 import { logger } from "@/lib/logger";
-import { createHash } from "crypto";
-
-type Prisma = Awaited<ReturnType<typeof getDb>>;
+import {
+  bumpMailboxBadges,
+  persistInboundMail,
+  type InboundMail,
+} from "./inbound-persist";
 
 type SyncResult = {
   ok: boolean;
@@ -19,7 +18,8 @@ type SyncResult = {
 
 /**
  * Pull new messages from an IMAP INBOX, parse them, dedup by Message-ID,
- * thread via In-Reply-To / References, and persist to EmailThread + EmailMessage.
+ * thread via In-Reply-To / References, and persist via the shared
+ * inbound-persist module (same target as the Resend webhook path).
  * Returns early with ok=false when IMAP_* env vars are missing (feature-flagged
  * until bectly provisions mailhosting).
  *
@@ -50,7 +50,6 @@ export async function syncImapInbox(): Promise<SyncResult> {
     logger: false,
   });
 
-  const db = await getDb();
   let fetched = 0;
   let inserted = 0;
   let skipped = 0;
@@ -77,9 +76,15 @@ export async function syncImapInbox(): Promise<SyncResult> {
             continue;
           }
           const parsed = await simpleParser(msg.source);
-          const result = await persistParsedMessage(db, parsed);
+          const mail = parsedToInbound(parsed);
+          if (!mail) {
+            // RFC-compliant messages always carry Message-ID; bail on malformed ones.
+            skipped++;
+            continue;
+          }
+          const result = await persistInboundMail(mail);
           if (result === "inserted") inserted++;
-          else if (result === "skipped") skipped++;
+          else skipped++;
         } catch (err) {
           failed++;
           logger.error("[imap-sync] message fetch/parse failed", {
@@ -100,166 +105,47 @@ export async function syncImapInbox(): Promise<SyncResult> {
     return { ok: false, fetched, inserted, skipped, failed, error: "imap_error" };
   }
 
-  // Each inbound insert increments EmailThread.unreadCount, which feeds the
-  // cached admin-badge trio (src/lib/admin-badges.ts). Drop the cached copy
-  // so the next admin nav reflects new mail.
-  if (inserted > 0) {
-    try {
-      revalidateTag("admin-badges", "max");
-      revalidateTag("admin-mailbox", "max");
-    } catch {
-      // revalidateTag may not be callable outside a request scope (e.g. cron
-      // wrapper). Non-fatal — TTL will still refresh the badge within minutes.
-    }
-  }
+  if (inserted > 0) bumpMailboxBadges();
 
   return { ok: true, fetched, inserted, skipped, failed };
 }
 
-/** Persist a parsed email into EmailThread + EmailMessage, with dedup. */
-async function persistParsedMessage(
-  db: Prisma,
-  parsed: ParsedMail,
-): Promise<"inserted" | "skipped"> {
+function parsedToInbound(parsed: ParsedMail): InboundMail | null {
   const messageId = parsed.messageId?.trim();
-  if (!messageId) {
-    // RFC-compliant messages always carry Message-ID; bail on malformed ones.
-    return "skipped";
-  }
-
-  const existing = await db.emailMessage.findUnique({ where: { messageId } });
-  if (existing) return "skipped";
-
-  const inReplyTo = parsed.inReplyTo?.trim() || null;
-  const referencesIds = normalizeReferences(parsed.references);
+  if (!messageId) return null;
 
   const fromAddr = firstAddress(parsed.from);
   const toAddrs = allAddresses(parsed.to);
   const ccAddrs = allAddresses(parsed.cc);
-  const subject = (parsed.subject ?? "(bez předmětu)").slice(0, 500);
-  const receivedAt = parsed.date ?? new Date();
 
-  // Threading: try to locate existing thread via inReplyTo / references chain.
-  let threadId: string | null = null;
-  if (inReplyTo) {
-    const parent = await db.emailMessage.findUnique({
-      where: { messageId: inReplyTo },
-      select: { threadId: true },
-    });
-    if (parent) threadId = parent.threadId;
-  }
-  if (!threadId && referencesIds.length > 0) {
-    const ref = await db.emailMessage.findFirst({
-      where: { messageId: { in: referencesIds } },
-      select: { threadId: true },
-    });
-    if (ref) threadId = ref.threadId;
-  }
-
-  const participants = dedupStrings([
-    fromAddr.address,
-    ...toAddrs.map((a) => a.address),
-    ...ccAddrs.map((a) => a.address),
-  ].filter(Boolean));
-
-  if (!threadId) {
-    const thread = await db.emailThread.create({
-      data: {
-        subject: stripReplyPrefix(subject),
-        participants: JSON.stringify(participants),
-        lastMessageAt: receivedAt,
-        messageCount: 0,
-        unreadCount: 0,
-      },
-      select: { id: true },
-    });
-    threadId = thread.id;
-  }
-
-  // Upload attachments first (best-effort — failures downgrade to skipped attachments).
-  const attachmentsData: Array<{
-    filename: string;
-    contentType: string;
-    sizeBytes: number;
-    r2Key: string;
-    checksumSha256: string;
-  }> = [];
+  const attachments: InboundMail["attachments"] = [];
   for (const att of parsed.attachments ?? []) {
     if (!att.content || !att.filename) continue;
-    try {
-      const buf = Buffer.isBuffer(att.content) ? att.content : Buffer.from(att.content as Uint8Array);
-      const checksum = createHash("sha256").update(buf).digest("hex");
-      const safeName = att.filename.replace(/[^a-zA-Z0-9._-]/g, "-").slice(0, 120);
-      // Deterministic key so duplicate attachments dedupe in R2 and the stored
-      // r2Key always matches the object actually written.
-      const explicitKey = `mailbox/${checksum}-${safeName}`;
-      const { key } = await uploadToR2(
-        buf,
-        safeName,
-        att.contentType ?? "application/octet-stream",
-        "mailbox",
-        explicitKey,
-      );
-      attachmentsData.push({
-        filename: att.filename.slice(0, 255),
-        contentType: (att.contentType ?? "application/octet-stream").slice(0, 120),
-        sizeBytes: buf.length,
-        r2Key: key,
-        checksumSha256: checksum,
-      });
-    } catch (err) {
-      logger.error("[imap-sync] attachment upload failed", {
-        filename: att.filename,
-        error: err instanceof Error ? err.message : String(err),
-      });
-    }
+    const buf = Buffer.isBuffer(att.content)
+      ? att.content
+      : Buffer.from(att.content as Uint8Array);
+    attachments.push({
+      filename: att.filename,
+      contentType: att.contentType ?? null,
+      content: buf,
+    });
   }
 
-  await db.emailMessage.create({
-    data: {
-      threadId,
-      messageId,
-      inReplyTo,
-      referencesIds: referencesIds.length ? JSON.stringify(referencesIds) : null,
-      direction: "inbound",
-      fromAddress: fromAddr.address,
-      fromName: fromAddr.name ?? null,
-      toAddresses: JSON.stringify(toAddrs.map((a) => a.address)),
-      ccAddresses: JSON.stringify(ccAddrs.map((a) => a.address)),
-      subject,
-      bodyText: parsed.text ?? null,
-      bodyHtml: typeof parsed.html === "string" ? parsed.html : null,
-      headersRaw: parsed.headerLines ? JSON.stringify(parsed.headerLines) : null,
-      receivedAt,
-      attachments: attachmentsData.length
-        ? { create: attachmentsData }
-        : undefined,
-    },
-  });
-
-  const existingThread = await db.emailThread.findUnique({
-    where: { id: threadId },
-    select: { participants: true },
-  });
-  const existingParticipants: string[] = existingThread?.participants
-    ? JSON.parse(existingThread.participants)
-    : [];
-  const mergedParticipants = dedupStrings([
-    ...existingParticipants,
-    ...participants,
-  ]);
-
-  await db.emailThread.update({
-    where: { id: threadId },
-    data: {
-      lastMessageAt: receivedAt,
-      messageCount: { increment: 1 },
-      unreadCount: { increment: 1 },
-      participants: JSON.stringify(mergedParticipants),
-    },
-  });
-
-  return "inserted";
+  return {
+    messageId,
+    inReplyTo: parsed.inReplyTo?.trim() || null,
+    references: normalizeReferences(parsed.references),
+    fromAddress: fromAddr.address,
+    fromName: fromAddr.name,
+    toAddresses: toAddrs.map((a) => a.address),
+    ccAddresses: ccAddrs.map((a) => a.address),
+    subject: (parsed.subject ?? "(bez předmětu)").slice(0, 500),
+    bodyText: parsed.text ?? null,
+    bodyHtml: typeof parsed.html === "string" ? parsed.html : null,
+    headersRaw: parsed.headerLines ? JSON.stringify(parsed.headerLines) : null,
+    receivedAt: parsed.date ?? new Date(),
+    attachments,
+  };
 }
 
 function firstAddress(a: AddressObject | AddressObject[] | undefined): {
@@ -291,13 +177,5 @@ function allAddresses(
 function normalizeReferences(refs: string | string[] | undefined): string[] {
   if (!refs) return [];
   const arr = Array.isArray(refs) ? refs : refs.split(/\s+/);
-  return dedupStrings(arr.map((r) => r.trim()).filter(Boolean));
-}
-
-function dedupStrings(arr: string[]): string[] {
-  return Array.from(new Set(arr));
-}
-
-function stripReplyPrefix(subject: string): string {
-  return subject.replace(/^(re|fwd|fw):\s*/i, "").trim() || "(bez předmětu)";
+  return Array.from(new Set(arr.map((r) => r.trim()).filter(Boolean)));
 }
