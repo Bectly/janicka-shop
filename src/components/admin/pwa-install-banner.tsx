@@ -103,10 +103,10 @@ export function PwaInstallBanner({ show }: PwaInstallBannerProps) {
     <div
       role="dialog"
       aria-label="Přidat aplikaci na plochu"
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-rose-700/30 bg-rose-500 text-white shadow-lg"
-      style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+      className="fixed inset-x-0 z-30 border-y border-rose-700/30 bg-rose-500 text-white shadow-lg"
+      style={{ bottom: "calc(4.5rem + env(safe-area-inset-bottom))" }}
     >
-      <div className="mx-auto flex max-w-md items-center gap-3 px-3 pt-3">
+      <div className="mx-auto flex max-w-md items-center gap-3 px-3 py-3">
         <div className="flex-1 text-sm font-medium leading-tight">
           Přidej Janička Shop na plochu
           <div className="text-xs font-normal text-white/85">
