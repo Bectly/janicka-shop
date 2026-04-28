@@ -3,9 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, User, LogIn, Shuffle } from "lucide-react";
+import { User, LogIn, Shuffle } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetTrigger,
@@ -63,10 +62,19 @@ export function MobileNav({ categoryCounts, sessionRole }: MobileNavProps) {
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
         render={
-          <Button variant="ghost" size="icon" className="!size-11 md:hidden" />
+          <button
+            type="button"
+            aria-label="Otevřít menu"
+            className="group/menubtn relative inline-flex size-11 shrink-0 items-center justify-center rounded-2xl border border-brand/15 bg-gradient-to-br from-blush-light via-card to-blush/40 shadow-[0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.6)] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-px hover:border-brand/35 hover:from-blush hover:to-brand-light/15 hover:shadow-[0_6px_18px_-8px_oklch(0.55_0.20_350_/_0.45)] active:translate-y-0 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background data-[state=open]:border-brand/45 data-[state=open]:from-brand/15 data-[state=open]:to-brand/5 md:hidden"
+          />
         }
       >
-        <Menu className="size-5" />
+        <span aria-hidden="true" className="relative flex size-5 flex-col items-end justify-center gap-[5px]">
+          <span className="block h-[2px] w-5 origin-center rounded-full bg-gradient-to-r from-brand via-brand-dark to-brand transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-data-[state=open]/menubtn:translate-y-[7px] group-data-[state=open]/menubtn:rotate-45" />
+          <span className="block h-[2px] w-3.5 rounded-full bg-brand/65 transition-[width,opacity,transform] duration-300 group-hover/menubtn:w-5 group-data-[state=open]/menubtn:w-0 group-data-[state=open]/menubtn:opacity-0" />
+          <span className="block h-[2px] w-4 origin-center rounded-full bg-gradient-to-r from-brand-dark via-brand to-brand-dark transition-[transform,width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/menubtn:w-5 group-data-[state=open]/menubtn:w-5 group-data-[state=open]/menubtn:-translate-y-[7px] group-data-[state=open]/menubtn:-rotate-45" />
+        </span>
+        <span aria-hidden="true" className="pointer-events-none absolute -right-0.5 -top-0.5 size-1.5 rounded-full bg-brand/0 transition-colors duration-300 group-hover/menubtn:bg-brand/70 group-data-[state=open]/menubtn:bg-brand" />
         <span className="sr-only">Menu</span>
       </SheetTrigger>
       <SheetContent side="left" className="w-72">

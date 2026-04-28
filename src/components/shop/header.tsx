@@ -94,13 +94,11 @@ export function Header() {
         {/* Spacer to push right-side icons when nav is loading */}
         <div className="hidden flex-1 md:block" />
 
-        {/* Right side: search + account + wishlist + cart
-            On mobile InstantSearch is in MobileNav sheet — hiding the redundant
-            icon here saves 44px so 4× 44px buttons no longer overflow 360px viewport. */}
-        <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-1">
-          <span className="hidden sm:inline-flex">
-            <InstantSearch />
-          </span>
+        {/* Right side — desktop only. On mobile every icon here lives in
+            BottomNav (Domů/Katalog/Wishlist/Košík/Účet) so duplicating them in
+            the top bar wastes viewport AND duplicates affordances. */}
+        <div className="ml-auto hidden shrink-0 items-center gap-1 md:flex">
+          <InstantSearch />
           <Suspense fallback={<div className="size-11" />}>
             <AccountHeaderButton />
           </Suspense>
