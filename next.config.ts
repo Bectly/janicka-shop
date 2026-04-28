@@ -66,6 +66,18 @@ const nextConfig: NextConfig = {
 
     return [
       ...aliasRules,
+      // Wishlist consolidation (#917): the legacy customer-only route is now a
+      // 301 to the canonical /oblibene which serves both anon + logged-in users.
+      {
+        source: "/account/oblibene",
+        destination: "/oblibene",
+        permanent: true,
+      },
+      {
+        source: "/account/oblibene/",
+        destination: "/oblibene",
+        permanent: true,
+      },
       // Czech product detail slug + optional trailing slash → English canonical.
       {
         source: "/produkty/:slug*",

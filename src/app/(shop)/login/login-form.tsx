@@ -26,7 +26,7 @@ async function mergeAnonWishlist() {
       useWishlistStore.getState().setItems(data.all);
     }
   } catch {
-    // Offline — Zustand stays as-is; next /account/oblibene visit retries via merge-client.
+    // Offline — Zustand stays as-is; next /oblibene visit retries via merge-client.
   }
 }
 

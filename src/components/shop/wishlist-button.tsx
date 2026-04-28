@@ -4,8 +4,10 @@ import { Heart, Check } from "lucide-react";
 import { useWishlistStore } from "@/lib/wishlist-store";
 import { useAuthStore } from "@/lib/auth-store";
 import { useSyncExternalStore, useCallback, useState, useTransition } from "react";
-import { subscribeSingleWishlistNotification } from "@/app/(shop)/oblibene/actions";
-import { toggleWishlist as toggleWishlistDb } from "@/app/(shop)/account/oblibene/actions";
+import {
+  subscribeSingleWishlistNotification,
+  toggleWishlist as toggleWishlistDb,
+} from "@/app/(shop)/oblibene/actions";
 
 const emptySubscribe = () => () => {};
 

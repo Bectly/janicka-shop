@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 const NAV_ITEMS = [
   { href: "/account", icon: LayoutDashboard, label: "Přehled", exact: true },
   { href: "/account/orders", icon: Package, label: "Objednávky", exact: false },
-  { href: "/account/oblibene", icon: Heart, label: "Oblíbené", exact: false },
+  { href: "/oblibene", icon: Heart, label: "Oblíbené", exact: false },
   { href: "/account/profile", icon: User, label: "Profil", exact: false },
   { href: "/account/adresy", icon: MapPin, label: "Adresy", exact: false },
   { href: "/account/nastaveni", icon: Settings, label: "Nastavení", exact: false },

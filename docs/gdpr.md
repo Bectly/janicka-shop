@@ -36,7 +36,7 @@ Janička Shop (provozovatel e-shopu). Kontakt: janicka@janicka-shop.cz.
 ## Customer rights (GDPR)
 ### Art. 15 — Právo na přístup
 Zákaznice vidí svá data přímo v `/account/profile`, `/account/adresy`,
-`/account/oblibene`, `/account/orders` a `/account/nastaveni` (aktivita).
+`/oblibene`, `/account/orders` a `/account/nastaveni` (aktivita).
 
 ### Art. 17 — Právo na výmaz
 `/account/nastaveni` → "Smazat účet". V1 = okamžitý soft-delete (bez 7denní lhůty):
