@@ -5,7 +5,7 @@ import { connection } from "next/server";
 
 import { ProductForm } from "@/components/admin/product-form";
 import { updateProduct } from "../../actions";
-import { ArrowLeft, BookOpen } from "lucide-react";
+import { ArrowLeft, BookOpen, Printer } from "lucide-react";
 import type { Metadata } from "next";
 
 interface Props {
@@ -81,10 +81,23 @@ export default async function EditProductPage({ params }: Props) {
         <ArrowLeft className="size-4" />
         Zpět na produkty
       </Link>
-      <h1 className="font-heading text-2xl font-bold text-foreground">
-        Upravit produkt
-      </h1>
-      <p className="mt-1 text-sm text-muted-foreground">{product.name}</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-heading text-2xl font-bold text-foreground">
+            Upravit produkt
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">{product.name}</p>
+        </div>
+        <Link
+          href={`/admin/products/${id}/label`}
+          target="_blank"
+          rel="noopener"
+          className="inline-flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+        >
+          <Printer className="size-4" />
+          Tisk štítku
+        </Link>
+      </div>
 
       {product.originalDescription && (
         <details className="mt-6 rounded-xl border border-amber-200 bg-amber-50/60 dark:border-amber-900/50 dark:bg-amber-950/20">

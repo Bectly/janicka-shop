@@ -64,7 +64,7 @@ export default async function AccountWishlistPage() {
           označíme ho a doporučíme podobné.
         </p>
       </div>
-      <WishlistMergeClient />
+      <WishlistMergeClient dbIds={items.map((i) => i.id)} />
       <WishlistGrid items={items} />
     </div>
   );

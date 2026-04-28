@@ -13,6 +13,7 @@ import {
   TrendingDown,
   Clock,
   Tag,
+  Printer,
 } from "lucide-react";
 import { getDb } from "@/lib/db";
 import { formatPrice } from "@/lib/format";
@@ -364,6 +365,15 @@ export default async function BundleDetailPage({
               Rozbalit
             </Link>
           )}
+          <Link
+            href={`/admin/bundles/${id}/labels`}
+            target="_blank"
+            rel="noopener"
+            className="inline-flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+          >
+            <Printer className="size-4" />
+            Tisk štítků
+          </Link>
           <StatusButtons bundleId={id} status={status} />
         </div>
       </div>

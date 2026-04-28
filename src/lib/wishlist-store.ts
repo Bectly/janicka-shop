@@ -7,6 +7,7 @@ interface WishlistState {
   has: (productId: string) => boolean;
   count: () => number;
   clear: () => void;
+  setItems: (productIds: string[]) => void;
 }
 
 export const useWishlistStore = create<WishlistState>()(
@@ -29,6 +30,8 @@ export const useWishlistStore = create<WishlistState>()(
       count: () => get().items.length,
 
       clear: () => set({ items: [] }),
+
+      setItems: (productIds) => set({ items: [...new Set(productIds)] }),
     }),
     {
       name: "janicka-wishlist",
