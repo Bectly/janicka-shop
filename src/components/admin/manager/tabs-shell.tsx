@@ -1,10 +1,17 @@
 "use client";
 
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useCallback, useSyncExternalStore } from "react";
 import { MessageSquare, ListTodo, BarChart3, Cog } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type ManagerTabKey = "konverzace" | "ukoly" | "reporty" | "session";
+
+const VALID_KEYS: ManagerTabKey[] = [
+  "konverzace",
+  "ukoly",
+  "reporty",
+  "session",
+];
 
 type TabDef = {
   key: ManagerTabKey;
@@ -13,6 +20,21 @@ type TabDef = {
   badge?: number;
   hidden?: boolean;
 };
+
+function subscribeHash(cb: () => void): () => void {
+  if (typeof window === "undefined") return () => undefined;
+  window.addEventListener("hashchange", cb);
+  return () => window.removeEventListener("hashchange", cb);
+}
+
+function readHashSnapshot(): string {
+  if (typeof window === "undefined") return "";
+  return window.location.hash.replace(/^#/, "");
+}
+
+function readHashServer(): string {
+  return "";
+}
 
 export function ManagerTabsShell({
   tasksTab,
@@ -26,13 +48,35 @@ export function ManagerTabsShell({
   tasksTab: ReactNode;
   reportsTab: ReactNode;
   sessionTab: ReactNode;
-  badges: { ukoly: number; reporty: number };
+  badges: { konverzace: number; ukoly: number; reporty: number };
   isAdmin: boolean;
 }) {
-  const [active, setActive] = useState<ManagerTabKey>("ukoly");
+  const hash = useSyncExternalStore(
+    subscribeHash,
+    readHashSnapshot,
+    readHashServer,
+  );
+  const fromHash = VALID_KEYS.includes(hash as ManagerTabKey)
+    ? (hash as ManagerTabKey)
+    : null;
+  const active: ManagerTabKey =
+    fromHash && (isAdmin || fromHash !== "session") ? fromHash : "konverzace";
+
+  const select = useCallback((key: ManagerTabKey) => {
+    if (typeof window === "undefined") return;
+    // replaceState avoids a history entry per click; dispatching the event
+    // feeds back through useSyncExternalStore so URL stays the source of truth.
+    window.history.replaceState(null, "", `#${key}`);
+    window.dispatchEvent(new HashChangeEvent("hashchange"));
+  }, []);
 
   const tabs: TabDef[] = [
-    { key: "konverzace", label: "Konverzace", icon: MessageSquare },
+    {
+      key: "konverzace",
+      label: "Konverzace",
+      icon: MessageSquare,
+      badge: badges.konverzace,
+    },
     { key: "ukoly", label: "Úkoly", icon: ListTodo, badge: badges.ukoly },
     { key: "reporty", label: "Reporty", icon: BarChart3, badge: badges.reporty },
     { key: "session", label: "Session", icon: Cog, hidden: !isAdmin },
@@ -52,6 +96,10 @@ export function ManagerTabsShell({
           {visibleTabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = active === tab.key;
+            const isUnreadAccent =
+              tab.key === "konverzace" &&
+              typeof tab.badge === "number" &&
+              tab.badge > 0;
             return (
               <button
                 key={tab.key}
@@ -59,7 +107,7 @@ export function ManagerTabsShell({
                 type="button"
                 aria-selected={isActive}
                 aria-controls={`manager-panel-${tab.key}`}
-                onClick={() => setActive(tab.key)}
+                onClick={() => select(tab.key)}
                 className={cn(
                   "inline-flex shrink-0 items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap",
                   "min-h-10 md:min-h-9",
@@ -76,7 +124,9 @@ export function ManagerTabsShell({
                       "ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none",
                       isActive
                         ? "bg-primary-foreground/20 text-primary-foreground"
-                        : "bg-foreground/[0.08] text-foreground/70",
+                        : isUnreadAccent
+                          ? "bg-pink-600 text-white"
+                          : "bg-foreground/[0.08] text-foreground/70",
                     )}
                   >
                     {tab.badge}

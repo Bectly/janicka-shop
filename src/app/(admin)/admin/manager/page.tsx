@@ -14,7 +14,7 @@
  */
 import type { Metadata } from "next";
 import { connection } from "next/server";
-import { Briefcase, MessageSquare } from "lucide-react";
+import { Briefcase } from "lucide-react";
 
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
@@ -23,6 +23,7 @@ import { ManagerTabsShell } from "@/components/admin/manager/tabs-shell";
 import { TasksTab } from "@/components/admin/manager/tasks-tab";
 import { ReportsTab } from "@/components/admin/manager/reports-tab";
 import { SessionTab } from "@/components/admin/manager/session-tab";
+import { ThreadsTab } from "@/components/admin/manager/threads-tab";
 
 const JANICKA_PROJECT_ID = 15;
 
@@ -36,8 +37,14 @@ export default async function AdminManagerPage() {
   const [session, prisma] = await Promise.all([auth(), getDb()]);
   const isAdmin = session?.user?.role === "admin";
 
-  const [latestSession, tasksRaw, artifacts, devloopTasks, recentSessions] =
-    await Promise.all([
+  const [
+    latestSession,
+    tasksRaw,
+    artifacts,
+    devloopTasks,
+    recentSessions,
+    unreadThreadCount,
+  ] = await Promise.all([
       prisma.managerSession.findFirst({
         where: { projectId: JANICKA_PROJECT_ID },
         orderBy: [{ requestedAt: "desc" }, { startedAt: "desc" }],
@@ -75,6 +82,13 @@ export default async function AdminManagerPage() {
             },
           })
         : Promise.resolve([]),
+      prisma.managerThreadMessage.count({
+        where: {
+          role: "manager",
+          readAt: null,
+          thread: { projectId: JANICKA_PROJECT_ID },
+        },
+      }),
     ]);
 
   const devloopOpen = devloopTasks.filter((t) => t.status === "open");
@@ -148,8 +162,12 @@ export default async function AdminManagerPage() {
 
       <ManagerTabsShell
         isAdmin={isAdmin}
-        badges={{ ukoly: totalActive, reporty: artifacts.length }}
-        conversationTab={<ConversationPlaceholder />}
+        badges={{
+          konverzace: unreadThreadCount,
+          ukoly: totalActive,
+          reporty: artifacts.length,
+        }}
+        conversationTab={<ThreadsTab />}
         tasksTab={
           <TasksTab
             openTasks={openTasks}
@@ -188,22 +206,6 @@ export default async function AdminManagerPage() {
           ) : null
         }
       />
-    </div>
-  );
-}
-
-function ConversationPlaceholder() {
-  return (
-    <div className="rounded-xl border border-dashed bg-card/50 p-8 text-center space-y-3">
-      <MessageSquare className="mx-auto size-8 text-muted-foreground" />
-      <div>
-        <p className="font-medium text-sm">Konverzace s manažerkou</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Threadovaný chat s typovanými bloky (text / graf / akce / poll).
-          Aktuálně se dokončuje napojení (J23 + J24). Mezitím můžeš spustit
-          klasickou session na záložce <strong>Session</strong>.
-        </p>
-      </div>
     </div>
   );
 }
