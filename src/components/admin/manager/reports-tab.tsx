@@ -44,6 +44,7 @@ export function ReportsTab({ artifacts }: { artifacts: ArtifactRow[] }) {
   const [range, setRange] = useState<RangeFilter>("30d");
 
   const filtered = useMemo(() => {
+    // eslint-disable-next-line react-hooks/purity -- range cutoff is intentionally re-evaluated on each filter change; user-driven, not deterministic
     const now = Date.now();
     const cutoff =
       range === "7d"
