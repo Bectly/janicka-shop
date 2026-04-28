@@ -86,8 +86,9 @@ export function ManagerTabsShell({
 
   return (
     <div className="space-y-4">
-      {/* Tab list — horizontally scrollable on mobile, normal on md+ */}
-      <div className="sticky top-0 z-10 -mx-2 bg-background/95 px-2 pb-2 backdrop-blur supports-[backdrop-filter]:bg-background/70 md:static md:mx-0 md:px-0 md:pb-0 md:bg-transparent">
+      {/* Tab list — sticky below the admin header (h-14). Without top-14 the
+          tab list slides under the header on scroll because both share top-0. */}
+      <div className="sticky top-14 z-10 -mx-2 bg-background/95 px-2 pb-2 backdrop-blur supports-[backdrop-filter]:bg-background/70 md:mx-0 md:px-0 md:pb-1 md:bg-background/85">
         <div
           role="tablist"
           aria-label="Manažerka — sekce"

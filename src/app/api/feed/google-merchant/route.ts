@@ -173,8 +173,15 @@ export async function GET(req: NextRequest) {
         xml += `    <g:color>${escapeXml(colors.join("/"))}</g:color>\n`;
       }
 
+      // Size: per GMC spec one value per <g:size>. Each piece is qty=1 unique,
+      // so the first listed size is the canonical one; remainder (if any) are
+      // emitted as additional tags in case the import lists equivalent sizings.
       if (sizes.length > 0) {
-        xml += `    <g:size>${escapeXml(sizes.join(", "))}</g:size>\n`;
+        xml += `    <g:size>${escapeXml(sizes[0])}</g:size>\n`;
+        // size_system: required for apparel size in CZ. Defaults to EU.
+        xml += `    <g:size_system>EU</g:size_system>\n`;
+        // size_type: regular | petite | plus | big and tall | maternity
+        xml += `    <g:size_type>regular</g:size_type>\n`;
       }
 
       // Shipping
