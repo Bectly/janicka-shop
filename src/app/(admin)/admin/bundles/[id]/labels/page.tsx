@@ -65,7 +65,7 @@ export default async function BundleLabelsPage({ params }: Props) {
 
   const bundleLabel = bundle.invoiceNumber
     ? bundle.invoiceNumber
-    : new Intl.DateTimeFormat("cs-CZ").format(bundle.orderDate);
+    : new Intl.DateTimeFormat("cs-CZ", { timeZone: "Europe/Prague" }).format(bundle.orderDate);
 
   return (
     <>

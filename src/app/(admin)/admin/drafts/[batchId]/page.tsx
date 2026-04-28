@@ -106,7 +106,7 @@ export default async function BatchReviewPage({ params }: PageProps) {
 }
 
 function formatDay(date: Date): string {
-  return date.toLocaleDateString("cs-CZ", { day: "numeric", month: "numeric", year: "numeric" });
+  return date.toLocaleDateString("cs-CZ", { day: "numeric", month: "numeric", year: "numeric", timeZone: "Europe/Prague" });
 }
 
 function parseStringArray(raw: string): string[] {

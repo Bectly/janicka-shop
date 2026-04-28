@@ -443,7 +443,9 @@ function DeliveryDeadlineCard({
     day: "numeric",
     month: "long",
     year: "numeric",
-  }).format(expectedDeliveryDate);
+  
+          timeZone: "Europe/Prague",
+        }).format(expectedDeliveryDate);
 
   let borderColor = "border-border";
   let icon = <Clock className="size-4 text-muted-foreground" />;

@@ -10,6 +10,7 @@ import {
   Mail,
   X,
 } from "lucide-react";
+import { formatDate } from "@/lib/format";
 
 interface Preview {
   subject: string;
@@ -277,7 +278,7 @@ export function CampaignDryRunDialog({
                   {exactLocks.map((l) => (
                     <li key={l.campaignKey}>
                       <code className="font-mono">{l.campaignKey}</code> — expiruje{" "}
-                      {new Date(l.expiresAt).toLocaleString("cs-CZ")}
+                      {formatDate(l.expiresAt)}
                     </li>
                   ))}
                   {crossLocks.map((l) => (
@@ -285,7 +286,7 @@ export function CampaignDryRunDialog({
                       <span className="mt-0.5 shrink-0">↔</span>
                       <span>
                         <code className="font-mono">{l.campaignKey}</code> — expiruje{" "}
-                        {new Date(l.expiresAt).toLocaleString("cs-CZ")}
+                        {formatDate(l.expiresAt)}
                         <span className="ml-1 opacity-80">(překryv segmentů — riziko dvojitého odeslání)</span>
                       </span>
                     </li>

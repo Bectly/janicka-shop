@@ -48,7 +48,9 @@ function formatCzDate(date: Date): string {
     day: "numeric",
     month: "numeric",
     year: "numeric",
-  }).format(date);
+  
+          timeZone: "Europe/Prague",
+        }).format(date);
 }
 
 function formatCzPrice(amount: number): string {

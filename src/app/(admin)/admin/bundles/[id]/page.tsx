@@ -116,7 +116,9 @@ function formatDay(date: Date): string {
     day: "numeric",
     month: "numeric",
     year: "numeric",
-  }).format(date);
+  
+          timeZone: "Europe/Prague",
+        }).format(date);
 }
 
 function firstImage(imagesJson: string): string | null {

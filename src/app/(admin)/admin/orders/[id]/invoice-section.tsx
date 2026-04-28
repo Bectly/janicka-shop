@@ -75,7 +75,9 @@ export function InvoiceSection({
         day: "numeric",
         month: "numeric",
         year: "numeric",
-      }).format(new Date(invoice.issuedAt))
+      
+          timeZone: "Europe/Prague",
+        }).format(new Date(invoice.issuedAt))
     : null;
 
   return (

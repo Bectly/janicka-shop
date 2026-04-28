@@ -243,7 +243,7 @@ export function DistributeClient({
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
         {savedAt && !error ? (
           <p className="text-sm text-muted-foreground">
-            Uloženo {savedAt.toLocaleTimeString("cs-CZ")}
+            Uloženo {savedAt.toLocaleTimeString("cs-CZ", { timeZone: "Europe/Prague" })}
           </p>
         ) : null}
         <button

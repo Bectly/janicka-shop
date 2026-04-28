@@ -286,7 +286,7 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
             <div className="mt-2 flex items-center gap-2 rounded-lg bg-blue-50 p-3">
               <CalendarClock className="size-4 shrink-0 text-blue-600" />
               <span className="text-sm font-medium text-blue-900">
-                do {new Intl.DateTimeFormat("cs-CZ", { day: "numeric", month: "long", year: "numeric" }).format(new Date(order.expectedDeliveryDate))}
+                do {new Intl.DateTimeFormat("cs-CZ", { day: "numeric", month: "long", year: "numeric" , timeZone: "Europe/Prague" }).format(new Date(order.expectedDeliveryDate))}
               </span>
             </div>
           </div>

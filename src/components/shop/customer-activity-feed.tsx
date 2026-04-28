@@ -15,7 +15,9 @@ function formatWhen(d: Date): string {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  }).format(d);
+  
+          timeZone: "Europe/Prague",
+        }).format(d);
 }
 
 function summarizeUserAgent(ua: string | null): string {

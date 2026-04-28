@@ -79,14 +79,18 @@ function formatDay(date: Date): string {
     day: "numeric",
     month: "numeric",
     year: "numeric",
-  }).format(date);
+  
+          timeZone: "Europe/Prague",
+        }).format(date);
 }
 
 function formatMonth(date: Date): string {
   return new Intl.DateTimeFormat("cs-CZ", {
     month: "long",
     year: "numeric",
-  }).format(date);
+  
+          timeZone: "Europe/Prague",
+        }).format(date);
 }
 
 export default async function SupplierDetailPage({

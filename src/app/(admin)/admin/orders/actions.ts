@@ -287,7 +287,9 @@ export async function exportAccountingCsv(
       day: "numeric",
       month: "numeric",
       year: "numeric",
-    }).format(d);
+    
+          timeZone: "Europe/Prague",
+        }).format(d);
 
   const calcVat = (total: number) => {
     if (vatRate === 0) return { base: total, vat: 0 };
@@ -403,7 +405,9 @@ export async function exportOrdersCsv(statusFilter?: string): Promise<string> {
       day: "numeric",
       month: "numeric",
       year: "numeric",
-    }).format(o.createdAt);
+    
+          timeZone: "Europe/Prague",
+        }).format(o.createdAt);
 
     return [
       o.orderNumber,

@@ -13,6 +13,7 @@ import {
   REPLY_TO,
 } from "@/lib/email/addresses";
 import { logger } from "@/lib/logger";
+import { formatDate } from "@/lib/format";
 
 async function requireAdmin() {
   const session = await auth();
@@ -194,7 +195,7 @@ function buildQuotedReply(
   latestBodyText: string | null,
 ): string {
   const sender = latestFromName?.trim() || latestFromAddress;
-  const header = `Dne ${latestReceivedAt.toLocaleString("cs-CZ")} ${sender} napsal(a):`;
+  const header = `Dne ${formatDate(latestReceivedAt)} ${sender} napsal(a):`;
   const quoted = (latestBodyText ?? "")
     .split(/\r?\n/)
     .map((line) => `> ${line}`)

@@ -21,7 +21,9 @@ function appendAudit(existing: string | null, line: string): string {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  }).format(new Date());
+  
+          timeZone: "Europe/Prague",
+        }).format(new Date());
   const entry = `[${stamp}] ${line}`;
   return existing && existing.trim() ? `${existing.trim()}\n${entry}` : entry;
 }
@@ -176,7 +178,9 @@ export async function exportCustomersCsv(
       day: "numeric",
       month: "numeric",
       year: "numeric",
-    }).format(c.createdAt);
+    
+          timeZone: "Europe/Prague",
+        }).format(c.createdAt);
 
     return [
       c.email,

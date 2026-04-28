@@ -122,7 +122,9 @@ function formatTick(iso: string): string {
   return new Intl.DateTimeFormat("cs-CZ", {
     day: "numeric",
     month: "numeric",
-  }).format(d);
+  
+          timeZone: "Europe/Prague",
+        }).format(d);
 }
 
 function formatTooltipDate(iso: string): string {
@@ -131,7 +133,9 @@ function formatTooltipDate(iso: string): string {
     day: "numeric",
     month: "long",
     year: "numeric",
-  }).format(d);
+  
+          timeZone: "Europe/Prague",
+        }).format(d);
 }
 
 function formatCompact(value: number): string {

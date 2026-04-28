@@ -188,7 +188,7 @@ function buildOrderConfirmationHtml(data: OrderEmailData): string {
       <div style="margin-top: 24px;">
         ${renderEyebrow("Předpokládané doručení")}
         <p style="margin: 4px 0 0; font-family: ${FONTS.serif}; font-size: 18px; font-weight: 600; color: ${BRAND.primary};">
-          do ${new Intl.DateTimeFormat("cs-CZ", { day: "numeric", month: "long", year: "numeric" }).format(new Date(data.expectedDeliveryDate))}
+          do ${new Intl.DateTimeFormat("cs-CZ", { day: "numeric", month: "long", year: "numeric" , timeZone: "Europe/Prague" }).format(new Date(data.expectedDeliveryDate))}
         </p>
       </div>` : ""}
 
@@ -862,7 +862,7 @@ export async function sendAdminDeadlineAlertEmail(
     : `Termín doručení: ${urgentCount} objednávek blízko termínu`;
 
   const formatDate = (d: Date) =>
-    new Intl.DateTimeFormat("cs-CZ", { day: "numeric", month: "long" }).format(d);
+    new Intl.DateTimeFormat("cs-CZ", { day: "numeric", month: "long" , timeZone: "Europe/Prague" }).format(d);
 
   const rows = orders
     .sort((a, b) => a.daysRemaining - b.daysRemaining)
@@ -3157,7 +3157,9 @@ export async function sendBatchArchivedAdminEmail(data: DraftBatchArchivedData):
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  }).format(data.lastActivityAt);
+  
+          timeZone: "Europe/Prague",
+        }).format(data.lastActivityAt);
   const subject = `Batch ${data.batchLabel} archivován — ${data.count} ${pluralKousek(data.count)} bez publikace 7 dní`;
 
   const content = `

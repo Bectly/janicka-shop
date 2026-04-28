@@ -288,7 +288,9 @@ export function AnalyticsSection({
                         day: "numeric",
                         month: "numeric",
                         year: "numeric",
-                      }).format(p.createdAt)}
+                      
+          timeZone: "Europe/Prague",
+        }).format(p.createdAt)}
                     </td>
                     <td className="px-4 py-2.5">
                       <Link

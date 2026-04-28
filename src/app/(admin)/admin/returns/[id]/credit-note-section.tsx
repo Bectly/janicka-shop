@@ -90,7 +90,9 @@ export function CreditNoteSection({
         day: "numeric",
         month: "numeric",
         year: "numeric",
-      }).format(new Date(creditNote.issuedAt))
+      
+          timeZone: "Europe/Prague",
+        }).format(new Date(creditNote.issuedAt))
     : null;
 
   return (

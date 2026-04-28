@@ -64,6 +64,7 @@ function formatDeliveryDate(date: Date): string {
     weekday: "short",
     day: "numeric",
     month: "numeric",
+    timeZone: "Europe/Prague",
   }).format(date);
 }
 

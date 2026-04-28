@@ -25,7 +25,9 @@ function formatStartedAt(d: Date): string {
     minute: "2-digit",
     day: "2-digit",
     month: "2-digit",
-  }).format(d);
+  
+          timeZone: "Europe/Prague",
+        }).format(d);
 }
 
 function shortBatchId(id: string): string {
