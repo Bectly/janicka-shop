@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { PwaInstallBanner } from "@/components/admin/pwa-install-banner";
 import { compressPhoto, runWithLimit } from "@/lib/image-compress";
 import {
   getUploadQueue,
@@ -1562,6 +1563,8 @@ export function MobileAddForm({ batchId, categories }: MobileAddFormProps) {
           </Button>
         </div>
       </div>
+
+      <PwaInstallBanner show={count > 0} />
     </main>
   );
 }

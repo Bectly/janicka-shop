@@ -1,6 +1,6 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 518 files, ~86,399 LOC.
+Auto-generated. Total: 518 files, ~86,439 LOC.
 **Drill-down dropped** — full render was 55,638 chars > cap 10,000 (~18% shown). Grep source files directly for symbol-level detail.
 
 ---
@@ -71,7 +71,7 @@ Auto-generated. Total: 518 files, ~86,399 LOC.
 - src/app/(admin)/admin/bundles/[id]/unpack/actions.ts (56 LOC)
 - src/app/(admin)/admin/bundles/[id]/unpack/page.tsx (123 LOC)
 - src/app/(admin)/admin/bundles/bundle-roi-card.tsx (208 LOC)
-- src/app/(admin)/admin/bundles/page.tsx (451 LOC)
+- src/app/(admin)/admin/bundles/page.tsx (491 LOC)
 - src/app/(admin)/admin/categories/[id]/edit/page.tsx (52 LOC)
 - src/app/(admin)/admin/categories/actions.ts (166 LOC)
 - src/app/(admin)/admin/categories/category-form.tsx (140 LOC)

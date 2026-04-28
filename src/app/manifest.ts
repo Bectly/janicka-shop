@@ -5,6 +5,8 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Janička Shop",
     short_name: "Janička",
     description: "Výběrový second hand oblečení",
+    id: "/",
+    scope: "/",
     start_url: "/",
     display: "standalone",
     theme_color: "#f43f5e",

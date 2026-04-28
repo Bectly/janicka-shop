@@ -1,0 +1,29 @@
+{
+  "name": "Janička Admin — Mobil",
+  "short_name": "Janička Admin",
+  "description": "Mobilní přidávání kousků do batche",
+  "id": "/admin/drafts/",
+  "scope": "/admin/drafts/",
+  "start_url": "/admin/drafts/mobile-start",
+  "display": "standalone",
+  "theme_color": "#f43f5e",
+  "background_color": "#ffffff",
+  "lang": "cs",
+  "dir": "ltr",
+  "orientation": "portrait",
+  "categories": ["productivity", "business"],
+  "icons": [
+    {
+      "src": "/logo/logo-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo/logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

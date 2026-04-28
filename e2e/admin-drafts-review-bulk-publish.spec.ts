@@ -189,8 +189,15 @@ test.describe("J9-T1 — review page select + completeness gate + bulk publish",
     await expect(page.getByText("kompletní", { exact: false })).toHaveCount(2);
     await expect(page.getByText(/chybí.*název/)).toHaveCount(1);
 
-    // Initially nothing selected.
-    await expect(checkboxes.locator('[aria-checked="true"]')).toHaveCount(0);
+    // Initially nothing selected. aria-checked lives on the role=checkbox span
+    // itself, so use a compound selector instead of nested .locator() (which
+    // would search descendants and trivially return 0).
+    await expect(
+      page.locator('[role="checkbox"][aria-checked="true"]'),
+    ).toHaveCount(0);
+    await expect(
+      page.locator('[role="checkbox"][aria-checked="false"]'),
+    ).toHaveCount(3);
 
     // 2. Click "Jen kompletní" — selectComplete() filters pendingDrafts by
     //    scoreDraft().complete and sets selected to those ids only.
