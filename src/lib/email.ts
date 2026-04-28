@@ -1,4 +1,4 @@
-import { getMailer } from "@/lib/email/smtp-transport";
+import { getMailer } from "@/lib/email/resend-transport";
 import {
   FROM_ORDERS,
   FROM_INFO,
@@ -256,7 +256,7 @@ function escapeHtml(str: string): string {
 export async function sendOrderConfirmationEmail(data: OrderEmailData): Promise<void> {
   const mailer = getMailer();
   if (!mailer) {
-    logger.warn("[Email] SMTP not configured — skipping order confirmation email");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping order confirmation email");
     return;
   }
 
@@ -286,7 +286,7 @@ export async function sendPaymentConfirmedEmail(data: {
 }): Promise<void> {
   const mailer = getMailer();
   if (!mailer) {
-    logger.warn("[Email] SMTP not configured — skipping payment confirmed email");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping payment confirmed email");
     return;
   }
 
@@ -438,7 +438,7 @@ export async function sendOrderStatusEmail(
 
   const mailer = getMailer();
   if (!mailer) {
-    logger.warn(`[Email] SMTP not configured — skipping ${newStatus} email`);
+    logger.warn(`[Email] RESEND_API_KEY not set — skipping ${newStatus} email`);
     return;
   }
 
@@ -612,7 +612,7 @@ function buildShippingNotificationHtml(data: ShippingNotificationData): string {
 export async function sendShippingNotificationEmail(data: ShippingNotificationData): Promise<boolean> {
   const mailer = getMailer();
   if (!mailer) {
-    logger.warn("[Email] SMTP not configured — skipping shipping notification email");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping shipping notification email");
     return false;
   }
 
@@ -804,7 +804,7 @@ function buildAdminNewOrderHtml(data: AdminOrderNotificationData): string {
 export async function sendAdminNewOrderEmail(data: AdminOrderNotificationData): Promise<void> {
   const mailer = getMailer();
   if (!mailer) {
-    logger.warn("[Email] SMTP not configured — skipping admin order notification");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping admin order notification");
     return;
   }
 
@@ -940,7 +940,7 @@ export async function sendEmailChangeVerifyEmail(data: {
 }): Promise<void> {
   const mailer = getMailer();
   if (!mailer) {
-    logger.warn("[Email] SMTP not configured — skipping email-change verify");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping email-change verify");
     return;
   }
   const firstName = (data.firstName || "").trim();
@@ -1082,7 +1082,7 @@ function buildPasswordResetHtml(data: PasswordResetEmailData): string {
 export async function sendPasswordResetEmail(data: PasswordResetEmailData): Promise<void> {
   const mailer = getMailer();
   if (!mailer) {
-    logger.warn("[Email] SMTP not configured — skipping password-reset");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping password-reset");
     return;
   }
   try {
@@ -1139,7 +1139,7 @@ export async function sendAccountDeletedEmail(data: {
 export async function sendNewsletterWelcomeEmail(email: string): Promise<void> {
   const mailer = getMailer();
   if (!mailer) {
-    logger.warn("[Email] SMTP not configured — skipping newsletter welcome email");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping newsletter welcome email");
     return;
   }
 
@@ -1246,7 +1246,7 @@ function buildAccountWelcomeHtml(data: AccountWelcomeData): string {
 export async function sendAccountWelcomeEmail(data: AccountWelcomeData): Promise<void> {
   const mailer = getMailer();
   if (!mailer) {
-    logger.warn("[Email] SMTP not configured — skipping account welcome email");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping account welcome email");
     return;
   }
 
@@ -1482,7 +1482,7 @@ export async function sendAbandonedCartEmail(
 ): Promise<boolean> {
   const mailer = getMailer();
   if (!mailer) {
-    logger.warn("[Email] SMTP not configured — skipping abandoned cart email");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping abandoned cart email");
     return false;
   }
 
@@ -1620,7 +1620,7 @@ function buildReviewRequestHtml(data: ReviewRequestEmailData): string {
 export async function sendReviewRequestEmail(data: ReviewRequestEmailData): Promise<boolean> {
   const mailer = getMailer();
   if (!mailer) {
-    logger.warn("[Email] SMTP not configured — skipping review request email");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping review request email");
     return false;
   }
 
@@ -1709,7 +1709,7 @@ function buildDeliveryCheckHtml(data: DeliveryCheckEmailData): string {
 export async function sendDeliveryCheckEmail(data: DeliveryCheckEmailData): Promise<boolean> {
   const mailer = getMailer();
   if (!mailer) {
-    logger.warn("[Email] SMTP not configured — skipping delivery check email");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping delivery check email");
     return false;
   }
 
@@ -1811,7 +1811,7 @@ function buildNewArrivalHtml(data: NewArrivalEmailData): string {
 export async function sendNewArrivalEmail(data: NewArrivalEmailData): Promise<boolean> {
   const mailer = getMailer();
   if (!mailer) {
-    logger.warn("[Email] SMTP not configured — skipping new arrival email");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping new arrival email");
     return false;
   }
 
@@ -1902,7 +1902,7 @@ export async function sendBrowseAbandonmentEmail(
 ): Promise<boolean> {
   const mailer = getMailer();
   if (!mailer) {
-    logger.warn("[Email] SMTP not configured — skipping browse abandonment email");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping browse abandonment email");
     return false;
   }
 
@@ -1990,7 +1990,7 @@ export async function sendCrossSellFollowUpEmail(
 ): Promise<boolean> {
   const mailer = getMailer();
   if (!mailer) {
-    logger.warn("[Email] SMTP not configured — skipping cross-sell follow-up email");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping cross-sell follow-up email");
     return false;
   }
 
@@ -2056,7 +2056,7 @@ export async function sendWinBackEmail(
 ): Promise<boolean> {
   const mailer = getMailer();
   if (!mailer) {
-    logger.warn("[Email] SMTP not configured — skipping win-back email");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping win-back email");
     return false;
   }
 
@@ -2163,7 +2163,7 @@ export async function sendCampaignEmail(
 ): Promise<boolean> {
   const mailer = getMailer();
   if (!mailer) {
-    logger.warn("[Email] SMTP not configured — skipping campaign email");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping campaign email");
     return false;
   }
 
@@ -2409,7 +2409,7 @@ export async function sendMothersDayEmail(
 ): Promise<boolean> {
   const mailer = getMailer();
   if (!mailer) {
-    logger.warn("[Email] SMTP not configured — skipping Mother's Day campaign");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping Mother's Day campaign");
     return false;
   }
 
@@ -2586,7 +2586,7 @@ export async function sendCustomsCampaignEmail(
 ): Promise<boolean> {
   const mailer = getMailer();
   if (!mailer) {
-    logger.warn("[Email] SMTP not configured — skipping customs campaign");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping customs campaign");
     return false;
   }
 
@@ -3011,7 +3011,7 @@ function resolveAdminNotifyEmail(): string | null {
 export async function sendBatchSealedAdminEmail(data: DraftBatchSealedData): Promise<void> {
   const mailer = getMailer();
   if (!mailer) {
-    logger.warn("[Email] SMTP not configured — skipping batch-sealed notification");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping batch-sealed notification");
     return;
   }
   const to = resolveAdminNotifyEmail();
@@ -3140,7 +3140,7 @@ export interface DraftBatchArchivedData {
 export async function sendBatchArchivedAdminEmail(data: DraftBatchArchivedData): Promise<void> {
   const mailer = getMailer();
   if (!mailer) {
-    logger.warn("[Email] SMTP not configured — skipping batch-archived notification");
+    logger.warn("[Email] RESEND_API_KEY not set — skipping batch-archived notification");
     return;
   }
   const to = resolveAdminNotifyEmail();

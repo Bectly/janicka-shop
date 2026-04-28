@@ -23,7 +23,7 @@ export const GET = wrapCronRoute("similar-items", async () => {
     return NextResponse.json({
       ok: true,
       sent: 0,
-      reason: "SMTP not configured",
+      reason: "RESEND_API_KEY not set",
     });
   }
 

@@ -151,7 +151,7 @@ export async function sendWishlistSoldNotifications(
   const mailer = getMailer();
   if (!mailer) {
     logger.warn(
-      "[Email] SMTP not configured — skipping wishlist sold notifications",
+      "[Email] RESEND_API_KEY not set — skipping wishlist sold notifications",
     );
     return;
   }

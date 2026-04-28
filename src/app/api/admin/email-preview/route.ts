@@ -145,7 +145,7 @@ export async function GET(req: Request) {
     const mailer = getMailer();
     if (!mailer) {
       return NextResponse.json(
-        { error: "SMTP not configured — set SMTP_HOST/SMTP_USER/SMTP_PASSWORD" },
+        { error: "RESEND_API_KEY not set — set SMTP_HOST/SMTP_USER/SMTP_PASSWORD" },
         { status: 503 },
       );
     }

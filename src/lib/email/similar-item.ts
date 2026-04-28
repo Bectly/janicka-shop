@@ -165,7 +165,7 @@ export async function sendSimilarItemNotifications(
   const mailer = getMailer();
   if (!mailer) {
     logger.warn(
-      "[Email] SMTP not configured — skipping similar item notifications",
+      "[Email] RESEND_API_KEY not set — skipping similar item notifications",
     );
     return;
   }
