@@ -1,7 +1,7 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 516 files, ~85,740 LOC.
-**Drill-down dropped** — full render was 55,441 chars > cap 10,000 (~18% shown). Grep source files directly for symbol-level detail.
+Auto-generated. Total: 518 files, ~86,399 LOC.
+**Drill-down dropped** — full render was 55,638 chars > cap 10,000 (~18% shown). Grep source files directly for symbol-level detail.
 
 ---
 
@@ -59,7 +59,7 @@ Auto-generated. Total: 516 files, ~85,740 LOC.
 - scripts/workers/packeta.ts (7 LOC)
 - scripts/workers/test-queue-integration.ts (482 LOC)
 
-## `src/` (473 files)
+## `src/` (475 files)
 
 - src/app/(admin)/admin/abandoned-carts/loading.tsx (6 LOC)
 - src/app/(admin)/admin/abandoned-carts/page.tsx (214 LOC)
@@ -70,6 +70,8 @@ Auto-generated. Total: 516 files, ~85,740 LOC.
 - src/app/(admin)/admin/bundles/[id]/status-buttons.tsx (59 LOC)
 - src/app/(admin)/admin/bundles/[id]/unpack/actions.ts (56 LOC)
 - src/app/(admin)/admin/bundles/[id]/unpack/page.tsx (123 LOC)
+- src/app/(admin)/admin/bundles/bundle-roi-card.tsx (208 LOC)
+- src/app/(admin)/admin/bundles/page.tsx (451 LOC)
 - src/app/(admin)/admin/categories/[id]/edit/page.tsx (52 LOC)
 - src/app/(admin)/admin/categories/actions.ts (166 LOC)
 - src/app/(admin)/admin/categories/category-form.tsx (140 LOC)
@@ -185,8 +187,6 @@ Auto-generated. Total: 516 files, ~85,740 LOC.
 - src/app/(shop)/account/adresy/address-list.tsx (172 LOC)
 - src/app/(shop)/account/adresy/loading.tsx (6 LOC)
 - src/app/(shop)/account/adresy/page.tsx (60 LOC)
-- src/app/(shop)/account/change-email/actions.ts (116 LOC)
-- src/app/(shop)/account/change-email/change-email-form.tsx (87 LOC)
-- src/app/(shop)/accoun
+- src/app/(shop)/account/change-email/
 
-... [truncated at 10,000 chars; compact render was 26,385. Use git ls-files for full file list.]
+... [truncated at 10,000 chars; compact render was 26,498. Use git ls-files for full file list.]

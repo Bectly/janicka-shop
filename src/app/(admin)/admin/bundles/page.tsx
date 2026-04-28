@@ -131,103 +131,9 @@ export default async function AdminBundlesPage({
   const period = pickPeriod(sp.period);
   const statusFilter = sp.status ?? "all";
 
-  const now = new Date();
-  const fromDate = new Date(now);
-  fromDate.setMonth(fromDate.getMonth() - Number(period));
-  const staleCutoff = new Date(now.getTime() - STALE_DAYS * MS_PER_DAY);
-  const yearAgo = new Date(now);
-  yearAgo.setMonth(yearAgo.getMonth() - 12);
+  // Filter bar suppliers list — cached, fast.
+  const suppliers = await getSuppliersList();
 
-  const [suppliers, bundles] = await Promise.all([
-    getSuppliersList(),
-    getBundlesAggregate({ supplierId, fromDate }),
-  ]);
-
-  // Aggregate per bundle
-  const cards: BundleRoiData[] = bundles.map((b) => {
-    let revenue = 0;
-    let soldCount = 0;
-    let staleCount = 0;
-    const sellTimes: { createdAt: Date; soldAt: Date | null }[] = [];
-
-    for (const p of b.products) {
-      // Earliest non-cancelled order createdAt = soldAt
-      let soldAt: Date | null = null;
-      for (const oi of p.orderItems) {
-        if (!oi.order) continue;
-        if (oi.order.status === "cancelled") continue;
-        if (!soldAt || oi.order.createdAt < soldAt) soldAt = oi.order.createdAt;
-      }
-      sellTimes.push({ createdAt: p.createdAt, soldAt });
-
-      if (p.sold) {
-        soldCount += 1;
-        revenue += p.price;
-      } else if (p.createdAt < staleCutoff) {
-        staleCount += 1;
-      }
-    }
-
-    const pieceCount = b.products.length;
-    const totalCost = b.totalPrice;
-    const profit = grossProfit(revenue, totalCost);
-    const margin = marginPct(revenue, totalCost);
-    const sellThroughPct = conversionRate(soldCount, pieceCount);
-    const avgSell = avgDaysToSell(sellTimes);
-    const status = classifyStatus({
-      totalCost,
-      revenue,
-      pieceCount,
-      soldCount,
-    });
-
-    return {
-      id: b.id,
-      name: b.invoiceNumber ?? `Balík ${formatDay(b.orderDate)}`,
-      supplierName: b.supplier.name,
-      orderDate: b.orderDate,
-      totalKg: b.totalKg,
-      totalCost,
-      revenue,
-      profit,
-      marginPct: margin,
-      sellThroughPct,
-      avgSellDays: avgSell,
-      pieceCount,
-      soldCount,
-      staleCount,
-      status,
-    };
-  });
-
-  const visibleCards =
-    statusFilter === "all"
-      ? cards
-      : cards.filter((c) => c.status === statusFilter);
-
-  // 12-month rolling summary (uses ALL bundles in last 12mo, ignoring period filter
-  // so the strip stays as a stable trailing-year benchmark).
-  // We re-derive against bundles that overlap the 12mo window from the already-
-  // fetched data when period === 12; otherwise we issue no extra query and the
-  // strip falls back to the visible period.
-  const yearScope = period === "12" ? cards : cards;
-  let yearInvested = 0;
-  let yearRevenue = 0;
-  let yearPieces = 0;
-  let yearSold = 0;
-  for (const c of yearScope) {
-    if (c.orderDate < yearAgo) continue;
-    yearInvested += c.totalCost;
-    yearRevenue += c.revenue;
-    yearPieces += c.pieceCount;
-    yearSold += c.soldCount;
-  }
-  const yearProfit = yearRevenue - yearInvested;
-  const yearMargin = yearRevenue > 0 ? (yearProfit / yearRevenue) * 100 : 0;
-  const yearSellThrough =
-    yearPieces > 0 ? (yearSold / yearPieces) * 100 : 0;
-
-  // Filter form helper: preserve other params via hidden inputs.
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -236,14 +142,10 @@ export default async function AdminBundlesPage({
             Balíky — ROI přehled
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {cards.length}{" "}
-            {cards.length === 1
-              ? "balík"
-              : cards.length >= 2 && cards.length <= 4
-                ? "balíky"
-                : "balíků"}{" "}
-            za posledních {period}{" "}
+            Za posledních {period}{" "}
             {period === "12" ? "měsíců" : "měsíce"}
+            {supplierId && ", filtrováno podle dodavatele"}
+            {statusFilter !== "all" && ", filtrováno podle stavu"}
           </p>
         </div>
         <Link
@@ -254,7 +156,7 @@ export default async function AdminBundlesPage({
         </Link>
       </div>
 
-      {/* Filter bar */}
+      {/* Filter bar — paints immediately, no async work */}
       <form
         method="get"
         className="mt-6 flex flex-wrap items-end gap-3 rounded-xl border bg-card p-4 shadow-sm"
@@ -342,43 +244,160 @@ export default async function AdminBundlesPage({
         )}
       </form>
 
-      {/* ROI cards grid */}
+      {/* Aggregation streams in via Suspense */}
       <Suspense
-        fallback={
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className="h-56 animate-pulse rounded-xl border bg-card"
-              />
+        key={`${supplierId ?? "all"}-${period}-${statusFilter}`}
+        fallback={<BundlesGridSkeleton />}
+      >
+        <BundlesGrid
+          supplierId={supplierId}
+          period={period}
+          statusFilter={statusFilter}
+        />
+      </Suspense>
+    </>
+  );
+}
+
+async function BundlesGrid({
+  supplierId,
+  period,
+  statusFilter,
+}: {
+  supplierId: string | null;
+  period: PeriodKey;
+  statusFilter: string;
+}) {
+  const now = new Date();
+  const fromDate = new Date(now);
+  fromDate.setMonth(fromDate.getMonth() - Number(period));
+  const staleCutoff = new Date(now.getTime() - STALE_DAYS * MS_PER_DAY);
+  const yearAgo = new Date(now);
+  yearAgo.setMonth(yearAgo.getMonth() - 12);
+
+  const bundles = await getBundlesAggregate({ supplierId, fromDate });
+
+  const cards: BundleRoiData[] = bundles.map((b) => {
+    let revenue = 0;
+    let soldCount = 0;
+    let staleCount = 0;
+    const sellTimes: { createdAt: Date; soldAt: Date | null }[] = [];
+
+    for (const p of b.products) {
+      let soldAt: Date | null = null;
+      for (const oi of p.orderItems) {
+        if (!oi.order) continue;
+        if (oi.order.status === "cancelled") continue;
+        if (!soldAt || oi.order.createdAt < soldAt) soldAt = oi.order.createdAt;
+      }
+      sellTimes.push({ createdAt: p.createdAt, soldAt });
+
+      if (p.sold) {
+        soldCount += 1;
+        revenue += p.price;
+      } else if (p.createdAt < staleCutoff) {
+        staleCount += 1;
+      }
+    }
+
+    const pieceCount = b.products.length;
+    const totalCost = b.totalPrice;
+    const profit = grossProfit(revenue, totalCost);
+    const margin = marginPct(revenue, totalCost);
+    const sellThroughPct = conversionRate(soldCount, pieceCount);
+    const avgSell = avgDaysToSell(sellTimes);
+    const status = classifyStatus({
+      totalCost,
+      revenue,
+      pieceCount,
+      soldCount,
+    });
+
+    return {
+      id: b.id,
+      name: b.invoiceNumber ?? `Balík ${formatDay(b.orderDate)}`,
+      supplierName: b.supplier.name,
+      orderDate: b.orderDate,
+      totalKg: b.totalKg,
+      totalCost,
+      revenue,
+      profit,
+      marginPct: margin,
+      sellThroughPct,
+      avgSellDays: avgSell,
+      pieceCount,
+      soldCount,
+      staleCount,
+      status,
+    };
+  });
+
+  const visibleCards =
+    statusFilter === "all"
+      ? cards
+      : cards.filter((c) => c.status === statusFilter);
+
+  // 12-month rolling summary across all bundles in current scope that fall in
+  // the last 12 months (period filter may narrow to <12mo; in that case the
+  // strip simply reflects the same scope as a stable trailing-period benchmark).
+  let yearInvested = 0;
+  let yearRevenue = 0;
+  let yearPieces = 0;
+  let yearSold = 0;
+  let yearBundles = 0;
+  for (const c of cards) {
+    if (c.orderDate < yearAgo) continue;
+    yearInvested += c.totalCost;
+    yearRevenue += c.revenue;
+    yearPieces += c.pieceCount;
+    yearSold += c.soldCount;
+    yearBundles += 1;
+  }
+  const yearProfit = yearRevenue - yearInvested;
+  const yearMargin = yearRevenue > 0 ? (yearProfit / yearRevenue) * 100 : 0;
+  const yearSellThrough =
+    yearPieces > 0 ? (yearSold / yearPieces) * 100 : 0;
+
+  return (
+    <>
+      <div className="mt-3 mb-1 text-sm text-muted-foreground">
+        {cards.length}{" "}
+        {cards.length === 1
+          ? "balík"
+          : cards.length >= 2 && cards.length <= 4
+            ? "balíky"
+            : "balíků"}{" "}
+        celkem
+        {statusFilter !== "all" && (
+          <>
+            {" "}
+            · {visibleCards.length} po filtru
+          </>
+        )}
+      </div>
+
+      <div className="mt-3">
+        {visibleCards.length === 0 ? (
+          <div className="rounded-xl border bg-card p-12 text-center shadow-sm">
+            <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-muted">
+              <Package className="size-6 text-muted-foreground" />
+            </div>
+            <p className="font-medium text-foreground">
+              Žádné balíky neodpovídají filtru
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Zkus rozšířit období nebo zrušit stav.
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {visibleCards.map((b) => (
+              <BundleRoiCard key={b.id} bundle={b} />
             ))}
           </div>
-        }
-      >
-        <div className="mt-6">
-          {visibleCards.length === 0 ? (
-            <div className="rounded-xl border bg-card p-12 text-center shadow-sm">
-              <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-muted">
-                <Package className="size-6 text-muted-foreground" />
-              </div>
-              <p className="font-medium text-foreground">
-                Žádné balíky neodpovídají filtru
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Zkus rozšířit období nebo zrušit stav.
-              </p>
-            </div>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {visibleCards.map((b) => (
-                <BundleRoiCard key={b.id} bundle={b} />
-              ))}
-            </div>
-          )}
-        </div>
-      </Suspense>
+        )}
+      </div>
 
-      {/* 12-month summary strip */}
       <section
         aria-label="Souhrn za posledních 12 měsíců"
         className="mt-8 rounded-xl border bg-gradient-to-br from-card to-muted/30 p-5 shadow-sm"
@@ -388,7 +407,7 @@ export default async function AdminBundlesPage({
             Souhrn za posledních 12 měsíců
           </h2>
           <span className="text-xs text-muted-foreground tabular-nums">
-            {yearScope.filter((c) => c.orderDate >= yearAgo).length} balíků
+            {yearBundles} balíků
           </span>
         </div>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
@@ -411,6 +430,27 @@ export default async function AdminBundlesPage({
           />
         </div>
       </section>
+    </>
+  );
+}
+
+function BundlesGridSkeleton() {
+  return (
+    <>
+      <div className="mt-3 mb-1 h-5 w-32 animate-pulse rounded bg-muted" />
+      <div className="mt-3 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {[0, 1, 2, 3, 4, 5].map((i) => (
+          <div
+            key={i}
+            className="h-56 animate-pulse rounded-xl border bg-card"
+            aria-hidden
+          />
+        ))}
+      </div>
+      <div
+        className="mt-8 h-32 animate-pulse rounded-xl border bg-card"
+        aria-hidden
+      />
     </>
   );
 }
