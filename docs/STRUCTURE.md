@@ -1,7 +1,7 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 512 files, ~84,952 LOC.
-**Drill-down dropped** — full render was 54,868 chars > cap 10,000 (~18% shown). Grep source files directly for symbol-level detail.
+Auto-generated. Total: 515 files, ~85,464 LOC.
+**Drill-down dropped** — full render was 55,308 chars > cap 10,000 (~18% shown). Grep source files directly for symbol-level detail.
 
 ---
 
@@ -59,7 +59,7 @@ Auto-generated. Total: 512 files, ~84,952 LOC.
 - scripts/workers/packeta.ts (7 LOC)
 - scripts/workers/test-queue-integration.ts (482 LOC)
 
-## `src/` (469 files)
+## `src/` (472 files)
 
 - src/app/(admin)/admin/abandoned-carts/loading.tsx (6 LOC)
 - src/app/(admin)/admin/abandoned-carts/page.tsx (214 LOC)
@@ -98,11 +98,11 @@ Auto-generated. Total: 512 files, ~84,952 LOC.
 - src/app/(admin)/admin/customers/tag-editor.tsx (152 LOC)
 - src/app/(admin)/admin/dashboard/analytics-data.ts (236 LOC)
 - src/app/(admin)/admin/dashboard/loading.tsx (6 LOC)
-- src/app/(admin)/admin/dashboard/page.tsx (631 LOC)
+- src/app/(admin)/admin/dashboard/page.tsx (623 LOC)
 - src/app/(admin)/admin/dashboard/period-selector.tsx (57 LOC)
-- src/app/(admin)/admin/drafts/[batchId]/actions.ts (340 LOC)
+- src/app/(admin)/admin/drafts/[batchId]/actions.ts (407 LOC)
 - src/app/(admin)/admin/drafts/[batchId]/page.tsx (139 LOC)
-- src/app/(admin)/admin/drafts/[batchId]/review-client.tsx (1320 LOC)
+- src/app/(admin)/admin/drafts/[batchId]/review-client.tsx (1494 LOC)
 - src/app/(admin)/admin/email-templates/actions.ts (133 LOC)
 - src/app/(admin)/admin/email-templates/email-editor.tsx (255 LOC)
 - src/app/(admin)/admin/email-templates/loading.tsx (6 LOC)
@@ -132,7 +132,7 @@ Auto-generated. Total: 512 files, ~84,952 LOC.
 - src/app/(admin)/admin/products/bulk-price.ts (21 LOC)
 - src/app/(admin)/admin/products/loading.tsx (6 LOC)
 - src/app/(admin)/admin/products/new/page.tsx (44 LOC)
-- src/app/(admin)/admin/products/page.tsx (343 LOC)
+- src/app/(admin)/admin/products/page.tsx (344 LOC)
 - src/app/(admin)/admin/products/quick-add/loading.tsx (6 LOC)
 - src/app/(admin)/admin/products/quick-add/page.tsx (44 LOC)
 - src/app/(admin)/admin/products/quick-add/quick-add-form.tsx (458 LOC)
@@ -175,6 +175,8 @@ Auto-generated. Total: 512 files, ~84,952 LOC.
 - src/app/(admin-onboarding)/admin/welcome/page.tsx (114 LOC)
 - src/app/(drafts-mobile)/admin/drafts/[batchId]/mobile/mobile-add-form.tsx (1627 LOC)
 - src/app/(drafts-mobile)/admin/drafts/[batchId]/mobile/page.tsx (65 LOC)
+- src/app/(drafts-mobile)/admin/drafts/mobile-start/actions.ts (80 LOC)
+- src/app/(drafts-mobile)/admin/drafts/mobile-start/page.tsx (146 LOC)
 - src/app/(shop)/about/page.tsx (116 LOC)
 - src/app/(shop)/account/account-nav.tsx (56 LOC)
 - src/app/(shop)/account/account-skeletons.tsx (81 LOC)
@@ -185,9 +187,6 @@ Auto-generated. Total: 512 files, ~84,952 LOC.
 - src/app/(shop)/account/adresy/page.tsx (60 LOC)
 - src/app/(shop)/account/change-email/actions.ts (116 LOC)
 - src/app/(shop)/account/change-email/change-email-form.tsx (87 LOC)
-- src/app/(shop)/account/change-email/page.tsx (65 LOC)
-- src/app/(shop)/account/layout.tsx (36 LOC)
-- src/app/(shop)/account/loading.tsx (6 LOC)
-- src/app/(shop)/acc
+- src/app/(shop)/accoun
 
-... [truncated at 10,000 chars; compact render was 26,133. Use git ls-files for full file list.]
+... [truncated at 10,000 chars; compact render was 26,326. Use git ls-files for full file list.]

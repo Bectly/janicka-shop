@@ -3125,6 +3125,74 @@ function pluralKousek(n: number): string {
   return "kousků";
 }
 
+export interface DraftBatchArchivedData {
+  batchId: string;
+  batchLabel: string;
+  count: number;
+  lastActivityAt: Date;
+}
+
+/**
+ * Notify admin that a stale draft batch was auto-archived (status=archived).
+ * Drafts are NOT deleted — admin can still view/recover via /admin/drafts/[batchId].
+ * Fire-and-forget: never throws.
+ */
+export async function sendBatchArchivedAdminEmail(data: DraftBatchArchivedData): Promise<void> {
+  const mailer = getMailer();
+  if (!mailer) {
+    logger.warn("[Email] SMTP not configured — skipping batch-archived notification");
+    return;
+  }
+  const to = resolveAdminNotifyEmail();
+  if (!to) {
+    logger.warn("[Email] No ADMIN_NOTIFY_EMAIL configured — skipping batch-archived notification");
+    return;
+  }
+
+  const baseUrl = getBaseUrl();
+  const batchUrl = `${baseUrl}/admin/drafts/${encodeURIComponent(data.batchId)}`;
+  const lastActivity = new Intl.DateTimeFormat("cs-CZ", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(data.lastActivityAt);
+  const subject = `Batch ${data.batchLabel} archivován — ${data.count} ${pluralKousek(data.count)} bez publikace 7 dní`;
+
+  const content = `
+    ${renderEyebrow("Batch archivován")}
+    ${renderDisplayHeading(`Batch ${escapeHtml(data.batchLabel)}`)}
+    <p style="margin:0 0 14px;font-family:${FONTS.sans};font-size:14px;line-height:1.6;color:${BRAND.charcoalSoft};">
+      Tento batch (${data.count} ${pluralKousek(data.count)}) nebyl 7 dní publikován,
+      tak jsme ho automaticky archivovali. Poslední aktivita: ${escapeHtml(lastActivity)}.
+    </p>
+    <p style="margin:0 0 14px;font-family:${FONTS.sans};font-size:14px;line-height:1.6;color:${BRAND.charcoalSoft};">
+      Kousky nebyly smazány — můžeš je kdykoli ručně prohlédnout, doplnit a publikovat.
+    </p>
+    <div style="margin:24px 0 4px;">
+      ${renderButton({ href: batchUrl, label: "Otevřít archivovaný batch", variant: "dark" })}
+    </div>`;
+
+  const html = renderLayout({
+    preheader: subject,
+    contentHtml: content,
+    showTagline: false,
+  });
+
+  try {
+    await mailer.sendMail({
+      from: FROM_SUPPORT,
+      replyTo: REPLY_TO,
+      to,
+      subject,
+      html,
+    });
+  } catch (error) {
+    logger.error(`[Email] Failed to send batch-archived notification for batch ${data.batchId}:`, error);
+  }
+}
+
 /** List of template keys exposed to the admin preview UI. */
 export const EMAIL_PREVIEW_TEMPLATES: { key: string; label: string; group: string }[] = [
   { key: "order-confirmation", label: "Potvrzení objednávky (Comgate)", group: "Objednávka" },
