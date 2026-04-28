@@ -1,22 +1,21 @@
 /**
- * Live SMTP deliverability smoke — fires EVERY template registered in
- * `renderEmailPreview` through the configured SMTP transport and prints a
- * per-template status report. Intended for post-deploy manual verification
- * against production SMTP (jvsatnik.cz MX) with the bectly test inbox as TO.
+ * Live deliverability smoke — fires EVERY template registered in
+ * `renderEmailPreview` through Resend and prints a per-template status report.
+ * Intended for post-deploy manual verification with the bectly test inbox.
  *
  * Usage:
  *   TO=jkopecky666@gmail.com npx tsx scripts/smoke-send-real.ts
  *   # or filter: TO=... TEMPLATE=order-confirmation npx tsx scripts/smoke-send-real.ts
  *
- * Requires SMTP_HOST / SMTP_USER / SMTP_PASSWORD in the environment. Missing
- * creds exit with code 2 so CI / cron can flag the gap loudly.
+ * Requires RESEND_API_KEY in the environment. Missing key exits with code 2 so
+ * CI / cron can flag the gap loudly.
  */
 
 import {
   renderEmailPreview,
   EMAIL_PREVIEW_TEMPLATES,
 } from "../src/lib/email";
-import { getMailer } from "../src/lib/email/smtp-transport";
+import { getMailer } from "../src/lib/email/resend-transport";
 import {
   FROM_ORDERS,
   FROM_INFO,
@@ -57,7 +56,7 @@ async function run(): Promise<void> {
   const mailer = getMailer();
   if (!mailer) {
     console.error(
-      "\n✗ SMTP not configured. Set SMTP_HOST / SMTP_USER / SMTP_PASSWORD (and optionally SMTP_PORT) before running this smoke.\n",
+      "\n✗ Resend not configured. Set RESEND_API_KEY before running this smoke.\n",
     );
     process.exit(2);
   }
@@ -71,7 +70,7 @@ async function run(): Promise<void> {
   }
 
   console.log(
-    `→ Smoke-sending ${targets.length} template(s) to ${TO} via SMTP (${process.env.SMTP_HOST}:${process.env.SMTP_PORT ?? 587})\n`,
+    `→ Smoke-sending ${targets.length} template(s) to ${TO} via Resend\n`,
   );
 
   const rows: Row[] = [];

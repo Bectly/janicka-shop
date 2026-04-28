@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { connection } from "next/server";
 import { auth } from "@/lib/auth";
 import { renderEmailPreview, EMAIL_PREVIEW_TEMPLATES } from "@/lib/email";
-import { getMailer } from "@/lib/email/smtp-transport";
+import { getMailer } from "@/lib/email/resend-transport";
 import {
   FROM_ORDERS,
   FROM_INFO,
@@ -145,7 +145,7 @@ export async function GET(req: Request) {
     const mailer = getMailer();
     if (!mailer) {
       return NextResponse.json(
-        { error: "RESEND_API_KEY not set — set SMTP_HOST/SMTP_USER/SMTP_PASSWORD" },
+        { error: "Email service not configured — set RESEND_API_KEY" },
         { status: 503 },
       );
     }

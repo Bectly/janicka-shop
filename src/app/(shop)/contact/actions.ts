@@ -49,7 +49,7 @@ export async function submitContactForm(
   const subjectLabel = SUBJECT_LABELS[subject] ?? subject;
 
   try {
-    const { getMailer } = await import("@/lib/email/smtp-transport");
+    const { getMailer } = await import("@/lib/email/resend-transport");
     const { FROM_SUPPORT } = await import("@/lib/email/addresses");
     const mailer = getMailer();
     if (!mailer) {

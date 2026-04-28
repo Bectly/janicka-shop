@@ -347,7 +347,7 @@ export function CampaignDryRunDialog({
                 Krok 2 — Pošli sobě
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Pošle jeden reálný e-mail přes SMTP na tvoji admin adresu, ať to můžeš otevřít v
+                Pošle jeden reálný e-mail přes Resend na tvoji admin adresu, ať to můžeš otevřít v
                 mobilu, Gmailu i Apple Mail.
               </p>
               <div className="mt-3 flex flex-col gap-2">

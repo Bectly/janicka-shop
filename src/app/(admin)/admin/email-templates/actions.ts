@@ -128,5 +128,5 @@ export async function sendCampaignTestEmail(formData: FormData): Promise<{
   const ok = await sendCampaignEmail(data, recipient);
   return ok
     ? { success: true, recipient }
-    : { success: false, error: "Odeslání selhalo — zkontroluj SMTP konfiguraci." };
+    : { success: false, error: "Odeslání selhalo — zkontroluj Resend konfiguraci." };
 }

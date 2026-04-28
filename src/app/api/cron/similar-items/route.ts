@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getMailer } from "@/lib/email/smtp-transport";
+import { getMailer } from "@/lib/email/resend-transport";
 import { FROM_NEWSLETTER, REPLY_TO } from "@/lib/email/addresses";
 import { getDb } from "@/lib/db";
 import { buildSimilarItemsArrivedHtml } from "@/lib/email/similar-item";

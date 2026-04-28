@@ -5,7 +5,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { getMailer } from "@/lib/email/smtp-transport";
+import { getMailer } from "@/lib/email/resend-transport";
 import {
   FROM_INFO,
   FROM_ORDERS,
@@ -228,7 +228,7 @@ export async function sendReplyAction(
   if (!mailer) {
     return {
       ok: false,
-      error: "SMTP není nakonfigurované — nastav SMTP_HOST/SMTP_USER/SMTP_PASSWORD.",
+      error: "E-mailová služba není nakonfigurovaná — nastav RESEND_API_KEY.",
     };
   }
 
@@ -284,7 +284,7 @@ export async function sendReplyAction(
       threadId,
       error: err instanceof Error ? err.message : String(err),
     });
-    return { ok: false, error: "SMTP odeslání selhalo. Zkontroluj logy." };
+    return { ok: false, error: "Odeslání e-mailu selhalo. Zkontroluj logy." };
   }
 
   const now = new Date();
@@ -355,7 +355,7 @@ export async function sendNewMessageAction(
   if (!mailer) {
     return {
       ok: false,
-      error: "SMTP není nakonfigurované — nastav SMTP_HOST/SMTP_USER/SMTP_PASSWORD.",
+      error: "E-mailová služba není nakonfigurovaná — nastav RESEND_API_KEY.",
     };
   }
 
@@ -378,7 +378,7 @@ export async function sendNewMessageAction(
     logger.error("[mailbox] send new message failed", {
       error: err instanceof Error ? err.message : String(err),
     });
-    return { ok: false, error: "SMTP odeslání selhalo. Zkontroluj logy." };
+    return { ok: false, error: "Odeslání e-mailu selhalo. Zkontroluj logy." };
   }
 
   const now = new Date();
