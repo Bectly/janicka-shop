@@ -30,12 +30,14 @@ const hiddenPrefixes = ["/admin", "/pick/"];
 
 export function BottomNav() {
   const pathname = usePathname();
-  const totalItems = useCartStore((s) => s.totalItems);
-  const wishlistCount = useWishlistStore((s) => s.count);
+  // Subscribe to the underlying arrays — selecting the store's getter functions
+  // returns stable references that never trigger a rerender on item changes.
+  const cartItems = useCartStore((s) => s.items);
+  const wishlistItems = useWishlistStore((s) => s.items);
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
-  const cartCount = mounted ? totalItems() : 0;
-  const wlCount = mounted ? wishlistCount() : 0;
+  const cartCount = mounted ? cartItems.reduce((sum, i) => sum + i.quantity, 0) : 0;
+  const wlCount = mounted ? wishlistItems.length : 0;
 
   if (hiddenPrefixes.some((r) => pathname.startsWith(r))) return null;
   // Hide on /checkout only when cart has items (active checkout flow). Empty

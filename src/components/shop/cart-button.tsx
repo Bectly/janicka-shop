@@ -8,10 +8,14 @@ import { useSyncExternalStore, useRef, useState, useEffect } from "react";
 const emptySubscribe = () => () => {};
 
 export function CartButton() {
-  const totalItems = useCartStore((s) => s.totalItems);
+  // Subscribe to items array directly — selecting `state.totalItems` returns
+  // the function reference (stable across renders), so Zustand's shallow
+  // equality never re-rendered when items changed → cart badge stale until
+  // hard refresh.
+  const items = useCartStore((s) => s.items);
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
-  const count = mounted ? totalItems() : 0;
+  const count = mounted ? items.reduce((sum, i) => sum + i.quantity, 0) : 0;
 
   const hasHydrated = useRef(false);
   const prevCount = useRef(0);

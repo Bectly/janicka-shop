@@ -59,7 +59,7 @@ async function HeaderNav() {
 export function Header() {
   return (
     <header data-hide-on-lightbox className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80">
-      <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-3 sm:gap-4 sm:px-6 lg:px-8">
         <Suspense
           fallback={
             <>
@@ -94,9 +94,13 @@ export function Header() {
         {/* Spacer to push right-side icons when nav is loading */}
         <div className="hidden flex-1 md:block" />
 
-        {/* Right side: search + account + wishlist + cart */}
-        <div className="ml-auto flex items-center gap-1">
-          <InstantSearch />
+        {/* Right side: search + account + wishlist + cart
+            On mobile InstantSearch is in MobileNav sheet — hiding the redundant
+            icon here saves 44px so 4× 44px buttons no longer overflow 360px viewport. */}
+        <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-1">
+          <span className="hidden sm:inline-flex">
+            <InstantSearch />
+          </span>
           <Suspense fallback={<div className="size-11" />}>
             <AccountHeaderButton />
           </Suspense>

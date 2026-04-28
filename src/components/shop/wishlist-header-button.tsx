@@ -8,10 +8,12 @@ import { useSyncExternalStore } from "react";
 const emptySubscribe = () => () => {};
 
 export function WishlistHeaderButton() {
-  const count = useWishlistStore((s) => s.count);
+  // Subscribe to items.length, not the count() function — function reference is
+  // stable so badge wouldn't update without a full refresh.
+  const items = useWishlistStore((s) => s.items);
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
-  const n = mounted ? count() : 0;
+  const n = mounted ? items.length : 0;
 
   return (
     <Link
