@@ -1,0 +1,13 @@
+[Unit]
+Description=Janička Shop — weekly images sync timer
+Documentation=file:///opt/janicka-shop/docs/runbooks/r2-backup-phase3.md
+
+[Timer]
+# Sundays 04:30 UTC — well after the nightly DB backup, low traffic window.
+OnCalendar=Sun *-*-* 04:30:00
+RandomizedDelaySec=15m
+Persistent=true
+Unit=janicka-backup-images.service
+
+[Install]
+WantedBy=timers.target

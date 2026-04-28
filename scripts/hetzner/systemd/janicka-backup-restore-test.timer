@@ -1,0 +1,14 @@
+[Unit]
+Description=Janička Shop — monthly restore-drill timer
+Documentation=file:///opt/janicka-shop/docs/runbooks/r2-backup-phase3.md
+
+[Timer]
+# 1st of every month 05:30 UTC. Fires after that month's day-1 db backup at
+# 03:15 + the weekly images at Sun 04:30, so it always validates fresh data.
+OnCalendar=*-*-01 05:30:00
+RandomizedDelaySec=15m
+Persistent=true
+Unit=janicka-backup-restore-test.service
+
+[Install]
+WantedBy=timers.target

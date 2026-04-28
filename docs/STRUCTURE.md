@@ -1,7 +1,7 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 554 files, ~91,958 LOC.
-**Drill-down dropped** — full render was 59,466 chars > cap 10,000 (~17% shown). Grep source files directly for symbol-level detail.
+Auto-generated. Total: 555 files, ~92,233 LOC.
+**Drill-down dropped** — full render was 59,598 chars > cap 10,000 (~17% shown). Grep source files directly for symbol-level detail.
 
 ---
 
@@ -17,7 +17,7 @@ Auto-generated. Total: 554 files, ~91,958 LOC.
 
 - prisma/seed.ts (157 LOC)
 
-## `scripts/` (39 files)
+## `scripts/` (40 files)
 
 - scripts/audit-r2-image-urls.ts (140 LOC)
 - scripts/backfill-alt-text.ts (127 LOC)
@@ -38,6 +38,7 @@ Auto-generated. Total: 554 files, ~91,958 LOC.
 - scripts/import-opatex.ts (344 LOC)
 - scripts/import-vinted-products.ts (405 LOC)
 - scripts/lighthouse-perf.ts (285 LOC)
+- scripts/migrate-turso-to-postgres.ts (275 LOC)
 - scripts/migrate-vinted-images.ts (397 LOC)
 - scripts/move-defect-warnings-from-description.ts (134 LOC)
 - scripts/normalize-sizes.ts (154 LOC)
@@ -185,6 +186,6 @@ Auto-generated. Total: 554 files, ~91,958 LOC.
 - src/app/(admin)/error.tsx (56 LOC)
 - src/app/(admin-auth)/admin/login/page.tsx (91 LOC)
 - src/app/(admin-onboarding)/admin/welcome/page.tsx (114 LOC)
-- src/app/(drafts-mobile)/admin/drafts/[batchId]/mobile/mobile-add-form.tsx (16
+- src/app/(drafts-mobile)/admi
 
-... [truncated at 10,000 chars; compact render was 28,549. Use git ls-files for full file list.]
+... [truncated at 10,000 chars; compact render was 28,598. Use git ls-files for full file list.]

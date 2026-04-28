@@ -1,0 +1,14 @@
+[Unit]
+Description=Janička Shop — nightly Postgres backup timer
+Documentation=file:///opt/janicka-shop/docs/runbooks/r2-backup-phase3.md
+
+[Timer]
+# 03:15 UTC daily — same slot as the existing local pg_dump cron from Phase 2.
+# Persistent=true means a missed run (host down at 03:15) fires on next boot.
+OnCalendar=*-*-* 03:15:00
+RandomizedDelaySec=10m
+Persistent=true
+Unit=janicka-backup-db.service
+
+[Install]
+WantedBy=timers.target

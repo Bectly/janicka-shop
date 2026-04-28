@@ -1,0 +1,19 @@
+[Unit]
+Description=Janička Shop — weekly images sync to R2
+After=network-online.target
+Wants=network-online.target
+Documentation=file:///opt/janicka-shop/docs/runbooks/r2-backup-phase3.md
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/local/bin/janicka-backup-images.sh
+Nice=15
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+TimeoutStartSec=4h
+StandardOutput=append:/var/log/janicka-backup-images.log
+StandardError=append:/var/log/janicka-backup-images.log
+
+[Install]
+WantedBy=multi-user.target

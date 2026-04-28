@@ -1,0 +1,19 @@
+[Unit]
+Description=Janička Shop — nightly Postgres backup to R2
+After=network-online.target postgresql.service
+Wants=network-online.target
+Documentation=file:///opt/janicka-shop/docs/runbooks/r2-backup-phase3.md
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/local/bin/janicka-backup-db.sh
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+TimeoutStartSec=2h
+StandardOutput=append:/var/log/janicka-backup-db.log
+StandardError=append:/var/log/janicka-backup-db.log
+
+[Install]
+WantedBy=multi-user.target

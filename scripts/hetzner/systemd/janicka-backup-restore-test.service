@@ -1,0 +1,19 @@
+[Unit]
+Description=Janička Shop — monthly restore drill (pull dump from R2, validate)
+After=network-online.target postgresql.service
+Wants=network-online.target
+Documentation=file:///opt/janicka-shop/docs/runbooks/r2-backup-phase3.md
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/local/bin/janicka-backup-restore-test.sh
+Nice=15
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+TimeoutStartSec=2h
+StandardOutput=append:/var/log/janicka-backup-restore-test.log
+StandardError=append:/var/log/janicka-backup-restore-test.log
+
+[Install]
+WantedBy=multi-user.target
