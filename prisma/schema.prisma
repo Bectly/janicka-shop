@@ -893,6 +893,7 @@ model ProductDraft {
   metaTitle       String?
   metaDescription String?
   weightG         Int?     // per-draft override; batch.defaultWeightG is the fallback
+  costBasis       Float?   // J12-D1: cost basis Kč — weight-distributed share of bundle total
 
   // Draft lifecycle
   status             String    @default("pending") // pending | ready | published | discarded
