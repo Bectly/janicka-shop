@@ -5,6 +5,7 @@ import { getDb } from "@/lib/db";
 import { requireDraftSessionForBatch } from "@/lib/draft-session";
 import { sendBatchSealedAdminEmail } from "@/lib/email";
 import { logger } from "@/lib/logger";
+import { checkBundleBreakEven } from "@/lib/bundles/break-even-alert";
 
 interface RouteContext {
   params: Promise<{ batchId: string }>;
@@ -54,6 +55,7 @@ export async function POST(req: Request, context: RouteContext) {
       id: true,
       adminId: true,
       status: true,
+      bundleId: true,
       bundle: { select: { invoiceNumber: true } },
     },
   });
@@ -107,6 +109,16 @@ export async function POST(req: Request, context: RouteContext) {
       });
     } catch (err) {
       logger.error("[drafts/seal] admin email failed:", err);
+    }
+    if (batch.bundleId) {
+      try {
+        await checkBundleBreakEven(batch.bundleId);
+      } catch (err) {
+        logger.error(
+          `[drafts/seal] break-even check failed for bundle ${batch.bundleId}:`,
+          err,
+        );
+      }
     }
   })().catch(() => {});
 

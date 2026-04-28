@@ -6,6 +6,7 @@ import { logOrderToHeureka } from "@/lib/heureka";
 import type { ComgatePaymentStatus } from "./types";
 import { logger } from "@/lib/logger";
 import { invalidateCustomerScope } from "@/lib/customer-cache";
+import { checkBundlesForOrder } from "@/lib/bundles/break-even-alert";
 
 /**
  * Map provider payment status to order status update.
@@ -94,6 +95,13 @@ export async function processPaymentStatus(
             ).catch((err) => {
               logger.error(
                 `[${providerLabel}] Heureka ORDER_INFO failed for ${order.orderNumber}:`,
+                err,
+              );
+            });
+
+            checkBundlesForOrder(order.id).catch((err) => {
+              logger.error(
+                `[${providerLabel}] Bundle break-even check failed for ${order.orderNumber}:`,
                 err,
               );
             });

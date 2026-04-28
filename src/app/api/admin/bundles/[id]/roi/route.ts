@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cacheLife, cacheTag } from "next/cache";
 import { auth } from "@/lib/auth";
 import { calcBundleROI, type BundleROI } from "@/lib/bundles/roi";
+import { checkBundleBreakEven } from "@/lib/bundles/break-even-alert";
 
 async function loadBundleROI(id: string): Promise<BundleROI | null> {
   "use cache";
@@ -24,5 +25,12 @@ export async function GET(
   if (!roi) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
+
+  // Fire-and-forget break-even check — also covered by order-paid hook,
+  // this is a defensive secondary trigger for cases where the hook missed.
+  if (roi.investment > 0 && roi.revenue >= roi.investment) {
+    void checkBundleBreakEven(id).catch(() => {});
+  }
+
   return NextResponse.json(roi);
 }
