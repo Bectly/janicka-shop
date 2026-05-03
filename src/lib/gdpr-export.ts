@@ -14,6 +14,7 @@ export interface ExportBundle {
   wishlist: unknown[];
   newsletter: Record<string, unknown> | null;
   loginHistory: unknown[];
+  priceWatches: unknown[];
 }
 
 /**
@@ -48,8 +49,15 @@ export async function buildCustomerDataBundle(
   });
   if (!customer) throw new Error("customer_not_found");
 
-  const [addresses, orders, returns, wishlist, loginHistory, newsletter] =
-    await Promise.all([
+  const [
+    addresses,
+    orders,
+    returns,
+    wishlist,
+    loginHistory,
+    newsletter,
+    priceWatches,
+  ] = await Promise.all([
       db.customerAddress.findMany({
         where: { customerId },
         orderBy: { createdAt: "asc" },
@@ -161,6 +169,14 @@ export async function buildCustomerDataBundle(
           updatedAt: true,
         },
       }),
+      db.priceWatch.findMany({
+        where: { email: customer.email.toLowerCase() },
+        select: {
+          productId: true,
+          currentPrice: true,
+          createdAt: true,
+        },
+      }),
     ]);
 
   return {
@@ -196,6 +212,7 @@ export async function buildCustomerDataBundle(
       metadata: safeJsonParse(l.metadata),
       at: l.createdAt,
     })),
+    priceWatches,
   };
 }
 

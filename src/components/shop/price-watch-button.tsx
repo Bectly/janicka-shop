@@ -133,6 +133,13 @@ export function PriceWatchButton({ productId, className = "" }: PriceWatchButton
           <p className="mb-2 text-xs text-muted-foreground">
             Pošleme ti jeden krátký email, jakmile zlevníme.
           </p>
+          <p className="mb-2 text-xs text-muted-foreground">
+            Zadáním emailu souhlasíš se zpracováním dle{" "}
+            <a href="/privacy" className="underline hover:text-foreground">
+              zásad ochrany
+            </a>
+            . Email odstraníme po odeslání notifikace.
+          </p>
           <div className="flex gap-2">
             <input
               type="email"
