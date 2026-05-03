@@ -1,6 +1,6 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 569 files, ~94,353 LOC.
+Auto-generated. Total: 569 files, ~94,509 LOC.
 **Drill-down dropped** — full render was 61,244 chars > cap 10,000 (~16% shown). Grep source files directly for symbol-level detail.
 
 ---
@@ -136,7 +136,7 @@ Auto-generated. Total: 569 files, ~94,353 LOC.
 - src/app/(admin)/admin/orders/loading.tsx (6 LOC)
 - src/app/(admin)/admin/orders/orders-table.tsx (379 LOC)
 - src/app/(admin)/admin/orders/page.tsx (178 LOC)
-- src/app/(admin)/admin/products/[id]/edit/page.tsx (129 LOC)
+- src/app/(admin)/admin/products/[id]/edit/page.tsx (191 LOC)
 - src/app/(admin)/admin/products/[id]/label/page.tsx (122 LOC)
 - src/app/(admin)/admin/products/[id]/label/print-button.tsx (20 LOC)
 - src/app/(admin)/admin/products/[id]/label/print-styles.tsx (33 LOC)
@@ -144,7 +144,7 @@ Auto-generated. Total: 569 files, ~94,353 LOC.
 - src/app/(admin)/admin/products/bulk-price.ts (21 LOC)
 - src/app/(admin)/admin/products/loading.tsx (6 LOC)
 - src/app/(admin)/admin/products/new/page.tsx (44 LOC)
-- src/app/(admin)/admin/products/page.tsx (344 LOC)
+- src/app/(admin)/admin/products/page.tsx (425 LOC)
 - src/app/(admin)/admin/products/quick-add/loading.tsx (6 LOC)
 - src/app/(admin)/admin/products/quick-add/page.tsx (44 LOC)
 - src/app/(admin)/admin/products/quick-add/quick-add-form.tsx (458 LOC)
