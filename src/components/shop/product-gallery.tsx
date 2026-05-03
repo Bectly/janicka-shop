@@ -6,9 +6,6 @@ import { ChevronLeft, ChevronRight, X, ZoomIn, Play } from "lucide-react";
 
 const SWIPE_THRESHOLD = 50;
 
-const BLUR_DATA_URL =
-  "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNlNWUwZGIiLz48L3N2Zz4=";
-
 interface ProductImage {
   url: string;
   alt: string;
@@ -37,7 +34,6 @@ function getPinchDist(e: React.TouchEvent): number {
 
 export function ProductGallery({ images, productName, videoUrl }: ProductGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [videoPlaying, setVideoPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -160,14 +156,12 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
   }, []);
 
   const goNext = useCallback(() => {
-    setSlideDirection("left");
     setActiveIndex((prev) => (prev === totalSlides - 1 ? 0 : prev + 1));
     setLbZoom(1);
     animateZoomReset();
   }, [totalSlides, animateZoomReset]);
 
   const goPrev = useCallback(() => {
-    setSlideDirection("right");
     setActiveIndex((prev) => (prev === 0 ? totalSlides - 1 : prev - 1));
     setLbZoom(1);
     animateZoomReset();
@@ -475,26 +469,26 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                 ref={swipeRefInline}
                 className="absolute inset-0 [will-change:transform] [transform:translateZ(0)]"
               >
-                <Image
-                  key={`slide-${activeIndex}`}
-                  src={getUrl(images[getImageIndex(activeIndex)])}
-                  alt={getAlt(images[getImageIndex(activeIndex)], productName, getImageIndex(activeIndex))}
-                  fill
-                  className={`object-cover ${
-                    slideDirection === "left"
-                      ? "animate-slide-in-left"
-                      : slideDirection === "right"
-                        ? "animate-slide-in-right"
-                        : ""
-                  }`}
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  priority={activeIndex === 0}
-                  fetchPriority={activeIndex === 0 ? "high" : "auto"}
-                  placeholder="blur"
-                  blurDataURL={BLUR_DATA_URL}
-                  unoptimized
-                  onAnimationEnd={() => setSlideDirection(null)}
-                />
+                {/* Stacked images with opacity crossfade — no remount, no blur flash.
+                    All images live in DOM; browser caches them; switching = opacity swap. */}
+                {images.map((img, imgIdx) => {
+                  const slideIdx = hasVideo && imgIdx >= videoSlideIndex ? imgIdx + 1 : imgIdx;
+                  const isActive = slideIdx === activeIndex;
+                  return (
+                    <img
+                      key={`${getUrl(img)}-${imgIdx}`}
+                      src={getUrl(img)}
+                      alt={getAlt(img, productName, imgIdx)}
+                      className={`absolute inset-0 size-full object-cover transition-opacity duration-150 ease-out ${
+                        isActive ? "opacity-100" : "opacity-0"
+                      }`}
+                      loading={imgIdx === 0 ? "eager" : "lazy"}
+                      decoding="async"
+                      fetchPriority={imgIdx === 0 ? "high" : "auto"}
+                      draggable={false}
+                    />
+                  );
+                })}
               </div>
             </>
           )}
@@ -505,7 +499,6 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setSlideDirection("right");
                   setActiveIndex((prev) =>
                     prev === 0 ? totalSlides - 1 : prev - 1,
                   );
@@ -519,7 +512,6 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setSlideDirection("left");
                   setActiveIndex((prev) =>
                     prev === totalSlides - 1 ? 0 : prev + 1,
                   );
@@ -540,7 +532,6 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setSlideDirection(i > activeIndex ? "left" : "right");
                       setActiveIndex(i);
                     }}
                     className={`inline-flex shrink-0 items-center justify-center ${totalSlides > 8 ? "size-8" : "size-11"}`}
@@ -567,7 +558,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                   <button
                     key="video-thumb"
                     type="button"
-                    onClick={() => { setSlideDirection(slideIdx > activeIndex ? "left" : "right"); setActiveIndex(slideIdx); }}
+                    onClick={() => setActiveIndex(slideIdx)}
                     className={`relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border-2 bg-muted transition-all duration-150 sm:size-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 ${
                       activeIndex === videoSlideIndex
                         ? "border-primary ring-1 ring-primary scale-[1.03]"
@@ -585,7 +576,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                 <button
                   key={`${getUrl(img)}-${imgIdx}`}
                   type="button"
-                  onClick={() => { setSlideDirection(slideIdx > activeIndex ? "left" : "right"); setActiveIndex(slideIdx); }}
+                  onClick={() => setActiveIndex(slideIdx)}
                   className={`relative size-16 shrink-0 overflow-hidden rounded-lg border-2 transition-all duration-150 sm:size-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 ${
                     slideIdx === activeIndex
                       ? "border-primary ring-1 ring-primary scale-[1.03]"
@@ -756,21 +747,28 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
               className="absolute inset-0 [touch-action:pan-y] [will-change:transform] [transform:translateZ(0)]"
             >
               {/* Zoom layer — transform applied via ref, not React style, to avoid re-render per gesture frame.
-                  Image keyed by activeIndex for fade-in on switch (no flash). */}
+                  Stacked images crossfade via opacity to prevent blank-frame flash on slide switch. */}
               <div
                 ref={zoomRef}
                 className="absolute inset-0 [will-change:transform] [transform-origin:50%_50%]"
               >
-                <Image
-                  key={`lb-${activeIndex}`}
-                  src={getUrl(images[getImageIndex(activeIndex)])}
-                  alt={getAlt(images[getImageIndex(activeIndex)], productName, getImageIndex(activeIndex))}
-                  fill
-                  priority
-                  className="object-contain animate-in fade-in-0 duration-200"
-                  sizes="(max-width: 640px) 80vw, 32rem"
-                  unoptimized
-                />
+                {images.map((img, imgIdx) => {
+                  const slideIdx = hasVideo && imgIdx >= videoSlideIndex ? imgIdx + 1 : imgIdx;
+                  const isActive = slideIdx === activeIndex;
+                  return (
+                    <img
+                      key={`lb-${getUrl(img)}-${imgIdx}`}
+                      src={getUrl(img)}
+                      alt={getAlt(img, productName, imgIdx)}
+                      className={`absolute inset-0 size-full object-contain transition-opacity duration-150 ease-out ${
+                        isActive ? "opacity-100" : "opacity-0"
+                      }`}
+                      loading="eager"
+                      decoding="async"
+                      draggable={false}
+                    />
+                  );
+                })}
               </div>
             </div>
           </div>
