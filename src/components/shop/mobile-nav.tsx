@@ -33,9 +33,15 @@ const topLinks = [
 interface MobileNavProps {
   categoryCounts?: Record<string, number>;
   sessionRole?: "customer" | null;
+  /**
+   * standalone — trigger button has its own pill (border/bg/shadow). Default.
+   * embedded — trigger has no chrome of its own; the parent provides the pill.
+   *            Used inside the floating header cluster to share one container with the logo.
+   */
+  variant?: "standalone" | "embedded";
 }
 
-export function MobileNav({ categoryCounts, sessionRole }: MobileNavProps) {
+export function MobileNav({ categoryCounts, sessionRole, variant = "standalone" }: MobileNavProps) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -65,7 +71,11 @@ export function MobileNav({ categoryCounts, sessionRole }: MobileNavProps) {
           <button
             type="button"
             aria-label="Otevřít menu"
-            className="group/menubtn relative inline-flex size-11 shrink-0 items-center justify-center rounded-2xl border border-brand/15 bg-gradient-to-br from-blush-light via-card to-blush/40 shadow-[0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.6)] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-px hover:border-brand/35 hover:from-blush hover:to-brand-light/15 hover:shadow-[0_6px_18px_-8px_oklch(0.55_0.20_350_/_0.45)] active:translate-y-0 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background data-[state=open]:border-brand/45 data-[state=open]:from-brand/15 data-[state=open]:to-brand/5 md:hidden"
+            className={
+              variant === "embedded"
+                ? "group/menubtn relative inline-flex size-11 shrink-0 items-center justify-center rounded-l-[14px] transition-colors duration-200 hover:bg-brand/5 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 md:hidden"
+                : "group/menubtn relative inline-flex size-11 shrink-0 items-center justify-center rounded-2xl border border-brand/15 bg-gradient-to-br from-blush-light via-card to-blush/40 shadow-[0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.6)] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-px hover:border-brand/35 hover:from-blush hover:to-brand-light/15 hover:shadow-[0_6px_18px_-8px_oklch(0.55_0.20_350_/_0.45)] active:translate-y-0 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background data-[state=open]:border-brand/45 data-[state=open]:from-brand/15 data-[state=open]:to-brand/5 md:hidden"
+            }
           />
         }
       >

@@ -62,10 +62,14 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
   const [lbZoom, setLbZoom] = useState(1);
   const isZoomed = lbZoom > 1;
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
-  const [swipeOffset, setSwipeOffset] = useState(0);
   const [lightboxDismissY, setLightboxDismissY] = useState(0);
   const [isLbDismissing, setIsLbDismissing] = useState(false);
   const imgContainerRef = useRef<HTMLDivElement>(null);
+  // Direct DOM refs for the swiping image — bypasses React reconcile per touchmove,
+  // keeps the transform on the GPU compositor for smooth 60fps follow.
+  // Two refs because inline gallery and lightbox can both be in DOM when lightbox is open.
+  const swipeRefInline = useRef<HTMLDivElement>(null);
+  const swipeRefLightbox = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{
     dragging: boolean;
     didDrag: boolean;
@@ -167,23 +171,35 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
     // Prevent vertical scroll while swiping horizontally
     e.preventDefault();
     touchRef.current.currentOffset = dx;
-    setSwipeOffset(dx);
-  }, [totalSlides]);
+    // Direct DOM mutation — skip React reconcile for every touchmove (60-120 Hz).
+    // This is the difference between "smooth follow" and "choppy lag" on mobile.
+    const el = swipeRefLightbox.current ?? swipeRefInline.current;
+    if (el) {
+      el.style.transition = "none";
+      el.style.transform = `translate3d(${dx}px, 0, 0)`;
+    }
+  }, []);
 
   const handleTouchEnd = useCallback(() => {
+    const el = swipeRefLightbox.current ?? swipeRefInline.current;
     if (!touchRef.current.swiping) {
-      setSwipeOffset(0);
+      if (el) {
+        el.style.transition = "transform 220ms cubic-bezier(0.16,1,0.3,1)";
+        el.style.transform = "";
+      }
       return;
     }
-    // Read offset from ref to avoid stale closure when touchEnd fires
-    // in the same frame as the last touchMove before React re-renders
     const offset = touchRef.current.currentOffset;
+    if (el) {
+      // Animate snap-back / transition out — single CSS transition, no React mid-frame.
+      el.style.transition = "transform 220ms cubic-bezier(0.16,1,0.3,1)";
+      el.style.transform = "";
+    }
     if (offset < -SWIPE_THRESHOLD) {
       goNext();
     } else if (offset > SWIPE_THRESHOLD) {
       goPrev();
     }
-    setSwipeOffset(0);
     touchRef.current.swiping = false;
   }, [goNext, goPrev]);
 
@@ -374,29 +390,31 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                   Zvětšit
                 </span>
               </button>
-              <Image
-                key={`slide-${activeIndex}`}
-                src={getUrl(images[getImageIndex(activeIndex)])}
-                alt={getAlt(images[getImageIndex(activeIndex)], productName, getImageIndex(activeIndex))}
-                fill
-                className={`object-cover ${
-                  swipeOffset !== 0
-                    ? "transition-transform duration-150 ease-out"
-                    : slideDirection === "left"
+              <div
+                ref={swipeRefInline}
+                className="absolute inset-0 [will-change:transform] [transform:translateZ(0)]"
+              >
+                <Image
+                  key={`slide-${activeIndex}`}
+                  src={getUrl(images[getImageIndex(activeIndex)])}
+                  alt={getAlt(images[getImageIndex(activeIndex)], productName, getImageIndex(activeIndex))}
+                  fill
+                  className={`object-cover ${
+                    slideDirection === "left"
                       ? "animate-slide-in-left"
                       : slideDirection === "right"
                         ? "animate-slide-in-right"
                         : ""
-                }`}
-                style={swipeOffset !== 0 ? { transform: `translateX(${swipeOffset}px)` } : undefined}
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                priority={activeIndex === 0}
-                fetchPriority={activeIndex === 0 ? "high" : "auto"}
-                placeholder="blur"
-                blurDataURL={BLUR_DATA_URL}
-                unoptimized
-                onAnimationEnd={() => setSlideDirection(null)}
-              />
+                  }`}
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  priority={activeIndex === 0}
+                  fetchPriority={activeIndex === 0 ? "high" : "auto"}
+                  placeholder="blur"
+                  blurDataURL={BLUR_DATA_URL}
+                  unoptimized
+                  onAnimationEnd={() => setSlideDirection(null)}
+                />
+              </div>
             </>
           )}
           {totalSlides > 1 && (
@@ -648,22 +666,25 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
               }
             }}
           >
-            <Image
-              src={getUrl(images[getImageIndex(activeIndex)])}
-              alt={getAlt(images[getImageIndex(activeIndex)], productName, getImageIndex(activeIndex))}
-              fill
-              priority
-              className="object-contain transition-transform duration-200"
-              style={{
-                transform: isZoomed
-                  ? `scale(${lbZoom}) translate(${panOffset.x / lbZoom}px, ${panOffset.y / lbZoom}px)`
-                  : swipeOffset !== 0
-                    ? `translateX(${swipeOffset}px)`
+            <div
+              ref={swipeRefLightbox}
+              className="absolute inset-0 [touch-action:pan-y] [will-change:transform] [transform:translateZ(0)]"
+            >
+              <Image
+                src={getUrl(images[getImageIndex(activeIndex)])}
+                alt={getAlt(images[getImageIndex(activeIndex)], productName, getImageIndex(activeIndex))}
+                fill
+                priority
+                className={isZoomed ? "object-contain transition-transform duration-200" : "object-contain"}
+                style={{
+                  transform: isZoomed
+                    ? `scale(${lbZoom}) translate(${panOffset.x / lbZoom}px, ${panOffset.y / lbZoom}px)`
                     : undefined,
-              }}
-              sizes="(max-width: 640px) 80vw, 32rem"
-              unoptimized
-            />
+                }}
+                sizes="(max-width: 640px) 80vw, 32rem"
+                unoptimized
+              />
+            </div>
           </div>
 
           {/* Thumbnail strip at bottom */}
