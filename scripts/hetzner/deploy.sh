@@ -98,6 +98,29 @@ if [[ $SYNC_ONLY -eq 0 ]]; then
     NODE_ENV=production npm run build
 fi
 
+# ---------- 2.5. prisma migrate deploy ----------
+# Apply any pending DB migrations BEFORE pm2 reload so the new code starts
+# against a matching schema. Reads DATABASE_URL from .env.production.
+# 2026-05-03: discovered 12 migrations had drifted unapplied because this
+# step was missing — mailbox/workspace/price-watch features would 500 once
+# touched. See backup at /opt/backups/janicka-shop/pre-migrate-20260503-*.sql.gz
+if [[ $SYNC_ONLY -eq 0 ]]; then
+    if [[ -f "$APP_ROOT/.env.production" ]]; then
+        log "prisma migrate deploy (loading .env.production)"
+        # Use `env -S` so values with spaces don't break — and DON'T `source`
+        # the file because it may contain shell-unsafe chars (e.g. unquoted < >).
+        DATABASE_URL=$(/usr/bin/grep -E '^DATABASE_URL=' "$APP_ROOT/.env.production" | head -1 | cut -d= -f2- | /usr/bin/sed 's/^"//;s/"$//')
+        if [[ -z "$DATABASE_URL" ]]; then
+            die "DATABASE_URL not found in .env.production — cannot run migrate deploy"
+        fi
+        export DATABASE_URL
+        npx prisma migrate deploy 2>&1 | /usr/bin/tee -a "$LOG"
+        unset DATABASE_URL
+    else
+        log "WARN: .env.production missing — skipping prisma migrate deploy"
+    fi
+fi
+
 # ---------- 3. standalone sync (the actual fix) ----------
 STANDALONE_DIR="$APP_ROOT/.next/standalone"
 [[ -d "$STANDALONE_DIR" ]] || die "standalone dir missing: $STANDALONE_DIR (build failed?)"
