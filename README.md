@@ -20,6 +20,23 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Analytics (GA4)
+
+GA4 is wired through `src/components/analytics-provider.tsx` and only loads
+`gtag.js` after the user grants analytics-cookie consent. To enable, set on
+Vercel (or in `.env.local`):
+
+```
+NEXT_PUBLIC_GA4_ID=G-XXXXXXXX
+# Optional: GA4 Measurement Protocol secret for server-side cron metrics
+GA4_API_SECRET=
+```
+
+When the env var is unset the provider is a no-op (no script loaded, no events
+fired). The legacy name `NEXT_PUBLIC_GA4_MEASUREMENT_ID` is still accepted as a
+fallback. Tracked events: `view_item`, `add_to_cart`, `begin_checkout`,
+`purchase`, `search`, `referral_share` — see `src/lib/analytics.ts`.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

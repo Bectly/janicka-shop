@@ -2,7 +2,10 @@
 
 import { useEffect, useRef } from "react";
 
-const GA4_ID = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID;
+// Accept either NEXT_PUBLIC_GA4_ID (short, preferred) or the legacy
+// NEXT_PUBLIC_GA4_MEASUREMENT_ID. When neither is set the loader is a no-op.
+const GA4_ID =
+  process.env.NEXT_PUBLIC_GA4_ID ?? process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID;
 const PINTEREST_ID = process.env.NEXT_PUBLIC_PINTEREST_TAG_ID;
 const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID;
 const CONSENT_KEY = "janicka-cookie-consent";

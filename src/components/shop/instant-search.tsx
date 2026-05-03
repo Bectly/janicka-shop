@@ -7,6 +7,7 @@ import MiniSearch from "minisearch";
 import { Search, X, Clock, ArrowRight, Loader2 } from "lucide-react";
 import { formatPrice } from "@/lib/format";
 import { CONDITION_LABELS } from "@/lib/constants";
+import { trackSearch } from "@/lib/analytics";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -215,6 +216,7 @@ export function InstantSearch({ variant = "icon", defaultOpen = false }: Instant
     const raw = miniSearchRef.current.search(q).slice(0, 8);
     setResults(raw as unknown as SearchResult[]);
     setActiveIdx(-1);
+    trackSearch(q, raw.length);
   }, []);
 
   const onInputChange = useCallback(

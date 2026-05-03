@@ -32,7 +32,8 @@ async function postGA4Event(
   eventName: "cron_duration_ms" | "cron_error",
   params: Record<string, string | number>,
 ): Promise<void> {
-  const measurementId = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID;
+  const measurementId =
+    process.env.NEXT_PUBLIC_GA4_ID ?? process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID;
   const apiSecret = process.env.GA4_API_SECRET;
   if (!measurementId || !apiSecret) return;
 

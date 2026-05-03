@@ -3,7 +3,7 @@
  * Consent-gated: checks cookie consent before firing events to GA4, Pinterest Tag, and Meta Pixel.
  *
  * Env vars (all optional — scripts only load when ID is set):
- * - NEXT_PUBLIC_GA4_MEASUREMENT_ID
+ * - NEXT_PUBLIC_GA4_ID (or legacy NEXT_PUBLIC_GA4_MEASUREMENT_ID)
  * - NEXT_PUBLIC_PINTEREST_TAG_ID
  * - NEXT_PUBLIC_META_PIXEL_ID
  */
@@ -197,6 +197,26 @@ export function trackBeginCheckout(items: AnalyticsItem[], total: number) {
       currency: "CZK",
     });
   }
+}
+
+/** Site search query — fires when results are computed (debounced caller). */
+export function trackSearch(query: string, resultCount: number) {
+  if (!hasAnalyticsConsent()) return;
+  const trimmed = query.trim();
+  if (trimmed.length < 2) return;
+  ga4("event", "search", {
+    search_term: trimmed,
+    result_count: resultCount,
+  });
+}
+
+/**
+ * Generic GA4 event wrapper. Use the named helpers above for canonical
+ * e-commerce events; reach for this only for ad-hoc events not yet covered.
+ */
+export function trackEvent(name: string, params?: Record<string, unknown>) {
+  if (!hasAnalyticsConsent()) return;
+  ga4("event", name, params ?? {});
 }
 
 /** User shares a referral link */
