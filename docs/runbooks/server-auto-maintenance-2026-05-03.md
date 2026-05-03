@@ -55,7 +55,23 @@ Verify: `logrotate -d /etc/logrotate.d/janicka` parses clean.
 
 ### 2. Uptime probe + Telegram alert
 
-`/usr/local/bin/janicka-uptime-check.sh` — pings `https://www.jvsatnik.cz/api/health` (8 s timeout, follows redirects). Treats `HTTP != 200` **or** `"ok":false` in body as down. State file `/var/lib/janicka-uptime.state` prevents repeat alerts; only edge transitions notify (down → up sends recovery message).
+`/usr/local/bin/janicka-uptime-check.sh` — pings `https://www.jvsatnik.cz/api/health` (10 s timeout, follows redirects).
+
+**Three-state classifier (P1 upgrade 2026-05-03, task #979)** — earlier binary up/down probe missed the C5189 DB-only outage because health endpoint was returning HTTP 200 with `{"ok":false,"db":"down"}`; `grep "ok:false"` was technically in place but the post-fix endpoint now returns HTTP 503 anyway. New `jq`-based probe parses JSON and emits one of:
+
+| State    | Trigger                                               | Emoji |
+|----------|-------------------------------------------------------|-------|
+| up       | HTTP 200 **and** `.ok == true` **and** `.db == "ok"`  | 🟢    |
+| degraded | HTTP 200 **and** (`.ok == false` or any subsystem ≠ ok) | 🟡    |
+| down     | HTTP non-200 / timeout / transport failure            | 🔴    |
+
+Edge transitions (any change between up/degraded/down) fire one Telegram alert; state persists in `/var/lib/janicka-uptime/state`, last-alert timestamp in `/var/lib/janicka-uptime/last_alert_ts` (60 s rate-limit floor on top of edge-only logic). Telegram body includes `db / redis / email` subsystem statuses, `version`, `commit`, `uptimeSeconds`, HTTP code and the probed URL.
+
+`logger -t janicka-uptime` line per run now: `state=<X> http=<Y> db=<Z> redis=<R> email=<E>` — useful for `journalctl -t janicka-uptime` incident timelines.
+
+Original binary script preserved as `/usr/local/bin/janicka-uptime-check.sh.bak.preP1obs`. `jq 1.6` installed via `apt`. Same systemd unit + timer (no service-file change).
+
+**Proactive follow-up (NOT in this task)**: same three-state pattern wanted for jarvis-brain Manager loop health probe — separate ticket.
 
 Credentials in `/etc/janicka-uptime.env` (mode 600):
 
@@ -101,7 +117,7 @@ $ systemctl is-enabled apt-daily-upgrade.timer # → enabled
 
 ## Operating notes
 
-* Telegram alert format: `🔴 jvsatnik.cz DOWN  HTTP=503` or `🟢 jvsatnik.cz UP  recovered after outage`.
+* Telegram alert format (P1 upgrade): `🟢 up → 🔴 down\njvsatnik.cz\ndb=down redis=ok email=ok\nversion=… commit=… uptime=…s\nhttp=503 ok=false\nhttps://www.jvsatnik.cz/api/health` — see three-state table in §2.
 * If alert noise becomes a problem, edit `OnUnitActiveSec` to `2min` or add an N-failure-in-a-row threshold to the script.
 * Probe writes `journal -t janicka-uptime` every minute — useful for incident timelines.
 * Disable for maintenance: `systemctl stop janicka-uptime.timer` (re-enable with `start`).

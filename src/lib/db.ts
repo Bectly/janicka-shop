@@ -33,40 +33,9 @@ function attachQueryListener(client: PrismaClient) {
 }
 
 async function createClient(): Promise<PrismaClient> {
-  const dbUrl = process.env.DATABASE_URL ?? "";
-  const tursoUrl = process.env.TURSO_DATABASE_URL;
-  const tursoToken = process.env.TURSO_AUTH_TOKEN;
   const logConfig = buildLogConfig();
-
-  // Postgres: native connection (Phase 2 cutover, primary path).
-  if (dbUrl.startsWith("postgres")) {
-    const client = new PrismaClient(logConfig);
-    attachQueryListener(client);
-    return client;
-  }
-
-  // Turso/libsql legacy path — only functional when schema.prisma provider
-  // is "sqlite". Kept for emergency rollback (revert schema + this branch).
-  if (tursoUrl && tursoToken) {
-    const { PrismaLibSQL } = await import("@prisma/adapter-libsql/web");
-    const adapter = new PrismaLibSQL({
-      url: tursoUrl.trim(),
-      authToken: tursoToken.trim(),
-    });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma constructor types don't expose `adapter` without bundler resolution
-    const client = new PrismaClient({ adapter, ...(logConfig ?? {}) } as any);
-    attachQueryListener(client);
-    return client;
-  }
-
-  // Local SQLite dev — only valid with sqlite-provider schema.
   const client = new PrismaClient(logConfig);
   attachQueryListener(client);
-  try {
-    await client.$executeRaw`PRAGMA journal_mode = WAL`;
-  } catch {
-    // Non-fatal — postgres rejects PRAGMA, sqlite WAL is a perf optimization.
-  }
   return client;
 }
 

@@ -29,7 +29,6 @@
     "@comgate/checkout-js": "^2.0.15",
     "@hookform/resolvers": "^5.2.2",
     "@libsql/client": "^0.17.2",
-    "@prisma/adapter-libsql": "^6.19.3",
     "@prisma/client": "^6.19.3",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
