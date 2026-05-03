@@ -24,10 +24,20 @@ export async function POST(req: NextRequest) {
   }
 
   const rawBody = await req.text();
-  const signature = req.headers.get("resend-signature") ?? "";
+  const svixId = req.headers.get("svix-id") ?? req.headers.get("webhook-id") ?? "";
+  const svixTs = req.headers.get("svix-timestamp") ?? req.headers.get("webhook-timestamp") ?? "";
+  const svixSig = req.headers.get("svix-signature") ?? req.headers.get("webhook-signature") ?? "";
+  const legacySig = req.headers.get("resend-signature") ?? "";
 
-  if (!verifySignature(rawBody, signature, secret)) {
-    logger.warn("[resend-inbound] signature mismatch");
+  const ok = svixId && svixTs && svixSig
+    ? verifySvixSignature(rawBody, svixId, svixTs, svixSig, secret)
+    : verifyLegacySignature(rawBody, legacySig, secret);
+
+  if (!ok) {
+    logger.warn("[resend-inbound] signature mismatch", {
+      hasSvix: Boolean(svixId && svixTs && svixSig),
+      hasLegacy: Boolean(legacySig),
+    });
     return NextResponse.json({ error: "invalid_signature" }, { status: 401 });
   }
 
@@ -57,7 +67,63 @@ export async function POST(req: NextRequest) {
   }
 }
 
-function verifySignature(body: string, signature: string, secret: string): boolean {
+/**
+ * Svix-style verification (Resend production webhook format as of 2025).
+ * Signed payload: `${svixId}.${svixTimestamp}.${rawBody}`
+ * Secret: base64-decoded payload of `whsec_<base64>`
+ * Header svix-signature: space-separated list of `v1,<base64sig>` entries.
+ * Replay window: 5 minutes either side of svix-timestamp.
+ */
+function verifySvixSignature(
+  body: string,
+  svixId: string,
+  svixTs: string,
+  svixSig: string,
+  secret: string,
+): boolean {
+  const ts = Number.parseInt(svixTs, 10);
+  if (!Number.isFinite(ts)) return false;
+  const now = Math.floor(Date.now() / 1000);
+  if (Math.abs(now - ts) > 300) return false;
+
+  const rawSecret = secret.startsWith("whsec_") ? secret.slice(6) : secret;
+  let secretBuf: Buffer;
+  try {
+    secretBuf = Buffer.from(rawSecret, "base64");
+  } catch {
+    return false;
+  }
+  if (secretBuf.length === 0) return false;
+
+  const toSign = `${svixId}.${svixTs}.${body}`;
+  const expected = createHmac("sha256", secretBuf).update(toSign).digest("base64");
+  const expectedBuf = Buffer.from(expected, "base64");
+
+  const candidates = svixSig.split(" ");
+  for (const candidate of candidates) {
+    const [, sig] = candidate.split(",", 2);
+    if (!sig) continue;
+    let gotBuf: Buffer;
+    try {
+      gotBuf = Buffer.from(sig, "base64");
+    } catch {
+      continue;
+    }
+    if (gotBuf.length !== expectedBuf.length) continue;
+    try {
+      if (timingSafeEqual(gotBuf, expectedBuf)) return true;
+    } catch {
+      continue;
+    }
+  }
+  return false;
+}
+
+/**
+ * Legacy/generic HMAC over body only — kept as fallback for older Resend
+ * Inbound webhook format (`resend-signature: sha256=<hex>`).
+ */
+function verifyLegacySignature(body: string, signature: string, secret: string): boolean {
   if (!signature) return false;
   const expected = createHmac("sha256", secret).update(body).digest("hex");
   const got = signature.startsWith("sha256=") ? signature.slice(7) : signature;
