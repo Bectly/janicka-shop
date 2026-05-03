@@ -87,6 +87,10 @@ export default function RootLayout({
             crossOrigin="anonymous"
           />
         )}
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="preconnect" href="https://connect.facebook.net" />
+        <link rel="preconnect" href="https://s.pinimg.com" />
+        <link rel="dns-prefetch" href="https://www.google-analytics.com" />
       </head>
       <body className="min-h-full flex flex-col">
         <a

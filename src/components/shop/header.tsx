@@ -48,7 +48,7 @@ async function MobileFloating() {
         <Image
           src="/logo/logo-header.png"
           alt=""
-          width={120}
+          width={88}
           height={48}
           className="h-6 w-auto"
           priority

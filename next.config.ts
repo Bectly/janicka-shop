@@ -32,7 +32,7 @@ const nextConfig: NextConfig = {
     // unoptimized={true} now that nginx serves /uploads/* with CF Edge cache;
     // these qualities still apply to admin-curated banners (collection-hero,
     // category-hero, hero-section) which keep going through the optimizer.
-    qualities: [25, 50, 75, 90, 95, 100],
+    qualities: [25, 50, 75, 85, 90, 95, 100],
     remotePatterns: [
       {
         // Cloudflare R2 public bucket — janicka-shop-images (legacy, kept until

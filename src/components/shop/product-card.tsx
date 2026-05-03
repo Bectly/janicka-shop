@@ -140,7 +140,7 @@ export function ProductCard({
         priority={priority}
         placeholder="blur"
         blurDataURL={BLUR_DATA_URL}
-        unoptimized
+        quality={85}
       />
       {secondImage && (
         <Image
@@ -152,7 +152,8 @@ export function ProductCard({
             ? "(max-width: 640px) 100vw, (max-width: 1024px) 66vw, 50vw"
             : "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           }
-          unoptimized
+          quality={85}
+          loading="lazy"
         />
       )}
     </>
