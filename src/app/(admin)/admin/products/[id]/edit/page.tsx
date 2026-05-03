@@ -5,7 +5,7 @@ import { connection } from "next/server";
 
 import { ProductForm } from "@/components/admin/product-form";
 import { updateProduct } from "../../actions";
-import { ArrowLeft, BookOpen, Printer } from "lucide-react";
+import { ArrowLeft, BookOpen, Printer, Bell } from "lucide-react";
 import type { Metadata } from "next";
 
 interface Props {
@@ -27,15 +27,29 @@ export default async function EditProductPage({ params }: Props) {
   const db = await getDb();
   const { id } = await params;
 
-  const [product, categories] = await Promise.all([
+  const [product, categories, priceWatchers] = await Promise.all([
     db.product.findUnique({ where: { id } }),
     db.category.findMany({
       orderBy: { sortOrder: "asc" },
       select: { id: true, name: true, slug: true },
     }),
+    db.priceWatch.findMany({
+      where: { productId: id },
+      select: { email: true, currentPrice: true, createdAt: true },
+      orderBy: { createdAt: "desc" },
+    }),
   ]);
 
   if (!product) notFound();
+
+  const watcherCount = priceWatchers.length;
+  const watcherAvgPrice =
+    watcherCount > 0
+      ? Math.round(
+          priceWatchers.reduce((sum, w) => sum + w.currentPrice, 0) /
+            watcherCount,
+        )
+      : 0;
 
   let sizes: string[] = [];
   let colors: string[] = [];
@@ -114,6 +128,54 @@ export default async function EditProductPage({ params }: Props) {
             </p>
           </div>
         </details>
+      )}
+
+      {watcherCount > 0 && (
+        <section
+          id="price-watchers"
+          className="mt-6 rounded-xl border border-amber-200 bg-amber-50/60 p-5 dark:border-amber-900/50 dark:bg-amber-950/20"
+        >
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="flex items-center gap-2 font-heading text-base font-semibold text-amber-900 dark:text-amber-200">
+              <Bell className="size-4" />
+              Zájem o slevu
+            </h2>
+            <p className="text-xs text-amber-800/80 dark:text-amber-300/70">
+              Email se odešle, jakmile snížíš cenu pod{" "}
+              <strong>{watcherAvgPrice} Kč</strong> (průměr opt-in cen).
+            </p>
+          </div>
+          <p className="mt-1 text-sm text-amber-900 dark:text-amber-200">
+            <strong>{watcherCount}</strong>{" "}
+            {watcherCount === 1
+              ? "zákazník sleduje cenu"
+              : watcherCount >= 2 && watcherCount <= 4
+                ? "zákazníci sledují cenu"
+                : "zákazníků sleduje cenu"}{" "}
+            tohoto kusu.
+          </p>
+          <ul className="mt-3 space-y-1 text-sm">
+            {priceWatchers.slice(0, 25).map((w) => (
+              <li
+                key={`${w.email}-${w.createdAt.toISOString()}`}
+                className="flex flex-wrap items-baseline justify-between gap-2 rounded-md bg-white/60 px-3 py-1.5 dark:bg-amber-950/30"
+              >
+                <span className="font-mono text-xs text-amber-900 dark:text-amber-200">
+                  {w.email}
+                </span>
+                <span className="text-xs text-amber-800/80 dark:text-amber-300/70">
+                  opt-in {w.currentPrice} Kč ·{" "}
+                  {w.createdAt.toLocaleDateString("cs-CZ")}
+                </span>
+              </li>
+            ))}
+          </ul>
+          {watcherCount > 25 && (
+            <p className="mt-2 text-xs text-amber-800/80 dark:text-amber-300/70">
+              … a dalších {watcherCount - 25}.
+            </p>
+          )}
+        </section>
       )}
 
       <div className="mt-6 rounded-xl border bg-card p-6 shadow-sm">

@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { CONDITION_LABELS, CONDITION_COLORS } from "@/lib/constants";
-import { ImageIcon, Eye, EyeOff, Star, StarOff, Trash2, X, Check, AlertCircle, CircleDollarSign } from "lucide-react";
+import { ImageIcon, Eye, EyeOff, Star, StarOff, Trash2, X, Check, AlertCircle, CircleDollarSign, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DeleteProductButton } from "@/components/admin/delete-product-button";
 import { DuplicateProductButton } from "@/components/admin/duplicate-product-button";
@@ -28,6 +28,7 @@ interface ProductRow {
   sold: boolean;
   featured: boolean;
   category: { name: string };
+  watcherCount?: number;
 }
 
 interface BulkProductTableProps {
@@ -175,9 +176,21 @@ export function BulkProductTable({ products, query }: BulkProductTableProps) {
                       </td>
                       <td className="px-4 py-3">
                         <div>
-                          <p className="font-medium text-foreground">
-                            {product.name}
-                          </p>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-medium text-foreground">
+                              {product.name}
+                            </p>
+                            {(product.watcherCount ?? 0) > 0 && (
+                              <Link
+                                href={`/admin/products/${product.id}/edit#price-watchers`}
+                                title={`${product.watcherCount} ${product.watcherCount === 1 ? "zákazník sleduje" : "zákazníků sleduje"} cenu`}
+                                className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-900 transition-colors hover:bg-amber-200 dark:bg-amber-950/40 dark:text-amber-300"
+                              >
+                                <Bell className="size-3" />
+                                Sledují {product.watcherCount}
+                              </Link>
+                            )}
+                          </div>
                           <p className="text-xs text-muted-foreground">
                             {product.sku}
                             {product.featured && (

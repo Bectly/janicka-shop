@@ -31,6 +31,7 @@ const STATUS_FILTERS = [
 
 type MissingKind = "images" | "measurements" | "defects" | "video" | "fitnote";
 const MISSING_KINDS: MissingKind[] = ["images", "measurements", "defects", "video", "fitnote"];
+type SortKind = "newest" | "watchers";
 const MISSING_LABELS: Record<MissingKind, string> = {
   images: "bez 4+ fotek",
   measurements: "bez měr (hruď + délka)",
@@ -68,10 +69,12 @@ async function getProductsPageData(
   statusFilter: string,
   categoryFilter: string,
   missingFilter: MissingKind | null,
+  sort: SortKind,
 ) {
   "use cache";
   cacheLife("minutes");
   cacheTag("admin-products");
+  cacheTag("price-watch");
 
   const db = await getDb();
 
@@ -142,6 +145,38 @@ async function getProductsPageData(
     totalCount = filtered.length;
     const start = (currentPage - 1) * ADMIN_PRODUCTS_PER_PAGE;
     products = filtered.slice(start, start + ADMIN_PRODUCTS_PER_PAGE);
+  } else if (sort === "watchers") {
+    // Order by PriceWatch row count: groupBy gives all (productId, count) pairs
+    // ordered desc, then page through and fetch matching products. Products with
+    // 0 watchers are intentionally excluded — sort=watchers means "show demand."
+    const grouped = await db.priceWatch.groupBy({
+      by: ["productId"],
+      _count: { _all: true },
+      orderBy: { _count: { productId: "desc" } },
+    });
+    // Apply same product-level filters via a where-side check: pull matching
+    // product IDs once, intersect with grouped order.
+    const allowedIds = await db.product.findMany({
+      where,
+      select: { id: true },
+    });
+    const allowed = new Set(allowedIds.map((p) => p.id));
+    const orderedIds = grouped
+      .filter((g) => allowed.has(g.productId))
+      .map((g) => g.productId);
+    totalCount = orderedIds.length;
+    const start = (currentPage - 1) * ADMIN_PRODUCTS_PER_PAGE;
+    const pageIds = orderedIds.slice(start, start + ADMIN_PRODUCTS_PER_PAGE);
+    const fetched = pageIds.length
+      ? await db.product.findMany({
+          where: { id: { in: pageIds } },
+          include: { category: { select: { name: true } } },
+        })
+      : [];
+    const byId = new Map(fetched.map((p) => [p.id, p]));
+    products = pageIds
+      .map((id) => byId.get(id))
+      .filter((p): p is NonNullable<typeof p> => Boolean(p));
   } else {
     [totalCount, products] = await Promise.all([
       db.product.count({ where }),
@@ -155,8 +190,25 @@ async function getProductsPageData(
     ]);
   }
 
+  // Single groupBy for watcher counts on the current page (no N+1).
+  const productIds = products.map((p) => p.id);
+  const watchersGrouped = productIds.length
+    ? await db.priceWatch.groupBy({
+        by: ["productId"],
+        where: { productId: { in: productIds } },
+        _count: { _all: true },
+      })
+    : [];
+  const watcherCountById = new Map(
+    watchersGrouped.map((g) => [g.productId, g._count._all]),
+  );
+  const productsWithWatchers = products.map((p) => ({
+    ...p,
+    watcherCount: watcherCountById.get(p.id) ?? 0,
+  }));
+
   const categories = await categoriesPromise;
-  return { products, totalCount, categories };
+  return { products: productsWithWatchers, totalCount, categories };
 }
 
 export default async function AdminProductsPage({
@@ -168,6 +220,7 @@ export default async function AdminProductsPage({
     status?: string;
     category?: string;
     missing?: string;
+    sort?: string;
   }>;
 }) {
   await connection();
@@ -181,6 +234,7 @@ export default async function AdminProductsPage({
       ? (params.missing as MissingKind)
       : null
   );
+  const sort: SortKind = params.sort === "watchers" ? "watchers" : "newest";
 
   const { products, totalCount, categories } = await getProductsPageData(
     currentPage,
@@ -188,6 +242,7 @@ export default async function AdminProductsPage({
     statusFilter,
     categoryFilter,
     missingFilter,
+    sort,
   );
 
   // Build URL helper preserving other params
@@ -197,6 +252,7 @@ export default async function AdminProductsPage({
     if (statusFilter !== "all") p.set("status", statusFilter);
     if (categoryFilter) p.set("category", categoryFilter);
     if (missingFilter) p.set("missing", missingFilter);
+    if (sort !== "newest") p.set("sort", sort);
     // Apply overrides
     for (const [k, v] of Object.entries(overrides)) {
       if (v) {
@@ -316,6 +372,31 @@ export default async function AdminProductsPage({
               ))}
             </>
           )}
+        </div>
+
+        {/* Sort pills */}
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <span className="text-muted-foreground">Řadit:</span>
+          <Link
+            href={filterUrl({ sort: "" })}
+            className={`rounded-full px-3 py-1 font-medium transition-colors ${
+              sort === "newest"
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+          >
+            Nejnovější
+          </Link>
+          <Link
+            href={filterUrl({ sort: "watchers" })}
+            className={`rounded-full px-3 py-1 font-medium transition-colors ${
+              sort === "watchers"
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+          >
+            Nejsledovanější
+          </Link>
         </div>
       </div>
 
