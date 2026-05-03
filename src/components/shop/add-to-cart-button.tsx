@@ -10,7 +10,6 @@ import { SizeGuide } from "@/components/shop/size-guide";
 import { MobileStickyAtc } from "@/components/shop/mobile-sticky-atc";
 import { getImageUrls } from "@/lib/images";
 import { flyToCart } from "@/lib/fly-to-cart";
-import confetti from "canvas-confetti";
 
 interface AddToCartProps {
   product: {
@@ -42,11 +41,14 @@ export function AddToCartButton({ product, hideSize = false }: AddToCartProps) {
   const isInCart = items.some((i) => i.productId === product.id);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  const fireConfetti = useCallback(() => {
+  // Lazy-load canvas-confetti only on first add-to-cart — keeps it out of the
+  // public PDP/homepage initial bundle (~12kB raw, only used after interaction).
+  const fireConfetti = useCallback(async () => {
     if (!buttonRef.current) return;
     const rect = buttonRef.current.getBoundingClientRect();
     const x = (rect.left + rect.width / 2) / window.innerWidth;
     const y = (rect.top + rect.height / 2) / window.innerHeight;
+    const { default: confetti } = await import("canvas-confetti");
     confetti({
       particleCount: 40,
       spread: 60,

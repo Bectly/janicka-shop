@@ -149,10 +149,18 @@ const nextConfig: NextConfig = {
     //     ever cache one user's response into another's view.
     //   Order matters in headers(): private surfaces are listed FIRST so the
     //   broader public catch-alls don't accidentally widen them.
+    // CATALOG_LIST_CACHE: 5min edge TTL + 10min SWR for catalog index pages
+    // (homepage, /products, /collections, /category). Second-hand inventory is
+    // low-write — admin add/edit fires revalidateTag("products") so CF picks up
+    // changes within 5min anyway. Bumped from 60→300 in C5185 (perf task #967).
+    // PDP (/products/:path*) and /search stay on the shorter PUBLIC_CACHE since
+    // PDP product fields change more often and /search is per-query.
+    const CATALOG_LIST_CACHE = "public, s-maxage=300, stale-while-revalidate=600";
     const PUBLIC_CACHE = "public, s-maxage=60, stale-while-revalidate=300";
     const STATIC_PAGE_CACHE = "public, s-maxage=3600, stale-while-revalidate=86400";
     const PRIVATE_NEVER = "private, no-store, no-cache, must-revalidate";
 
+    const cacheCatalogList = [{ key: "Cache-Control", value: CATALOG_LIST_CACHE }];
     const cachePublic = [{ key: "Cache-Control", value: PUBLIC_CACHE }];
     const cacheStatic = [{ key: "Cache-Control", value: STATIC_PAGE_CACHE }];
     const cachePrivate = [{ key: "Cache-Control", value: PRIVATE_NEVER }];
@@ -185,13 +193,14 @@ const nextConfig: NextConfig = {
       { source: "/privacy", headers: cacheStatic },
       { source: "/sitemap.xml", headers: cacheStatic },
       { source: "/robots.txt", headers: cacheStatic },
-      // Catalog / homepage / PDP — short edge TTL, long SWR
-      { source: "/", headers: cachePublic },
-      { source: "/products", headers: cachePublic },
+      // Catalog list pages — 5min edge TTL, 10min SWR (revalidateTag flushes on admin write)
+      { source: "/", headers: cacheCatalogList },
+      { source: "/products", headers: cacheCatalogList },
+      { source: "/collections", headers: cacheCatalogList },
+      { source: "/collections/:path*", headers: cacheCatalogList },
+      { source: "/category/:path*", headers: cacheCatalogList },
+      // PDP + search — keep short TTL (PDP fields change often, search is per-query)
       { source: "/products/:path*", headers: cachePublic },
-      { source: "/collections", headers: cachePublic },
-      { source: "/collections/:path*", headers: cachePublic },
-      { source: "/category/:path*", headers: cachePublic },
       { source: "/search", headers: cachePublic },
       // Security headers — apply to everything
       {
