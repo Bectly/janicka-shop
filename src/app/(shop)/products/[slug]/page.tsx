@@ -774,6 +774,13 @@ export default async function ProductDetailPage({ params }: Props) {
                 <span className="text-xs font-semibold tracking-wider text-foreground">Rozměry kusu</span>
                 <span className="text-xs text-muted-foreground/40" aria-hidden="true">·</span>
                 <MeasurementGuide />
+                <span className="text-xs text-muted-foreground/40" aria-hidden="true">·</span>
+                <Link
+                  href="/rozmery"
+                  className="inline-flex items-center gap-1 rounded-sm text-[11px] font-medium text-primary transition-colors duration-150 hover:text-primary/80 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-1"
+                >
+                  Tabulka velikostí
+                </Link>
                 <span className="ml-auto hidden text-xs text-muted-foreground sm:inline">v cm · ploché položení</span>
                 {garmentIcon && (
                   <span

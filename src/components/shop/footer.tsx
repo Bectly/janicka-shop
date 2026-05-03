@@ -35,6 +35,7 @@ const baseFooterLinks = {
       { name: "Kontaktujte nás", href: "/contact" },
       { name: "Reklamace", href: "/returns" },
       { name: "Sledování objednávky", href: "/objednavka" },
+      { name: "Tabulka velikostí", href: "/rozmery" },
     ],
   },
 };
