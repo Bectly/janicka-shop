@@ -73,7 +73,12 @@ const BASE_URL = getSiteUrl();
 
 async function getProduct(slug: string) {
   "use cache";
-  cacheLife("hours");
+  // Trace #958 F4: tightened from "hours" → "minutes" so Next.js 16 cacheComponents
+  // auto-emits Cache-Control: s-maxage=60 (matching the previous next.config.ts
+  // /products/:path* rule we removed). The blanket rule was poisoning soft-404s
+  // with 60s public cache; relying on cacheLife instead lets notFound() emit
+  // its proper no-store header for missing slugs.
+  cacheLife("minutes");
   cacheTag(`product-${slug}`, "products");
   const product = await getProductBySlug(slug);
   if (!product) return null;
@@ -279,7 +284,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const product = await getProduct(slug);
 
-  if (!product) notFound();
+  // Soft-404 metadata: when slug doesn't resolve, emit no-index head so
+  // crawlers don't keep the URL in the index even if CF edge briefly serves
+  // the response. The page component still throws notFound() below, which
+  // sets the response status to 404 — these two work together.
+  if (!product) {
+    return {
+      title: "Stránka nenalezena · Janička",
+      description: "Tento kousek už není k mání nebo URL neexistuje.",
+      robots: { index: false, follow: false },
+    };
+  }
 
   const structuredImages = parseProductImages(product.images);
   const imageUrls = structuredImages.map((img) => img.url);

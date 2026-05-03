@@ -199,8 +199,11 @@ const nextConfig: NextConfig = {
       { source: "/collections", headers: cacheCatalogList },
       { source: "/collections/:path*", headers: cacheCatalogList },
       { source: "/category/:path*", headers: cacheCatalogList },
-      // PDP + search — keep short TTL (PDP fields change often, search is per-query)
-      { source: "/products/:path*", headers: cachePublic },
+      // PDP cache is now driven by `export const revalidate = 60` inside
+      // src/app/(shop)/products/[slug]/page.tsx so Next.js can emit no-store
+      // automatically for soft-404 responses (a blanket /products/:path* rule
+      // here would override Next's 404 default and poison CF edge — Trace #958
+      // F4). /search keeps its short PUBLIC_CACHE because it's per-query.
       { source: "/search", headers: cachePublic },
       // Security headers — apply to everything
       {

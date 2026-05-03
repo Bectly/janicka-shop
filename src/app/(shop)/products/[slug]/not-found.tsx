@@ -1,11 +1,18 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { connection } from "next/server";
 import { ArrowLeft, ArrowRight, PackageX } from "lucide-react";
 import { getDb } from "@/lib/db";
 import { ProductCard } from "@/components/shop/product-card";
 import { Button } from "@/components/ui/button";
 import { getLowestPrices30d } from "@/lib/price-history";
+
+export const metadata: Metadata = {
+  title: "Stránka nenalezena · Janička",
+  description: "Tento kousek už není k mání nebo URL neexistuje.",
+  robots: { index: false, follow: false },
+};
 
 async function ProductNotFoundContent() {
   await connection();
