@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
 import { logger } from "@/lib/logger";
+import { getDb } from "@/lib/db";
 import {
   bumpMailboxBadges,
   persistInboundMail,
   type InboundMail,
 } from "@/lib/email/inbound-persist";
+import { fetchResendEmailBody } from "@/lib/email/fetch-resend-body";
 
 /**
  * Resend Inbound webhook. Receives parsed mail JSON, verifies HMAC over the
@@ -69,7 +71,15 @@ export async function POST(req: NextRequest) {
 
   try {
     const result = await persistInboundMail(mail);
-    if (result === "inserted") bumpMailboxBadges();
+    if (result === "inserted") {
+      bumpMailboxBadges();
+      // Resend's webhook payload omits body text/html and full headers — fetch
+      // them via GET /emails/:id and patch the row. Fire-and-forget: Resend
+      // retries on 5xx, so the response must return 200 immediately.
+      if (mail.resendEmailId) {
+        void backfillResendBody(mail.messageId, mail.resendEmailId);
+      }
+    }
     return NextResponse.json({ ok: true, result });
   } catch (err) {
     logger.error("[resend-inbound] persist failed", {
@@ -233,8 +243,14 @@ function mapResendPayload(raw: unknown): InboundMail | null {
     }
   }
 
+  const resendEmailId =
+    typeof data.email_id === "string" && data.email_id.trim()
+      ? data.email_id.trim()
+      : null;
+
   return {
     messageId,
+    resendEmailId,
     inReplyTo,
     references,
     fromAddress: fromAddr.address,
@@ -302,4 +318,33 @@ function toArray(v: string[] | string | null | undefined): string[] {
     if (parsed.address) out.push(parsed.address);
   }
   return Array.from(new Set(out));
+}
+
+/**
+ * Resend's Inbound webhook (2025+) omits text/html/full headers — fetch them
+ * via GET /emails/:id and patch the persisted row. Errors are logged, never
+ * thrown: the row is already persisted with metadata + we want the webhook to
+ * keep returning 200.
+ */
+async function backfillResendBody(messageId: string, resendEmailId: string): Promise<void> {
+  try {
+    const body = await fetchResendEmailBody(resendEmailId);
+    if (!body) return;
+    if (!body.text && !body.html && !body.headersRaw) return;
+    const db = await getDb();
+    await db.emailMessage.update({
+      where: { messageId },
+      data: {
+        bodyText: body.text ?? undefined,
+        bodyHtml: body.html ?? undefined,
+        headersRaw: body.headersRaw ?? undefined,
+      },
+    });
+  } catch (err) {
+    logger.error("[resend-inbound] body backfill failed", {
+      messageId,
+      resendEmailId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
 }

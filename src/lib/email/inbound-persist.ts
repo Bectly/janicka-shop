@@ -11,6 +11,7 @@ import { logger } from "@/lib/logger";
  */
 export type InboundMail = {
   messageId: string;
+  resendEmailId?: string | null;
   inReplyTo?: string | null;
   references?: string[];
   fromAddress: string;
@@ -132,6 +133,7 @@ export async function persistInboundMail(mail: InboundMail): Promise<PersistResu
     data: {
       threadId,
       messageId,
+      resendEmailId: mail.resendEmailId?.trim() || null,
       inReplyTo,
       referencesIds: referencesIds.length ? JSON.stringify(referencesIds) : null,
       direction: "inbound",

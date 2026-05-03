@@ -627,6 +627,7 @@ model EmailMessage {
   threadId     String
   thread       EmailThread        @relation(fields: [threadId], references: [id], onDelete: Cascade)
   messageId    String             @unique // RFC Message-ID header, used for dedup
+  resendEmailId String?           // Resend internal UUID (data.email_id from inbound webhook); used for post-persist body fetch
   inReplyTo    String?            // parent Message-ID
   referencesIds String?           // JSON array of referenced Message-IDs
   direction    String             @default("inbound") // "inbound" | "outbound"
@@ -648,6 +649,7 @@ model EmailMessage {
   @@index([threadId, receivedAt])
   @@index([receivedAt])
   @@index([fromAddress])
+  @@index([resendEmailId])
 }
 
 model EmailAttachment {
