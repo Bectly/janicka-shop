@@ -186,6 +186,28 @@ test.describe("Admin auth gate — middleware + server actions", () => {
     expect(body).not.toHaveProperty("orders");
   });
 
+  test("customer session → 401 on PATCH /api/admin/onboard (H-1 close-out)", async ({ page, request, context }) => {
+    await registerAndLoginCustomer(page, request);
+    const cookies = await context.cookies();
+    const hasSession = cookies.some(
+      (c) =>
+        c.name === "authjs.session-token" ||
+        c.name === "__Secure-authjs.session-token",
+    );
+    test.skip(
+      !hasSession,
+      "Customer login flow did not set a NextAuth session cookie in this env",
+    );
+
+    const res = await request.patch("/api/admin/onboard");
+    expect(res.status()).toBe(401);
+  });
+
+  test("anonymous PATCH /api/admin/onboard → 401", async ({ request }) => {
+    const res = await request.patch("/api/admin/onboard");
+    expect(res.status()).toBe(401);
+  });
+
   test("customer session bounces from admin layout to /admin/login", async ({ page, request, context }) => {
     await registerAndLoginCustomer(page, request);
     const cookies = await context.cookies();
