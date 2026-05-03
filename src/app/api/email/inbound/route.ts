@@ -48,27 +48,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid_json" }, { status: 400 });
   }
 
+  // Filter: Resend webhook fires for many event types (delivery_delayed,
+  // delivered, bounced, opened, clicked, ...). Only `email.received` is the
+  // inbound mail event — for everything else, ack 200 so Resend stops retrying.
+  const eventType =
+    payload && typeof payload === "object"
+      ? (payload as { type?: unknown }).type
+      : undefined;
+  if (typeof eventType === "string" && eventType !== "email.received") {
+    return NextResponse.json({ ok: true, ignored: eventType });
+  }
+
   const mail = mapResendPayload(payload);
   if (!mail) {
-    // Log shape (no body content) so we can adapt to whatever Resend sends.
-    const shape =
-      payload && typeof payload === "object"
-        ? {
-            topKeys: Object.keys(payload as Record<string, unknown>).slice(0, 20),
-            type: (payload as { type?: unknown }).type ?? null,
-            dataKeys:
-              typeof (payload as { data?: unknown }).data === "object"
-                ? Object.keys((payload as { data: Record<string, unknown> }).data).slice(0, 30)
-                : null,
-            fromShape: typeof (payload as { data?: { from?: unknown } }).data?.from,
-            toShape: typeof (payload as { data?: { to?: unknown } }).data?.to,
-            headersShape:
-              Array.isArray((payload as { data?: { headers?: unknown } }).data?.headers)
-                ? "array"
-                : typeof (payload as { data?: { headers?: unknown } }).data?.headers,
-          }
-        : { topKeys: [], note: "payload not object" };
-    logger.warn("[resend-inbound] payload missing required fields", { shape });
+    logger.warn("[resend-inbound] payload missing required fields", {
+      type: eventType ?? null,
+    });
     return NextResponse.json({ error: "missing_fields" }, { status: 400 });
   }
 
@@ -163,6 +158,7 @@ interface ResendInboundData {
   from?: string | { email?: string; name?: string } | null;
   to?: string[] | string | null;
   cc?: string[] | string | null;
+  bcc?: string[] | string | null;
   subject?: string | null;
   text?: string | null;
   html?: string | null;
@@ -175,6 +171,10 @@ interface ResendInboundData {
     contentBase64?: string | null;
   }> | null;
   date?: string | null;
+  // Resend Inbound 2025+ (top-level fields, no `headers` envelope):
+  message_id?: string | null;
+  email_id?: string | null;
+  created_at?: string | null;
 }
 
 /**
@@ -187,11 +187,18 @@ function mapResendPayload(raw: unknown): InboundMail | null {
   const env = raw as ResendInboundPayload;
   const data: ResendInboundData = (env.data ?? (raw as ResendInboundData)) || {};
 
+  // Message-ID resolution: Resend Inbound 2025+ puts the RFC822 Message-ID
+  // at data.message_id (top-level). Older/beta puts it in headers. Fall back
+  // to synthesizing from email_id so we always have a stable thread key.
   const headers = normalizeHeaders(data.headers);
-  const messageId =
+  let messageId =
+    (typeof data.message_id === "string" ? data.message_id.trim() : "") ||
     headers["message-id"]?.trim() ||
     headers["message-Id"]?.trim() ||
     "";
+  if (!messageId && typeof data.email_id === "string" && data.email_id.trim()) {
+    messageId = `<resend-${data.email_id.trim()}@jvsatnik.cz>`;
+  }
   if (!messageId) return null;
 
   const fromAddr = pickFrom(data.from);
@@ -206,7 +213,9 @@ function mapResendPayload(raw: unknown): InboundMail | null {
     ? referencesRaw.split(/\s+/).map((r) => r.trim()).filter(Boolean)
     : [];
 
-  const receivedAt = data.date ? new Date(data.date) : new Date();
+  // Resend Inbound 2025+ uses created_at (ISO) instead of `date`.
+  const receivedAtSource = data.date || data.created_at;
+  const receivedAt = receivedAtSource ? new Date(receivedAtSource) : new Date();
 
   const attachments: InboundMail["attachments"] = [];
   for (const att of data.attachments ?? []) {
