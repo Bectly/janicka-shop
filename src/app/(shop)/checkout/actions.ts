@@ -10,6 +10,7 @@ import { sendOrderConfirmationEmail, sendAdminNewOrderEmail } from "@/lib/email"
 import { dispatchEmail } from "@/lib/email-dispatch";
 import { sendSimilarItemNotifications } from "@/lib/email/similar-item";
 import { sendWishlistSoldNotifications } from "@/lib/email/wishlist-sold";
+import { sweepSoldPriceWatchers } from "@/lib/email/price-drop";
 import { logOrderToHeureka } from "@/lib/heureka";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { invalidateProductCaches } from "@/lib/redis";
@@ -542,6 +543,12 @@ export async function createOrder(
   // Notify wishlist subscribers that their saved item just sold (fire-and-forget)
   sendWishlistSoldNotifications(order.soldProducts).catch((e) =>
     logger.error("[Checkout] Wishlist sold notify:", e),
+  );
+
+  // Notify price-drop watchers (#980) that the item is gone — sends "sold + 3 podobné"
+  // and deletes the watcher rows so future price changes don't fire on a dead product.
+  sweepSoldPriceWatchers(order.soldProducts).catch((e) =>
+    logger.error("[Checkout] Price-watch sold sweep:", e),
   );
 
   // P4.2: Enqueue order confirmation email on BullMQ (fire-and-forget).

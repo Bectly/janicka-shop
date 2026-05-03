@@ -308,6 +308,21 @@ model WishlistSubscription {
   @@index([notifiedAt])
 }
 
+// Price-drop watcher (#980).
+model PriceWatch {
+  id           String   @id @default(cuid())
+  email        String
+  productId    String
+  currentPrice Float
+  userId       String?
+  unsubToken   String   @unique
+  createdAt    DateTime @default(now())
+
+  @@unique([email, productId])
+  @@index([productId])
+  @@index([email])
+}
+
 // Cross-pipeline notify dedup gate (#556). The three product-notify pipelines
 // (BackInStockSubscription cron, WishlistSubscription on sold, ProductNotifyRequest
 // similar-item cron) can each fire for the same (email, productId) when one event

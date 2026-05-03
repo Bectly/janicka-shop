@@ -15,6 +15,7 @@ import { getLowestPrices30d } from "@/lib/price-history";
 import { buildProductSchema, buildBreadcrumbSchema, buildFaqSchema, buildVideoObjectSchema, jsonLdString } from "@/lib/structured-data";
 import { ShareButtons } from "@/components/shop/share-buttons";
 import { WishlistButton } from "@/components/shop/wishlist-button";
+import { PriceWatchButton } from "@/components/shop/price-watch-button";
 import {
   TrackProductView,
   RecentlyViewedSection,
@@ -835,9 +836,10 @@ export default async function ProductDetailPage({ params }: Props) {
             );
           })()}
 
-          {/* Social sharing + wishlist */}
-          <div className="mt-4 flex items-center gap-3">
+          {/* Social sharing + wishlist + price watcher */}
+          <div className="mt-4 flex flex-wrap items-center gap-3">
             <WishlistButton productId={product.id} variant="detail" />
+            <PriceWatchButton productId={product.id} />
             <ShareButtons
               url={`${BASE_URL}/products/${product.slug}`}
               title={product.name}

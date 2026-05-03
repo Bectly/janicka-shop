@@ -11,6 +11,8 @@ import { rateLimitAdmin } from "@/lib/rate-limit";
 import { parseDefectImages, serializeDefectImages } from "@/lib/defects";
 import { ALL_SIZES } from "@/lib/sizes";
 import { computeBulkPrice } from "./bulk-price";
+import { triggerPriceWatchEmails } from "@/lib/email/price-drop";
+import { logger } from "@/lib/logger";
 
 const CONDITION_VALUES = [
   "new_with_tags",
@@ -299,6 +301,7 @@ export async function updateProduct(id: string, formData: FormData) {
       data: { productId: id, price: current.price },
     });
   }
+  const priceDropped = current ? current.price > parsed.price : false;
 
   await db.product.update({
     where: { id },
@@ -337,6 +340,17 @@ export async function updateProduct(id: string, formData: FormData) {
   revalidatePath(`/products/${slug}`);
   revalidatePath("/products");
   revalidatePath("/");
+
+  if (priceDropped) {
+    after(async () => {
+      try {
+        await triggerPriceWatchEmails(id, parsed.price);
+      } catch (err) {
+        logger.error("[updateProduct] price-watch fan-out failed:", err);
+      }
+    });
+  }
+
   redirect("/admin/products");
 }
 
@@ -651,6 +665,7 @@ export async function bulkUpdatePrice(
   });
 
   let affected = 0;
+  const drops: Array<{ id: string; newPrice: number }> = [];
   for (const p of products) {
     const next = computeBulkPrice(p.price, parsed.mode, parsed.value);
     if (next === p.price) continue;
@@ -663,6 +678,7 @@ export async function bulkUpdatePrice(
       data: { price: next },
     });
     revalidateTag(`product-${p.slug}`, "max");
+    if (next < p.price) drops.push({ id: p.id, newPrice: next });
     affected++;
   }
 
@@ -672,6 +688,18 @@ export async function bulkUpdatePrice(
   revalidatePath("/admin/products");
   revalidatePath("/products");
   revalidatePath("/");
+
+  if (drops.length > 0) {
+    after(async () => {
+      for (const d of drops) {
+        try {
+          await triggerPriceWatchEmails(d.id, d.newPrice);
+        } catch (err) {
+          logger.error("[bulkUpdatePrice] price-watch fan-out failed:", err);
+        }
+      }
+    });
+  }
 
   return { affected };
 }
@@ -716,6 +744,8 @@ export async function updateProductQuick(
       data: { productId: id, price: current.price },
     });
   }
+  const priceDropped =
+    parsed.price !== undefined && parsed.price < current.price;
 
   const updated = await db.product.update({
     where: { id },
@@ -730,6 +760,16 @@ export async function updateProductQuick(
   revalidatePath("/admin/products");
   revalidatePath("/products");
   revalidatePath("/");
+
+  if (priceDropped) {
+    after(async () => {
+      try {
+        await triggerPriceWatchEmails(id, parsed.price!);
+      } catch (err) {
+        logger.error("[updateProductQuick] price-watch fan-out failed:", err);
+      }
+    });
+  }
 
   return { ok: true, product: updated };
 }

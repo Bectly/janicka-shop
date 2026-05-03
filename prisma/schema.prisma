@@ -308,6 +308,25 @@ model WishlistSubscription {
   @@index([notifiedAt])
 }
 
+// Price-drop watcher (#980). Visitor opts in on PDP "Sledovat cenu" → row created
+// with the price at opt-in time. Admin lowers price → admin actions fire
+// triggerPriceWatchEmails() which fans out a Resend email to every watcher whose
+// stored currentPrice > newPrice, then bumps their currentPrice to the new value
+// so a single drop only emails once. unsubToken is HMAC-signed (signUnsubscribeToken).
+model PriceWatch {
+  id           String   @id @default(cuid())
+  email        String
+  productId    String
+  currentPrice Float    // price at opt-in / last notified — gate for next email
+  userId       String?  // optional Customer id when opt-in was authenticated
+  unsubToken   String   @unique
+  createdAt    DateTime @default(now())
+
+  @@unique([email, productId])
+  @@index([productId])
+  @@index([email])
+}
+
 // Cross-pipeline notify dedup gate (#556). The three product-notify pipelines
 // (BackInStockSubscription cron, WishlistSubscription on sold, ProductNotifyRequest
 // similar-item cron) can each fire for the same (email, productId) when one event
