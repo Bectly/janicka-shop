@@ -165,6 +165,7 @@ export function AnalyticsSection({
                               alt={p.name}
                               width={28}
                               height={28}
+                              unoptimized
                               className="size-7 shrink-0 rounded-md object-cover"
                             />
                           )}
@@ -269,6 +270,7 @@ export function AnalyticsSection({
                             alt={p.name}
                             width={28}
                             height={28}
+                            unoptimized
                             className="size-7 shrink-0 rounded-md object-cover"
                           />
                         )}

@@ -166,6 +166,7 @@ export function BulkProductTable({ products, query }: BulkProductTableProps) {
                             alt=""
                             width={40}
                             height={40}
+                            unoptimized
                             className="size-10 rounded-md object-cover"
                           />
                         ) : (

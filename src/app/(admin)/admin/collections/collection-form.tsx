@@ -267,6 +267,7 @@ export function CollectionForm({ collection, allProducts }: CollectionFormProps)
                         alt={product.name}
                         width={40}
                         height={40}
+                        unoptimized
                         className="size-full object-cover"
                       />
                     ) : (
@@ -338,6 +339,7 @@ export function CollectionForm({ collection, allProducts }: CollectionFormProps)
                         alt={product.name}
                         width={32}
                         height={32}
+                        unoptimized
                         className="size-full object-cover"
                       />
                     ) : (

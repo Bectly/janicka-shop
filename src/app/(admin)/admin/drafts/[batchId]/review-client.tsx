@@ -1580,6 +1580,7 @@ function DraftImages({ images }: { images: string[] }) {
           src={images[0]}
           alt="Hlavní foto"
           fill
+          unoptimized
           className="object-cover"
           sizes="160px"
         />
@@ -1595,6 +1596,7 @@ function DraftImages({ images }: { images: string[] }) {
                 src={url}
                 alt={`Foto ${idx + 2}`}
                 fill
+                unoptimized
                 className="object-cover"
                 sizes="56px"
               />

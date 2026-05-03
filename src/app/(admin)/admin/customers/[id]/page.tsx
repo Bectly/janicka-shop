@@ -529,6 +529,7 @@ export default async function CustomerDetailPage({
                         src={thumb}
                         alt={w.product.name}
                         fill
+                        unoptimized
                         sizes="56px"
                         className="object-cover"
                       />

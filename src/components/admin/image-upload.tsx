@@ -270,6 +270,7 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
                   src={url}
                   alt={`Produkt ${index + 1}`}
                   fill
+                  unoptimized
                   className="pointer-events-none object-cover"
                   draggable={false}
                   sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
