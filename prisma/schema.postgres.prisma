@@ -971,3 +971,66 @@ model SiteSetting {
   value     String
   updatedAt DateTime @updatedAt
 }
+
+// Workspace Phase P11a — per-tab AI workspace for admin Manažerka.
+model ManagerWorkspaceTab {
+  id             String              @id @default(cuid())
+  projectId      Int
+  title          String
+  status         String              @default("active") // active | pinned | archived
+  createdBy      String
+  createdAt      DateTime            @default(now())
+  lastActivityAt DateTime            @default(now())
+  settingsJson   Json                @default("{}")
+  messages       WorkspaceMessage[]
+  artifacts      WorkspaceArtifact[]
+  fsOps          WorkspaceFsOp[]
+
+  @@index([status, lastActivityAt])
+  @@index([projectId, lastActivityAt])
+}
+
+model WorkspaceMessage {
+  id             String              @id @default(cuid())
+  tabId          String
+  tab            ManagerWorkspaceTab @relation(fields: [tabId], references: [id], onDelete: Cascade)
+  role           String              // user | manager | system
+  contentMd      String
+  attachmentJson Json                @default("[]")
+  createdAt      DateTime            @default(now())
+  readAt         DateTime?
+  processedAt    DateTime?
+  artifacts      WorkspaceArtifact[]
+
+  @@index([tabId, createdAt])
+}
+
+model WorkspaceArtifact {
+  id          String              @id @default(cuid())
+  tabId       String
+  tab         ManagerWorkspaceTab @relation(fields: [tabId], references: [id], onDelete: Cascade)
+  messageId   String?
+  message     WorkspaceMessage?   @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  kind        String              // analysis | calculation | preview | download | proposal
+  titleCs     String
+  contentMd   String
+  contentJson Json                @default("{}")
+  downloadUrl String?
+  pinned      Boolean             @default(false)
+  createdAt   DateTime            @default(now())
+
+  @@index([tabId, createdAt])
+}
+
+model WorkspaceFsOp {
+  id       String              @id @default(cuid())
+  tabId    String
+  tab      ManagerWorkspaceTab @relation(fields: [tabId], references: [id], onDelete: Cascade)
+  opType   String              // read | write | delete | exec
+  path     String
+  bytes    BigInt?
+  exitCode Int?
+  ts       DateTime            @default(now())
+
+  @@index([tabId, ts])
+}
