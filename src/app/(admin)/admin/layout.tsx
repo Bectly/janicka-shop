@@ -8,6 +8,7 @@ import { AdminSidebar, AdminSidebarMobileTrigger } from "@/components/admin/side
 import { AdminOrderNotifier } from "@/components/admin/order-notifier";
 import { GlobalSearch } from "@/components/admin/global-search";
 import { Breadcrumbs } from "@/components/admin/breadcrumbs";
+import { AdminQueryProvider } from "@/components/admin/query-provider";
 
 // #524f Phase 1b: opt-in wall-clock instrumentation for pre/post cache-fix
 // baseline. Enable by setting PERF_PROFILE=1 in Vercel env. Emits console.time
@@ -105,10 +106,12 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen bg-muted/30">
-      <Suspense>
-        <AdminAuthGate>{children}</AdminAuthGate>
-      </Suspense>
-    </div>
+    <AdminQueryProvider>
+      <div className="flex min-h-screen bg-muted/30">
+        <Suspense>
+          <AdminAuthGate>{children}</AdminAuthGate>
+        </Suspense>
+      </div>
+    </AdminQueryProvider>
   );
 }
