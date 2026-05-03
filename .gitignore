@@ -45,3 +45,8 @@ next-env.d.ts
 # Prisma sqlite WAL/SHM files (committed by accident)
 prisma/dev.db-wal
 prisma/dev.db-shm
+
+# Lighthouse raw artifacts — convention is /tmp/lighthouse, summary.md goes in repo
+# See docs/runbooks/perf-audit-convention.md
+docs/perf-reports/*.report.json
+docs/perf-reports/*.report.html
