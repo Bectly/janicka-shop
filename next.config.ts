@@ -128,7 +128,72 @@ const nextConfig: NextConfig = {
     ];
   },
   async headers() {
+    // Cache-Control posture (added 2026-05-03):
+    //   The shop now lives on Hetzner behind Cloudflare. The origin emits NO
+    //   cache hints by default → CF returns DYNAMIC for every page → every
+    //   visitor round-trips to Hetzner, no edge cache, no compounding hits.
+    //
+    //   Strategy:
+    //   - Public catalog (/, /products, /products/[slug], /collections,
+    //     /search) emits a short edge-tier TTL with a generous SWR window.
+    //     Admin updates a product → existing revalidateTag("products")
+    //     invalidates the in-memory "use cache" layer immediately; CF picks
+    //     up the new HTML within 60s and serves stale-while-revalidate up
+    //     to 5 min after.
+    //   - Static-ish marketing pages (/about·/contact·/shipping·/returns·
+    //     /terms·/privacy·sitemap·robots) cache for an hour at the edge.
+    //   - All authenticated/per-user/write surfaces (/admin, /api, /account,
+    //     /oblibene, /cart, /checkout, /login, /register, /reset-password,
+    //     /verify-email-change, /order, /objednavka) emit explicit
+    //     `private, no-store` so neither CF nor any intermediate proxy can
+    //     ever cache one user's response into another's view.
+    //   Order matters in headers(): private surfaces are listed FIRST so the
+    //   broader public catch-alls don't accidentally widen them.
+    const PUBLIC_CACHE = "public, s-maxage=60, stale-while-revalidate=300";
+    const STATIC_PAGE_CACHE = "public, s-maxage=3600, stale-while-revalidate=86400";
+    const PRIVATE_NEVER = "private, no-store, no-cache, must-revalidate";
+
+    const cachePublic = [{ key: "Cache-Control", value: PUBLIC_CACHE }];
+    const cacheStatic = [{ key: "Cache-Control", value: STATIC_PAGE_CACHE }];
+    const cachePrivate = [{ key: "Cache-Control", value: PRIVATE_NEVER }];
+
     return [
+      // Private / per-user — listed first
+      { source: "/admin/:path*", headers: cachePrivate },
+      { source: "/api/:path*", headers: cachePrivate },
+      { source: "/account/:path*", headers: cachePrivate },
+      { source: "/oblibene", headers: cachePrivate },
+      { source: "/oblibene/:path*", headers: cachePrivate },
+      { source: "/cart", headers: cachePrivate },
+      { source: "/cart/:path*", headers: cachePrivate },
+      { source: "/checkout", headers: cachePrivate },
+      { source: "/checkout/:path*", headers: cachePrivate },
+      { source: "/login", headers: cachePrivate },
+      { source: "/register", headers: cachePrivate },
+      { source: "/reset-password", headers: cachePrivate },
+      { source: "/reset-password/:path*", headers: cachePrivate },
+      { source: "/verify-email-change", headers: cachePrivate },
+      { source: "/order/:path*", headers: cachePrivate },
+      { source: "/objednavka/:path*", headers: cachePrivate },
+      // Static-ish marketing pages
+      { source: "/about", headers: cacheStatic },
+      { source: "/contact", headers: cacheStatic },
+      { source: "/shipping", headers: cacheStatic },
+      { source: "/returns", headers: cacheStatic },
+      { source: "/returns/:path*", headers: cacheStatic },
+      { source: "/terms", headers: cacheStatic },
+      { source: "/privacy", headers: cacheStatic },
+      { source: "/sitemap.xml", headers: cacheStatic },
+      { source: "/robots.txt", headers: cacheStatic },
+      // Catalog / homepage / PDP — short edge TTL, long SWR
+      { source: "/", headers: cachePublic },
+      { source: "/products", headers: cachePublic },
+      { source: "/products/:path*", headers: cachePublic },
+      { source: "/collections", headers: cachePublic },
+      { source: "/collections/:path*", headers: cachePublic },
+      { source: "/category/:path*", headers: cachePublic },
+      { source: "/search", headers: cachePublic },
+      // Security headers — apply to everything
       {
         source: "/(.*)",
         headers: [
