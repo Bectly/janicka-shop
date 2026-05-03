@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { logger } from "@/lib/logger";
+import { REPLY_TO } from "@/lib/email/addresses";
 
 let cached: ResendMailer | null | undefined;
 
@@ -70,13 +71,19 @@ export function getMailer(): ResendMailer | null {
 
       const toList = Array.isArray(opts.to) ? opts.to : [opts.to];
 
+      // Default Reply-To so customer replies hit the shared inbox we ingest
+      // via the Resend Inbound webhook. Mirror the alias that the message was
+      // sent from (objednavky → objednavky reply, etc.); fall back to global
+      // EMAIL_REPLY_TO for senders that don't match a known alias.
+      const replyTo = opts.replyTo ?? deriveReplyTo(opts.from);
+
       const payload = {
         from: opts.from,
         to: toList,
         subject: opts.subject,
         html: opts.html,
         text: opts.text,
-        replyTo: opts.replyTo,
+        replyTo,
         headers: Object.keys(headers).length ? headers : undefined,
         attachments: opts.attachments?.map((att) => ({
           filename: att.filename ?? "attachment",
@@ -111,4 +118,11 @@ export function getMailer(): ResendMailer | null {
   };
 
   return cached;
+}
+
+function deriveReplyTo(from: string): string {
+  const match = from.match(/<([^>]+)>/);
+  const addr = (match ? match[1] : from).trim().toLowerCase();
+  if (addr.endsWith("@jvsatnik.cz")) return addr;
+  return REPLY_TO;
 }

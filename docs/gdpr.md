@@ -1,7 +1,7 @@
 # GDPR — Customer Data Handling
 
 ## Data controller
-Janička Shop (provozovatel e-shopu). Kontakt: janicka@janicka-shop.cz.
+Janička Shop (provozovatel e-shopu). Kontakt: info@jvsatnik.cz.
 
 ## Lawful basis
 - Smluvní plnění (objednávky, doručení, reklamace)

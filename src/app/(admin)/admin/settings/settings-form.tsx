@@ -101,7 +101,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
               name="contactEmail"
               type="email"
               defaultValue={settings.contactEmail}
-              placeholder="info@janicka.cz"
+              placeholder="info@jvsatnik.cz"
               className="mt-1.5"
             />
           </div>

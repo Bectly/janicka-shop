@@ -41,7 +41,7 @@ export default async function WithdrawalFormPage() {
             <div className="mt-3 rounded-lg border border-dashed p-4 print:rounded-none">
               <p className="font-medium">Adresát:</p>
               <p className="mt-1">Janička Shop</p>
-              <p>E-mail: info@janicka.cz</p>
+              <p>E-mail: info@jvsatnik.cz</p>
             </div>
           </section>
 
@@ -168,7 +168,7 @@ export default async function WithdrawalFormPage() {
           <li>Vyplňte všechny údaje (název zboží, číslo objednávky, vaše jméno a adresu).</li>
           <li>
             Odešlete vyplněný formulář e-mailem na{" "}
-            <strong className="text-foreground">info@janicka.cz</strong> nebo
+            <strong className="text-foreground">info@jvsatnik.cz</strong> nebo
             poštou na naši adresu.
           </li>
           <li>Zboží zabalte a odešlete na adresu, kterou vám sdělíme v potvrzení přijetí odstoupení.</li>

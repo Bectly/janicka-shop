@@ -12,7 +12,7 @@ const contactInfo = [
   {
     icon: Mail,
     label: "E-mail",
-    value: "info@janicka.cz",
+    value: "info@jvsatnik.cz",
     gradient: "from-brand/[0.06] to-champagne-light/30",
     iconGradient: "from-brand/20 to-blush",
   },

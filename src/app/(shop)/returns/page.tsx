@@ -51,7 +51,7 @@ export default function ReturnsPage() {
           <ol className="mt-2 list-inside list-decimal space-y-2">
             <li>
               Kontaktujte nás e-mailem na{" "}
-              <strong className="text-foreground">info@janicka.cz</strong> s
+              <strong className="text-foreground">info@jvsatnik.cz</strong> s
               číslem objednávky a důvodem vrácení.
             </li>
             <li>
@@ -119,7 +119,7 @@ export default function ReturnsPage() {
           </h2>
           <p>
             E-mail:{" "}
-            <strong className="text-foreground">info@janicka.cz</strong>
+            <strong className="text-foreground">info@jvsatnik.cz</strong>
           </p>
           <p className="mt-1">
             Nebo využijte náš{" "}

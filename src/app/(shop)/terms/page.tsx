@@ -38,7 +38,7 @@ export default function TermsPage() {
             <p>Sídlo: [DOPLNIT ADRESA]</p>
             <p>
               E-mail:{" "}
-              <strong className="text-foreground">info@janicka.cz</strong>
+              <strong className="text-foreground">info@jvsatnik.cz</strong>
             </p>
             <p className="mt-2 text-xs">
               Prodávající není plátcem DPH, pokud není uvedeno jinak.
@@ -264,7 +264,7 @@ export default function TermsPage() {
               Reklamace a vrácení
             </Link>
             . Formulář je třeba odeslat na adresu{" "}
-            <strong className="text-foreground">info@janicka.cz</strong>.
+            <strong className="text-foreground">info@jvsatnik.cz</strong>.
           </p>
           <p className="mt-3">
             Zboží musí být vráceno nepoškozené, neprané, bez známek dalšího
@@ -296,7 +296,7 @@ export default function TermsPage() {
           </p>
           <p className="mt-3">
             Reklamaci lze uplatnit e-mailem na{" "}
-            <strong className="text-foreground">info@janicka.cz</strong>.
+            <strong className="text-foreground">info@jvsatnik.cz</strong>.
             Prodávající je povinen reklamaci vyřídit nejpozději do{" "}
             <strong className="text-foreground">30 dnů</strong> ode dne jejího
             uplatnění, pokud se smluvní strany nedohodly na lhůtě delší.

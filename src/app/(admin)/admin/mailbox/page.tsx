@@ -29,7 +29,7 @@ const FOLDER_LABELS: Record<MailboxFolder, string> = {
 
 const EMPTY_HINT: Record<MailboxFolder, string> = {
   inbox:
-    "E-maily pro admin@janicka.cz se zobrazí po nastavení IMAP přístupu (IMAP_HOST, IMAP_USER, IMAP_PASSWORD) ve Vercel.",
+    "E-maily pro info@jvsatnik.cz a další aliasy se zobrazí po zapnutí inbound (Cloudflare Email Routing → Resend Inbound webhook → /api/email/inbound, env RESEND_INBOUND_SECRET).",
   starred: "Označené hvězdičkou se zobrazí tady.",
   sent: "Odeslané zprávy se zobrazí tady.",
   archived: "Archivované konverzace se zobrazí tady.",

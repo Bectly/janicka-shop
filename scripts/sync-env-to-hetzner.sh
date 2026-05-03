@@ -145,9 +145,9 @@ NEXT_PUBLIC_R2_PUBLIC_URL=${r2_public}
 RESEND_API_KEY=${resend_key}
 RESEND_FROM_EMAIL=$(local_key RESEND_FROM_EMAIL)
 EMAIL_FROM=$(local_key RESEND_FROM_EMAIL)
-NEWSLETTER_EMAIL_FROM=Janička Shop <novinky@janicka-shop.cz>
+NEWSLETTER_EMAIL_FROM=Janička Shop <novinky@jvsatnik.cz>
 ADMIN_NOTIFICATION_EMAIL=$(local_key ADMIN_EMAIL)
-CONTACT_EMAIL=info@janicka-shop.cz
+CONTACT_EMAIL=info@jvsatnik.cz
 
 # Packeta / Zásilkovna
 PACKETA_API_PASSWORD=${packeta_pw}

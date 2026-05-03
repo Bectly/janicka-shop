@@ -32,7 +32,7 @@ export default function PrivacyPage() {
             <p>Sídlo: [DOPLNIT ADRESA]</p>
             <p>
               E-mail:{" "}
-              <strong className="text-foreground">info@janicka.cz</strong>
+              <strong className="text-foreground">info@jvsatnik.cz</strong>
             </p>
           </div>
           <p className="mt-3">
@@ -268,7 +268,7 @@ export default function PrivacyPage() {
           </ul>
           <p className="mt-3">
             Pro uplatnění svých práv nás kontaktujte na{" "}
-            <strong className="text-foreground">info@janicka.cz</strong>. Na váš
+            <strong className="text-foreground">info@jvsatnik.cz</strong>. Na váš
             požadavek odpovíme nejpozději do 30 dnů.
           </p>
         </section>
@@ -316,7 +316,7 @@ export default function PrivacyPage() {
             zasíláme pouze na základě vašeho výslovného souhlasu (opt-in).
             Souhlas můžete kdykoli odvolat kliknutím na odkaz &bdquo;odhlásit
             se&ldquo; v&nbsp;každém zaslaném e-mailu nebo kontaktováním na{" "}
-            <strong className="text-foreground">info@janicka.cz</strong>.
+            <strong className="text-foreground">info@jvsatnik.cz</strong>.
           </p>
           <p className="mt-3">
             E-maily o&nbsp;opuštěném košíku zasíláme pouze zákazníkům, kteří
@@ -382,7 +382,7 @@ export default function PrivacyPage() {
           <ul className="mt-2 list-inside list-disc space-y-1">
             <li>
               E-mail:{" "}
-              <strong className="text-foreground">info@janicka.cz</strong>
+              <strong className="text-foreground">info@jvsatnik.cz</strong>
             </li>
             <li>
               <Link href="/contact" className="inline-flex min-h-[44px] items-center text-primary underline">
