@@ -1,7 +1,7 @@
 "use server";
 
 import { getDb } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/require-admin";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { ORDER_STATUS_LABELS, PAYMENT_METHOD_LABELS, SHIPPING_METHOD_LABELS } from "@/lib/constants";
 import { sendOrderStatusEmail, sendShippingNotificationEmail } from "@/lib/email";
@@ -30,11 +30,6 @@ const STATUS_TRANSITIONS: Record<string, string[]> = {
   delivered: [], // terminal state
   cancelled: ["pending"], // can only revert to pending for re-processing
 };
-
-async function requireAdmin() {
-  const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
-}
 
 export async function updateOrderStatus(orderId: string, status: string) {
   await requireAdmin();

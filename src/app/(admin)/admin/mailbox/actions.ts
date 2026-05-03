@@ -3,7 +3,7 @@
 import { randomBytes } from "crypto";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/require-admin";
 import { getDb } from "@/lib/db";
 import { getMailer } from "@/lib/email/resend-transport";
 import {
@@ -14,13 +14,6 @@ import {
 } from "@/lib/email/addresses";
 import { logger } from "@/lib/logger";
 import { formatDate } from "@/lib/format";
-
-async function requireAdmin() {
-  const session = await auth();
-  if (!session?.user) {
-    throw new Error("Unauthorized");
-  }
-}
 
 function parseJsonList(raw: string | null | undefined): string[] {
   if (!raw) return [];

@@ -1,17 +1,11 @@
 "use server";
 
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/require-admin";
 import { getDb } from "@/lib/db";
 import { rateLimitAdmin } from "@/lib/rate-limit";
 import { renderCampaignEmailPreview, sendCampaignEmail } from "@/lib/email";
 import type { CampaignEmailData, CampaignProduct } from "@/lib/email";
 import { getImageUrls, parseJsonStringArray } from "@/lib/images";
-
-async function requireAdmin() {
-  const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
-  return session;
-}
 
 function buildCampaignData(formData: FormData, products: CampaignProduct[]): CampaignEmailData {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://jvsatnik.cz";

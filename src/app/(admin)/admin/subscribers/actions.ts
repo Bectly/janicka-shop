@@ -3,6 +3,7 @@
 import { revalidateTag } from "next/cache";
 import { getDb } from "@/lib/db";
 import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/require-admin";
 import { rateLimitAdmin } from "@/lib/rate-limit";
 import { claimCampaignSendLock, releaseCampaignSendLock } from "@/lib/campaign-lock";
 import {
@@ -16,12 +17,6 @@ import type { CampaignEmailData, CampaignProduct, MothersDayEmailNumber, Mothers
 import { getImageUrls } from "@/lib/images";
 import { parseJsonStringArray } from "@/lib/images";
 import { runMothersDayCampaign } from "@/lib/campaigns/mothers-day";
-
-async function requireAdmin() {
-  const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
-  return session;
-}
 
 // One full campaign send per 1h window per key, enforced atomically in the
 // DB (see campaign-lock.ts). This is critical on Vercel where each serverless

@@ -1,7 +1,7 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 558 files, ~93,013 LOC.
-**Drill-down dropped** — full render was 59,963 chars > cap 10,000 (~17% shown). Grep source files directly for symbol-level detail.
+Auto-generated. Total: 558 files, ~93,034 LOC.
+**Drill-down dropped** — full render was 59,982 chars > cap 10,000 (~17% shown). Grep source files directly for symbol-level detail.
 
 ---
 

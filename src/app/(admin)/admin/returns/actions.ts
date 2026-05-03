@@ -1,7 +1,7 @@
 "use server";
 
 import { getDb } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/require-admin";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { rateLimitAdmin } from "@/lib/rate-limit";
 import {
@@ -14,11 +14,6 @@ import { ComgateError } from "@/lib/payments/types";
 
 const VALID_STATUSES = ["pending", "approved", "rejected", "completed"];
 const VALID_REASONS = ["withdrawal_14d", "defect", "wrong_item", "other"];
-
-async function requireAdmin() {
-  const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
-}
 
 /**
  * Generate sequential return number: VRT-YYYY-NNNN

@@ -2,6 +2,7 @@
 
 import { getDb } from "@/lib/db";
 import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/require-admin";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 import { rateLimitAdmin, checkRateLimitOnly, recordRateLimitHit, getClientIp } from "@/lib/rate-limit";
@@ -11,11 +12,6 @@ import {
   parseExistingMeasurements,
   type MeasurementField,
 } from "@/lib/measurements-extractor";
-
-async function requireAdmin() {
-  const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
-}
 
 const settingsSchema = z.object({
   shopName: z.string().trim().min(1, "Název obchodu je povinný").max(100),
