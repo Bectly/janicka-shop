@@ -1,13 +1,13 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 556 files, ~92,589 LOC.
+Auto-generated. Total: 556 files, ~92,743 LOC.
 **Drill-down dropped** — full render was 59,808 chars > cap 10,000 (~17% shown). Grep source files directly for symbol-level detail.
 
 ---
 
 ## `next.config.ts/` (1 files)
 
-- next.config.ts (167 LOC)
+- next.config.ts (232 LOC)
 
 ## `playwright.config.ts/` (1 files)
 
