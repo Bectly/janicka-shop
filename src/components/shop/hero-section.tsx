@@ -28,11 +28,18 @@ function generatePetals(count: number) {
   }));
 }
 
+type Petal = ReturnType<typeof generatePetals>[number];
+
 export function HeroSection() {
   const [mounted, setMounted] = useState(false);
-  const [petals] = useState(() => generatePetals(12));
+  // Petals must be generated post-mount — Math.random() in a useState
+  // initializer produces different values on the server vs the client and
+  // triggers React #418/#419 hydration errors on every page load.
+  const [petals, setPetals] = useState<Petal[]>([]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- non-deterministic petal positions must be generated client-side after hydration
+    setPetals(generatePetals(12));
     // Trigger entrance animation after mount
     const raf = requestAnimationFrame(() => setMounted(true));
     return () => cancelAnimationFrame(raf);

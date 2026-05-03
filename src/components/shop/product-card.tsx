@@ -6,24 +6,11 @@ import { getImageUrls } from "@/lib/images";
 import { cn } from "@/lib/utils";
 import { WishlistButton } from "./wishlist-button";
 import { QuickViewButton } from "./quick-view-modal";
+import { TimeElapsedBadge } from "./time-elapsed-badge";
 import { Truck } from "lucide-react";
 
 const BLUR_DATA_URL =
   "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNlNWUwZGIiLz48L3N2Zz4=";
-
-/** Format how long ago a product was added — returns null for items older than 7 days */
-function formatTimeElapsed(date: Date | string): string | null {
-  const created = typeof date === "string" ? new Date(date) : date;
-  const diffMs = Date.now() - created.getTime();
-  if (diffMs < 0) return null;
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffHours < 1) return "Právě přidáno";
-  if (diffHours < 24) return `Před ${diffHours}h`;
-  if (diffDays < 7) return `Před ${diffDays}d`;
-  return null;
-}
 
 interface ProductCardProps {
   id: string;
@@ -85,15 +72,7 @@ export function ProductCard({
   /* ---------- Badges (shared between variants) ---------- */
   const badges = (
     <div className="absolute left-3 top-3 flex flex-col gap-1">
-      {createdAt && (() => {
-        const label = formatTimeElapsed(createdAt);
-        if (!label) return null;
-        return (
-          <span className="rounded-full bg-primary px-2.5 py-0.5 text-xs font-semibold text-primary-foreground shadow-sm">
-            {label}
-          </span>
-        );
-      })()}
+      {createdAt && <TimeElapsedBadge createdAt={createdAt} />}
       {hasDiscount && (
         <span className="rounded-full bg-destructive/90 px-2.5 py-0.5 text-xs font-semibold text-white shadow-sm">
           -{discountPercent} %
