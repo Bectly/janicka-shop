@@ -13,6 +13,7 @@ import { CartRecommendations } from "@/components/shop/cart-recommendations";
 import { CartExitIntent } from "@/components/shop/cart-exit-intent";
 import { FreeShippingBar } from "@/components/shop/free-shipping-bar";
 import { CartEmailCapture } from "@/components/shop/cart-email-capture";
+import { CartCaptureBeacon } from "@/components/shop/cart-capture-beacon";
 import { ExpressCheckoutButtons } from "@/components/shop/checkout/express-checkout-buttons";
 import { useSyncExternalStore, useState, useEffect, useCallback, useTransition } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -266,6 +267,9 @@ export default function CartPage() {
 
       {/* Exit intent popup — unique items urgency (desktop only, once per session) */}
       <CartExitIntent />
+
+      {/* Abandoned-cart beacon — fires sendBeacon on tab hide/unload when consent+email known */}
+      <CartCaptureBeacon pageUrl="/cart" />
     </div>
   );
 }

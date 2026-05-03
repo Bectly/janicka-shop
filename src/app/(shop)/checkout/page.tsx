@@ -60,7 +60,11 @@ import {
   COD_SURCHARGE,
 } from "@/lib/constants";
 import { MobileCheckoutSummary } from "@/components/shop/mobile-checkout-summary";
-import { CUSTOMER_EMAIL_KEY } from "@/components/shop/browse-abandonment-tracker";
+import {
+  CUSTOMER_EMAIL_KEY,
+  MARKETING_CONSENT_KEY,
+} from "@/components/shop/browse-abandonment-tracker";
+import { CartCaptureBeacon } from "@/components/shop/cart-capture-beacon";
 import { logger } from "@/lib/logger";
 
 const emptySubscribe = () => () => {};
@@ -409,6 +413,19 @@ export default function CheckoutPage() {
     // Intentionally only marketingConsent in deps — fires only when consent changes,
     // not on every cart/price update (those are captured at email blur).
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [marketingConsent]);
+
+  // Mirror marketingConsent into localStorage so CartCaptureBeacon (and any
+  // post-navigation consent reads) can gate sendBeacon on explicit opt-in.
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        MARKETING_CONSENT_KEY,
+        marketingConsent ? "true" : "false",
+      );
+    } catch {
+      // localStorage blocked — beacon simply won't fire
+    }
   }, [marketingConsent]);
 
   // If server action returned field errors, open the relevant step
@@ -1406,6 +1423,9 @@ export default function CheckoutPage() {
           className="h-[calc(4.5rem+env(safe-area-inset-bottom,_0px))] lg:hidden"
         />
       </form>
+
+      {/* Abandoned-cart beacon — fires on tab hide/unload when consent+email known */}
+      <CartCaptureBeacon pageUrl="/checkout" beforeUnload />
 
       {/* Mobile sticky summary bar */}
       <MobileCheckoutSummary

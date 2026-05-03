@@ -7,6 +7,9 @@ import { useCartStore } from "@/lib/cart-store";
 /** localStorage key for known customer email (set during checkout or newsletter signup). */
 export const CUSTOMER_EMAIL_KEY = "janicka-customer-email";
 
+/** localStorage key for explicit marketing consent — required before any abandoned-cart beacon fires (GDPR). */
+export const MARKETING_CONSENT_KEY = "janicka-marketing-consent";
+
 interface Props {
   productId: string;
   productSlug: string;

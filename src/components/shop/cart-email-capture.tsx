@@ -5,6 +5,10 @@ import { Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { captureCartEmail } from "@/lib/actions/cart-email";
 import { useCartStore } from "@/lib/cart-store";
+import {
+  CUSTOMER_EMAIL_KEY,
+  MARKETING_CONSENT_KEY,
+} from "@/components/shop/browse-abandonment-tracker";
 
 /**
  * Inline email capture on the cart page.
@@ -40,6 +44,12 @@ export function CartEmailCapture() {
         cartTotal: totalPrice(),
         marketingConsent: consent,
       });
+      try {
+        localStorage.setItem(CUSTOMER_EMAIL_KEY, email.toLowerCase());
+        localStorage.setItem(MARKETING_CONSENT_KEY, consent ? "true" : "false");
+      } catch {
+        // localStorage blocked — beacon will simply not fire
+      }
       setCaptured(true);
     });
   };
