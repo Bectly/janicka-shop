@@ -25,6 +25,39 @@ async function pingDb(): Promise<ProbeStatus> {
   }
 }
 
+type EmailProbe = "ok" | "missing_env" | "error";
+
+interface EmailProbeResult {
+  status: EmailProbe;
+  missing?: string;
+}
+
+function probeEmail(): EmailProbeResult {
+  try {
+    const apiKey = process.env.RESEND_API_KEY?.trim();
+    if (!apiKey) return { status: "missing_env", missing: "RESEND_API_KEY" };
+
+    const senderVars = [
+      "EMAIL_FROM_ORDERS",
+      "EMAIL_FROM_INFO",
+      "EMAIL_FROM_NEWSLETTER",
+      "EMAIL_FROM_SUPPORT",
+      "EMAIL_REPLY_TO",
+    ] as const;
+    for (const name of senderVars) {
+      const raw = process.env[name]?.trim();
+      if (!raw) continue;
+      if (!raw.includes("@")) {
+        return { status: "missing_env", missing: `${name} (invalid address)` };
+      }
+    }
+
+    return { status: "ok" };
+  } catch {
+    return { status: "error" };
+  }
+}
+
 async function pingRedis(): Promise<ProbeStatus> {
   if (!process.env.REDIS_URL) return "n/a";
   try {
@@ -53,6 +86,7 @@ export async function GET() {
   await connection();
 
   const [db, redis] = await Promise.all([pingDb(), pingRedis()]);
+  const email = probeEmail();
   const ok = db === "ok";
 
   return NextResponse.json(
@@ -60,6 +94,8 @@ export async function GET() {
       ok,
       db,
       redis,
+      email: email.status,
+      ...(email.missing ? { emailMissing: email.missing } : {}),
       ts: new Date().toISOString(),
       version: process.env.npm_package_version ?? null,
       commit: process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GIT_COMMIT_SHA ?? null,
