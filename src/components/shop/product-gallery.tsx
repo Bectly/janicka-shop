@@ -789,7 +789,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                       e.stopPropagation();
                       setActiveIndex(slideIdx);
                       setLbZoom(1);
-                                      animateZoomReset();
+                      animateZoomReset();
                     }}
                     className={`relative size-12 shrink-0 overflow-hidden rounded-lg border-2 transition-all sm:size-14 ${
                       slideIdx === activeIndex
