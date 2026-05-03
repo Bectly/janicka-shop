@@ -45,6 +45,7 @@ interface ProductData {
   active: boolean;
   images: string;
   measurements?: string;
+  measurementsCm?: string | null;
   defectsNote?: string | null;
   defectImages?: string;
   fitNote?: string | null;
@@ -308,18 +309,35 @@ export function ProductForm({ categories, product, action }: ProductFormProps) {
           />
         </div>
 
+        {/* Real measurements (free-form) */}
+        <div className="space-y-2 sm:col-span-2">
+          <Label htmlFor="measurementsCm">Skutečné rozměry (cm)</Label>
+          <Textarea
+            id="measurementsCm"
+            name="measurementsCm"
+            defaultValue={product?.measurementsCm ?? ""}
+            rows={3}
+            placeholder="Obvod hrudníku: 94cm, Délka: 65cm, Ramena: 38cm"
+          />
+          <p className="text-xs text-muted-foreground">
+            Volný text — přesné rozměry v cm. Zákazník druhého kola potřebuje
+            čísla, ne jen velikost.
+          </p>
+        </div>
+
         {/* Fit note */}
         <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="fitNote">Poznámka ke střihu</Label>
-          <Input
+          <Textarea
             id="fitNote"
             name="fitNote"
             defaultValue={product?.fitNote ?? ""}
             maxLength={120}
-            placeholder="např. Padne rovným postavám, mírně volný v bocích"
+            rows={2}
+            placeholder="Střih je volnější, doporučujeme S/M"
           />
           <p className="text-xs text-muted-foreground">
-            Krátký popis střihu — jak kousek sedí (max 120 znaků)
+            Jak kousek sedí (např. úzký v ramenou, volný v bocích).
           </p>
         </div>
 

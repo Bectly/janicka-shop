@@ -746,13 +746,28 @@ export default async function ProductDetailPage({ params }: Props) {
           {/* Description */}
           <ProductDescription text={product.description} />
 
-          {/* Fit note */}
-          {product.fitNote && (
-            <div className="mt-3 flex items-start gap-2.5 rounded-lg border border-primary/10 bg-primary/[0.035] px-3.5 py-2.5">
-              <Sparkles className="mt-0.5 size-3.5 shrink-0 text-primary/60" />
-              <p className="text-sm italic leading-relaxed text-foreground/75">
-                {product.fitNote}
-              </p>
+          {/* Rozměry — free-text real measurements + fit note (second-hand context) */}
+          {(product.measurementsCm || product.fitNote) && (
+            <div className="mt-4 overflow-hidden rounded-xl border border-border">
+              <div className="flex items-center gap-2 border-b border-border bg-muted/40 px-4 py-2.5">
+                <Ruler className="size-4 shrink-0 text-foreground/60" />
+                <span className="text-xs font-semibold tracking-wider text-foreground">
+                  Rozměry
+                </span>
+              </div>
+              <div className="space-y-3 px-4 py-3.5">
+                {product.measurementsCm && (
+                  <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed text-foreground tabular-nums">
+                    {product.measurementsCm}
+                  </pre>
+                )}
+                {product.fitNote && (
+                  <p className="flex items-start gap-2 text-sm italic leading-relaxed text-foreground/75">
+                    <Sparkles className="mt-0.5 size-3.5 shrink-0 text-primary/60" />
+                    <span>{product.fitNote}</span>
+                  </p>
+                )}
+              </div>
             </div>
           )}
 

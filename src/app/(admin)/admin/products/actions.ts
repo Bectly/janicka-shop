@@ -155,6 +155,12 @@ function parseMeasurementsInput(formData: FormData): string {
   return JSON.stringify(measurements);
 }
 
+function parseMeasurementsCmInput(formData: FormData): string | null {
+  const raw = ((formData.get("measurementsCm") as string) || "").trim();
+  if (!raw) return null;
+  return raw.slice(0, 2000);
+}
+
 function slugify(text: string): string {
   return text
     .toLowerCase()
@@ -201,6 +207,7 @@ export async function createProduct(formData: FormData) {
 
   const validatedImages = parseImages(formData);
   const measurements = parseMeasurementsInput(formData);
+  const measurementsCm = parseMeasurementsCmInput(formData);
   const { note: defectsNote, images: defectImages } = parseDefectsInput(formData);
   const fitNote = ((formData.get("fitNote") as string) || "").trim().slice(0, 120) || null;
   const rawVideoUrl = ((formData.get("videoUrl") as string) || "").trim();
@@ -224,6 +231,7 @@ export async function createProduct(formData: FormData) {
       ),
       images: validatedImages,
       measurements,
+      measurementsCm,
       defectsNote,
       defectImages,
       fitNote,
@@ -300,6 +308,7 @@ export async function updateProduct(id: string, formData: FormData) {
 
   const validatedImages = parseImages(formData);
   const measurements = parseMeasurementsInput(formData);
+  const measurementsCm = parseMeasurementsCmInput(formData);
   const { note: defectsNote, images: defectImages } = parseDefectsInput(formData);
   const fitNote = ((formData.get("fitNote") as string) || "").trim().slice(0, 120) || null;
   const rawVideoUrl = ((formData.get("videoUrl") as string) || "").trim();
@@ -336,6 +345,7 @@ export async function updateProduct(id: string, formData: FormData) {
       ),
       images: validatedImages,
       measurements,
+      measurementsCm,
       defectsNote,
       defectImages,
       fitNote,
@@ -424,6 +434,7 @@ export async function quickCreateProduct(formData: FormData) {
 
   const validatedImages = parseImages(formData);
   const measurements = parseMeasurementsInput(formData);
+  const measurementsCm = parseMeasurementsCmInput(formData);
   const { note: defectsNote, images: defectImages } = parseDefectsInput(formData);
   const fitNote = ((formData.get("fitNote") as string) || "").trim().slice(0, 120) || null;
   const rawVideoUrl = ((formData.get("videoUrl") as string) || "").trim();
@@ -460,6 +471,7 @@ export async function quickCreateProduct(formData: FormData) {
       ),
       images: validatedImages,
       measurements,
+      measurementsCm,
       defectsNote,
       defectImages,
       fitNote,
@@ -532,6 +544,7 @@ export async function duplicateProduct(id: string) {
       colors: source.colors,
       images: source.images,
       measurements: source.measurements,
+      measurementsCm: source.measurementsCm,
       defectsNote: source.defectsNote,
       defectImages: source.defectImages,
       fitNote: source.fitNote,

@@ -36,7 +36,8 @@ model Product {
   colors        String         @default("[]")
   images        String         @default("[]")
   measurements  String         @default("{}") // JSON: {chest?, waist?, hips?, length?} in cm
-  fitNote       String? // Human-readable fit note, max 120 chars
+  measurementsCm String? // Free-text real measurements (multi-line). Second-hand: "Obvod hrudníku: 94cm, Délka: 65cm…"
+  fitNote       String? // Human-readable fit note
   videoUrl      String? // Product video URL (15-30s, portrait 9:16)
   defectsNote   String? // Free-text description of flaws/imperfections
   defectImages  String         @default("[]") // JSON: string[] of defect-detail photo URLs
