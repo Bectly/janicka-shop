@@ -3,9 +3,23 @@
 import { requireAdmin } from "@/lib/require-admin";
 import { getDb } from "@/lib/db";
 import { rateLimitAdmin } from "@/lib/rate-limit";
-import { renderCampaignEmailPreview, sendCampaignEmail } from "@/lib/email";
+import {
+  renderCampaignEmailPreview,
+  sendCampaignEmail,
+  renderEmailPreview,
+  EMAIL_PREVIEW_TEMPLATES,
+} from "@/lib/email";
 import type { CampaignEmailData, CampaignProduct } from "@/lib/email";
 import { getImageUrls, parseJsonStringArray } from "@/lib/images";
+import { getMailer } from "@/lib/email/resend-transport";
+import {
+  FROM_ORDERS,
+  FROM_INFO,
+  FROM_NEWSLETTER,
+  FROM_SUPPORT,
+  REPLY_TO,
+} from "@/lib/email/addresses";
+import { logger } from "@/lib/logger";
 
 function buildCampaignData(formData: FormData, products: CampaignProduct[]): CampaignEmailData {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://jvsatnik.cz";
@@ -123,4 +137,96 @@ export async function sendCampaignTestEmail(formData: FormData): Promise<{
   return ok
     ? { success: true, recipient }
     : { success: false, error: "Odeslání selhalo — zkontroluj Resend konfiguraci." };
+}
+
+function fromForGroup(group: string): string {
+  switch (group) {
+    case "Marketing":
+      return FROM_NEWSLETTER;
+    case "Účet":
+      return FROM_SUPPORT;
+    case "Admin":
+      return FROM_INFO;
+    default:
+      return FROM_ORDERS;
+  }
+}
+
+export interface TemplateEntry {
+  key: string;
+  label: string;
+  group: string;
+  subject: string;
+  from: string;
+}
+
+export async function listTemplateEntries(): Promise<TemplateEntry[]> {
+  await requireAdmin();
+  return EMAIL_PREVIEW_TEMPLATES.map((t) => {
+    const preview = renderEmailPreview(t.key);
+    return {
+      key: t.key,
+      label: t.label,
+      group: t.group,
+      subject: preview?.subject ?? "(náhled nedostupný)",
+      from: fromForGroup(t.group),
+    };
+  });
+}
+
+export async function sendTemplateTestEmail(templateKey: string): Promise<{
+  success: boolean;
+  recipient?: string;
+  error?: string;
+  messageId?: string;
+}> {
+  const session = await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) return { success: false, error: "Příliš mnoho požadavků." };
+
+  const recipient = session.user?.email;
+  if (!recipient) return { success: false, error: "Admin e-mail není nastaven." };
+
+  const entry = EMAIL_PREVIEW_TEMPLATES.find((t) => t.key === templateKey);
+  if (!entry) return { success: false, error: `Šablona ${templateKey} neexistuje.` };
+
+  const preview = renderEmailPreview(templateKey);
+  if (!preview) return { success: false, error: `Náhled šablony selhal.` };
+
+  const mailer = getMailer();
+  if (!mailer) {
+    return {
+      success: false,
+      error: "E-mailová služba není nakonfigurovaná — nastav RESEND_API_KEY.",
+    };
+  }
+
+  try {
+    const info = await mailer.sendMail({
+      from: fromForGroup(entry.group),
+      replyTo: REPLY_TO,
+      to: recipient,
+      subject: `[TEST] ${preview.subject}`,
+      html: preview.html,
+      headers: {
+        "X-Janicka-Preview": "1",
+        "X-Janicka-Template": templateKey,
+        "X-Janicka-Group": entry.group,
+      },
+    });
+    return {
+      success: true,
+      recipient,
+      messageId: info.messageId ?? undefined,
+    };
+  } catch (err) {
+    logger.error("[email-templates] send test failed", {
+      template: templateKey,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Odeslání selhalo.",
+    };
+  }
 }
