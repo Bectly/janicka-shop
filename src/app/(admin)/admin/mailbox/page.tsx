@@ -52,7 +52,11 @@ function truncate(text: string | null | undefined, max = 140): string {
   return collapsed.length > max ? collapsed.slice(0, max - 1) + "…" : collapsed;
 }
 
-async function getMailboxPageData(folder: MailboxFolder, q: string) {
+async function getMailboxPageData(
+  folder: MailboxFolder,
+  q: string,
+  labelId: string | null,
+) {
   "use cache";
   // Mailbox is expected to feel fresh — 30s TTL keeps IMAP sync visibility tight.
   cacheLife({ stale: 30, revalidate: 30, expire: 120 });
@@ -60,7 +64,12 @@ async function getMailboxPageData(folder: MailboxFolder, q: string) {
 
   const db = await getDb();
 
-  const baseWhere = folderWhere(folder);
+  const baseWhere: Prisma.EmailThreadWhereInput = labelId
+    ? {
+        trashed: false,
+        threadLabels: { some: { labelId } },
+      }
+    : folderWhere(folder);
 
   // #524d: bodyText + fromAddress dropped from search OR. bodyText is an unindexed
   // large TEXT column (table-scan on every keystroke); fromAddress is redundant with
@@ -84,7 +93,7 @@ async function getMailboxPageData(folder: MailboxFolder, q: string) {
       }
     : baseWhere;
 
-  const [threads, totalUnread] = await Promise.all([
+  const [threads, totalUnread, label] = await Promise.all([
     db.emailThread.findMany({
       where,
       orderBy: { lastMessageAt: "desc" },
@@ -101,21 +110,32 @@ async function getMailboxPageData(folder: MailboxFolder, q: string) {
             attachments: { select: { id: true }, take: 1 },
           },
         },
+        threadLabels: {
+          include: {
+            label: { select: { id: true, name: true, color: true } },
+          },
+        },
       },
     }),
     db.emailThread.aggregate({
       where: folderWhere("inbox"),
       _sum: { unreadCount: true },
     }),
+    labelId
+      ? db.emailLabel.findUnique({
+          where: { id: labelId },
+          select: { id: true, name: true, color: true },
+        })
+      : Promise.resolve(null),
   ]);
 
-  return { threads, unread: totalUnread._sum.unreadCount ?? 0 };
+  return { threads, unread: totalUnread._sum.unreadCount ?? 0, label };
 }
 
 export default async function AdminMailboxPage({
   searchParams,
 }: {
-  searchParams: Promise<{ folder?: string; q?: string }>;
+  searchParams: Promise<{ folder?: string; q?: string; label?: string }>;
 }) {
   await connection();
   const params = await searchParams;
@@ -123,18 +143,22 @@ export default async function AdminMailboxPage({
     ? params.folder
     : "inbox";
   const q = (params.q ?? "").trim();
+  const labelId =
+    typeof params.label === "string" && params.label ? params.label : null;
 
-  const { threads, unread } = await getMailboxPageData(folder, q);
+  const { threads, unread, label } = await getMailboxPageData(folder, q, labelId);
+
+  const heading = label ? `Štítek: ${label.name}` : FOLDER_LABELS[folder];
 
   return (
     <>
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
           <h1 className="font-heading text-2xl font-bold text-foreground">
-            {FOLDER_LABELS[folder]}
+            {heading}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {folder === "inbox" && unread > 0
+            {!label && folder === "inbox" && unread > 0
               ? `${unread} nepřečtených · ${threads.length} konverzací na této stránce`
               : `${threads.length} konverzací`}
           </p>
@@ -207,6 +231,27 @@ export default async function AdminMailboxPage({
                       <p className="mt-0.5 truncate text-xs text-muted-foreground">
                         {truncate(last?.bodyText, 120)}
                       </p>
+                      {t.threadLabels.length > 0 ? (
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {t.threadLabels.map((tl) => (
+                            <span
+                              key={tl.label.id}
+                              className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium"
+                              style={{
+                                backgroundColor: `${tl.label.color}20`,
+                                color: tl.label.color,
+                              }}
+                            >
+                              <span
+                                aria-hidden
+                                className="size-1 rounded-full"
+                                style={{ backgroundColor: tl.label.color }}
+                              />
+                              {tl.label.name}
+                            </span>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
                     <div className="flex shrink-0 flex-col items-end gap-1">
                       {isUnread ? (

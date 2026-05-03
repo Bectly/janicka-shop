@@ -74,3 +74,39 @@ export async function getMailboxFolderCounts(): Promise<MailboxFolderCounts> {
     inboxUnread: inboxUnreadAgg._sum.unreadCount ?? 0,
   };
 }
+
+export type MailboxLabelSummary = {
+  id: string;
+  name: string;
+  color: string;
+  /** Threads with this label that aren't trashed (matches the sidebar filter). */
+  threadCount: number;
+};
+
+/**
+ * Sidebar label list with non-trashed thread counts. Same cache lifetime as
+ * folder counts so the labels section stays cheap on repeat renders.
+ */
+export async function getMailboxLabels(): Promise<MailboxLabelSummary[]> {
+  "use cache";
+  cacheLife({ stale: 30, revalidate: 30, expire: 120 });
+  cacheTag("admin-mailbox");
+
+  const db = await getDb();
+  const labels = await db.emailLabel.findMany({ orderBy: { name: "asc" } });
+  if (labels.length === 0) return [];
+
+  const counts = await db.emailThreadLabel.groupBy({
+    by: ["labelId"],
+    where: { thread: { trashed: false } },
+    _count: { _all: true },
+  });
+  const byId = new Map(counts.map((c) => [c.labelId, c._count._all]));
+
+  return labels.map((l) => ({
+    id: l.id,
+    name: l.name,
+    color: l.color,
+    threadCount: byId.get(l.id) ?? 0,
+  }));
+}

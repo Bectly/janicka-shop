@@ -6,6 +6,7 @@ import type { Metadata } from "next";
 import { getDb } from "@/lib/db";
 import { formatDate } from "@/lib/format";
 import { MailboxReplyForm } from "@/components/admin/mailbox-reply-form";
+import { ThreadLabelPicker } from "@/components/admin/mailbox/thread-label-picker";
 import {
   archiveThreadAction,
   flagThreadAction,
@@ -46,6 +47,11 @@ export default async function AdminThreadPage({
         orderBy: { receivedAt: "asc" },
         include: {
           attachments: true,
+        },
+      },
+      threadLabels: {
+        include: {
+          label: { select: { id: true, name: true, color: true } },
         },
       },
     },
@@ -93,6 +99,16 @@ export default async function AdminThreadPage({
             <p className="text-xs text-muted-foreground">
               {thread.messageCount} zprávy · poslední {formatDate(thread.lastMessageAt)}
             </p>
+            <div className="mt-2">
+              <ThreadLabelPicker
+                threadId={thread.id}
+                initialLabels={thread.threadLabels.map((tl) => ({
+                  id: tl.label.id,
+                  name: tl.label.name,
+                  color: tl.label.color,
+                }))}
+              />
+            </div>
           </div>
         </div>
         <div className="flex shrink-0 gap-1">

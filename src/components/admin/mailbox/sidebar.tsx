@@ -9,9 +9,12 @@ import {
 } from "lucide-react";
 import {
   getMailboxFolderCounts,
+  getMailboxLabels,
   type MailboxFolder,
 } from "@/lib/mailbox-folders";
 import { MailboxSidebarLink } from "./sidebar-link";
+import { MailboxSidebarLabelLink } from "./sidebar-label-link";
+import { MailboxLabelManager } from "./label-manager";
 
 type FolderItem = {
   key: MailboxFolder;
@@ -33,7 +36,10 @@ const ICONS = {
 } as const;
 
 export async function MailboxSidebar() {
-  const counts = await getMailboxFolderCounts();
+  const [counts, labels] = await Promise.all([
+    getMailboxFolderCounts(),
+    getMailboxLabels(),
+  ]);
 
   const items: FolderItem[] = [
     {
@@ -107,6 +113,35 @@ export async function MailboxSidebar() {
           })}
         </ul>
       </nav>
+
+      <div className="mt-6 border-t pt-4">
+        <div className="flex items-center justify-between px-3 pb-1">
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">
+            Štítky
+          </span>
+        </div>
+        {labels.length > 0 ? (
+          <ul className="space-y-0.5">
+            {labels.map((l) => (
+              <li key={l.id}>
+                <MailboxSidebarLabelLink
+                  labelId={l.id}
+                  name={l.name}
+                  color={l.color}
+                  total={l.threadCount}
+                />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="px-3 py-2 text-xs text-muted-foreground/70">
+            Žádné štítky.
+          </p>
+        )}
+        <div className="mt-1">
+          <MailboxLabelManager />
+        </div>
+      </div>
     </aside>
   );
 }
