@@ -5,6 +5,9 @@ import { getDb } from "@/lib/db";
 import { SettingsForm } from "./settings-form";
 import { PasswordChangeForm } from "./password-form";
 import { MeasurementsBackfill } from "./measurements-backfill";
+import { WorkspaceSection } from "./workspace-section";
+
+const WORKSPACE_FLAG = process.env.MANAGER_WORKSPACE === "1";
 
 export const metadata: Metadata = {
   title: "Nastavení obchodu",
@@ -66,6 +69,8 @@ export default async function AdminSettingsPage() {
           <MeasurementsBackfill />
         </div>
       </div>
+
+      {WORKSPACE_FLAG ? <WorkspaceSection /> : null}
     </>
   );
 }

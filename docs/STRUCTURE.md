@@ -1,7 +1,7 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 577 files, ~96,271 LOC.
-**Drill-down dropped** — full render was 62,189 chars > cap 10,000 (~16% shown). Grep source files directly for symbol-level detail.
+Auto-generated. Total: 583 files, ~97,867 LOC.
+**Drill-down dropped** — full render was 62,931 chars > cap 10,000 (~16% shown). Grep source files directly for symbol-level detail.
 
 ---
 
@@ -61,7 +61,7 @@ Auto-generated. Total: 577 files, ~96,271 LOC.
 - scripts/workers/packeta.ts (7 LOC)
 - scripts/workers/test-queue-integration.ts (482 LOC)
 
-## `src/` (532 files)
+## `src/` (538 files)
 
 - src/app/(admin)/admin/abandoned-carts/loading.tsx (6 LOC)
 - src/app/(admin)/admin/abandoned-carts/page.tsx (214 LOC)
@@ -126,7 +126,8 @@ Auto-generated. Total: 577 files, ~96,271 LOC.
 - src/app/(admin)/admin/mailbox/mailbox-search.tsx (91 LOC)
 - src/app/(admin)/admin/mailbox/page.tsx (234 LOC)
 - src/app/(admin)/admin/manager/actions.ts (231 LOC)
-- src/app/(admin)/admin/manager/page.tsx (369 LOC)
+- src/app/(admin)/admin/manager/page.tsx (429 LOC)
+- src/app/(admin)/admin/manager/workspace/actions.ts (326 LOC)
 - src/app/(admin)/admin/orders/[id]/create-return-form.tsx (243 LOC)
 - src/app/(admin)/admin/orders/[id]/internal-note-editor.tsx (92 LOC)
 - src/app/(admin)/admin/orders/[id]/invoice-section.tsx (139 LOC)
@@ -185,7 +186,6 @@ Auto-generated. Total: 577 files, ~96,271 LOC.
 - src/app/(admin)/admin/suppliers/loading.tsx (6 LOC)
 - src/app/(admin)/admin/suppliers/page.tsx (108 LOC)
 - src/app/(admin)/admin/suppliers/supplier-form-sheet.tsx (224 LOC)
-- src/app/(admin)/admin/suppliers/supplier-row.tsx (126 LOC)
-- src/app/(admi
+- src/app/(ad
 
-... [truncated at 10,000 chars; compact render was 29,672. Use git ls-files for full file list.]
+... [truncated at 10,000 chars; compact render was 30,064. Use git ls-files for full file list.]

@@ -323,3 +323,186 @@ export async function markTabSeenAction(
   });
   return { ok: true };
 }
+
+const CLEANUP_RETAIN_DAYS = 30;
+
+export async function forceCleanupWorkspaceTabAction(
+  tabId: string,
+): Promise<{
+  ok: boolean;
+  error?: string;
+  removedFsOps?: number;
+  removedMessages?: number;
+}> {
+  await requireAdmin();
+  const prisma = await getDb();
+  const tab = await prisma.managerWorkspaceTab.findUnique({
+    where: { id: tabId },
+  });
+  if (!tab || tab.projectId !== JANICKA_PROJECT_ID) {
+    return { ok: false, error: "Tab nenalezen" };
+  }
+  const cutoff = new Date(
+    Date.now() - CLEANUP_RETAIN_DAYS * 24 * 60 * 60 * 1000,
+  );
+  const [fsRes, msgRes] = await Promise.all([
+    prisma.workspaceFsOp.deleteMany({
+      where: { tabId, ts: { lt: cutoff } },
+    }),
+    prisma.workspaceMessage.deleteMany({
+      where: { tabId, role: "system", createdAt: { lt: cutoff } },
+    }),
+  ]);
+  revalidatePath("/admin/settings");
+  return {
+    ok: true,
+    removedFsOps: fsRes.count,
+    removedMessages: msgRes.count,
+  };
+}
+
+export type WorkspaceTabUsageRow = {
+  id: string;
+  title: string;
+  status: "active" | "pinned" | "archived";
+  lastActivityAt: string;
+  sizeBytes: number;
+  messageCount: number;
+  fsOpCount: number;
+  blockedAttempts: number;
+  recentFsOps: {
+    id: string;
+    opType: string;
+    path: string;
+    bytes: number | null;
+    exitCode: number | null;
+    ts: string;
+  }[];
+};
+
+export type WorkspaceQuotaPoint = {
+  date: string;
+  fsOps: number;
+  blocked: number;
+};
+
+export async function getWorkspaceObservabilityAction(): Promise<{
+  ok: true;
+  rows: WorkspaceTabUsageRow[];
+  sparkline: WorkspaceQuotaPoint[];
+  totals: {
+    sizeBytes: number;
+    fsOps: number;
+    blocked: number;
+    tabs: number;
+  };
+}> {
+  await requireAdmin();
+  const prisma = await getDb();
+  const tabs = await prisma.managerWorkspaceTab.findMany({
+    where: { projectId: JANICKA_PROJECT_ID },
+    orderBy: [{ status: "asc" }, { lastActivityAt: "desc" }],
+    take: 200,
+  });
+
+  const rows: WorkspaceTabUsageRow[] = await Promise.all(
+    tabs.map(async (tab) => {
+      const [messages, artifacts, fsOps, recentFsOps, blockedCount] =
+        await Promise.all([
+          prisma.workspaceMessage.findMany({
+            where: { tabId: tab.id },
+            select: { contentMd: true, attachmentJson: true },
+          }),
+          prisma.workspaceArtifact.findMany({
+            where: { tabId: tab.id },
+            select: { contentMd: true },
+          }),
+          prisma.workspaceFsOp.aggregate({
+            where: { tabId: tab.id },
+            _count: { _all: true },
+            _sum: { bytes: true },
+          }),
+          prisma.workspaceFsOp.findMany({
+            where: { tabId: tab.id },
+            orderBy: { ts: "desc" },
+            take: 20,
+          }),
+          prisma.workspaceFsOp.count({
+            where: {
+              tabId: tab.id,
+              OR: [{ exitCode: { not: 0 } }, { exitCode: null }],
+            },
+          }),
+        ]);
+
+      const messageBytes = messages.reduce(
+        (sum, m) => sum + Buffer.byteLength(m.contentMd, "utf8"),
+        0,
+      );
+      const artifactBytes = artifacts.reduce(
+        (sum, a) => sum + Buffer.byteLength(a.contentMd, "utf8"),
+        0,
+      );
+      const fsBytes = fsOps._sum.bytes ? Number(fsOps._sum.bytes) : 0;
+
+      return {
+        id: tab.id,
+        title: tab.title,
+        status: tabStatus(tab.status),
+        lastActivityAt: tab.lastActivityAt.toISOString(),
+        sizeBytes: messageBytes + artifactBytes + fsBytes,
+        messageCount: messages.length,
+        fsOpCount: fsOps._count._all,
+        blockedAttempts: blockedCount,
+        recentFsOps: recentFsOps.map((op) => ({
+          id: op.id,
+          opType: op.opType,
+          path: op.path,
+          bytes: op.bytes !== null ? Number(op.bytes) : null,
+          exitCode: op.exitCode,
+          ts: op.ts.toISOString(),
+        })),
+      };
+    }),
+  );
+
+  const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  since.setUTCHours(0, 0, 0, 0);
+  const tabIds = tabs.map((t) => t.id);
+  const recent =
+    tabIds.length > 0
+      ? await prisma.workspaceFsOp.findMany({
+          where: { tabId: { in: tabIds }, ts: { gte: since } },
+          select: { ts: true, exitCode: true },
+        })
+      : [];
+
+  const buckets = new Map<string, { fsOps: number; blocked: number }>();
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(since);
+    d.setUTCDate(d.getUTCDate() + i);
+    buckets.set(d.toISOString().slice(0, 10), { fsOps: 0, blocked: 0 });
+  }
+  for (const op of recent) {
+    const key = op.ts.toISOString().slice(0, 10);
+    const b = buckets.get(key);
+    if (!b) continue;
+    b.fsOps += 1;
+    if (op.exitCode !== 0) b.blocked += 1;
+  }
+  const sparkline: WorkspaceQuotaPoint[] = Array.from(buckets.entries()).map(
+    ([date, v]) => ({ date, fsOps: v.fsOps, blocked: v.blocked }),
+  );
+
+  const totals = rows.reduce(
+    (acc, r) => {
+      acc.sizeBytes += r.sizeBytes;
+      acc.fsOps += r.fsOpCount;
+      acc.blocked += r.blockedAttempts;
+      return acc;
+    },
+    { sizeBytes: 0, fsOps: 0, blocked: 0, tabs: rows.length },
+  );
+
+  return { ok: true, rows, sparkline, totals };
+}
