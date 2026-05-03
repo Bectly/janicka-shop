@@ -101,7 +101,7 @@ export async function previewCampaignEmail(formData: FormData): Promise<{
   const collectionId = (formData.get("collectionId") as string) || null;
   const products = await loadCollectionProducts(collectionId);
   const data = buildCampaignData(formData, products);
-  const sampleEmail = session.user?.email ?? "preview@janicka-shop.cz";
+  const sampleEmail = session.user?.email ?? "preview@jvsatnik.cz";
   const html = renderCampaignEmailPreview(data, sampleEmail);
   const db = await getDb();
   const subscriberCount = await db.newsletterSubscriber.count({

@@ -168,7 +168,7 @@ export async function buildCustomerDataBundle(
       generatedAt: new Date().toISOString(),
       customerId,
       format: "janicka-gdpr-export-v1",
-      docs: "https://janicka-shop.cz/docs/gdpr",
+      docs: "https://www.jvsatnik.cz/privacy",
     },
     profile: customer,
     addresses,

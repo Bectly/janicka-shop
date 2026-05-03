@@ -517,7 +517,7 @@ export async function previewMothersDayCampaign(
     },
   });
   const products = await loadMothersDayProducts(emailNumber);
-  const sampleEmail = (await getAdminTestRecipient()) ?? "preview@janicka-shop.cz";
+  const sampleEmail = (await getAdminTestRecipient()) ?? "preview@jvsatnik.cz";
   const segment: MothersDaySegment = "warm";
   const { subject, html } = renderMothersDayPreview(emailNumber, segment, products, sampleEmail);
   return { subject, html, subscriberCount, sampleEmail };
@@ -558,7 +558,7 @@ export async function previewCustomsCampaign(
     },
   });
   const products = await loadCustomsProducts(emailNumber);
-  const sampleEmail = (await getAdminTestRecipient()) ?? "preview@janicka-shop.cz";
+  const sampleEmail = (await getAdminTestRecipient()) ?? "preview@jvsatnik.cz";
   const { subject, html } = renderCustomsCampaignPreview(emailNumber, products, sampleEmail);
   return { subject, html, subscriberCount, sampleEmail };
 }

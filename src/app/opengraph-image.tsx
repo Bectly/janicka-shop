@@ -107,7 +107,7 @@ export default async function OgImage() {
             <span>✦ Každý kus unikát</span>
             <span>✦ Doprava zdarma od 1 500 Kč</span>
           </div>
-          <div style={{ fontWeight: 600, color: "#8b5e4c" }}>janicka-shop.cz</div>
+          <div style={{ fontWeight: 600, color: "#8b5e4c" }}>jvsatnik.cz</div>
         </div>
       </div>
     ),

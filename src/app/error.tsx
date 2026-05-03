@@ -17,7 +17,7 @@ export default function GlobalError({
     logger.error("[App] Unhandled error:", error);
   }, [error]);
 
-  const subject = encodeURIComponent("Chyba na janicka-shop.cz");
+  const subject = encodeURIComponent("Chyba na jvsatnik.cz");
   const body = encodeURIComponent(
     `Ahoj,\n\nnarazila jsem na chybu.\n\nReferenční kód: ${error.digest ?? "n/a"}\nURL: ${typeof window !== "undefined" ? window.location.href : "n/a"}\n\n`,
   );
@@ -57,7 +57,7 @@ export default function GlobalError({
       </div>
 
       <a
-        href={`mailto:kontakt@janicka-shop.cz?subject=${subject}&body=${body}`}
+        href={`mailto:podpora@jvsatnik.cz?subject=${subject}&body=${body}`}
         className="mt-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary hover:underline"
       >
         <Mail className="size-3.5" />
