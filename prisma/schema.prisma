@@ -975,3 +975,14 @@ model SiteSetting {
   value     String
   updatedAt DateTime @updatedAt
 }
+
+// Phase 6 (manager-sync-architecture-2026-05-03 §6): singleton heartbeat row
+// written by the JARVIS manager_watcher each poll tick. /api/health derives
+// watcher_alive + lag_seconds from this so the Hetzner uptime cron can alert
+// when the brain-side worker stalls.
+model ManagerSyncHeartbeat {
+  id              String   @id @default("singleton")
+  lastBeatAt      DateTime @default(now())
+  watcherHostname String
+  updatedAt       DateTime @updatedAt
+}

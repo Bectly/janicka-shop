@@ -4,14 +4,23 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Search } from "lucide-react";
+import type { MailboxFolder } from "@/lib/mailbox-folders";
 
 const DEBOUNCE_MS = 300;
 
+function buildHref(folder: MailboxFolder, q: string): string {
+  const params = new URLSearchParams();
+  if (folder !== "inbox") params.set("folder", folder);
+  if (q) params.set("q", q);
+  const qs = params.toString();
+  return qs ? `/admin/mailbox?${qs}` : "/admin/mailbox";
+}
+
 export function MailboxSearch({
-  tab,
+  folder,
   initialQ,
 }: {
-  tab: "inbox" | "archived";
+  folder: MailboxFolder;
   initialQ: string;
 }) {
   const router = useRouter();
@@ -34,11 +43,7 @@ export function MailboxSearch({
   const pushSearch = (q: string) => {
     if (q === lastPushedRef.current) return;
     lastPushedRef.current = q;
-    const params = new URLSearchParams();
-    if (tab === "archived") params.set("tab", "archived");
-    if (q) params.set("q", q);
-    const qs = params.toString();
-    router.replace(qs ? `/admin/mailbox?${qs}` : "/admin/mailbox");
+    router.replace(buildHref(folder, q));
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -69,7 +74,7 @@ export function MailboxSearch({
       </div>
       {value ? (
         <Link
-          href={tab === "archived" ? "/admin/mailbox?tab=archived" : "/admin/mailbox"}
+          href={buildHref(folder, "")}
           className="rounded-lg border px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           onClick={() => {
             if (debounceRef.current) clearTimeout(debounceRef.current);

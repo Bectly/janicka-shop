@@ -1,0 +1,112 @@
+import Link from "next/link";
+import {
+  Archive,
+  Inbox,
+  PenSquare,
+  Send,
+  Star,
+  Trash2,
+} from "lucide-react";
+import {
+  getMailboxFolderCounts,
+  type MailboxFolder,
+} from "@/lib/mailbox-folders";
+import { MailboxSidebarLink } from "./sidebar-link";
+
+type FolderItem = {
+  key: MailboxFolder;
+  label: string;
+  href: string;
+  icon: "inbox" | "star" | "send" | "archive" | "trash";
+  /** Show this number in bold next to the row when > 0 (e.g. unread). */
+  highlight?: number;
+  /** Subtle total count shown muted on the right. */
+  total: number;
+};
+
+const ICONS = {
+  inbox: Inbox,
+  star: Star,
+  send: Send,
+  archive: Archive,
+  trash: Trash2,
+} as const;
+
+export async function MailboxSidebar() {
+  const counts = await getMailboxFolderCounts();
+
+  const items: FolderItem[] = [
+    {
+      key: "inbox",
+      label: "Doručené",
+      href: "/admin/mailbox",
+      icon: "inbox",
+      highlight: counts.inboxUnread,
+      total: counts.inbox,
+    },
+    {
+      key: "starred",
+      label: "S hvězdičkou",
+      href: "/admin/mailbox?folder=starred",
+      icon: "star",
+      total: counts.starred,
+    },
+    {
+      key: "sent",
+      label: "Odeslané",
+      href: "/admin/mailbox?folder=sent",
+      icon: "send",
+      total: counts.sent,
+    },
+    {
+      key: "archived",
+      label: "Archiv",
+      href: "/admin/mailbox?folder=archived",
+      icon: "archive",
+      total: counts.archived,
+    },
+    {
+      key: "trash",
+      label: "Koš",
+      href: "/admin/mailbox?folder=trash",
+      icon: "trash",
+      total: counts.trash,
+    },
+  ];
+
+  return (
+    <aside
+      aria-label="Složky schránky"
+      className="w-full shrink-0 lg:w-56"
+    >
+      <Link
+        href="/admin/mailbox/compose"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/40"
+      >
+        <PenSquare className="size-4" />
+        Napsat
+      </Link>
+
+      <nav className="mt-4">
+        <ul className="space-y-0.5">
+          {items.map((it) => {
+            const Icon = ICONS[it.icon];
+            return (
+              <li key={it.key}>
+                <MailboxSidebarLink
+                  folder={it.key}
+                  href={it.href}
+                  label={it.label}
+                  highlight={it.highlight ?? 0}
+                  total={it.total}
+                >
+                  <Icon className="size-4 shrink-0" />
+                </MailboxSidebarLink>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+    </aside>
+  );
+}

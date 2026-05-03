@@ -1,11 +1,16 @@
 import Link from "next/link";
 import { cacheLife, cacheTag } from "next/cache";
 import { connection } from "next/server";
-import { Mail, Paperclip, PenSquare } from "lucide-react";
+import { Mail, Paperclip, Star } from "lucide-react";
 import type { Metadata } from "next";
 import type { Prisma } from "@prisma/client";
 import { getDb } from "@/lib/db";
 import { formatRelativeTime } from "@/lib/format";
+import {
+  folderWhere,
+  isMailboxFolder,
+  type MailboxFolder,
+} from "@/lib/mailbox-folders";
 import { MailboxSearch } from "./mailbox-search";
 
 export const metadata: Metadata = {
@@ -13,6 +18,23 @@ export const metadata: Metadata = {
 };
 
 const THREADS_PER_PAGE = 50;
+
+const FOLDER_LABELS: Record<MailboxFolder, string> = {
+  inbox: "Doručené",
+  starred: "S hvězdičkou",
+  sent: "Odeslané",
+  archived: "Archiv",
+  trash: "Koš",
+};
+
+const EMPTY_HINT: Record<MailboxFolder, string> = {
+  inbox:
+    "E-maily pro admin@janicka.cz se zobrazí po nastavení IMAP přístupu (IMAP_HOST, IMAP_USER, IMAP_PASSWORD) ve Vercel.",
+  starred: "Označené hvězdičkou se zobrazí tady.",
+  sent: "Odeslané zprávy se zobrazí tady.",
+  archived: "Archivované konverzace se zobrazí tady.",
+  trash: "Vyhozené zprávy zůstanou tady, dokud je nesmažete natrvalo.",
+};
 
 function parseJsonList(raw: string | null | undefined): string[] {
   if (!raw) return [];
@@ -30,7 +52,7 @@ function truncate(text: string | null | undefined, max = 140): string {
   return collapsed.length > max ? collapsed.slice(0, max - 1) + "…" : collapsed;
 }
 
-async function getMailboxPageData(tab: "inbox" | "archived", q: string) {
+async function getMailboxPageData(folder: MailboxFolder, q: string) {
   "use cache";
   // Mailbox is expected to feel fresh — 30s TTL keeps IMAP sync visibility tight.
   cacheLife({ stale: 30, revalidate: 30, expire: 120 });
@@ -38,10 +60,7 @@ async function getMailboxPageData(tab: "inbox" | "archived", q: string) {
 
   const db = await getDb();
 
-  const baseWhere: Prisma.EmailThreadWhereInput =
-    tab === "archived"
-      ? { archived: true, trashed: false }
-      : { archived: false, trashed: false };
+  const baseWhere = folderWhere(folder);
 
   // #524d: bodyText + fromAddress dropped from search OR. bodyText is an unindexed
   // large TEXT column (table-scan on every keystroke); fromAddress is redundant with
@@ -85,7 +104,7 @@ async function getMailboxPageData(tab: "inbox" | "archived", q: string) {
       },
     }),
     db.emailThread.aggregate({
-      where: { archived: false, trashed: false },
+      where: folderWhere("inbox"),
       _sum: { unreadCount: true },
     }),
   ]);
@@ -96,74 +115,42 @@ async function getMailboxPageData(tab: "inbox" | "archived", q: string) {
 export default async function AdminMailboxPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; q?: string }>;
+  searchParams: Promise<{ folder?: string; q?: string }>;
 }) {
   await connection();
   const params = await searchParams;
-  const tab: "inbox" | "archived" = params.tab === "archived" ? "archived" : "inbox";
+  const folder: MailboxFolder = isMailboxFolder(params.folder)
+    ? params.folder
+    : "inbox";
   const q = (params.q ?? "").trim();
 
-  const { threads, unread } = await getMailboxPageData(tab, q);
+  const { threads, unread } = await getMailboxPageData(folder, q);
 
   return (
     <>
       <div className="flex items-center justify-between gap-4">
-        <div>
+        <div className="min-w-0">
           <h1 className="font-heading text-2xl font-bold text-foreground">
-            Schránka
+            {FOLDER_LABELS[folder]}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {unread > 0
+            {folder === "inbox" && unread > 0
               ? `${unread} nepřečtených · ${threads.length} konverzací na této stránce`
               : `${threads.length} konverzací`}
           </p>
         </div>
-        <Link
-          href="/admin/mailbox/compose"
-          className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-        >
-          <PenSquare className="size-4" />
-          Nová zpráva
-        </Link>
       </div>
 
-      <MailboxSearch tab={tab} initialQ={q} />
-
-      <div className="mt-4 flex gap-1 border-b">
-        <Link
-          href="/admin/mailbox"
-          className={`px-4 py-2 text-sm font-medium transition-colors ${
-            tab === "inbox"
-              ? "border-b-2 border-primary text-foreground"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          Doručené
-        </Link>
-        <Link
-          href="/admin/mailbox?tab=archived"
-          className={`px-4 py-2 text-sm font-medium transition-colors ${
-            tab === "archived"
-              ? "border-b-2 border-primary text-foreground"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          Archivované
-        </Link>
-      </div>
+      <MailboxSearch folder={folder} initialQ={q} />
 
       {threads.length === 0 ? (
         <div className="mt-12 rounded-xl border bg-card p-12 text-center shadow-sm">
           <Mail className="mx-auto size-12 text-muted-foreground/30" />
           <p className="mt-4 text-lg font-medium text-muted-foreground">
-            {tab === "archived" ? "Nic v archivu" : "Žádné e-maily"}
+            {q ? "Žádné výsledky" : "Tato složka je prázdná"}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            {q
-              ? "Žádná konverzace nevyhovuje hledání."
-              : tab === "archived"
-                ? "Archivované konverzace se zobrazí tady."
-                : "E-maily pro admin@janicka.cz se zobrazí po nastavení IMAP přístupu (IMAP_HOST, IMAP_USER, IMAP_PASSWORD) ve Vercel."}
+            {q ? "Žádná konverzace nevyhovuje hledání." : EMPTY_HINT[folder]}
           </p>
         </div>
       ) : (
@@ -174,8 +161,8 @@ export default async function AdminMailboxPage({
               const participants = parseJsonList(t.participants);
               const senderLabel =
                 last?.fromName?.trim() || last?.fromAddress || participants[0] || "—";
-              const isUnread = t.unreadCount > 0;
-              const hasAttachment = last?.attachments?.length ?? 0 > 0;
+              const isUnread = t.unreadCount > 0 && folder !== "sent";
+              const hasAttachment = (last?.attachments?.length ?? 0) > 0;
               return (
                 <li key={t.id}>
                   <Link
@@ -184,14 +171,22 @@ export default async function AdminMailboxPage({
                       isUnread ? "bg-primary/5" : ""
                     }`}
                   >
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                    <div className="relative flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
                       {senderLabel.slice(0, 2).toUpperCase()}
+                      {t.flagged ? (
+                        <Star
+                          className="absolute -right-1 -top-1 size-3.5 fill-amber-400 text-amber-500"
+                          aria-label="Hvězdička"
+                        />
+                      ) : null}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-baseline justify-between gap-2">
                         <span
                           className={`truncate text-sm ${
-                            isUnread ? "font-semibold text-foreground" : "text-foreground"
+                            isUnread
+                              ? "font-semibold text-foreground"
+                              : "text-foreground"
                           }`}
                         >
                           {senderLabel}
@@ -202,7 +197,9 @@ export default async function AdminMailboxPage({
                       </div>
                       <p
                         className={`truncate text-sm ${
-                          isUnread ? "font-medium text-foreground" : "text-muted-foreground"
+                          isUnread
+                            ? "font-medium text-foreground"
+                            : "text-muted-foreground"
                         }`}
                       >
                         {t.subject || "(bez předmětu)"}
