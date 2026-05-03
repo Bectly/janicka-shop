@@ -33,6 +33,7 @@ import { MeasurementGuide } from "@/components/shop/measurement-guide";
 import { BrowseAbandonmentTracker } from "@/components/shop/browse-abandonment-tracker";
 import { Truck, Leaf, Ruler, Sparkles, Heart } from "lucide-react";
 import { parseProductImages, parseMeasurements, hasMeasurements } from "@/lib/images";
+import { getGarmentIcon } from "@/lib/garment-icons";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Metadata } from "next";
 
@@ -765,6 +766,7 @@ export default async function ProductDetailPage({ params }: Props) {
               measurementCount === 4 ? "grid-cols-2 sm:grid-cols-4" :
               measurementCount === 5 ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5" :
               "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6";
+            const garmentIcon = getGarmentIcon(product.category?.slug);
             return (
             <div className="mt-4 overflow-hidden rounded-xl border border-border">
               <div className="flex items-center gap-2 border-b border-border bg-muted/40 px-4 py-2.5">
@@ -773,6 +775,22 @@ export default async function ProductDetailPage({ params }: Props) {
                 <span className="text-xs text-muted-foreground/40" aria-hidden="true">·</span>
                 <MeasurementGuide />
                 <span className="ml-auto hidden text-xs text-muted-foreground sm:inline">v cm · ploché položení</span>
+                {garmentIcon && (
+                  <span
+                    aria-hidden="true"
+                    className="ml-2 size-7 shrink-0 bg-foreground/55"
+                    style={{
+                      WebkitMaskImage: `url(${garmentIcon})`,
+                      maskImage: `url(${garmentIcon})`,
+                      WebkitMaskRepeat: "no-repeat",
+                      maskRepeat: "no-repeat",
+                      WebkitMaskPosition: "center",
+                      maskPosition: "center",
+                      WebkitMaskSize: "contain",
+                      maskSize: "contain",
+                    }}
+                  />
+                )}
               </div>
               <div className={`grid gap-px bg-border ${gridCols}`}>
                 {measurements.chest && (

@@ -1,7 +1,7 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 563 files, ~93,594 LOC.
-**Drill-down dropped** — full render was 60,573 chars > cap 10,000 (~17% shown). Grep source files directly for symbol-level detail.
+Auto-generated. Total: 568 files, ~94,287 LOC.
+**Drill-down dropped** — full render was 61,100 chars > cap 10,000 (~16% shown). Grep source files directly for symbol-level detail.
 
 ---
 
@@ -60,7 +60,7 @@ Auto-generated. Total: 563 files, ~93,594 LOC.
 - scripts/workers/packeta.ts (7 LOC)
 - scripts/workers/test-queue-integration.ts (482 LOC)
 
-## `src/` (519 files)
+## `src/` (524 files)
 
 - src/app/(admin)/admin/abandoned-carts/loading.tsx (6 LOC)
 - src/app/(admin)/admin/abandoned-carts/page.tsx (214 LOC)
@@ -140,7 +140,7 @@ Auto-generated. Total: 563 files, ~93,594 LOC.
 - src/app/(admin)/admin/products/[id]/label/page.tsx (122 LOC)
 - src/app/(admin)/admin/products/[id]/label/print-button.tsx (20 LOC)
 - src/app/(admin)/admin/products/[id]/label/print-styles.tsx (33 LOC)
-- src/app/(admin)/admin/products/actions.ts (960 LOC)
+- src/app/(admin)/admin/products/actions.ts (1000 LOC)
 - src/app/(admin)/admin/products/bulk-price.ts (21 LOC)
 - src/app/(admin)/admin/products/loading.tsx (6 LOC)
 - src/app/(admin)/admin/products/new/page.tsx (44 LOC)
@@ -186,6 +186,6 @@ Auto-generated. Total: 563 files, ~93,594 LOC.
 - src/app/(admin)/admin/suppliers/supplier-row.tsx (126 LOC)
 - src/app/(admin)/error.tsx (56 LOC)
 - src/app/(admin-auth)/admin/login/page.tsx (91 LOC)
-- src/app/(admin-onboar
+- src/app/(admin-onboa
 
-... [truncated at 10,000 chars; compact render was 28,989. Use git ls-files for full file list.]
+... [truncated at 10,000 chars; compact render was 29,235. Use git ls-files for full file list.]
