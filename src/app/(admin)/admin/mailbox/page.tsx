@@ -12,6 +12,8 @@ import {
   type MailboxFolder,
 } from "@/lib/mailbox-folders";
 import { MailboxSearch } from "./mailbox-search";
+import { MailboxDraftsList } from "./drafts-list";
+import { listEmailDraftsAction } from "./actions";
 
 export const metadata: Metadata = {
   title: "Schránka",
@@ -25,6 +27,7 @@ const FOLDER_LABELS: Record<MailboxFolder, string> = {
   sent: "Odeslané",
   archived: "Archiv",
   trash: "Koš",
+  drafts: "Koncepty",
 };
 
 const EMPTY_HINT: Record<MailboxFolder, string> = {
@@ -34,6 +37,7 @@ const EMPTY_HINT: Record<MailboxFolder, string> = {
   sent: "Odeslané zprávy se zobrazí tady.",
   archived: "Archivované konverzace se zobrazí tady.",
   trash: "Vyhozené zprávy zůstanou tady, dokud je nesmažete natrvalo.",
+  drafts: "Rozepsané zprávy se ukládají automaticky každých 10 sekund.",
 };
 
 function parseJsonList(raw: string | null | undefined): string[] {
@@ -145,6 +149,27 @@ export default async function AdminMailboxPage({
   const q = (params.q ?? "").trim();
   const labelId =
     typeof params.label === "string" && params.label ? params.label : null;
+
+  if (folder === "drafts") {
+    const drafts = await listEmailDraftsAction({ limit: 100 });
+    return (
+      <>
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="font-heading text-2xl font-bold text-foreground">
+              {FOLDER_LABELS.drafts}
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {drafts.length === 0
+                ? EMPTY_HINT.drafts
+                : `${drafts.length} rozepsaných zpráv`}
+            </p>
+          </div>
+        </div>
+        <MailboxDraftsList drafts={drafts} />
+      </>
+    );
+  }
 
   const { threads, unread, label } = await getMailboxPageData(folder, q, labelId);
 

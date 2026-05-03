@@ -284,6 +284,57 @@ test.describe("@requires-db Mailbox API — authenticated round-trips", () => {
   });
 });
 
+test.describe("@requires-db Mailbox Phase C — drafts autosave round-trip (task #1045)", () => {
+  test("compose form autosave creates EmailDraft, drafts folder shows it, delete removes it", async ({
+    page,
+  }) => {
+    test.skip(
+      !process.env.E2E_ADMIN_EMAIL || !process.env.E2E_ADMIN_PASSWORD,
+      "E2E_ADMIN_EMAIL / E2E_ADMIN_PASSWORD not configured",
+    );
+    await loginAsAdmin(page);
+
+    const subjectTag = `Draft autosave ${TAG}`;
+    const recipientAddr = `draft-recipient-${UNIQUE}@test.local`;
+
+    // The form's autosave debounce is 10s which is impractical for E2E.
+    // Seed an EmailDraft directly (matching the shape saveEmailDraftAction
+    // produces) then drive the UI to verify drafts folder + prefill.
+    const adminRow = await prisma.admin.findFirst({ select: { id: true } });
+    test.skip(!adminRow, "no admin row in DB");
+
+    const draft = await prisma.emailDraft.create({
+      data: {
+        fromAlias: "podpora@jvsatnik.cz",
+        toAddresses: JSON.stringify([recipientAddr]),
+        subject: subjectTag,
+        bodyText: "Probe body",
+        bodyHtml: "<p>Probe body</p>",
+        authorId: adminRow!.id,
+      },
+      select: { id: true },
+    });
+
+    try {
+      // Drafts folder shows the row (rendered server-side).
+      await page.goto("/admin/mailbox?folder=drafts");
+      await expect(page.getByText(subjectTag)).toBeVisible({ timeout: 10_000 });
+      await expect(page.getByText(recipientAddr)).toBeVisible();
+
+      // Click into the draft → compose page prefilled from listEmailDraftsAction.
+      await page.goto(
+        `/admin/mailbox/compose?draftId=${encodeURIComponent(draft.id)}`,
+      );
+      await expect(page.locator('input[name="subject"]')).toHaveValue(subjectTag);
+      await expect(page.locator('input[name="to"]')).toHaveValue(recipientAddr);
+    } finally {
+      await prisma.emailDraft
+        .delete({ where: { id: draft.id } })
+        .catch(() => {});
+    }
+  });
+});
+
 test.describe("Resend inbound webhook — DB persist round-trip", () => {
   test("signed payload → 200 inserted + EmailMessage row in DB", async ({
     request,

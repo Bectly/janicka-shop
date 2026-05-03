@@ -542,6 +542,97 @@ export async function listEmailDraftsAction(opts?: {
   }));
 }
 
+// --- Phase C: signatures CRUD (task #1045) ---
+
+export type SignatureRow = {
+  id: string;
+  alias: string;
+  isDefault: boolean;
+  bodyHtml: string;
+  updatedAt: Date;
+};
+
+const ALIAS_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function normalizeAlias(raw: unknown): string {
+  if (typeof raw !== "string") return "";
+  const v = raw.trim().toLowerCase();
+  return ALIAS_RE.test(v) ? v : "";
+}
+
+export async function listSignaturesAction(): Promise<SignatureRow[]> {
+  await requireAdmin();
+  const db = await getDb();
+  const rows = await db.emailSignature.findMany({ orderBy: { alias: "asc" } });
+  return rows.map((r) => ({
+    id: r.id,
+    alias: r.alias,
+    isDefault: r.isDefault,
+    bodyHtml: r.bodyHtml,
+    updatedAt: r.updatedAt,
+  }));
+}
+
+export async function getSignatureForAliasAction(
+  alias: string,
+): Promise<SignatureRow | null> {
+  await requireAdmin();
+  const a = normalizeAlias(alias);
+  if (!a) return null;
+  const db = await getDb();
+  const row = await db.emailSignature.findUnique({ where: { alias: a } });
+  if (!row) return null;
+  return {
+    id: row.id,
+    alias: row.alias,
+    isDefault: row.isDefault,
+    bodyHtml: row.bodyHtml,
+    updatedAt: row.updatedAt,
+  };
+}
+
+export async function upsertSignatureAction(input: {
+  id?: string;
+  alias: string;
+  bodyHtml: string;
+  isDefault?: boolean;
+}): Promise<{ id: string }> {
+  await requireAdmin();
+  const alias = normalizeAlias(input?.alias);
+  if (!alias) throw new Error("Alias musí být platná e-mailová adresa.");
+  const bodyHtml = typeof input?.bodyHtml === "string" ? input.bodyHtml : "";
+  if (!bodyHtml.trim()) throw new Error("Tělo podpisu je povinné.");
+  const isDefault = Boolean(input?.isDefault);
+
+  const db = await getDb();
+  const existing = await db.emailSignature.findUnique({ where: { alias } });
+  if (existing && input.id && existing.id !== input.id) {
+    throw new Error("Pro tento alias už existuje jiný podpis.");
+  }
+
+  const data = { alias, bodyHtml, isDefault };
+  const saved = existing
+    ? await db.emailSignature.update({
+        where: { alias },
+        data,
+        select: { id: true },
+      })
+    : await db.emailSignature.create({ data, select: { id: true } });
+
+  revalidatePath("/admin/mailbox/settings");
+  return { id: saved.id };
+}
+
+export async function deleteSignatureAction(id: string): Promise<void> {
+  await requireAdmin();
+  if (typeof id !== "string" || !id) return;
+  const db = await getDb();
+  await db.emailSignature.delete({ where: { id } }).catch(() => {
+    /* idempotent */
+  });
+  revalidatePath("/admin/mailbox/settings");
+}
+
 // --- Phase B: labels CRUD + thread assignment (task #1038) ---
 
 export type LabelRow = {

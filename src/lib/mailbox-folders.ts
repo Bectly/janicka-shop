@@ -7,7 +7,8 @@ export type MailboxFolder =
   | "starred"
   | "sent"
   | "archived"
-  | "trash";
+  | "trash"
+  | "drafts";
 
 export type MailboxFolderCounts = Record<MailboxFolder, number> & {
   inboxUnread: number;
@@ -19,10 +20,15 @@ export function isMailboxFolder(value: unknown): value is MailboxFolder {
     value === "starred" ||
     value === "sent" ||
     value === "archived" ||
-    value === "trash"
+    value === "trash" ||
+    value === "drafts"
   );
 }
 
+/**
+ * Thread-table filter for folder views. Drafts live in EmailDraft (separate
+ * table) so this throws — page-level code branches on folder==="drafts" first.
+ */
 export function folderWhere(folder: MailboxFolder): Prisma.EmailThreadWhereInput {
   switch (folder) {
     case "inbox":
@@ -38,6 +44,8 @@ export function folderWhere(folder: MailboxFolder): Prisma.EmailThreadWhereInput
       return { archived: true, trashed: false };
     case "trash":
       return { trashed: true };
+    case "drafts":
+      throw new Error("folderWhere: drafts is not an EmailThread folder");
   }
 }
 
@@ -52,13 +60,14 @@ export async function getMailboxFolderCounts(): Promise<MailboxFolderCounts> {
 
   const db = await getDb();
 
-  const [inbox, starred, sent, archived, trash, inboxUnreadAgg] =
+  const [inbox, starred, sent, archived, trash, drafts, inboxUnreadAgg] =
     await Promise.all([
       db.emailThread.count({ where: folderWhere("inbox") }),
       db.emailThread.count({ where: folderWhere("starred") }),
       db.emailThread.count({ where: folderWhere("sent") }),
       db.emailThread.count({ where: folderWhere("archived") }),
       db.emailThread.count({ where: folderWhere("trash") }),
+      db.emailDraft.count(),
       db.emailThread.aggregate({
         where: { archived: false, trashed: false },
         _sum: { unreadCount: true },
@@ -71,6 +80,7 @@ export async function getMailboxFolderCounts(): Promise<MailboxFolderCounts> {
     sent,
     archived,
     trash,
+    drafts,
     inboxUnread: inboxUnreadAgg._sum.unreadCount ?? 0,
   };
 }

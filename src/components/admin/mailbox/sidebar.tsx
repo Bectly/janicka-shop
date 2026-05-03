@@ -1,9 +1,11 @@
 import Link from "next/link";
 import {
   Archive,
+  FileEdit,
   Inbox,
   PenSquare,
   Send,
+  Settings,
   Star,
   Trash2,
 } from "lucide-react";
@@ -20,7 +22,7 @@ type FolderItem = {
   key: MailboxFolder;
   label: string;
   href: string;
-  icon: "inbox" | "star" | "send" | "archive" | "trash";
+  icon: "inbox" | "star" | "send" | "archive" | "trash" | "drafts";
   /** Show this number in bold next to the row when > 0 (e.g. unread). */
   highlight?: number;
   /** Subtle total count shown muted on the right. */
@@ -33,6 +35,7 @@ const ICONS = {
   send: Send,
   archive: Archive,
   trash: Trash2,
+  drafts: FileEdit,
 } as const;
 
 export async function MailboxSidebar() {
@@ -56,6 +59,13 @@ export async function MailboxSidebar() {
       href: "/admin/mailbox?folder=starred",
       icon: "star",
       total: counts.starred,
+    },
+    {
+      key: "drafts",
+      label: "Koncepty",
+      href: "/admin/mailbox?folder=drafts",
+      icon: "drafts",
+      total: counts.drafts,
     },
     {
       key: "sent",
@@ -141,6 +151,16 @@ export async function MailboxSidebar() {
         <div className="mt-1">
           <MailboxLabelManager />
         </div>
+      </div>
+
+      <div className="mt-6 border-t pt-4">
+        <Link
+          href="/admin/mailbox/settings"
+          className="inline-flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        >
+          <Settings className="size-3.5" />
+          Nastavení
+        </Link>
       </div>
     </aside>
   );
