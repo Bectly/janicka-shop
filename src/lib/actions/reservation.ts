@@ -1,7 +1,7 @@
 "use server";
 
 import { getDb } from "@/lib/db";
-import { getOrCreateVisitorId, RESERVATION_MS } from "@/lib/visitor";
+import { getOrCreateVisitorId, MIN_REFRESH_MS, RESERVATION_MS } from "@/lib/visitor";
 import { rateLimitReservation } from "@/lib/rate-limit";
 
 export type ReservationResult = {
@@ -80,8 +80,18 @@ export async function releaseReservation(productId: string): Promise<void> {
 }
 
 /**
- * Extend reservations for all items in cart (called on cart page load / periodically).
- * Returns map of productId → new reservedUntil ISO string, or null if product no longer available.
+ * Refresh reservations for all items in cart (called on cart page mount).
+ *
+ * Threshold-based: only extends a visitor's own reservation when it has less
+ * than MIN_REFRESH_MINUTES remaining. With ≥ MIN_REFRESH_MINUTES left the
+ * existing reservedUntil is preserved, so a page refresh does NOT reset the
+ * visible countdown back to the full window. Already-expired slots are left
+ * untouched — the cart UI surfaces them via the existing 0:00 / "Rezervace
+ * vypršela" badge instead of silently grabbing a fresh window.
+ *
+ * Returns map of productId → reservedUntil ISO string (active or expired,
+ * always belonging to this visitor), or null if the product is no longer
+ * available to this visitor (sold, inactive, or claimed by someone else).
  */
 export async function extendReservations(
   productIds: string[]
@@ -95,44 +105,48 @@ export async function extendReservations(
 
   const visitorId = await getOrCreateVisitorId();
   const now = new Date();
-  const reservedUntil = new Date(now.getTime() + RESERVATION_MS);
-  const result: Record<string, string | null> = {};
+  const refreshThreshold = new Date(now.getTime() + MIN_REFRESH_MS);
+  const newReservedUntil = new Date(now.getTime() + RESERVATION_MS);
 
   const db = await getDb();
 
-  // Atomic batch update — extends only products that are available to this visitor.
-  // Prevents TOCTOU race where individual read-then-write could overwrite
-  // another visitor's reservation made between the read and write.
+  // Atomic conditional extend — only when this visitor's slot is about to
+  // expire (< MIN_REFRESH_MINUTES remaining but not yet expired). Slots with
+  // > MIN_REFRESH_MINUTES are preserved so refresh keeps the same countdown;
+  // already-expired slots are intentionally not re-grabbed silently. Visitor
+  // scoping prevents overwriting another visitor's reservation.
   await db.product.updateMany({
     where: {
       id: { in: productIds },
       active: true,
       sold: false,
-      OR: [
-        { reservedUntil: null },
-        { reservedUntil: { lt: now } },
-        { reservedBy: visitorId },
-      ],
+      reservedBy: visitorId,
+      reservedUntil: { gt: now, lt: refreshThreshold },
     },
-    data: { reservedUntil, reservedBy: visitorId },
+    data: { reservedUntil: newReservedUntil },
   });
 
-  // Read back to determine which products were successfully extended
+  // Read back current state per product to compose the response.
   const products = await db.product.findMany({
     where: { id: { in: productIds } },
-    select: { id: true, reservedBy: true },
+    select: { id: true, reservedBy: true, reservedUntil: true },
   });
 
+  const result: Record<string, string | null> = {};
   for (const product of products) {
-    result[product.id] =
-      product.reservedBy === visitorId ? reservedUntil.toISOString() : null;
+    if (product.reservedBy === visitorId && product.reservedUntil) {
+      // Visitor still owns the slot — return whatever the current expiry is.
+      // May be in the past (expired): the cart countdown will hit 0:00 and the
+      // existing UI badge ("Rezervace vypršela") prompts manual re-reservation.
+      result[product.id] = product.reservedUntil.toISOString();
+    } else {
+      // Sold, inactive, released, or held by another visitor → not available.
+      result[product.id] = null;
+    }
   }
 
-  // Products not found in DB
   for (const id of productIds) {
-    if (!(id in result)) {
-      result[id] = null;
-    }
+    if (!(id in result)) result[id] = null;
   }
 
   return result;

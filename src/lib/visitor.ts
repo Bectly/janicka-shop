@@ -28,3 +28,14 @@ export const RESERVATION_MINUTES = 15;
 
 /** Reservation duration in milliseconds */
 export const RESERVATION_MS = RESERVATION_MINUTES * 60 * 1000;
+
+/**
+ * Threshold for auto-extending a reservation on cart page mount.
+ * Below this remaining time, an extend call refreshes the slot to a new 15min
+ * window. Above it, the existing reservedUntil is preserved so a page refresh
+ * does not silently reset the visible countdown.
+ */
+export const MIN_REFRESH_MINUTES = 5;
+
+/** Threshold in milliseconds */
+export const MIN_REFRESH_MS = MIN_REFRESH_MINUTES * 60 * 1000;

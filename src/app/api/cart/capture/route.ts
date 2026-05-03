@@ -5,8 +5,6 @@ import { getOrCreateVisitorId } from "@/lib/visitor";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 
-export const runtime = "nodejs";
-
 const bodySchema = z.object({
   email: z.string().trim().toLowerCase().email().max(254),
   cartItems: z
