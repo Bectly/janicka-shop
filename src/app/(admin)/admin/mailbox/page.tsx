@@ -163,7 +163,7 @@ export default async function AdminMailboxPage({
               ? "Žádná konverzace nevyhovuje hledání."
               : tab === "archived"
                 ? "Archivované konverzace se zobrazí tady."
-                : "Příchozí e-maily z @jvsatnik.cz se zobrazí po nastavení IMAP serveru a spuštění sync cronu."}
+                : "E-maily pro admin@janicka.cz se zobrazí po nastavení IMAP přístupu (IMAP_HOST, IMAP_USER, IMAP_PASSWORD) ve Vercel."}
           </p>
         </div>
       ) : (

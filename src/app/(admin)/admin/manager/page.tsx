@@ -1,14 +1,12 @@
 /**
  * Admin Manager page — Janička sees the strategic agent's output.
  *
- * Tabbed UI (J24-J27):
- *   Tab 1 Konverzace — placeholder until Bolt's J24 thread UI lands
- *   Tab 2 Úkoly      — manager kanban + collapsible devloop section + blocked
- *   Tab 3 Reporty    — filterable artifact feed (kind + range, Export PDF)
- *   Tab 4 Session    — admin-only: start form + session history with artifacts
+ * Two shells:
+ *   v1 (default)   — 4-tab: Konverzace / Úkoly / Reporty / Session
+ *   v2 (MANAGER_UI_V2=1) — 2-tab: Dnes / Historie (no devloop, no technical noise)
  *
  * Reads NATIVELY from janicka's own Turso DB via Prisma:
- *  - latest ManagerSession + recent history
+ *  - latest ManagerSession + recent history (admin only)
  *  - ManagerTask (open / accepted+in_progress / blocked / done last 7d)
  *  - ManagerArtifact (note + report + chart + task_*, last 50)
  */
@@ -19,17 +17,46 @@ import { Briefcase } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { getJanickaDevloopTasks } from "@/lib/jarvis-db";
-import { ManagerTabsShell } from "@/components/admin/manager/tabs-shell";
+import {
+  ManagerTabsShell,
+  ManagerTabsShellV2,
+} from "@/components/admin/manager/tabs-shell";
 import { TasksTab } from "@/components/admin/manager/tasks-tab";
 import { ReportsTab } from "@/components/admin/manager/reports-tab";
 import { SessionTab } from "@/components/admin/manager/session-tab";
 import { ThreadsTab } from "@/components/admin/manager/threads-tab";
+import { TodayTab } from "@/components/admin/manager/today-tab";
+import { HistoryTab } from "@/components/admin/manager/history-tab";
 
 const JANICKA_PROJECT_ID = 15;
+const V2_FLAG = process.env.MANAGER_UI_V2 === "1";
 
 export const metadata: Metadata = {
   title: "Manažerka",
 };
+
+function previewFromBlocks(contentJson: string, max = 220): string {
+  try {
+    const parsed = JSON.parse(contentJson) as unknown;
+    if (!Array.isArray(parsed)) return "";
+    const textParts: string[] = [];
+    for (const block of parsed) {
+      if (
+        block &&
+        typeof block === "object" &&
+        "type" in block &&
+        (block as { type?: unknown }).type === "text"
+      ) {
+        const body = (block as { bodyMd?: unknown }).bodyMd;
+        if (typeof body === "string" && body.trim()) textParts.push(body.trim());
+      }
+    }
+    const joined = textParts.join("\n\n").replace(/\s+/g, " ").trim();
+    return joined.length > max ? joined.slice(0, max - 1) + "…" : joined;
+  } catch {
+    return "";
+  }
+}
 
 export default async function AdminManagerPage() {
   await connection();
@@ -37,6 +64,20 @@ export default async function AdminManagerPage() {
   const [session, prisma] = await Promise.all([auth(), getDb()]);
   const isAdmin = session?.user?.role === "admin";
 
+  if (V2_FLAG) {
+    return renderV2({ prisma, isAdmin });
+  }
+
+  return renderV1({ prisma, isAdmin });
+}
+
+async function renderV1({
+  prisma,
+  isAdmin,
+}: {
+  prisma: Awaited<ReturnType<typeof getDb>>;
+  isAdmin: boolean;
+}) {
   const [
     latestSession,
     tasksRaw,
@@ -45,51 +86,51 @@ export default async function AdminManagerPage() {
     recentSessions,
     unreadThreadCount,
   ] = await Promise.all([
-      prisma.managerSession.findFirst({
-        where: { projectId: JANICKA_PROJECT_ID },
-        orderBy: [{ requestedAt: "desc" }, { startedAt: "desc" }],
-      }),
-      prisma.managerTask.findMany({
-        where: { projectId: JANICKA_PROJECT_ID },
-        orderBy: [{ priority: "asc" }, { dueAt: "asc" }, { createdAt: "desc" }],
-        take: 200,
-        include: {
-          comments: { orderBy: { createdAt: "asc" }, take: 50 },
-        },
-      }),
-      prisma.managerArtifact.findMany({
-        where: {
-          projectId: JANICKA_PROJECT_ID,
-          kind: { in: ["note", "chart", "report", "task_ai", "task_human"] },
-        },
-        orderBy: { createdAt: "desc" },
-        take: 50,
-        include: {
-          comments: { orderBy: { createdAt: "asc" }, take: 50 },
-        },
-      }),
-      getJanickaDevloopTasks(),
-      isAdmin
-        ? prisma.managerSession.findMany({
-            where: { projectId: JANICKA_PROJECT_ID },
-            orderBy: [{ startedAt: "desc" }],
-            take: 20,
-            include: {
-              artifacts: {
-                orderBy: { createdAt: "desc" },
-                take: 50,
-              },
+    prisma.managerSession.findFirst({
+      where: { projectId: JANICKA_PROJECT_ID },
+      orderBy: [{ requestedAt: "desc" }, { startedAt: "desc" }],
+    }),
+    prisma.managerTask.findMany({
+      where: { projectId: JANICKA_PROJECT_ID },
+      orderBy: [{ priority: "asc" }, { dueAt: "asc" }, { createdAt: "desc" }],
+      take: 200,
+      include: {
+        comments: { orderBy: { createdAt: "asc" }, take: 50 },
+      },
+    }),
+    prisma.managerArtifact.findMany({
+      where: {
+        projectId: JANICKA_PROJECT_ID,
+        kind: { in: ["note", "chart", "report", "task_ai", "task_human"] },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+      include: {
+        comments: { orderBy: { createdAt: "asc" }, take: 50 },
+      },
+    }),
+    getJanickaDevloopTasks(),
+    isAdmin
+      ? prisma.managerSession.findMany({
+          where: { projectId: JANICKA_PROJECT_ID },
+          orderBy: [{ startedAt: "desc" }],
+          take: 20,
+          include: {
+            artifacts: {
+              orderBy: { createdAt: "desc" },
+              take: 50,
             },
-          })
-        : Promise.resolve([]),
-      prisma.managerThreadMessage.count({
-        where: {
-          role: "manager",
-          readAt: null,
-          thread: { projectId: JANICKA_PROJECT_ID },
-        },
-      }),
-    ]);
+          },
+        })
+      : Promise.resolve([]),
+    prisma.managerThreadMessage.count({
+      where: {
+        role: "manager",
+        readAt: null,
+        thread: { projectId: JANICKA_PROJECT_ID },
+      },
+    }),
+  ]);
 
   const devloopOpen = devloopTasks.filter((t) => t.status === "open");
   const devloopBlocked = devloopTasks.filter((t) => t.status === "blocked");
@@ -205,6 +246,122 @@ export default async function AdminManagerPage() {
             />
           ) : null
         }
+      />
+    </div>
+  );
+}
+
+async function renderV2({
+  prisma,
+  isAdmin: _isAdmin,
+}: {
+  prisma: Awaited<ReturnType<typeof getDb>>;
+  isAdmin: boolean;
+}) {
+  // Today bucket: midnight Europe/Prague projected to UTC for the query.
+  const now = new Date();
+  const startOfToday = new Date(now);
+  startOfToday.setHours(0, 0, 0, 0);
+
+  const [tasks, artifacts, latestManagerMessageRow] = await Promise.all([
+    prisma.managerTask.findMany({
+      where: {
+        projectId: JANICKA_PROJECT_ID,
+        status: { in: ["open", "accepted", "in_progress"] },
+      },
+      orderBy: [{ priority: "asc" }, { dueAt: "asc" }, { createdAt: "desc" }],
+      take: 100,
+      include: {
+        comments: { orderBy: { createdAt: "asc" }, take: 50 },
+      },
+    }),
+    prisma.managerArtifact.findMany({
+      where: {
+        projectId: JANICKA_PROJECT_ID,
+        kind: { in: ["task_human", "report"] },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+      include: {
+        comments: { orderBy: { createdAt: "asc" }, take: 50 },
+      },
+    }),
+    prisma.managerThreadMessage.findFirst({
+      where: {
+        role: "manager",
+        thread: { projectId: JANICKA_PROJECT_ID },
+      },
+      orderBy: { createdAt: "desc" },
+      include: { thread: true },
+    }),
+  ]);
+
+  const actionableTasks = tasks;
+  const totalActive = tasks.length;
+
+  const todayReportRow =
+    artifacts.find(
+      (a) => a.kind === "report" && a.createdAt >= startOfToday,
+    ) ?? null;
+  const todayReport = todayReportRow
+    ? {
+        id: todayReportRow.id,
+        title: todayReportRow.title,
+        bodyMd: todayReportRow.bodyMd,
+        bodyJson: todayReportRow.bodyJson,
+        createdAt: todayReportRow.createdAt,
+      }
+    : null;
+
+  const latestManagerMessage = latestManagerMessageRow
+    ? {
+        id: latestManagerMessageRow.id,
+        threadId: latestManagerMessageRow.threadId,
+        threadSubject: latestManagerMessageRow.thread.subject ?? null,
+        preview: previewFromBlocks(latestManagerMessageRow.contentJson),
+        createdAt: latestManagerMessageRow.createdAt,
+      }
+    : null;
+
+  const historyArtifacts = artifacts.map((a) => ({
+    id: a.id,
+    kind: a.kind,
+    title: a.title,
+    bodyMd: a.bodyMd,
+    bodyJson: a.bodyJson,
+    status: a.status,
+    mood: a.mood,
+    createdAt: a.createdAt,
+    comments: a.comments,
+  }));
+
+  const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const historyCount = historyArtifacts.filter(
+    (a) => a.createdAt.getTime() >= cutoff,
+  ).length;
+
+  return (
+    <div className="space-y-6 max-w-full">
+      <header className="space-y-1">
+        <h1 className="flex items-center gap-2 font-heading text-2xl font-bold text-foreground">
+          <Briefcase className="size-6 text-primary" />
+          Manažerka projektu
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Co máš dneska udělat a co ti manažerka napsala v posledních dnech.
+        </p>
+      </header>
+
+      <ManagerTabsShellV2
+        badges={{ dnes: totalActive, historie: historyCount }}
+        todayTab={
+          <TodayTab
+            actionableTasks={actionableTasks}
+            todayReport={todayReport}
+            latestManagerMessage={latestManagerMessage}
+          />
+        }
+        historyTab={<HistoryTab artifacts={historyArtifacts} />}
       />
     </div>
   );

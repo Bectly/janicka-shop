@@ -1,7 +1,15 @@
 "use client";
 
 import { type ReactNode, useCallback, useSyncExternalStore } from "react";
-import { MessageSquare, ListTodo, BarChart3, Cog } from "lucide-react";
+import {
+  MessageSquare,
+  ListTodo,
+  BarChart3,
+  Cog,
+  Sparkles,
+  Calendar,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type ManagerTabKey = "konverzace" | "ukoly" | "reporty" | "session";
@@ -13,12 +21,23 @@ const VALID_KEYS: ManagerTabKey[] = [
   "session",
 ];
 
+export type ManagerTabKeyV2 = "dnes" | "historie";
+
+const VALID_KEYS_V2: ManagerTabKeyV2[] = ["dnes", "historie"];
+
 type TabDef = {
   key: ManagerTabKey;
   label: string;
-  icon: typeof MessageSquare;
+  icon: LucideIcon;
   badge?: number;
   hidden?: boolean;
+};
+
+type TabDefV2 = {
+  key: ManagerTabKeyV2;
+  label: string;
+  icon: LucideIcon;
+  badge?: number;
 };
 
 function subscribeHash(cb: () => void): () => void {
@@ -148,6 +167,96 @@ export function ManagerTabsShell({
         {active === "ukoly" && tasksTab}
         {active === "reporty" && reportsTab}
         {active === "session" && sessionTab}
+      </div>
+    </div>
+  );
+}
+
+export function ManagerTabsShellV2({
+  todayTab,
+  historyTab,
+  badges,
+}: {
+  todayTab: ReactNode;
+  historyTab: ReactNode;
+  badges: { dnes: number; historie: number };
+}) {
+  const hash = useSyncExternalStore(
+    subscribeHash,
+    readHashSnapshot,
+    readHashServer,
+  );
+  const fromHash = VALID_KEYS_V2.includes(hash as ManagerTabKeyV2)
+    ? (hash as ManagerTabKeyV2)
+    : null;
+  const active: ManagerTabKeyV2 = fromHash ?? "dnes";
+
+  const select = useCallback((key: ManagerTabKeyV2) => {
+    if (typeof window === "undefined") return;
+    window.history.replaceState(null, "", `#${key}`);
+    window.dispatchEvent(new HashChangeEvent("hashchange"));
+  }, []);
+
+  const tabs: TabDefV2[] = [
+    { key: "dnes", label: "Dnes", icon: Sparkles, badge: badges.dnes },
+    {
+      key: "historie",
+      label: "Historie",
+      icon: Calendar,
+      badge: badges.historie,
+    },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <div className="sticky top-14 z-10 -mx-2 bg-background/95 px-2 pb-2 backdrop-blur supports-[backdrop-filter]:bg-background/70 md:mx-0 md:px-0 md:pb-1 md:bg-background/85">
+        <div
+          role="tablist"
+          aria-label="Manažerka — sekce"
+          className="flex gap-1 overflow-x-auto rounded-lg border bg-card p-1 shadow-sm scrollbar-thin md:overflow-visible"
+        >
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = active === tab.key;
+            return (
+              <button
+                key={tab.key}
+                role="tab"
+                type="button"
+                aria-selected={isActive}
+                aria-controls={`manager-panel-${tab.key}`}
+                onClick={() => select(tab.key)}
+                className={cn(
+                  "inline-flex shrink-0 items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap",
+                  "min-h-10 md:min-h-9",
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow"
+                    : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground",
+                )}
+              >
+                <Icon className="size-4" />
+                <span>{tab.label}</span>
+                {typeof tab.badge === "number" && tab.badge > 0 && (
+                  <span
+                    className={cn(
+                      "ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none",
+                      isActive
+                        ? "bg-primary-foreground/20 text-primary-foreground"
+                        : "bg-foreground/[0.08] text-foreground/70",
+                    )}
+                  >
+                    {tab.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div role="tabpanel" id={`manager-panel-${active}`} className="min-w-0">
+        {active === "dnes" && todayTab}
+        {active === "historie" && historyTab}
       </div>
     </div>
   );

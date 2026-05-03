@@ -1,7 +1,7 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 570 files, ~94,847 LOC.
-**Drill-down dropped** — full render was 61,336 chars > cap 10,000 (~16% shown). Grep source files directly for symbol-level detail.
+Auto-generated. Total: 571 files, ~95,226 LOC.
+**Drill-down dropped** — full render was 61,492 chars > cap 10,000 (~16% shown). Grep source files directly for symbol-level detail.
 
 ---
 
@@ -17,10 +17,11 @@ Auto-generated. Total: 570 files, ~94,847 LOC.
 
 - prisma/seed.ts (157 LOC)
 
-## `scripts/` (40 files)
+## `scripts/` (41 files)
 
 - scripts/audit-r2-image-urls.ts (140 LOC)
 - scripts/backfill-alt-text.ts (127 LOC)
+- scripts/backfill-manager-sync.py (379 LOC)
 - scripts/categories-add-boty.ts (225 LOC)
 - scripts/clean-descriptions.ts (250 LOC)
 - scripts/cleanup-sizes-local.ts (93 LOC)
@@ -185,7 +186,6 @@ Auto-generated. Total: 570 files, ~94,847 LOC.
 - src/app/(admin)/admin/suppliers/supplier-form-sheet.tsx (224 LOC)
 - src/app/(admin)/admin/suppliers/supplier-row.tsx (126 LOC)
 - src/app/(admin)/error.tsx (56 LOC)
-- src/app/(admin-auth)/admin/login/page.tsx (91 LOC)
-- src/app/(admin-onboa
+- src/app/(admin-auth)/admin/l
 
-... [truncated at 10,000 chars; compact render was 29,315. Use git ls-files for full file list.]
+... [truncated at 10,000 chars; compact render was 29,360. Use git ls-files for full file list.]
