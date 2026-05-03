@@ -1,7 +1,7 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 560 files, ~93,212 LOC.
-**Drill-down dropped** — full render was 60,244 chars > cap 10,000 (~17% shown). Grep source files directly for symbol-level detail.
+Auto-generated. Total: 561 files, ~93,543 LOC.
+**Drill-down dropped** — full render was 60,388 chars > cap 10,000 (~17% shown). Grep source files directly for symbol-level detail.
 
 ---
 
@@ -60,7 +60,7 @@ Auto-generated. Total: 560 files, ~93,212 LOC.
 - scripts/workers/packeta.ts (7 LOC)
 - scripts/workers/test-queue-integration.ts (482 LOC)
 
-## `src/` (516 files)
+## `src/` (517 files)
 
 - src/app/(admin)/admin/abandoned-carts/loading.tsx (6 LOC)
 - src/app/(admin)/admin/abandoned-carts/page.tsx (214 LOC)
@@ -111,10 +111,11 @@ Auto-generated. Total: 560 files, ~93,212 LOC.
 - src/app/(admin)/admin/drafts/[batchId]/actions.ts (407 LOC)
 - src/app/(admin)/admin/drafts/[batchId]/page.tsx (139 LOC)
 - src/app/(admin)/admin/drafts/[batchId]/review-client.tsx (1628 LOC)
-- src/app/(admin)/admin/email-templates/actions.ts (127 LOC)
+- src/app/(admin)/admin/email-templates/actions.ts (233 LOC)
 - src/app/(admin)/admin/email-templates/email-editor.tsx (255 LOC)
 - src/app/(admin)/admin/email-templates/loading.tsx (6 LOC)
-- src/app/(admin)/admin/email-templates/page.tsx (28 LOC)
+- src/app/(admin)/admin/email-templates/page.tsx (45 LOC)
+- src/app/(admin)/admin/email-templates/templates-list.tsx (208 LOC)
 - src/app/(admin)/admin/layout.tsx (115 LOC)
 - src/app/(admin)/admin/mailbox/[threadId]/page.tsx (258 LOC)
 - src/app/(admin)/admin/mailbox/actions.ts (409 LOC)
@@ -185,7 +186,6 @@ Auto-generated. Total: 560 files, ~93,212 LOC.
 - src/app/(admin)/admin/suppliers/supplier-row.tsx (126 LOC)
 - src/app/(admin)/error.tsx (56 LOC)
 - src/app/(admin-auth)/admin/login/page.tsx (91 LOC)
-- src/app/(admin-onboarding)/admin/welcome/page.tsx (114 LOC)
-- src/app/(drafts-mobile)/admi
+- src/app/(admin-onboar
 
-... [truncated at 10,000 chars; compact render was 28,820. Use git ls-files for full file list.]
+... [truncated at 10,000 chars; compact render was 28,889. Use git ls-files for full file list.]
