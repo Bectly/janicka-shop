@@ -1,12 +1,8 @@
 "use client";
 
-import { useActionState, useRef, useEffect } from "react";
+import { useRef, useState, useTransition, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { Send } from "lucide-react";
-import { sendReplyAction } from "@/app/(admin)/admin/mailbox/actions";
-
-type State = { ok: boolean; error?: string };
-
-const INITIAL: State = { ok: false };
 
 export function MailboxReplyForm({
   threadId,
@@ -15,20 +11,66 @@ export function MailboxReplyForm({
   threadId: string;
   replyTo: string;
 }) {
-  const boundAction = sendReplyAction.bind(null, threadId);
-  const [state, formAction, pending] = useActionState(boundAction, INITIAL);
+  const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
-  useEffect(() => {
-    if (state.ok && formRef.current) {
-      formRef.current.reset();
-    }
-  }, [state.ok]);
+  function onSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(null);
+    setSuccess(false);
+    const fd = new FormData(e.currentTarget);
+    const body = String(fd.get("body") ?? "");
+
+    startTransition(async () => {
+      try {
+        const res = await fetch(
+          `/api/admin/mailbox/threads/${encodeURIComponent(threadId)}/reply`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ body }),
+          },
+        );
+        const data = (await res.json().catch(() => null)) as
+          | { ok: true }
+          | { ok: false; error?: string }
+          | null;
+
+        if (!res.ok || !data?.ok) {
+          setError(
+            (data && "error" in data && data.error) ||
+              "Odeslání odpovědi selhalo.",
+          );
+          return;
+        }
+
+        setSuccess(true);
+        formRef.current?.reset();
+        router.refresh();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Síťová chyba.");
+      }
+    });
+  }
+
+  const status = error
+    ? error
+    : success
+      ? "Odpověď odeslána."
+      : "Z odeslání se vytvoří nový záznam v konverzaci.";
+  const statusClass = error
+    ? "text-destructive"
+    : success
+      ? "text-emerald-600"
+      : "text-muted-foreground";
 
   return (
     <form
       ref={formRef}
-      action={formAction}
+      onSubmit={onSubmit}
       className="mt-6 overflow-hidden rounded-xl border bg-card shadow-sm"
     >
       <div className="border-b bg-muted/30 px-4 py-2 text-xs text-muted-foreground">
@@ -41,31 +83,17 @@ export function MailboxReplyForm({
         rows={6}
         placeholder="Napiš odpověď…"
         className="w-full resize-y border-0 bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
-        disabled={pending}
+        disabled={isPending}
       />
       <div className="flex items-center justify-between gap-3 border-t bg-muted/20 px-4 py-2">
-        <p
-          className={`text-xs ${
-            state.error
-              ? "text-destructive"
-              : state.ok
-                ? "text-emerald-600"
-                : "text-muted-foreground"
-          }`}
-        >
-          {state.error
-            ? state.error
-            : state.ok
-              ? "Odpověď odeslána."
-              : "Z odeslání se vytvoří nový záznam v konverzaci."}
-        </p>
+        <p className={`text-xs ${statusClass}`}>{status}</p>
         <button
           type="submit"
-          disabled={pending}
+          disabled={isPending}
           className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Send className="size-4" />
-          {pending ? "Odesílání…" : "Odeslat"}
+          {isPending ? "Odesílání…" : "Odeslat"}
         </button>
       </div>
     </form>

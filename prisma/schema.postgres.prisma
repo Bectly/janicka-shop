@@ -610,6 +610,8 @@ model EmailThread {
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
   messages         EmailMessage[]
+  threadLabels     EmailThreadLabel[]
+  drafts           EmailDraft[]
 
   @@index([lastMessageAt])
   @@index([archived, trashed, lastMessageAt])
@@ -655,6 +657,82 @@ model EmailAttachment {
   createdAt  DateTime     @default(now())
 
   @@index([messageId])
+}
+
+// --- Mailbox v2 Phase B (task #1032) ---
+model EmailLabel {
+  id        String             @id @default(cuid())
+  name      String             @unique
+  color     String             @default("#9CA3AF")
+  createdAt DateTime           @default(now())
+  threads   EmailThreadLabel[]
+}
+
+model EmailThreadLabel {
+  threadId  String
+  labelId   String
+  thread    EmailThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  label     EmailLabel  @relation(fields: [labelId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+
+  @@id([threadId, labelId])
+  @@index([labelId])
+}
+
+model EmailDraft {
+  id              String       @id @default(cuid())
+  threadId        String?
+  thread          EmailThread? @relation(fields: [threadId], references: [id], onDelete: SetNull)
+  inReplyToId     String?
+  fromAlias       String
+  toAddresses     String       @default("[]")
+  ccAddresses     String       @default("[]")
+  bccAddresses    String       @default("[]")
+  subject         String       @default("")
+  bodyHtml        String       @default("")
+  bodyText        String       @default("")
+  attachmentR2Keys String      @default("[]")
+  authorId        String
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([authorId, updatedAt])
+  @@index([threadId])
+}
+
+model EmailSignature {
+  id        String   @id @default(cuid())
+  alias     String   @unique
+  isDefault Boolean  @default(false)
+  bodyHtml  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model EmailTemplate {
+  id        String   @id @default(cuid())
+  category  String
+  name      String
+  subject   String
+  bodyHtml  String
+  variables String   @default("[]")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category, name])
+}
+
+model EmailRule {
+  id         String   @id @default(cuid())
+  name       String
+  enabled    Boolean  @default(true)
+  priority   Int      @default(100)
+  conditions String
+  actions    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([enabled, priority])
 }
 
 // ============================================================================

@@ -406,3 +406,138 @@ export async function sendNewMessageAction(
   revalidateTag("admin-mailbox", "max");
   redirect(`/admin/mailbox/${thread.id}`);
 }
+
+// --- Phase B: drafts (task #1032) ---
+
+export type DraftInput = {
+  id?: string;
+  threadId?: string | null;
+  inReplyToId?: string | null;
+  fromAlias: string;
+  toAddresses?: string[];
+  ccAddresses?: string[];
+  bccAddresses?: string[];
+  subject?: string;
+  bodyHtml?: string;
+  bodyText?: string;
+  attachmentR2Keys?: string[];
+};
+
+type DraftRow = {
+  id: string;
+  threadId: string | null;
+  inReplyToId: string | null;
+  fromAlias: string;
+  toAddresses: string[];
+  ccAddresses: string[];
+  bccAddresses: string[];
+  subject: string;
+  bodyHtml: string;
+  bodyText: string;
+  attachmentR2Keys: string[];
+  updatedAt: Date;
+  createdAt: Date;
+};
+
+function toStringArray(v: unknown): string[] {
+  if (!Array.isArray(v)) return [];
+  return v.filter((x): x is string => typeof x === "string");
+}
+
+/**
+ * Upsert a draft for the current admin. Pass `id` to update an existing draft;
+ * omit `id` to create a new one. Body is stored both as HTML and plain text so
+ * the preview stays accessible when the rich editor is offline.
+ */
+export async function saveEmailDraftAction(input: DraftInput): Promise<{ id: string }> {
+  const session = await requireAdmin();
+  const authorId = session.user?.id;
+  if (!authorId) throw new Error("Unauthorized");
+
+  if (typeof input?.fromAlias !== "string" || !input.fromAlias.trim()) {
+    throw new Error("fromAlias is required");
+  }
+
+  const data = {
+    threadId: input.threadId ?? null,
+    inReplyToId: input.inReplyToId ?? null,
+    fromAlias: input.fromAlias.trim().toLowerCase(),
+    toAddresses: JSON.stringify(toStringArray(input.toAddresses)),
+    ccAddresses: JSON.stringify(toStringArray(input.ccAddresses)),
+    bccAddresses: JSON.stringify(toStringArray(input.bccAddresses)),
+    subject: typeof input.subject === "string" ? input.subject : "",
+    bodyHtml: typeof input.bodyHtml === "string" ? input.bodyHtml : "",
+    bodyText: typeof input.bodyText === "string" ? input.bodyText : "",
+    attachmentR2Keys: JSON.stringify(toStringArray(input.attachmentR2Keys)),
+    authorId,
+  };
+
+  const db = await getDb();
+  if (input.id && typeof input.id === "string") {
+    const existing = await db.emailDraft.findUnique({ where: { id: input.id } });
+    if (!existing) throw new Error("Draft not found");
+    if (existing.authorId !== authorId) throw new Error("Forbidden");
+    const updated = await db.emailDraft.update({
+      where: { id: input.id },
+      data,
+      select: { id: true },
+    });
+    revalidatePath("/admin/mailbox");
+    return { id: updated.id };
+  }
+
+  const created = await db.emailDraft.create({ data, select: { id: true } });
+  revalidatePath("/admin/mailbox");
+  return { id: created.id };
+}
+
+export async function deleteEmailDraftAction(id: string): Promise<void> {
+  const session = await requireAdmin();
+  const authorId = session.user?.id;
+  if (!authorId) throw new Error("Unauthorized");
+  if (typeof id !== "string" || !id) return;
+
+  const db = await getDb();
+  const existing = await db.emailDraft.findUnique({ where: { id } });
+  if (!existing) return;
+  if (existing.authorId !== authorId) throw new Error("Forbidden");
+
+  await db.emailDraft.delete({ where: { id } });
+  revalidatePath("/admin/mailbox");
+}
+
+export async function listEmailDraftsAction(opts?: {
+  threadId?: string;
+  limit?: number;
+}): Promise<DraftRow[]> {
+  const session = await requireAdmin();
+  const authorId = session.user?.id;
+  if (!authorId) throw new Error("Unauthorized");
+
+  const db = await getDb();
+  const where: { authorId: string; threadId?: string } = { authorId };
+  if (opts?.threadId) where.threadId = opts.threadId;
+
+  const limit = Math.min(Math.max(opts?.limit ?? 50, 1), 200);
+  const rows = await db.emailDraft.findMany({
+    where,
+    orderBy: { updatedAt: "desc" },
+    take: limit,
+  });
+
+  return rows.map((r) => ({
+    id: r.id,
+    threadId: r.threadId,
+    inReplyToId: r.inReplyToId,
+    fromAlias: r.fromAlias,
+    toAddresses: parseJsonList(r.toAddresses),
+    ccAddresses: parseJsonList(r.ccAddresses),
+    bccAddresses: parseJsonList(r.bccAddresses),
+    subject: r.subject,
+    bodyHtml: r.bodyHtml,
+    bodyText: r.bodyText,
+    attachmentR2Keys: parseJsonList(r.attachmentR2Keys),
+    updatedAt: r.updatedAt,
+    createdAt: r.createdAt,
+  }));
+}
