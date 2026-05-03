@@ -1,7 +1,7 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 558 files, ~93,034 LOC.
-**Drill-down dropped** — full render was 59,982 chars > cap 10,000 (~17% shown). Grep source files directly for symbol-level detail.
+Auto-generated. Total: 559 files, ~92,998 LOC.
+**Drill-down dropped** — full render was 60,048 chars > cap 10,000 (~17% shown). Grep source files directly for symbol-level detail.
 
 ---
 
@@ -60,7 +60,7 @@ Auto-generated. Total: 558 files, ~93,034 LOC.
 - scripts/workers/packeta.ts (7 LOC)
 - scripts/workers/test-queue-integration.ts (482 LOC)
 
-## `src/` (514 files)
+## `src/` (515 files)
 
 - src/app/(admin)/admin/abandoned-carts/loading.tsx (6 LOC)
 - src/app/(admin)/admin/abandoned-carts/page.tsx (214 LOC)
@@ -79,14 +79,14 @@ Auto-generated. Total: 558 files, ~93,034 LOC.
 - src/app/(admin)/admin/bundles/bundle-roi-card.tsx (210 LOC)
 - src/app/(admin)/admin/bundles/page.tsx (493 LOC)
 - src/app/(admin)/admin/categories/[id]/edit/page.tsx (52 LOC)
-- src/app/(admin)/admin/categories/actions.ts (166 LOC)
+- src/app/(admin)/admin/categories/actions.ts (161 LOC)
 - src/app/(admin)/admin/categories/category-form.tsx (140 LOC)
 - src/app/(admin)/admin/categories/category-row.tsx (96 LOC)
 - src/app/(admin)/admin/categories/loading.tsx (6 LOC)
 - src/app/(admin)/admin/categories/new/page.tsx (24 LOC)
 - src/app/(admin)/admin/categories/page.tsx (120 LOC)
 - src/app/(admin)/admin/collections/[id]/edit/page.tsx (48 LOC)
-- src/app/(admin)/admin/collections/actions.ts (186 LOC)
+- src/app/(admin)/admin/collections/actions.ts (181 LOC)
 - src/app/(admin)/admin/collections/collection-form.tsx (392 LOC)
 - src/app/(admin)/admin/collections/collection-row.tsx (80 LOC)
 - src/app/(admin)/admin/collections/ensure-seasonal-button.tsx (58 LOC)
@@ -111,13 +111,13 @@ Auto-generated. Total: 558 files, ~93,034 LOC.
 - src/app/(admin)/admin/drafts/[batchId]/actions.ts (407 LOC)
 - src/app/(admin)/admin/drafts/[batchId]/page.tsx (139 LOC)
 - src/app/(admin)/admin/drafts/[batchId]/review-client.tsx (1628 LOC)
-- src/app/(admin)/admin/email-templates/actions.ts (133 LOC)
+- src/app/(admin)/admin/email-templates/actions.ts (127 LOC)
 - src/app/(admin)/admin/email-templates/email-editor.tsx (255 LOC)
 - src/app/(admin)/admin/email-templates/loading.tsx (6 LOC)
 - src/app/(admin)/admin/email-templates/page.tsx (28 LOC)
 - src/app/(admin)/admin/layout.tsx (115 LOC)
 - src/app/(admin)/admin/mailbox/[threadId]/page.tsx (258 LOC)
-- src/app/(admin)/admin/mailbox/actions.ts (416 LOC)
+- src/app/(admin)/admin/mailbox/actions.ts (409 LOC)
 - src/app/(admin)/admin/mailbox/compose/page.tsx (40 LOC)
 - src/app/(admin)/admin/mailbox/loading.tsx (6 LOC)
 - src/app/(admin)/admin/mailbox/mailbox-search.tsx (86 LOC)
@@ -131,7 +131,7 @@ Auto-generated. Total: 558 files, ~93,034 LOC.
 - src/app/(admin)/admin/orders/[id]/packeta-section.tsx (121 LOC)
 - src/app/(admin)/admin/orders/[id]/page.tsx (501 LOC)
 - src/app/(admin)/admin/orders/[id]/tracking-number-form.tsx (70 LOC)
-- src/app/(admin)/admin/orders/actions.ts (1023 LOC)
+- src/app/(admin)/admin/orders/actions.ts (1018 LOC)
 - src/app/(admin)/admin/orders/loading.tsx (6 LOC)
 - src/app/(admin)/admin/orders/orders-table.tsx (379 LOC)
 - src/app/(admin)/admin/orders/page.tsx (178 LOC)
@@ -139,7 +139,7 @@ Auto-generated. Total: 558 files, ~93,034 LOC.
 - src/app/(admin)/admin/products/[id]/label/page.tsx (122 LOC)
 - src/app/(admin)/admin/products/[id]/label/print-button.tsx (20 LOC)
 - src/app/(admin)/admin/products/[id]/label/print-styles.tsx (33 LOC)
-- src/app/(admin)/admin/products/actions.ts (965 LOC)
+- src/app/(admin)/admin/products/actions.ts (960 LOC)
 - src/app/(admin)/admin/products/bulk-price.ts (21 LOC)
 - src/app/(admin)/admin/products/loading.tsx (6 LOC)
 - src/app/(admin)/admin/products/new/page.tsx (44 LOC)
@@ -155,18 +155,18 @@ Auto-generated. Total: 558 files, ~93,034 LOC.
 - src/app/(admin)/admin/returns/[id]/page.tsx (327 LOC)
 - src/app/(admin)/admin/returns/[id]/refund-button.tsx (101 LOC)
 - src/app/(admin)/admin/returns/[id]/return-status-select.tsx (108 LOC)
-- src/app/(admin)/admin/returns/actions.ts (537 LOC)
+- src/app/(admin)/admin/returns/actions.ts (532 LOC)
 - src/app/(admin)/admin/returns/loading.tsx (6 LOC)
 - src/app/(admin)/admin/returns/page.tsx (214 LOC)
 - src/app/(admin)/admin/scan/page.tsx (35 LOC)
 - src/app/(admin)/admin/scan/scanner-client.tsx (231 LOC)
-- src/app/(admin)/admin/settings/actions.ts (282 LOC)
+- src/app/(admin)/admin/settings/actions.ts (278 LOC)
 - src/app/(admin)/admin/settings/loading.tsx (6 LOC)
 - src/app/(admin)/admin/settings/measurements-backfill.tsx (124 LOC)
 - src/app/(admin)/admin/settings/page.tsx (72 LOC)
 - src/app/(admin)/admin/settings/password-form.tsx (90 LOC)
 - src/app/(admin)/admin/settings/settings-form.tsx (294 LOC)
-- src/app/(admin)/admin/subscribers/actions.ts (590 LOC)
+- src/app/(admin)/admin/subscribers/actions.ts (585 LOC)
 - src/app/(admin)/admin/subscribers/campaign-dry-run-dialog.tsx (483 LOC)
 - src/app/(admin)/admin/subscribers/campaign-sender.tsx (300 LOC)
 - src/app/(admin)/admin/subscribers/customs-campaign-button.tsx (115 LOC)
@@ -188,4 +188,4 @@ Auto-generated. Total: 558 files, ~93,034 LOC.
 - src/app/(admin-onboarding)/admin/welcome/page.tsx (114 LOC)
 - src/app/(drafts-mobile)/admi
 
-... [truncated at 10,000 chars; compact render was 28,729. Use git ls-files for full file list.]
+... [truncated at 10,000 chars; compact render was 28,765. Use git ls-files for full file list.]
