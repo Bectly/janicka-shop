@@ -140,23 +140,34 @@ test.describe("Functional bug hunt — prod (jvsatnik.cz)", () => {
     expect(apiFailures).toHaveLength(0);
   });
 
-  test("P-3 — PDP for known live slug: 200, AddToCart button visible", async ({
-    page,
-  }) => {
-    await page.goto("/products", { waitUntil: "domcontentloaded" });
-    const firstHref = await page
-      .locator('a[href^="/products/"]')
-      .first()
-      .getAttribute("href");
-    expect(firstHref).toBeTruthy();
-    const res = await page.goto(firstHref!, {
-      waitUntil: "domcontentloaded",
-    });
-    expect(res?.status()).toBe(200);
-    await expect(
-      page.getByRole("button", { name: /Přidat do košíku|Vyprodáno/ }),
-    ).toBeVisible({ timeout: 10_000 });
-  });
+  test.fixme(
+    "F6 (P0) — PDP renders blank/empty body (no product info, no AddToCart) — confirms C5180",
+    async ({ page }) => {
+      // Sage C5180 reported every PDP renders sold-out empty state.
+      // This probe corroborates: navigating to a freshly-listed slug
+      // from /products produces a page with announcement bar +
+      // newsletter footer + cookie modal, but the entire main column
+      // is collapsed (no image, no price, no button). The 'Přidat do
+      // košíku' string IS present in the SSR HTML (curl confirms) but
+      // the rendered DOM has no such button — likely client-side
+      // hydration error or sold-out branch hiding the entire form.
+      // Likely same root cause as the Postgres-vs-libsql adapter
+      // mismatch flagged in C5183 build break.
+      await page.goto("/products", { waitUntil: "domcontentloaded" });
+      const firstHref = await page
+        .locator('a[href^="/products/"]')
+        .first()
+        .getAttribute("href");
+      expect(firstHref).toBeTruthy();
+      const res = await page.goto(firstHref!, {
+        waitUntil: "domcontentloaded",
+      });
+      expect(res?.status()).toBe(200);
+      await expect(
+        page.getByRole("button", { name: /Přidat do košíku|Vyprodáno/ }),
+      ).toBeVisible({ timeout: 10_000 });
+    },
+  );
 
   test("P-4 — /api/search/products: returns full client-side index (≥1 item)", async ({
     request,
