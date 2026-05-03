@@ -247,6 +247,41 @@ test.describe("@requires-db Mailbox API — authenticated round-trips", () => {
     expect(thread?.messages).toHaveLength(1);
     expect(thread?.messages[0].direction).toBe("outbound");
   });
+
+  test("POST reply happy path → 200 + outbound EmailMessage appended [skips without RESEND_API_KEY]", async ({
+    page,
+  }) => {
+    test.skip(!seededThreadId, "seed missing");
+    test.skip(
+      !process.env.RESEND_API_KEY,
+      "RESEND_API_KEY unset — reply path requires real mailer",
+    );
+    await loginAsAdmin(page);
+
+    const before = await prisma.emailMessage.count({
+      where: { threadId: seededThreadId! },
+    });
+
+    const res = await page.context().request.post(
+      `/api/admin/mailbox/threads/${seededThreadId}/reply`,
+      { data: { body: "E2E reply body — round-trip persistence check." } },
+    );
+    expect(res.status()).toBe(200);
+    const json = await res.json();
+    expect(json.ok).toBe(true);
+
+    const after = await prisma.emailMessage.findMany({
+      where: { threadId: seededThreadId! },
+      orderBy: { receivedAt: "desc" },
+      take: 1,
+    });
+    expect(after.length).toBe(1);
+    expect(after[0].direction).toBe("outbound");
+    const total = await prisma.emailMessage.count({
+      where: { threadId: seededThreadId! },
+    });
+    expect(total).toBe(before + 1);
+  });
 });
 
 test.describe("Resend inbound webhook — DB persist round-trip", () => {
