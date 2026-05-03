@@ -50,7 +50,25 @@ export async function POST(req: NextRequest) {
 
   const mail = mapResendPayload(payload);
   if (!mail) {
-    logger.warn("[resend-inbound] payload missing required fields");
+    // Log shape (no body content) so we can adapt to whatever Resend sends.
+    const shape =
+      payload && typeof payload === "object"
+        ? {
+            topKeys: Object.keys(payload as Record<string, unknown>).slice(0, 20),
+            type: (payload as { type?: unknown }).type ?? null,
+            dataKeys:
+              typeof (payload as { data?: unknown }).data === "object"
+                ? Object.keys((payload as { data: Record<string, unknown> }).data).slice(0, 30)
+                : null,
+            fromShape: typeof (payload as { data?: { from?: unknown } }).data?.from,
+            toShape: typeof (payload as { data?: { to?: unknown } }).data?.to,
+            headersShape:
+              Array.isArray((payload as { data?: { headers?: unknown } }).data?.headers)
+                ? "array"
+                : typeof (payload as { data?: { headers?: unknown } }).data?.headers,
+          }
+        : { topKeys: [], note: "payload not object" };
+    logger.warn("[resend-inbound] payload missing required fields", { shape });
     return NextResponse.json({ error: "missing_fields" }, { status: 400 });
   }
 
