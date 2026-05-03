@@ -61,7 +61,6 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
   // Numeric zoom (1 = normal, 2+ = zoomed) for pinch-to-zoom support
   const [lbZoom, setLbZoom] = useState(1);
   const isZoomed = lbZoom > 1;
-  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [lightboxDismissY, setLightboxDismissY] = useState(0);
   const [isLbDismissing, setIsLbDismissing] = useState(false);
   const imgContainerRef = useRef<HTMLDivElement>(null);
@@ -94,24 +93,68 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
     startDist: number;
     startZoom: number;
   }>({ active: false, startDist: 0, startZoom: 1 });
+  // Zoom transform — applied via direct DOM mutation for 60fps gesture follow.
+  // gestureRef is the source of truth during pinch/pan/wheel; lbZoom state is committed at gesture end.
+  const zoomRef = useRef<HTMLDivElement>(null);
+  const gestureRef = useRef({ zoom: 1, panX: 0, panY: 0 });
+  const rafRef = useRef<number | null>(null);
+
+  const applyZoomTransform = useCallback(() => {
+    const el = zoomRef.current;
+    if (!el) return;
+    const { zoom, panX, panY } = gestureRef.current;
+    el.style.transform = `translate3d(${panX}px, ${panY}px, 0) scale(${zoom})`;
+  }, []);
+
+  const scheduleZoomApply = useCallback(() => {
+    if (rafRef.current != null) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      applyZoomTransform();
+    });
+  }, [applyZoomTransform]);
+
+  const clampPan = useCallback((zoom: number, panX: number, panY: number) => {
+    const container = imgContainerRef.current;
+    if (!container || zoom <= 1) return { panX: 0, panY: 0 };
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    const maxX = (w * (zoom - 1)) / 2;
+    const maxY = (h * (zoom - 1)) / 2;
+    return {
+      panX: Math.max(-maxX, Math.min(maxX, panX)),
+      panY: Math.max(-maxY, Math.min(maxY, panY)),
+    };
+  }, []);
+
+  const animateZoomReset = useCallback(() => {
+    gestureRef.current = { zoom: 1, panX: 0, panY: 0 };
+    const el = zoomRef.current;
+    if (!el) return;
+    el.style.transition = "transform 200ms cubic-bezier(0.16,1,0.3,1)";
+    el.style.transform = "translate3d(0,0,0) scale(1)";
+    window.setTimeout(() => {
+      if (zoomRef.current) zoomRef.current.style.transition = "";
+    }, 220);
+  }, []);
 
   const openLightbox = useCallback(
     (index: number) => {
       setActiveIndex(index);
       setLightboxOpen(true);
       setLbZoom(1);
-      setPanOffset({ x: 0, y: 0 });
+      gestureRef.current = { zoom: 1, panX: 0, panY: 0 };
     },
     [],
   );
 
   const closeLightbox = useCallback(() => {
     setLightboxClosing(true);
+    gestureRef.current = { zoom: 1, panX: 0, panY: 0 };
     setTimeout(() => {
       setLightboxOpen(false);
       setLightboxClosing(false);
       setLbZoom(1);
-      setPanOffset({ x: 0, y: 0 });
       setLightboxDismissY(0);
     }, 150);
   }, []);
@@ -120,23 +163,34 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
     setSlideDirection("left");
     setActiveIndex((prev) => (prev === totalSlides - 1 ? 0 : prev + 1));
     setLbZoom(1);
-    setPanOffset({ x: 0, y: 0 });
-  }, [totalSlides]);
+    animateZoomReset();
+  }, [totalSlides, animateZoomReset]);
 
   const goPrev = useCallback(() => {
     setSlideDirection("right");
     setActiveIndex((prev) => (prev === 0 ? totalSlides - 1 : prev - 1));
     setLbZoom(1);
-    setPanOffset({ x: 0, y: 0 });
-  }, [totalSlides]);
+    animateZoomReset();
+  }, [totalSlides, animateZoomReset]);
 
   const toggleZoom = useCallback(() => {
-    setLbZoom((z) => {
-      if (z <= 1) return 2;
-      setPanOffset({ x: 0, y: 0 });
-      return 1;
-    });
-  }, []);
+    const cur = gestureRef.current.zoom;
+    if (cur > 1) {
+      animateZoomReset();
+      setLbZoom(1);
+      return;
+    }
+    gestureRef.current = { zoom: 2, panX: 0, panY: 0 };
+    const el = zoomRef.current;
+    if (el) {
+      el.style.transition = "transform 200ms cubic-bezier(0.16,1,0.3,1)";
+      el.style.transform = "translate3d(0,0,0) scale(2)";
+      window.setTimeout(() => {
+        if (zoomRef.current) zoomRef.current.style.transition = "";
+      }, 220);
+    }
+    setLbZoom(2);
+  }, [animateZoomReset]);
 
   // Touch swipe handlers for mobile gallery navigation
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -178,7 +232,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
       el.style.transition = "none";
       el.style.transform = `translate3d(${dx}px, 0, 0)`;
     }
-  }, []);
+  }, [totalSlides]);
 
   const handleTouchEnd = useCallback(() => {
     const el = swipeRefLightbox.current ?? swipeRefInline.current;
@@ -215,14 +269,14 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
           return imageSlideIndices[(pos + 1) % imageSlideIndices.length];
         });
         setLbZoom(1);
-        setPanOffset({ x: 0, y: 0 });
+          animateZoomReset();
       } else if (e.key === "ArrowLeft") {
         setActiveIndex((prev) => {
           const pos = imageSlideIndices.indexOf(prev);
           return imageSlideIndices[(pos - 1 + imageSlideIndices.length) % imageSlideIndices.length];
         });
         setLbZoom(1);
-        setPanOffset({ x: 0, y: 0 });
+          animateZoomReset();
       }
     };
     document.addEventListener("keydown", handleKey);
@@ -243,7 +297,33 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
       document.body.classList.remove("lightbox-open");
       window.scrollTo(0, scrollY);
     };
-  }, [lightboxOpen, closeLightbox, imageSlideIndices]);
+  }, [lightboxOpen, closeLightbox, imageSlideIndices, animateZoomReset]);
+
+  // Desktop wheel zoom — passive: false so we can preventDefault and stop page scroll
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const container = imgContainerRef.current;
+    if (!container) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const cur = gestureRef.current.zoom;
+      // Smooth exponential factor — feels natural, no debounce needed.
+      const factor = Math.exp(-e.deltaY * 0.0015);
+      const newZoom = Math.max(1, Math.min(4, cur * factor));
+      if (newZoom === cur) return;
+      gestureRef.current.zoom = newZoom;
+      const clamped = clampPan(newZoom, gestureRef.current.panX, gestureRef.current.panY);
+      gestureRef.current.panX = clamped.panX;
+      gestureRef.current.panY = clamped.panY;
+      scheduleZoomApply();
+      // Commit only when crossing the isZoomed boundary — avoids re-render per wheel tick
+      if ((cur > 1) !== (newZoom > 1)) {
+        setLbZoom(newZoom > 1 ? newZoom : 1);
+      }
+    };
+    container.addEventListener("wheel", onWheel, { passive: false });
+    return () => container.removeEventListener("wheel", onWheel);
+  }, [lightboxOpen, clampPan, scheduleZoomApply]);
 
   // Pause video and reset when leaving video slide (tap-to-play = no autoplay)
   useEffect(() => {
@@ -286,7 +366,8 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
     }
   }, [lightboxDismissY, closeLightbox]);
 
-  // Mouse drag for panning when zoomed
+  // Pointer-based pan when zoomed (mouse drag + single-finger touch drag).
+  // Mutates gestureRef directly + schedules a rAF style.transform write — no React re-render per move.
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
       if (!isZoomed) return;
@@ -296,12 +377,12 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
         didDrag: false,
         startX: e.clientX,
         startY: e.clientY,
-        startOffsetX: panOffset.x,
-        startOffsetY: panOffset.y,
+        startOffsetX: gestureRef.current.panX,
+        startOffsetY: gestureRef.current.panY,
       };
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
     },
-    [isZoomed, panOffset],
+    [isZoomed],
   );
 
   const handlePointerMove = useCallback(
@@ -309,16 +390,16 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
       if (!dragRef.current.dragging) return;
       const dx = e.clientX - dragRef.current.startX;
       const dy = e.clientY - dragRef.current.startY;
-      // Mark as actual drag if moved beyond a small threshold
       if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
         dragRef.current.didDrag = true;
       }
-      setPanOffset({
-        x: dragRef.current.startOffsetX + dx,
-        y: dragRef.current.startOffsetY + dy,
-      });
+      const zoom = gestureRef.current.zoom;
+      const clamped = clampPan(zoom, dragRef.current.startOffsetX + dx, dragRef.current.startOffsetY + dy);
+      gestureRef.current.panX = clamped.panX;
+      gestureRef.current.panY = clamped.panY;
+      scheduleZoomApply();
     },
-    [],
+    [clampPan, scheduleZoomApply],
   );
 
   const handlePointerUp = useCallback(() => {
@@ -566,7 +647,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                     return imageSlideIndices[(pos - 1 + imageSlideIndices.length) % imageSlideIndices.length];
                   });
                   setLbZoom(1);
-                  setPanOffset({ x: 0, y: 0 });
+                              animateZoomReset();
                 }}
                 className="absolute top-1/2 left-2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-2.5 text-white transition-all duration-150 hover:bg-white/20 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:left-4 sm:p-3"
                 aria-label="Předchozí fotka"
@@ -581,7 +662,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                     return imageSlideIndices[(pos + 1) % imageSlideIndices.length];
                   });
                   setLbZoom(1);
-                  setPanOffset({ x: 0, y: 0 });
+                              animateZoomReset();
                 }}
                 className="absolute top-1/2 right-2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-2.5 text-white transition-all duration-150 hover:bg-white/20 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:right-4 sm:p-3"
                 aria-label="Další fotka"
@@ -619,10 +700,11 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
             onTouchStart={(e) => {
               if (e.touches.length === 2) {
                 // Pinch start — capture initial distance and zoom level
+                // Read from gestureRef (canonical) not lbZoom (state, may be stale mid-gesture)
                 pinchRef.current = {
                   active: true,
                   startDist: getPinchDist(e),
-                  startZoom: lbZoom,
+                  startZoom: gestureRef.current.zoom,
                 };
                 return;
               }
@@ -639,7 +721,11 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                   1,
                   Math.min(4, pinchRef.current.startZoom * (dist / pinchRef.current.startDist)),
                 );
-                setLbZoom(newZoom);
+                gestureRef.current.zoom = newZoom;
+                const clamped = clampPan(newZoom, gestureRef.current.panX, gestureRef.current.panY);
+                gestureRef.current.panX = clamped.panX;
+                gestureRef.current.panY = clamped.panY;
+                scheduleZoomApply();
                 return;
               }
               if (!isZoomed) {
@@ -650,14 +736,13 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
             onTouchEnd={() => {
               if (pinchRef.current.active) {
                 pinchRef.current.active = false;
-                // Snap back to 1.0 if barely zoomed
-                setLbZoom((z) => {
-                  if (z < 1.2) {
-                    setPanOffset({ x: 0, y: 0 });
-                    return 1;
-                  }
-                  return z;
-                });
+                const finalZoom = gestureRef.current.zoom;
+                if (finalZoom < 1.2) {
+                  animateZoomReset();
+                  setLbZoom(1);
+                } else {
+                  setLbZoom(finalZoom);
+                }
                 return;
               }
               if (!isZoomed) {
@@ -670,20 +755,23 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
               ref={swipeRefLightbox}
               className="absolute inset-0 [touch-action:pan-y] [will-change:transform] [transform:translateZ(0)]"
             >
-              <Image
-                src={getUrl(images[getImageIndex(activeIndex)])}
-                alt={getAlt(images[getImageIndex(activeIndex)], productName, getImageIndex(activeIndex))}
-                fill
-                priority
-                className={isZoomed ? "object-contain transition-transform duration-200" : "object-contain"}
-                style={{
-                  transform: isZoomed
-                    ? `scale(${lbZoom}) translate(${panOffset.x / lbZoom}px, ${panOffset.y / lbZoom}px)`
-                    : undefined,
-                }}
-                sizes="(max-width: 640px) 80vw, 32rem"
-                unoptimized
-              />
+              {/* Zoom layer — transform applied via ref, not React style, to avoid re-render per gesture frame.
+                  Image keyed by activeIndex for fade-in on switch (no flash). */}
+              <div
+                ref={zoomRef}
+                className="absolute inset-0 [will-change:transform] [transform-origin:50%_50%]"
+              >
+                <Image
+                  key={`lb-${activeIndex}`}
+                  src={getUrl(images[getImageIndex(activeIndex)])}
+                  alt={getAlt(images[getImageIndex(activeIndex)], productName, getImageIndex(activeIndex))}
+                  fill
+                  priority
+                  className="object-contain animate-in fade-in-0 duration-200"
+                  sizes="(max-width: 640px) 80vw, 32rem"
+                  unoptimized
+                />
+              </div>
             </div>
           </div>
 
@@ -701,7 +789,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
                       e.stopPropagation();
                       setActiveIndex(slideIdx);
                       setLbZoom(1);
-                      setPanOffset({ x: 0, y: 0 });
+                                      animateZoomReset();
                     }}
                     className={`relative size-12 shrink-0 overflow-hidden rounded-lg border-2 transition-all sm:size-14 ${
                       slideIdx === activeIndex
