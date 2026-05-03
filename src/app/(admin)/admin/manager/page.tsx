@@ -27,9 +27,12 @@ import { SessionTab } from "@/components/admin/manager/session-tab";
 import { ThreadsTab } from "@/components/admin/manager/threads-tab";
 import { TodayTab } from "@/components/admin/manager/today-tab";
 import { HistoryTab } from "@/components/admin/manager/history-tab";
+import { WorkspaceTabsShell } from "@/components/admin/manager/workspace-tabs-shell";
+import type { WorkspaceTabRow } from "@/app/(admin)/admin/manager/workspace/actions";
 
 const JANICKA_PROJECT_ID = 15;
 const V2_FLAG = process.env.MANAGER_UI_V2 === "1";
+const WORKSPACE_FLAG = process.env.MANAGER_WORKSPACE === "1";
 
 export const metadata: Metadata = {
   title: "Manažerka",
@@ -340,6 +343,48 @@ async function renderV2({
     (a) => a.createdAt.getTime() >= cutoff,
   ).length;
 
+  // Phase 11b: hybrid shell with workspace conversation tabs (gated by flag).
+  // Falls back to the 2-tab shell if MANAGER_WORKSPACE is unset so we can
+  // ship the schema/actions without forcing the UI on Janička yet.
+  let workspaceTabs: WorkspaceTabRow[] = [];
+  if (WORKSPACE_FLAG) {
+    const tabRows = await prisma.managerWorkspaceTab.findMany({
+      where: { projectId: JANICKA_PROJECT_ID },
+      orderBy: [{ status: "asc" }, { lastActivityAt: "desc" }],
+      take: 200,
+    });
+    workspaceTabs = await Promise.all(
+      tabRows.map(async (t) => {
+        const settings =
+          t.settingsJson && typeof t.settingsJson === "object"
+            ? (t.settingsJson as Record<string, unknown>)
+            : {};
+        const lastSeenRaw = settings.lastSeenAt;
+        const lastSeen = typeof lastSeenRaw === "string" ? lastSeenRaw : null;
+        const unreadCount = await prisma.workspaceMessage.count({
+          where: {
+            tabId: t.id,
+            role: "manager",
+            createdAt: lastSeen ? { gt: new Date(lastSeen) } : undefined,
+          },
+        });
+        const status: "active" | "pinned" | "archived" =
+          t.status === "pinned" || t.status === "archived"
+            ? t.status
+            : "active";
+        return {
+          id: t.id,
+          title: t.title,
+          status,
+          createdAt: t.createdAt.toISOString(),
+          lastActivityAt: t.lastActivityAt.toISOString(),
+          unreadCount,
+          lastSeenAt: lastSeen,
+        };
+      }),
+    );
+  }
+
   return (
     <div className="space-y-6 max-w-full">
       <header className="space-y-1">
@@ -352,17 +397,32 @@ async function renderV2({
         </p>
       </header>
 
-      <ManagerTabsShellV2
-        badges={{ dnes: totalActive, historie: historyCount }}
-        todayTab={
-          <TodayTab
-            actionableTasks={actionableTasks}
-            todayReport={todayReport}
-            latestManagerMessage={latestManagerMessage}
-          />
-        }
-        historyTab={<HistoryTab artifacts={historyArtifacts} />}
-      />
+      {WORKSPACE_FLAG ? (
+        <WorkspaceTabsShell
+          fixedBadges={{ dnes: totalActive, historie: historyCount }}
+          todayTab={
+            <TodayTab
+              actionableTasks={actionableTasks}
+              todayReport={todayReport}
+              latestManagerMessage={latestManagerMessage}
+            />
+          }
+          historyTab={<HistoryTab artifacts={historyArtifacts} />}
+          initialTabs={workspaceTabs}
+        />
+      ) : (
+        <ManagerTabsShellV2
+          badges={{ dnes: totalActive, historie: historyCount }}
+          todayTab={
+            <TodayTab
+              actionableTasks={actionableTasks}
+              todayReport={todayReport}
+              latestManagerMessage={latestManagerMessage}
+            />
+          }
+          historyTab={<HistoryTab artifacts={historyArtifacts} />}
+        />
+      )}
     </div>
   );
 }
