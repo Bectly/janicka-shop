@@ -541,3 +541,160 @@ export async function listEmailDraftsAction(opts?: {
     createdAt: r.createdAt,
   }));
 }
+
+// --- Phase B: labels CRUD + thread assignment (task #1038) ---
+
+export type LabelRow = {
+  id: string;
+  name: string;
+  color: string;
+  createdAt: Date;
+};
+
+const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
+
+function normalizeLabelName(raw: unknown): string {
+  if (typeof raw !== "string") return "";
+  return raw.trim().slice(0, 60);
+}
+
+function normalizeLabelColor(raw: unknown, fallback = "#9CA3AF"): string {
+  if (typeof raw !== "string") return fallback;
+  const v = raw.trim();
+  return HEX_COLOR.test(v) ? v : fallback;
+}
+
+export async function listLabelsAction(): Promise<LabelRow[]> {
+  await requireAdmin();
+  const db = await getDb();
+  const rows = await db.emailLabel.findMany({ orderBy: { name: "asc" } });
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    color: r.color,
+    createdAt: r.createdAt,
+  }));
+}
+
+export async function createLabelAction(input: {
+  name: string;
+  color?: string;
+}): Promise<{ id: string }> {
+  await requireAdmin();
+  const name = normalizeLabelName(input?.name);
+  if (!name) throw new Error("Název štítku je povinný.");
+  const color = normalizeLabelColor(input?.color);
+
+  const db = await getDb();
+  const existing = await db.emailLabel.findUnique({ where: { name } });
+  if (existing) throw new Error("Štítek s tímto názvem už existuje.");
+
+  const created = await db.emailLabel.create({
+    data: { name, color },
+    select: { id: true },
+  });
+  revalidatePath("/admin/mailbox");
+  revalidateTag("admin-mailbox", "max");
+  return { id: created.id };
+}
+
+export async function updateLabelAction(input: {
+  id: string;
+  name: string;
+  color?: string;
+}): Promise<void> {
+  await requireAdmin();
+  if (typeof input?.id !== "string" || !input.id) {
+    throw new Error("Chybí id štítku.");
+  }
+  const name = normalizeLabelName(input?.name);
+  if (!name) throw new Error("Název štítku je povinný.");
+  const color = normalizeLabelColor(input?.color);
+
+  const db = await getDb();
+  const clash = await db.emailLabel.findFirst({
+    where: { name, NOT: { id: input.id } },
+    select: { id: true },
+  });
+  if (clash) throw new Error("Štítek s tímto názvem už existuje.");
+
+  await db.emailLabel.update({
+    where: { id: input.id },
+    data: { name, color },
+  });
+  revalidatePath("/admin/mailbox");
+  revalidateTag("admin-mailbox", "max");
+}
+
+export async function deleteLabelAction(id: string): Promise<void> {
+  await requireAdmin();
+  if (typeof id !== "string" || !id) return;
+  const db = await getDb();
+  // Cascade on EmailThreadLabel handles the join rows.
+  await db.emailLabel.delete({ where: { id } }).catch(() => {
+    /* idempotent: already gone */
+  });
+  revalidatePath("/admin/mailbox");
+  revalidateTag("admin-mailbox", "max");
+}
+
+/**
+ * Replace the full label set for a thread. `labelIds` is the desired final
+ * set — server diffs against existing rows and applies adds/removes in one
+ * transaction so the picker stays atomic.
+ */
+export async function setThreadLabelsAction(
+  threadId: string,
+  labelIds: string[],
+): Promise<void> {
+  await requireAdmin();
+  if (typeof threadId !== "string" || !threadId) {
+    throw new Error("Chybí identifikátor konverzace.");
+  }
+  const desired = Array.from(
+    new Set(toStringArray(labelIds).filter((id) => id.length > 0)),
+  );
+
+  const db = await getDb();
+  const thread = await db.emailThread.findUnique({
+    where: { id: threadId },
+    select: { id: true },
+  });
+  if (!thread) throw new Error("Konverzace nenalezena.");
+
+  if (desired.length > 0) {
+    const valid = await db.emailLabel.findMany({
+      where: { id: { in: desired } },
+      select: { id: true },
+    });
+    if (valid.length !== desired.length) {
+      throw new Error("Některý štítek neexistuje.");
+    }
+  }
+
+  const existing = await db.emailThreadLabel.findMany({
+    where: { threadId },
+    select: { labelId: true },
+  });
+  const existingIds = new Set(existing.map((r) => r.labelId));
+  const desiredSet = new Set(desired);
+  const toAdd = desired.filter((id) => !existingIds.has(id));
+  const toRemove = [...existingIds].filter((id) => !desiredSet.has(id));
+
+  await db.$transaction([
+    ...(toRemove.length > 0
+      ? [
+          db.emailThreadLabel.deleteMany({
+            where: { threadId, labelId: { in: toRemove } },
+          }),
+        ]
+      : []),
+    ...toAdd.map((labelId) =>
+      db.emailThreadLabel.create({ data: { threadId, labelId } }),
+    ),
+  ]);
+
+  revalidatePath("/admin/mailbox");
+  revalidatePath(`/admin/mailbox/${threadId}`);
+  revalidateTag("admin-mailbox", "max");
+}

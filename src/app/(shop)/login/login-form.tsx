@@ -35,7 +35,12 @@ type Tab = "login" | "register";
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/account";
+  const rawRedirect = searchParams.get("redirect");
+  // Open-redirect guard: only allow same-origin relative paths.
+  const redirect =
+    rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
+      ? rawRedirect
+      : "/account";
   const [tab, setTab] = useState<Tab>("login");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);

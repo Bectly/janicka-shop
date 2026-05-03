@@ -1,6 +1,7 @@
 import { NextResponse, connection } from "next/server";
 import { getDb } from "@/lib/db";
 import { getImageUrls } from "@/lib/images";
+import { rateLimitSearch } from "@/lib/rate-limit";
 
 
 /**
@@ -10,6 +11,14 @@ import { getImageUrls } from "@/lib/images";
  * Cached via Next.js fetch cache + CDN for 60s.
  */
 export async function GET() {
+  const rl = await rateLimitSearch();
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: "Příliš mnoho požadavků. Zkuste to za chvíli." },
+      { status: 429, headers: { "Retry-After": "60" } },
+    );
+  }
+
   await connection();
   const db = await getDb();
 
