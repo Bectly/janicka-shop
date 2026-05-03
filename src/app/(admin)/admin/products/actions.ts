@@ -78,7 +78,24 @@ function parseSeoAndNote(formData: FormData): {
 
 const VINTED_HOST_RE = /(?:^|\.)vinted\.(net|com)$/i;
 
+// Phase 7 cutover: image-storage local backend emits same-origin paths like
+// "/uploads/products/<uuid>-<file>.webp" by default. Persist those alongside
+// absolute http(s) URLs (legacy R2, future absolute /uploads bases).
+function isAcceptedImageUrl(u: string): boolean {
+  if (typeof u !== "string" || u.length === 0 || u.length > 2048) return false;
+  if (u.startsWith("/uploads/")) return true;
+  if (!/^https?:\/\//i.test(u)) return false;
+  try {
+    new URL(u);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function rejectVintedHost(u: string): boolean {
+  // Relative same-origin paths can't host on Vinted by definition.
+  if (u.startsWith("/")) return true;
   try {
     return !VINTED_HOST_RE.test(new URL(u).hostname);
   } catch {
@@ -86,22 +103,20 @@ function rejectVintedHost(u: string): boolean {
   }
 }
 
+const imageUrlString = z
+  .string()
+  .refine(isAcceptedImageUrl, "Neplatná URL fotky — musí být HTTP(S) nebo /uploads/...")
+  .refine(rejectVintedHost, "Fotky hostované na Vinted nejsou povolené — musí být nahrané do našeho úložiště");
+
 const productImageSchema = z.object({
-  url: z
-    .string()
-    .url()
-    .refine(
-      (u) => u.startsWith("https://") || u.startsWith("http://"),
-      "Pouze HTTP/HTTPS URL",
-    )
-    .refine(rejectVintedHost, "Fotky hostované na Vinted nejsou povolené — musí být nahrané do našeho úložiště"),
+  url: imageUrlString,
   alt: z.string().max(200).default(""),
   caption: z.string().max(300).optional(),
 });
 
 const imagesSchema = z.array(
   z.union([
-    z.string().url().refine(rejectVintedHost, "Fotky hostované na Vinted nejsou povolené — musí být nahrané do našeho úložiště"),
+    imageUrlString,
     productImageSchema, // new {url, alt}[] format
   ]),
 ).max(10);

@@ -1,7 +1,7 @@
 # janicka-shop — Code Structure (compact)
 
-Auto-generated. Total: 583 files, ~97,867 LOC.
-**Drill-down dropped** — full render was 62,931 chars > cap 10,000 (~16% shown). Grep source files directly for symbol-level detail.
+Auto-generated. Total: 584 files, ~98,398 LOC.
+**Drill-down dropped** — full render was 63,030 chars > cap 10,000 (~16% shown). Grep source files directly for symbol-level detail.
 
 ---
 
@@ -61,7 +61,7 @@ Auto-generated. Total: 583 files, ~97,867 LOC.
 - scripts/workers/packeta.ts (7 LOC)
 - scripts/workers/test-queue-integration.ts (482 LOC)
 
-## `src/` (538 files)
+## `src/` (539 files)
 
 - src/app/(admin)/admin/abandoned-carts/loading.tsx (6 LOC)
 - src/app/(admin)/admin/abandoned-carts/page.tsx (214 LOC)
@@ -127,7 +127,7 @@ Auto-generated. Total: 583 files, ~97,867 LOC.
 - src/app/(admin)/admin/mailbox/page.tsx (234 LOC)
 - src/app/(admin)/admin/manager/actions.ts (231 LOC)
 - src/app/(admin)/admin/manager/page.tsx (429 LOC)
-- src/app/(admin)/admin/manager/workspace/actions.ts (326 LOC)
+- src/app/(admin)/admin/manager/workspace/actions.ts (509 LOC)
 - src/app/(admin)/admin/orders/[id]/create-return-form.tsx (243 LOC)
 - src/app/(admin)/admin/orders/[id]/internal-note-editor.tsx (92 LOC)
 - src/app/(admin)/admin/orders/[id]/invoice-section.tsx (139 LOC)
@@ -167,9 +167,10 @@ Auto-generated. Total: 583 files, ~97,867 LOC.
 - src/app/(admin)/admin/settings/actions.ts (278 LOC)
 - src/app/(admin)/admin/settings/loading.tsx (6 LOC)
 - src/app/(admin)/admin/settings/measurements-backfill.tsx (124 LOC)
-- src/app/(admin)/admin/settings/page.tsx (72 LOC)
+- src/app/(admin)/admin/settings/page.tsx (77 LOC)
 - src/app/(admin)/admin/settings/password-form.tsx (90 LOC)
 - src/app/(admin)/admin/settings/settings-form.tsx (294 LOC)
+- src/app/(admin)/admin/settings/workspace-section.tsx (343 LOC)
 - src/app/(admin)/admin/subscribers/actions.ts (585 LOC)
 - src/app/(admin)/admin/subscribers/campaign-dry-run-dialog.tsx (483 LOC)
 - src/app/(admin)/admin/subscribers/campaign-sender.tsx (300 LOC)
@@ -185,7 +186,6 @@ Auto-generated. Total: 583 files, ~97,867 LOC.
 - src/app/(admin)/admin/suppliers/actions.ts (248 LOC)
 - src/app/(admin)/admin/suppliers/loading.tsx (6 LOC)
 - src/app/(admin)/admin/suppliers/page.tsx (108 LOC)
-- src/app/(admin)/admin/suppliers/supplier-form-sheet.tsx (224 LOC)
-- src/app/(ad
+- src/app/(admin
 
-... [truncated at 10,000 chars; compact render was 30,064. Use git ls-files for full file list.]
+... [truncated at 10,000 chars; compact render was 30,129. Use git ls-files for full file list.]
