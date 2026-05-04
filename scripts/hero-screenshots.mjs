@@ -18,7 +18,8 @@ const CRITERIA = {
   '1920x1080': { maxHeroPx: 486 },
 };
 
-const BASE_URL = 'http://localhost:3000';
+// Use prod URL since local dev server is in a contested state
+const BASE_URL = 'https://jvsatnik.cz';
 
 const browser = await chromium.launch({ headless: true });
 const results = [];
@@ -32,42 +33,29 @@ for (const vp of VIEWPORTS) {
 
   await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 45000 });
 
-  // Wait for main content to hydrate (hero section should appear)
-  try {
-    await page.waitForSelector('main section, body section', { timeout: 10000 });
-  } catch {
-    console.log(`[${vp.name}] WARNING: no section found after 10s`);
-  }
+  // Wait for hydration
+  await page.waitForTimeout(2000);
 
   const domInfo = await page.evaluate(() => {
-    // Find the hero section — it should be the first section on the page
     const allSections = Array.from(document.querySelectorAll('section'));
+    // Hero is the first section with the hero gradient background
     const heroSection = allSections.find(s =>
       s.className.includes('max-h-hero') ||
-      s.className.includes('min-h-') ||
-      s.className.includes('overflow-hidden') && s.className.includes('bg-gradient')
+      (s.className.includes('overflow-hidden') && s.className.includes('bg-gradient'))
     ) || allSections[0];
 
     if (!heroSection) {
-      return {
-        heroH: -1,
-        heroClass: 'NOT FOUND',
-        hasMaxH: false,
-        hasMinH: false,
-        sectionCount: allSections.length,
-        bodySnippet: document.body.innerText.substring(0, 100),
-      };
+      return { heroH: -1, heroClass: 'NOT_FOUND', hasMaxH: false, hasMinH: false, sectionCount: allSections.length };
     }
 
     const rect = heroSection.getBoundingClientRect();
     const cls = heroSection.className;
     return {
       heroH: Math.round(rect.height),
-      heroClass: cls.substring(0, 120),
+      heroClass: cls.substring(0, 150),
       hasMaxH: cls.includes('max-h-hero'),
       hasMinH: cls.includes('min-h-['),
       sectionCount: allSections.length,
-      bodySnippet: '',
     };
   });
 
@@ -75,21 +63,10 @@ for (const vp of VIEWPORTS) {
   await page.screenshot({ path: screenshotPath, fullPage: false });
 
   const criteria = CRITERIA[vp.name];
-  // -1 means section not found — that's a fail unless server-side rendering
-  const pass = domInfo.heroH > 0 ? domInfo.heroH <= criteria.maxHeroPx : false;
+  const pass = domInfo.heroH > 0 && domInfo.heroH <= criteria.maxHeroPx;
 
-  results.push({
-    viewport: vp.name,
-    heroHeight: domInfo.heroH,
-    maxAllowed: criteria.maxHeroPx,
-    pass,
-    hasMaxH: domInfo.hasMaxH,
-    hasMinH: domInfo.hasMinH,
-    heroClass: domInfo.heroClass,
-    sectionCount: domInfo.sectionCount,
-  });
-
-  console.log(`[${vp.name}] hero=${domInfo.heroH}px max=${criteria.maxHeroPx}px ${pass ? 'PASS' : 'FAIL'} sections=${domInfo.sectionCount} max-h=${domInfo.hasMaxH} min-h=${domInfo.hasMinH}`);
+  results.push({ viewport: vp.name, heroHeight: domInfo.heroH, maxAllowed: criteria.maxHeroPx, pass, hasMaxH: domInfo.hasMaxH, hasMinH: domInfo.hasMinH });
+  console.log(`[${vp.name}] hero=${domInfo.heroH}px max=${criteria.maxHeroPx}px ${pass ? 'PASS' : 'FAIL'} has-max-h=${domInfo.hasMaxH} has-min-h=${domInfo.hasMinH}`);
   if (domInfo.heroClass) console.log(`  class: ${domInfo.heroClass}`);
 
   await ctx.close();
@@ -99,8 +76,7 @@ await browser.close();
 
 console.log('\n=== SUMMARY ===');
 for (const r of results) {
-  const status = r.pass ? 'PASS' : 'FAIL';
-  console.log(`${status} ${r.viewport}: hero=${r.heroHeight}px (max=${r.maxAllowed}px) sections=${r.sectionCount} has-max-h=${r.hasMaxH} has-min-h=${r.hasMinH}`);
+  console.log(`${r.pass ? 'PASS' : 'FAIL'} ${r.viewport}: hero=${r.heroHeight}px (max=${r.maxAllowed}px) has-max-h=${r.hasMaxH} has-min-h=${r.hasMinH}`);
 }
 
 const allPass = results.every(r => r.pass);
