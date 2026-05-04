@@ -98,7 +98,10 @@ async function getCachedCatalog(): Promise<{
     db.category.findMany({ orderBy: { sortOrder: "asc" } }),
     db.product.findMany({
       where: { active: true, sold: false },
-      include: { category: { select: { slug: true, name: true } } },
+      include: {
+        category: { select: { slug: true, name: true } },
+        _count: { select: { wishlistedBy: true } },
+      },
       orderBy: { createdAt: "desc" },
       take: 2000,
     }),
@@ -138,6 +141,7 @@ async function getCachedCatalog(): Promise<{
       categoryName: p.category.name,
       categorySlug: p.category.slug,
       lowestPrice30d: lowestPricesMap.get(p.id) ?? null,
+      wishlistCount: p._count?.wishlistedBy ?? 0,
     };
   });
 

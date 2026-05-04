@@ -31,7 +31,10 @@ async function getNewProductsForPage() {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const recent = await db.product.findMany({
       where: { active: true, sold: false, createdAt: { gte: thirtyDaysAgo } },
-      include: { category: { select: { name: true } } },
+      include: {
+        category: { select: { name: true } },
+        _count: { select: { wishlistedBy: true } },
+      },
       take: 8,
       orderBy: { createdAt: "desc" },
     });
@@ -39,7 +42,10 @@ async function getNewProductsForPage() {
     // Fallback: if nothing in last 30 days, show the 8 most recently added products
     return db.product.findMany({
       where: { active: true, sold: false },
-      include: { category: { select: { name: true } } },
+      include: {
+        category: { select: { name: true } },
+        _count: { select: { wishlistedBy: true } },
+      },
       take: 8,
       orderBy: { createdAt: "desc" },
     });
@@ -56,7 +62,10 @@ async function getFeaturedProductsForPage() {
     const db = await getDb();
     const featured = await db.product.findMany({
       where: { featured: true, active: true, sold: false },
-      include: { category: { select: { name: true } } },
+      include: {
+        category: { select: { name: true } },
+        _count: { select: { wishlistedBy: true } },
+      },
       take: 8,
       orderBy: { createdAt: "desc" },
     });
@@ -65,7 +74,10 @@ async function getFeaturedProductsForPage() {
     // "Doporučujeme" section still renders meaningful content.
     return db.product.findMany({
       where: { active: true, sold: false },
-      include: { category: { select: { name: true } } },
+      include: {
+        category: { select: { name: true } },
+        _count: { select: { wishlistedBy: true } },
+      },
       take: 8,
       orderBy: { createdAt: "desc" },
     });
@@ -174,6 +186,7 @@ async function NewProductsSection() {
               createdAt={product.createdAt.toISOString()}
               isReserved={false}
               lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
+              wishlistCount={product._count?.wishlistedBy ?? 0}
               priority={i < 4}
             />
           ))}
@@ -238,6 +251,7 @@ async function FeaturedProductsSection() {
               stock={product.stock}
               isReserved={false}
               lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
+              wishlistCount={product._count?.wishlistedBy ?? 0}
               priority={i < 4}
               variant={i === 0 || i === 5 ? "featured" : "standard"}
             />
@@ -267,7 +281,10 @@ async function SaleProductsSection() {
         sold: false,
         compareAt: { not: null },
       },
-      include: { category: { select: { name: true } } },
+      include: {
+        category: { select: { name: true } },
+        _count: { select: { wishlistedBy: true } },
+      },
       take: 8,
       orderBy: { createdAt: "desc" },
     });
@@ -319,6 +336,7 @@ async function SaleProductsSection() {
                 stock={product.stock}
                 isReserved={false}
                 lowestPrice30d={lowestPricesMap.get(product.id) ?? null}
+                wishlistCount={product._count?.wishlistedBy ?? 0}
                 variant={i === 0 || i === 5 ? "featured" : "standard"}
               />
             </div>

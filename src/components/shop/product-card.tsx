@@ -7,7 +7,8 @@ import { WishlistButton } from "./wishlist-button";
 import { QuickViewButton } from "./quick-view-modal";
 import { TimeElapsedBadge } from "./time-elapsed-badge";
 import { ProductCardImage } from "./product-card-image";
-import { Truck } from "lucide-react";
+import { JanickaSeal } from "./janicka-seal";
+import { Heart, Truck } from "lucide-react";
 
 interface ProductCardProps {
   id: string;
@@ -25,6 +26,8 @@ interface ProductCardProps {
   createdAt?: Date | string;
   isReserved?: boolean;
   lowestPrice30d?: number | null;
+  /** Number of customers who wishlisted this product (QW-01). Badge shown when ≥3. */
+  wishlistCount?: number;
   /** Pass true for above-the-fold cards (first 4) to preload with high priority — improves LCP */
   priority?: boolean;
   /** Card display variant — "featured" cards are larger with text overlaid on image */
@@ -47,9 +50,11 @@ export function ProductCard({
   createdAt,
   isReserved,
   lowestPrice30d,
+  wishlistCount = 0,
   priority = false,
   variant = "standard",
 }: ProductCardProps) {
+  const showWishlistBadge = wishlistCount >= 3;
   const hasDiscount = compareAt && compareAt > price;
   const discountPercent = hasDiscount
     ? Math.round(((compareAt - price) / compareAt) * 100)
@@ -122,15 +127,25 @@ export function ProductCard({
           {imageBlock}
 
           {/* Action buttons — revealed on hover (always visible on touch) */}
-          <div className="absolute top-3 right-3 z-10 flex flex-col gap-1.5 transition-all duration-300 sm:translate-y-1 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100 card-actions-touch-reveal">
+          <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-1.5 transition-all duration-300 sm:translate-y-1 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100 card-actions-touch-reveal">
             <WishlistButton productId={id} />
             <QuickViewButton productId={id} />
+            {showWishlistBadge && (
+              <span
+                aria-label={`${wishlistCount} lidí má v oblíbených`}
+                className="hidden items-center gap-1 rounded-full bg-black/45 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm backdrop-blur-sm sm:inline-flex"
+              >
+                <Heart className="size-2.5 fill-current" aria-hidden="true" />
+                {wishlistCount}
+              </span>
+            )}
           </div>
 
           {badges}
 
           {/* Editorial gradient overlay with product info */}
           <div className="absolute inset-x-0 bottom-0 z-[5] bg-gradient-to-t from-black/65 via-black/35 to-transparent px-5 pt-24 pb-5 transition-all duration-500 group-hover:from-black/75 group-hover:via-black/45">
+            <JanickaSeal variant="compact" tone="onDark" className="mb-2 hidden sm:flex" />
             <div className="flex items-center gap-1.5">
               {brand && (
                 <span className="text-[11px] font-semibold tracking-[0.12em] text-white/90 uppercase">{brand}</span>
@@ -170,9 +185,18 @@ export function ProductCard({
         {imageBlock}
 
         {/* Action buttons — revealed on hover (always visible on touch) */}
-        <div className="absolute top-3 right-3 z-10 flex flex-col gap-1.5 transition-all duration-300 sm:translate-y-1 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100 card-actions-touch-reveal">
+        <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-1.5 transition-all duration-300 sm:translate-y-1 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100 card-actions-touch-reveal">
           <WishlistButton productId={id} />
           <QuickViewButton productId={id} />
+          {showWishlistBadge && (
+            <span
+              aria-label={`${wishlistCount} lidí má v oblíbených`}
+              className="hidden items-center gap-1 rounded-full bg-black/45 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm backdrop-blur-sm sm:inline-flex"
+            >
+              <Heart className="size-2.5 fill-current" aria-hidden="true" />
+              {wishlistCount}
+            </span>
+          )}
         </div>
 
         {badges}

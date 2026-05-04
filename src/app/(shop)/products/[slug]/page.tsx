@@ -31,6 +31,7 @@ import { NotifyMeForm } from "@/components/shop/notify-me-form";
 import { BackInStockForm } from "@/components/shop/back-in-stock-form";
 import { MeasurementGuide } from "@/components/shop/measurement-guide";
 import { BrowseAbandonmentTracker } from "@/components/shop/browse-abandonment-tracker";
+import { JanickaSeal } from "@/components/shop/janicka-seal";
 import { Truck, Leaf, Ruler, Sparkles, Heart } from "lucide-react";
 import { parseProductImages, parseMeasurements, hasMeasurements } from "@/lib/images";
 import { getGarmentIcon } from "@/lib/garment-icons";
@@ -513,6 +514,7 @@ export default async function ProductDetailPage({ params }: Props) {
             <h1 className="mt-1 font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
               {product.name}
             </h1>
+            <JanickaSeal className="mt-3" />
 
             <div className="mt-6 rounded-2xl bg-gradient-to-br from-brand-light/15 via-blush/25 to-champagne/20 p-8 text-center">
               <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-light/40 to-brand/15 ring-1 ring-brand/10">
@@ -690,6 +692,8 @@ export default async function ProductDetailPage({ params }: Props) {
           {titleVariant && (
             <p className="mt-2 text-sm text-muted-foreground">{titleVariant}</p>
           )}
+
+          <JanickaSeal className="mt-3" />
 
           {/* Condition + Price */}
           <div className="mt-4 flex flex-wrap items-center gap-3">

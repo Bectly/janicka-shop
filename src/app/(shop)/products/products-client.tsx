@@ -46,6 +46,7 @@ export interface CatalogProduct {
   categoryName: string;
   categorySlug: string;
   lowestPrice30d: number | null;
+  wishlistCount: number;
 }
 
 interface ProductsClientProps {
@@ -544,6 +545,7 @@ export function ProductsClient({
                       createdAt={product.createdAt}
                       isReserved={false}
                       lowestPrice30d={product.lowestPrice30d}
+                      wishlistCount={product.wishlistCount}
                       priority={i < 4}
                       variant={isEditorial ? "featured" : "standard"}
                     />
