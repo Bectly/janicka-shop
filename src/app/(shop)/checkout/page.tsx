@@ -9,7 +9,7 @@ import {
   useSyncExternalStore,
   useTransition,
 } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getPersistedReferralCode } from "@/components/shop/referral-tracker";
 import Image from "next/image";
 import Link from "next/link";
@@ -67,6 +67,14 @@ import {
 import { CartCaptureBeacon } from "@/components/shop/cart-capture-beacon";
 import { ReservationCountdownBanner } from "@/components/shop/reservation-countdown-banner";
 import { useReservationHeartbeat } from "@/hooks/use-reservation-heartbeat";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { logger } from "@/lib/logger";
 
 const emptySubscribe = () => () => {};
@@ -230,6 +238,7 @@ function CheckoutStep({
 // ---------------------------------------------------------------------------
 
 export default function CheckoutPage() {
+  const router = useRouter();
   const items = useCartStore((s) => s.items);
   const totalPrice = useCartStore((s) => s.totalPrice);
   const clearCart = useCartStore((s) => s.clearCart);
@@ -434,6 +443,19 @@ export default function CheckoutPage() {
       // localStorage blocked — beacon simply won't fire
     }
   }, [marketingConsent]);
+
+  // Detect "products no longer available" error from server action and surface
+  // a modal with a clear back-to-cart CTA instead of leaving the user with a
+  // raw red error string and no path forward.
+  const [expiredModalOpen, setExpiredModalOpen] = useState(false);
+  const isUnavailableError =
+    !!state.error &&
+    /(nejsou dostupné|není dostupná|Aktualizujte košík|Odeberte je z košíku)/i.test(
+      state.error,
+    );
+  useEffect(() => {
+    if (isUnavailableError) setExpiredModalOpen(true);
+  }, [isUnavailableError]);
 
   // If server action returned field errors, open the relevant step
   useEffect(() => {
@@ -681,7 +703,7 @@ export default function CheckoutPage() {
         </div>
       )}
 
-      {state.error && (
+      {state.error && !isUnavailableError && (
         <div
           role="alert"
           className="mt-4 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive"
@@ -689,6 +711,39 @@ export default function CheckoutPage() {
           {state.error}
         </div>
       )}
+
+      {/* Graceful expired-reservation modal — surfaces when the submit
+          server action returns an "unavailable" error. Replaces the bare
+          red text with a clear path back to /cart instead of a dead end. */}
+      <Dialog open={expiredModalOpen} onOpenChange={setExpiredModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Rezervace vypršela</DialogTitle>
+            <DialogDescription>
+              {state.error ||
+                "Některý kus z košíku už není dostupný. Zkontrolujte košík a zkuste to znovu."}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setExpiredModalOpen(false)}
+            >
+              Zavřít
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                setExpiredModalOpen(false);
+                router.push("/cart");
+              }}
+            >
+              Zkontrolovat košík
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Sticky reservation countdown — shortest expiry across cart items */}
       <div className="mt-4">
