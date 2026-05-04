@@ -47,7 +47,7 @@ export function CollectionCard({
   return (
     <Link
       href={`/collections/${slug}`}
-      className={`group relative overflow-hidden rounded-2xl shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 ${wide ? "sm:col-span-2" : ""}`}
+      className={`group relative overflow-hidden rounded-2xl shadow-sm transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_16px_40px_-8px_rgba(180,130,140,0.20)] haptic-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 ${wide ? "sm:col-span-2" : ""}`}
     >
       {/* ── Image / empty state ────────────────────────────── */}
       <div className={`relative overflow-hidden ${wide ? "aspect-[4/3] sm:aspect-[16/9]" : "aspect-[4/3]"}`}>
@@ -66,7 +66,7 @@ export function CollectionCard({
               quality={90}
             />
             {/* Editorial gradient — ensures text legibility */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent" />
             {/* Subtle brand-tint on hover */}
             <div className="absolute inset-0 bg-primary/0 transition-colors duration-300 group-hover:bg-primary/8" />
           </>
@@ -83,7 +83,7 @@ export function CollectionCard({
         )}
 
         {/* ── Overlaid content ─────────────────────────────── */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
+        <div className="absolute bottom-0 left-0 right-0 p-4 lg:p-5">
           {/* Count pill */}
           {countLabel && (
             <div className="mb-2 inline-flex items-center rounded-full bg-white/20 px-2.5 py-0.5 backdrop-blur-sm">
@@ -113,13 +113,13 @@ export function CollectionCard({
             </p>
           )}
 
-          {/* CTA arrow */}
+          {/* CTA arrow — subtle directional hint, no redundant text (whole card is the link) */}
           <p
-            className={`mt-2 flex items-center gap-1 text-xs font-semibold uppercase tracking-wider transition-all duration-300 group-hover:gap-2 ${
-              hasImage ? "text-white/80" : "text-brand"
+            className={`mt-2.5 flex items-center gap-1 text-sm transition-all duration-300 group-hover:gap-2 ${
+              hasImage ? "text-white/60" : "text-brand/60"
             }`}
+            aria-hidden="true"
           >
-            Prohlédnout
             <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
           </p>
         </div>

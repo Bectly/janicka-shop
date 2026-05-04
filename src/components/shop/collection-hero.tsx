@@ -40,7 +40,7 @@ export function CollectionHero({
   }, []);
 
   return (
-    <div className="category-hero relative -mx-4 -mt-8 mb-10 overflow-hidden sm:-mx-6 lg:-mx-8">
+    <div className="category-hero relative -mx-4 -mt-8 mb-10 overflow-hidden min-h-[260px] sm:min-h-[320px] lg:min-h-[380px] sm:-mx-6 lg:-mx-8">
       {/* Background with parallax */}
       <div
         className="absolute inset-0 will-change-transform"
@@ -64,7 +64,7 @@ export function CollectionHero({
 
       {/* Decorative watermark */}
       <div
-        className="pointer-events-none absolute right-4 top-6 select-none font-heading text-[12rem] font-bold leading-none text-foreground/[0.03] sm:right-8 sm:text-[16rem] lg:right-16 lg:text-[20rem]"
+        className="pointer-events-none absolute right-4 top-6 select-none font-heading text-[12rem] font-bold leading-none text-foreground/[0.05] sm:right-8 sm:text-[16rem] lg:right-16 lg:text-[20rem]"
         aria-hidden="true"
       >
         {title.charAt(0)}
