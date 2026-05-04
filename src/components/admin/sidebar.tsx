@@ -35,6 +35,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { useLiveState } from "@/hooks/use-live-state";
 
 type NavItem =
   | { href: string; label: string; icon: React.ElementType; divider?: false }
@@ -75,6 +76,16 @@ function SidebarBody({
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
+  // R2: live counts override SSR initial values without a page refresh.
+  // While the live query is pending or errors out we fall back to the
+  // server-rendered numbers so the sidebar is never empty.
+  const { data: live } = useLiveState();
+  const liveMailboxUnread = live?.mailbox.unreadCount ?? mailboxUnread;
+  // ordersLast24h is a 24h window (from getAdminBadges); live-state has no
+  // matching counter so we keep the SSR value. The animated dot uses the
+  // 5-minute window from live-state to flag fresh orders without a refresh.
+  const liveOrdersLast24h = ordersLast24h;
+  const newOrdersPulse = (live?.orders.newSince5MinCount ?? 0) > 0;
 
   return (
     <>
@@ -95,13 +106,14 @@ function SidebarBody({
           }
           const isActive = pathname.startsWith(item.href);
           const Icon = item.icon;
-          const showOrderBadge = item.href === "/admin/orders" && ordersLast24h > 0;
-          const showMailboxBadge = item.href === "/admin/mailbox" && mailboxUnread > 0;
-          const badgeValue = showOrderBadge ? ordersLast24h : showMailboxBadge ? mailboxUnread : 0;
+          const showOrderBadge = item.href === "/admin/orders" && liveOrdersLast24h > 0;
+          const showMailboxBadge = item.href === "/admin/mailbox" && liveMailboxUnread > 0;
+          const showOrderPulse = item.href === "/admin/orders" && newOrdersPulse;
+          const badgeValue = showOrderBadge ? liveOrdersLast24h : showMailboxBadge ? liveMailboxUnread : 0;
           const badgeTitle = showOrderBadge
-            ? `Posledních 24h: ${ordersLast24h} nových objednávek`
+            ? `Posledních 24h: ${liveOrdersLast24h} nových objednávek`
             : showMailboxBadge
-              ? `${mailboxUnread} nepřečtených e-mailů`
+              ? `${liveMailboxUnread} nepřečtených e-mailů`
               : undefined;
           return (
             <Link
@@ -116,12 +128,27 @@ function SidebarBody({
               }`}
               title={badgeTitle}
             >
-              <Icon className="size-4" />
+              <span className="relative inline-flex">
+                <Icon className="size-4" />
+                {showOrderPulse ? (
+                  <span
+                    aria-label="Nové objednávky za posledních 5 minut"
+                    className="absolute -top-1 -right-1 flex size-2"
+                  >
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-destructive opacity-75" />
+                    <span className="relative inline-flex size-2 rounded-full bg-destructive" />
+                  </span>
+                ) : null}
+              </span>
               <span className="flex-1">{item.label}</span>
               {badgeValue > 0 ? (
                 <span
                   aria-label={badgeTitle}
-                  className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold leading-5 text-primary-foreground"
+                  className={`inline-flex min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[11px] font-semibold leading-5 ${
+                    showMailboxBadge
+                      ? "bg-destructive text-destructive-foreground"
+                      : "bg-primary text-primary-foreground"
+                  }`}
                 >
                   {badgeValue > 99 ? "99+" : badgeValue}
                 </span>

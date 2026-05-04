@@ -42,10 +42,22 @@ export async function GET() {
       where: { trashed: false, archived: false },
     }),
     db.emailThread.count({ where: { trashed: false } }),
+    // R2: include thread id + subject + latest inbound sender so the toast
+    // can render "Nový email od [sender]" without a second roundtrip.
     db.emailThread.findFirst({
-      where: { trashed: false, archived: false },
+      where: { trashed: false, archived: false, unreadCount: { gt: 0 } },
       orderBy: { lastMessageAt: "desc" },
-      select: { lastMessageAt: true },
+      select: {
+        id: true,
+        subject: true,
+        lastMessageAt: true,
+        messages: {
+          where: { direction: "inbound" },
+          orderBy: { receivedAt: "desc" },
+          take: 1,
+          select: { fromAddress: true, fromName: true },
+        },
+      },
     }),
     db.managerWorkspaceTab.findMany({
       where: { status: { in: ["active", "pinned"] } },
@@ -77,7 +89,13 @@ export async function GET() {
     }),
     db.order.findFirst({
       orderBy: { createdAt: "desc" },
-      select: { createdAt: true },
+      select: {
+        id: true,
+        orderNumber: true,
+        total: true,
+        createdAt: true,
+        customer: { select: { firstName: true, lastName: true } },
+      },
     }),
     db.productDraftBatch.count({
       where: { status: { in: ["open", "sealed"] } },
@@ -114,12 +132,35 @@ export async function GET() {
     progress = { batchId: mostRecentBatch.id, percent };
   }
 
+  const latestUnreadMsg = mailboxLatest?.messages[0];
+  const latestUnread = mailboxLatest
+    ? {
+        threadId: mailboxLatest.id,
+        subject: mailboxLatest.subject,
+        sender:
+          latestUnreadMsg?.fromName?.trim() ||
+          latestUnreadMsg?.fromAddress ||
+          "Neznámý odesílatel",
+      }
+    : null;
+
+  const latestOrderSummary = latestOrder
+    ? {
+        id: latestOrder.id,
+        orderNumber: latestOrder.orderNumber,
+        total: latestOrder.total,
+        customerName:
+          `${latestOrder.customer?.firstName ?? ""} ${latestOrder.customer?.lastName ?? ""}`.trim(),
+      }
+    : null;
+
   return NextResponse.json({
     ts: now.toISOString(),
     mailbox: {
       unreadCount: mailboxUnread._sum.unreadCount ?? 0,
       latestThreadAt: mailboxLatest?.lastMessageAt.toISOString() ?? null,
       totalThreads: mailboxTotal,
+      latestUnread,
     },
     workspace: {
       tabs,
@@ -133,6 +174,7 @@ export async function GET() {
       paidNotShippedCount: paidNotShipped,
       newSince5MinCount: newOrders5m,
       latestOrderAt: latestOrder?.createdAt.toISOString() ?? null,
+      latestOrder: latestOrderSummary,
     },
     drafts: {
       activeBatchCount: activeBatches,

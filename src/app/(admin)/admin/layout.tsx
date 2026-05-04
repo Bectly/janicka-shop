@@ -5,7 +5,7 @@ import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { getAdminBadges } from "@/lib/admin-badges";
 import { AdminSidebar, AdminSidebarMobileTrigger } from "@/components/admin/sidebar";
-import { AdminOrderNotifier } from "@/components/admin/order-notifier";
+import { LiveAdminToasts } from "@/components/admin/live-admin-toasts";
 import { GlobalSearch } from "@/components/admin/global-search";
 import { Breadcrumbs } from "@/components/admin/breadcrumbs";
 import { AdminQueryProvider } from "@/components/admin/query-provider";
@@ -95,7 +95,7 @@ async function AdminAuthGate({
           {children}
         </div>
       </main>
-      <AdminOrderNotifier soundEnabled={soundNotifications} />
+      <LiveAdminToasts soundEnabled={soundNotifications} />
     </>
   );
 }

@@ -9,8 +9,8 @@
 - **Payments**: Comgate (primary CZ) + Stripe (int'l fallback)
 - **State**: Zustand (cart, UI)
 - **Email**: Resend (accountable via Janička's own account)
-- **Deploy**: Vercel (auto on push to main)
-- **Images**: Cloudflare R2 (migrating from UploadThing — see docs/specs.md)
+- **Deploy**: **Hetzner VPS** (root@46.224.219.3) — `bash scripts/hetzner/deploy.sh`. Production URL: https://jvsatnik.cz. Cutover 2026-04-28.
+- **Images**: Cloudflare R2 + nginx `/uploads/*` legacy (Phase 7) — viz docs/runbooks/image-storage-phase7.md
 
 ## Project Structure
 ```
@@ -45,8 +45,9 @@ prisma/schema.prisma # DB schema
 
 ## Infrastructure
 - **Repo**: `git@github.com:Bectly/janicka-shop.git`, branch `main`, NIKDY nepushovat bez explicitního požadavku
-- **Vercel**: project `janicka-shop`, auto-deploy na push. Token: `SELECT key_value FROM api_keys WHERE name='vercel'`
-- **Turso (prod)**: `turso db list` via `~/.turso/turso`. Driver: `@libsql/client` + `@prisma/adapter-libsql`
+- **PRODUKCE**: Hetzner VPS root@46.224.219.3, deploy `bash scripts/hetzner/deploy.sh`, URL https://jvsatnik.cz. Postgres lokálně (přes SSH tunnel `127.0.0.1:5432`), nginx serves `/uploads/*`, env sync přes `scripts/sync-env-to-hetzner.sh`. Smoke: `npm run smoke:prod`.
+- **Vercel**: NEpoužívá se. `package.json` `deploy` script (`vercel deploy --prod`) je historický, neprodukční.
+- **Turso (legacy)**: zůstává v `api_keys`, ale produkce po cutoveru jede na Hetzner postgres (viz `docs/audits/hetzner-deploy-verify-2026-04-28.md`).
 - **Dev server**: `npm run dev` → localhost:3000. **VŽDY** `npm run build` před claimováním feature jako hotové.
 - **API klíče v JARVIS DB**: `sqlite3 ~/.claude/jarvis-gym/jarvis.db "SELECT name, service, key_value, endpoint FROM api_keys;"`
 
