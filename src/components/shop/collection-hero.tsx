@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Layers } from "lucide-react";
+import { Layers, Heart } from "lucide-react";
 
 interface CollectionHeroProps {
   title: string;
   description?: string | null;
   image?: string | null;
   productCount: number;
+  variant?: "default" | "seasonal";
 }
 
 export function CollectionHero({
@@ -16,7 +17,9 @@ export function CollectionHero({
   description,
   image,
   productCount,
+  variant = "default",
 }: CollectionHeroProps) {
+  const isSeasonal = variant === "seasonal";
   const [offset, setOffset] = useState(0);
 
   useEffect(() => {
@@ -72,10 +75,17 @@ export function CollectionHero({
 
       {/* Content */}
       <div className="relative mx-auto max-w-7xl px-4 pb-12 pt-20 sm:px-6 sm:pb-16 sm:pt-24 lg:px-8 lg:pb-20 lg:pt-32">
-        <span className="category-hero-stagger mb-4 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1 text-eyebrow !text-primary">
-          <Layers className="size-3.5 shrink-0" aria-hidden="true" />
-          Kolekce
-        </span>
+        {isSeasonal ? (
+          <span className="category-hero-stagger mb-4 inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-eyebrow !text-rose-600">
+            <Heart className="size-3.5 shrink-0" aria-hidden="true" />
+            Sezónní kolekce
+          </span>
+        ) : (
+          <span className="category-hero-stagger mb-4 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1 text-eyebrow !text-primary">
+            <Layers className="size-3.5 shrink-0" aria-hidden="true" />
+            Kolekce
+          </span>
+        )}
 
         <h1
           className="category-hero-stagger [animation-delay:80ms] text-display text-foreground"

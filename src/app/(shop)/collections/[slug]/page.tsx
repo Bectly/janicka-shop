@@ -149,6 +149,7 @@ export default async function CollectionPage({ params }: Props) {
         description={collection.description || null}
         image={collection.image}
         productCount={orderedProducts.length}
+        variant={slug.startsWith("den-matek") ? "seasonal" : "default"}
       />
 
       {/* Breadcrumb */}
