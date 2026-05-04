@@ -114,7 +114,10 @@ async function getCachedCatalog(): Promise<{
     // IMAGE_STORAGE_BACKEND=local. Re-serialize as the legacy {url, alt}[] shape
     // (or string[] fallback if all alts are empty) so the client component's
     // existing parser keeps working.
-    const parsed = parseProductImages(p.images).slice(0, 2);
+    // Cap at 5 to match ProductCardImage MAX_THUMBS — the hover strip needs all
+    // five (raised from 2 after C4387, which predated the strip and only sent
+    // [0]+[1] for the legacy crossfade).
+    const parsed = parseProductImages(p.images).slice(0, 5);
     const allEmpty = parsed.every((img) => !img.alt && !img.caption);
     const trimmedImages = allEmpty
       ? JSON.stringify(parsed.map((img) => img.url))
