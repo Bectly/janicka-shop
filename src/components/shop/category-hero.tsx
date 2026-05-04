@@ -168,7 +168,7 @@ export function CategoryHero({
       </div>
 
       {/* Content */}
-      <div className="relative mx-auto max-w-7xl px-4 pb-12 pt-20 sm:px-6 sm:pb-16 sm:pt-24 lg:px-8 lg:pb-20 lg:pt-32">
+      <div className="relative mx-auto max-w-7xl px-4 pb-10 pt-12 sm:px-6 sm:pb-14 sm:pt-16 lg:px-8 lg:pb-16 lg:pt-20">
         {/* Editorial pill badge — stagger 1 */}
         <span className="category-hero-stagger mb-4 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1 text-xs font-semibold uppercase tracking-widest text-primary">
           <mood.icon className="size-3.5 shrink-0" aria-hidden="true" />
@@ -242,7 +242,7 @@ export function CatalogHero({ productCount }: { productCount: number }) {
         J
       </div>
 
-      <div className="relative mx-auto max-w-7xl px-4 pb-12 pt-20 sm:px-6 sm:pb-16 sm:pt-24 lg:px-8 lg:pb-20 lg:pt-32">
+      <div className="relative mx-auto max-w-7xl px-4 pb-10 pt-12 sm:px-6 sm:pb-14 sm:pt-16 lg:px-8 lg:pb-16 lg:pt-20">
         {/* Editorial pill badge */}
         <span className="category-hero-stagger mb-4 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1 text-xs font-semibold uppercase tracking-widest text-primary">
           <Tag className="size-3.5 shrink-0" aria-hidden="true" />

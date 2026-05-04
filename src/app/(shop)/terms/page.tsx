@@ -14,7 +14,7 @@ export default function TermsPage() {
         Obchodní podmínky
       </h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Účinné od: [DOPLNIT DATUM]
+        Účinné od: 1. 5. 2026
       </p>
 
       <div className="mt-8 space-y-8 text-muted-foreground leading-relaxed">
