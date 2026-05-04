@@ -6,6 +6,8 @@ import { SettingsForm } from "./settings-form";
 import { PasswordChangeForm } from "./password-form";
 import { MeasurementsBackfill } from "./measurements-backfill";
 import { WorkspaceSection } from "./workspace-section";
+import { HeroEditorialImageForm } from "./hero-editorial-image-form";
+import { getSiteSetting, HERO_EDITORIAL_IMAGE_KEY } from "@/lib/site-settings";
 
 const WORKSPACE_FLAG = process.env.MANAGER_WORKSPACE === "1";
 
@@ -31,6 +33,7 @@ export default async function AdminSettingsPage() {
     const db = await getDb();
     settings = await db.shopSettings.create({ data: { id: "singleton" } });
   }
+  const heroEditorialImage = await getSiteSetting(HERO_EDITORIAL_IMAGE_KEY);
 
   return (
     <>
@@ -43,6 +46,19 @@ export default async function AdminSettingsPage() {
 
       <div className="mt-6 rounded-xl border bg-card p-6 shadow-sm">
         <SettingsForm settings={settings} />
+      </div>
+
+      <div className="mt-6 rounded-xl border bg-card p-6 shadow-sm">
+        <h2 className="font-heading text-lg font-semibold text-foreground">
+          Editoriální foto hrdiny
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Hlavní fotka v hero sekci na homepage. Když je vyplněna, nahradí
+          výchozí logo. Logo se pak zobrazí jen jako malý badge v rohu.
+        </p>
+        <div className="mt-4">
+          <HeroEditorialImageForm initialUrl={heroEditorialImage} />
+        </div>
       </div>
 
       <div className="mt-6 rounded-xl border bg-card p-6 shadow-sm">

@@ -19,6 +19,8 @@ import {
   mergeWithFillers,
 } from "@/lib/curated/fill-with-random";
 import { HeroSection } from "@/components/shop/hero-section";
+import { HeroProductPeekStrip } from "@/components/shop/hero-product-peek-strip";
+import { getSiteSetting, HERO_EDITORIAL_IMAGE_KEY } from "@/lib/site-settings";
 import { buildItemListSchema, buildWebSiteSchema, buildOrganizationSchema, jsonLdString } from "@/lib/structured-data";
 import { ScrollReveal } from "@/components/shop/scroll-reveal";
 import { ProductCarousel } from "@/components/shop/product-carousel";
@@ -633,6 +635,7 @@ async function JsonLdSection() {
 
 export default async function HomePage() {
   await connection();
+  const editorialImageUrl = await getSiteSetting(HERO_EDITORIAL_IMAGE_KEY);
   return (
     <>
       {/* JSON-LD structured data — streamed, non-blocking */}
@@ -641,7 +644,10 @@ export default async function HomePage() {
       </Suspense>
 
       {/* Hero — dominant logo + brand statement + cherry blossom particles */}
-      <HeroSection />
+      <HeroSection
+        editorialImageUrl={editorialImageUrl}
+        peekStrip={<HeroProductPeekStrip />}
+      />
 
       {/* Mother's Day banner — date-gated May 1–10, 2026 */}
       <Suspense fallback={null}>

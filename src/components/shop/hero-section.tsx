@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,13 @@ function generatePetals(count: number) {
 
 type Petal = ReturnType<typeof generatePetals>[number];
 
-export function HeroSection() {
+export function HeroSection({
+  peekStrip,
+  editorialImageUrl,
+}: {
+  peekStrip?: ReactNode;
+  editorialImageUrl?: string | null;
+}) {
   const [mounted, setMounted] = useState(false);
   // Petals must be generated post-mount — Math.random() in a useState
   // initializer produces different values on the server vs the client and
@@ -44,6 +50,8 @@ export function HeroSection() {
     const raf = requestAnimationFrame(() => setMounted(true));
     return () => cancelAnimationFrame(raf);
   }, []);
+
+  const hasEditorial = Boolean(editorialImageUrl);
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-brand-light/40 via-blush to-champagne-light/60">
@@ -96,22 +104,46 @@ export function HeroSection() {
           Janička — second hand &amp; vintage móda, značkové oblečení levně
         </h1>
 
-        {/* Logo — dominant, first thing visitor sees */}
+        {/* Editorial photo (when admin uploaded) — otherwise the brand logo */}
         <div
-          className={`transition-all duration-1000 ease-out ${
+          className={`relative transition-all duration-1000 ease-out ${
             mounted
               ? "opacity-100 scale-100 translate-y-0"
               : "opacity-0 scale-90 translate-y-4"
           }`}
         >
-          <Image
-            src="/logo/logo-transparent.png"
-            alt="Janička"
-            width={400}
-            height={218}
-            priority
-            className="mx-auto h-auto w-[280px] drop-shadow-lg sm:w-[400px] lg:w-[520px]"
-          />
+          {hasEditorial ? (
+            <div className="relative mx-auto w-[260px] sm:w-[360px] lg:w-[480px]">
+              <Image
+                src={editorialImageUrl as string}
+                alt="Janička — editoriální foto"
+                width={960}
+                height={1200}
+                priority
+                fetchPriority="high"
+                sizes="(max-width: 640px) 260px, (max-width: 1024px) 360px, 480px"
+                className="h-auto w-full rounded-3xl object-cover shadow-2xl"
+              />
+              <Image
+                src="/logo/logo-transparent.png"
+                alt=""
+                aria-hidden="true"
+                width={120}
+                height={66}
+                className="absolute bottom-3 right-3 h-auto w-[60px] opacity-70 drop-shadow-md sm:w-[88px]"
+              />
+            </div>
+          ) : (
+            <Image
+              src="/logo/logo-transparent.png"
+              alt="Janička"
+              width={400}
+              height={218}
+              priority
+              fetchPriority="high"
+              className="mx-auto h-auto w-[280px] drop-shadow-lg sm:w-[400px] lg:w-[520px]"
+            />
+          )}
         </div>
 
         {/* Tagline — editorial serif italic accent */}
@@ -150,13 +182,18 @@ export function HeroSection() {
             mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
           }`}
         >
-          <Button size="lg" render={<Link href="/products" />}>
+          <Button
+            size="lg"
+            data-track="hero-cta-primary"
+            render={<Link href="/products" />}
+          >
             Prohlédnout kolekci
             <ArrowRight data-icon="inline-end" className="size-4" />
           </Button>
           <Button
             variant="outline"
             size="lg"
+            data-track="hero-cta-sale"
             render={<Link href="/products?sale=true" />}
           >
             <Percent data-icon="inline-start" className="size-4" />
@@ -178,6 +215,9 @@ export function HeroSection() {
             <ArrowDown className="size-5 animate-bounce" aria-hidden="true" />
           </a>
         </div>
+
+        {/* Peek strip — 3-4 newest products as slim "passport" cards */}
+        {peekStrip}
       </div>
     </section>
   );

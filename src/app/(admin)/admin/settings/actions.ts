@@ -12,6 +12,11 @@ import {
   parseExistingMeasurements,
   type MeasurementField,
 } from "@/lib/measurements-extractor";
+import {
+  HERO_EDITORIAL_IMAGE_KEY,
+  getSiteSetting,
+  setSiteSetting,
+} from "@/lib/site-settings";
 
 const settingsSchema = z.object({
   shopName: z.string().trim().min(1, "Název obchodu je povinný").max(100),
@@ -273,5 +278,66 @@ export async function backfillMeasurements(): Promise<MeasurementsBackfillResult
     updated,
     skipped,
     byField,
+  };
+}
+
+// --- Hero editorial image (SiteSetting key: hero_editorial_image) ---
+
+export type HeroEditorialImageResult = {
+  success: boolean;
+  message: string;
+  url: string | null;
+};
+
+export async function getHeroEditorialImageUrl(): Promise<string | null> {
+  await requireAdmin();
+  return getSiteSetting(HERO_EDITORIAL_IMAGE_KEY);
+}
+
+const heroImageUrlSchema = z
+  .string()
+  .trim()
+  .url("Neplatná URL adresa obrázku")
+  .max(2048);
+
+export async function updateHeroEditorialImage(
+  url: string | null,
+): Promise<HeroEditorialImageResult> {
+  await requireAdmin();
+  const rl = await rateLimitAdmin();
+  if (!rl.success) {
+    return {
+      success: false,
+      message: "Příliš mnoho požadavků. Zkuste to za chvíli.",
+      url: await getSiteSetting(HERO_EDITORIAL_IMAGE_KEY),
+    };
+  }
+
+  if (url) {
+    const parsed = heroImageUrlSchema.safeParse(url);
+    if (!parsed.success) {
+      return {
+        success: false,
+        message: parsed.error.issues[0]?.message ?? "Neplatná URL",
+        url: await getSiteSetting(HERO_EDITORIAL_IMAGE_KEY),
+      };
+    }
+    await setSiteSetting(HERO_EDITORIAL_IMAGE_KEY, parsed.data);
+    revalidatePath("/admin/settings");
+    revalidatePath("/");
+    return {
+      success: true,
+      message: "Editoriální foto uloženo",
+      url: parsed.data,
+    };
+  }
+
+  await setSiteSetting(HERO_EDITORIAL_IMAGE_KEY, null);
+  revalidatePath("/admin/settings");
+  revalidatePath("/");
+  return {
+    success: true,
+    message: "Editoriální foto odstraněno — zobrazí se logo.",
+    url: null,
   };
 }
