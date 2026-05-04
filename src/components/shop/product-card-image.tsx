@@ -107,9 +107,10 @@ export function ProductCardImage({
       {/* Hover thumbnail strip — desktop only (touch can't hover) */}
       {showThumbStrip && hasMultiple && (
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[6] hidden p-2 sm:flex">
-          <div className="pointer-events-auto mx-auto flex max-w-full gap-1 rounded-full bg-background/90 p-1 shadow-md backdrop-blur-sm opacity-0 translate-y-2 transition-all duration-200 ease-out group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:translate-y-0">
+          <div className="pointer-events-auto mx-auto flex max-w-full gap-1 overflow-x-auto scrollbar-none rounded-full bg-background/90 p-1 shadow-md backdrop-blur-sm opacity-0 translate-y-2 transition-all duration-200 ease-out group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:translate-y-0">
             {thumbs.map((url, i) => {
               const isActive = i === hoveredIdx;
+              const compact = thumbs.length >= 5;
               return (
                 <button
                   key={`${url}-${i}`}
@@ -120,7 +121,8 @@ export function ProductCardImage({
                   aria-label={`Zobrazit foto ${i + 1}`}
                   aria-current={isActive ? "true" : undefined}
                   className={cn(
-                    "relative size-9 shrink-0 overflow-hidden rounded-full border-2 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                    "relative shrink-0 overflow-hidden rounded-full border-2 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                    compact ? "size-7" : "size-9",
                     isActive
                       ? "border-primary"
                       : "border-transparent hover:border-primary/40",
@@ -130,7 +132,7 @@ export function ProductCardImage({
                     src={url}
                     alt=""
                     fill
-                    sizes="36px"
+                    sizes={compact ? "28px" : "36px"}
                     className="object-cover"
                     unoptimized
                     loading="lazy"
