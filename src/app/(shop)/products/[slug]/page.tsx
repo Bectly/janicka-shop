@@ -211,7 +211,7 @@ async function RelatedProductsSection({
   if (merged.length === 0) return null;
   const finalProducts = merged;
 
-  const allIds = [productId, ...relatedProducts.map((p) => p.id)];
+  const allIds = [productId, ...finalProducts.map((p) => p.id)];
   const lowestPricesMap = await getLowestPrices30d(allIds);
 
   if (sold) {
@@ -237,7 +237,7 @@ async function RelatedProductsSection({
           </a>
         </div>
         <ProductCarousel ariaLabel="Podobné dostupné kousky">
-          {relatedProducts.map((p) => (
+          {finalProducts.map((p) => (
             <ProductCard
               key={p.id}
               id={p.id}
@@ -273,7 +273,7 @@ async function RelatedProductsSection({
         </h2>
       </div>
       <ProductCarousel ariaLabel="Mohlo by se vám líbit">
-        {relatedProducts.map((p) => (
+        {finalProducts.map((p) => (
           <ProductCard
             key={p.id}
             id={p.id}

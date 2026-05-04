@@ -8,6 +8,7 @@ import { sendNewsletterWelcomeEmail } from "@/lib/email";
 import { logger } from "@/lib/logger";
 import { ALL_SIZES } from "@/lib/sizes";
 import { COLOR_MAP } from "@/lib/constants";
+import { MIN_VISIBLE_PRODUCTS, mergeWithFillers } from "@/lib/curated/fill-with-random";
 
 const newsletterSchema = z.object({
   email: z.string().trim().email("Zadejte platný e-mail").max(254),
@@ -272,6 +273,9 @@ export async function getCartRecommendations(
   const categoryIds = [...new Set(cartProducts.map((p) => p.categoryId))];
   if (categoryIds.length === 0) return [];
 
+  const TARGET = 4;
+  const include = { category: { select: { name: true } } } as const;
+
   // Fetch candidates from same categories, excluding cart items
   const candidates = await db.product.findMany({
     where: {
@@ -280,12 +284,31 @@ export async function getCartRecommendations(
       active: true,
       sold: false,
     },
-    include: { category: { select: { name: true } } },
+    include,
     orderBy: { createdAt: "desc" },
-    take: 4,
+    take: TARGET,
   });
 
-  return candidates.map((p) => ({
+  // Top up with cross-category fillers when same-category pool is too small,
+  // so the section never renders 1–3 lonely cards. Seeded by sorted cart IDs
+  // for stable per-cart results across page interactions.
+  let final = candidates;
+  if (candidates.length < TARGET) {
+    const excludeIds = [...safeIds, ...candidates.map((p) => p.id)];
+    const fillerPool = await db.product.findMany({
+      where: { id: { notIn: excludeIds }, active: true, sold: false },
+      include,
+      take: (TARGET - candidates.length) * 3,
+      orderBy: { createdAt: "desc" },
+    });
+    final = mergeWithFillers(candidates, fillerPool, {
+      seed: `cart-${[...safeIds].sort().join(",")}`,
+      minVisible: MIN_VISIBLE_PRODUCTS,
+      targetCount: TARGET,
+    });
+  }
+
+  return final.map((p) => ({
     id: p.id,
     name: p.name,
     slug: p.slug,
