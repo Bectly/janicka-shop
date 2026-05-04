@@ -65,6 +65,8 @@ import {
   MARKETING_CONSENT_KEY,
 } from "@/components/shop/browse-abandonment-tracker";
 import { CartCaptureBeacon } from "@/components/shop/cart-capture-beacon";
+import { ReservationCountdownBanner } from "@/components/shop/reservation-countdown-banner";
+import { useReservationHeartbeat } from "@/hooks/use-reservation-heartbeat";
 import { logger } from "@/lib/logger";
 
 const emptySubscribe = () => () => {};
@@ -256,6 +258,11 @@ export default function CheckoutPage() {
     () => true,
     () => false,
   );
+
+  // Sliding heartbeat — keeps reservations refreshed while the user fills
+  // in checkout. Without this, the user can dwell 12+ min on a long form,
+  // hit submit, and discover the reservation expired mid-flight.
+  useReservationHeartbeat(mounted);
 
   // Accordion state
   const [activeStep, setActiveStep] = useState(0);
@@ -682,6 +689,11 @@ export default function CheckoutPage() {
           {state.error}
         </div>
       )}
+
+      {/* Sticky reservation countdown — shortest expiry across cart items */}
+      <div className="mt-4">
+        <ReservationCountdownBanner />
+      </div>
 
       {/* Express checkout buttons — above accordion, C1496: 2x mobile conversion */}
       <div className="mt-6">
