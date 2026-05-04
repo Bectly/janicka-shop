@@ -50,7 +50,8 @@ export function CollectionCard({
       className={`group relative overflow-hidden rounded-2xl shadow-sm transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_16px_40px_-8px_rgba(180,130,140,0.20)] haptic-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 ${wide ? "sm:col-span-2" : ""}`}
     >
       {/* ── Image / empty state ────────────────────────────── */}
-      <div className={`relative overflow-hidden ${wide ? "aspect-[4/3] sm:aspect-[3/2]" : "aspect-[4/3] sm:aspect-[3/2] lg:aspect-[4/3]"}`}>
+      {/* Aspect ratios kept tall enough that overlaid text block ≥ ~80px even on 2-col tablet (~320px wide) */}
+      <div className={`relative overflow-hidden ${wide ? "aspect-[4/3] sm:aspect-[3/2]" : "aspect-[4/3]"}`}>
         {hasImage ? (
           <>
             <Image
@@ -74,20 +75,24 @@ export function CollectionCard({
           <div
             className={`absolute inset-0 bg-gradient-to-br ${gradientTheme} transition-opacity duration-300 group-hover:opacity-90`}
           >
-            {/* Decorative initial — editorial signal of curated emptiness */}
-            <div
-              className="pointer-events-none absolute -right-4 -top-6 select-none font-heading text-[8rem] font-bold leading-none text-brand-dark/[0.08] sm:text-[10rem]"
-              aria-hidden="true"
-            >
-              {title.charAt(0)}
-            </div>
+            {/* Editorial monogram — title initial as dominant visual */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="rounded-full bg-white/40 p-3 shadow-sm backdrop-blur-sm ring-1 ring-white/30">
-                <Layers className="size-6 text-brand-dark/60" />
+              <div
+                className="pointer-events-none select-none font-heading font-bold leading-none text-brand-dark/[0.18] transition-transform duration-500 group-hover:scale-110 text-[7rem] sm:text-[8rem] lg:text-[10rem]"
+                aria-hidden="true"
+              >
+                {title.charAt(0)}
               </div>
             </div>
+            {/* Small Kolekce eyebrow — signals editorial intent over generic placeholder */}
+            <div className="absolute left-4 top-4 inline-flex items-center gap-1 rounded-full bg-white/55 px-2 py-0.5 ring-1 ring-brand-dark/10 backdrop-blur-sm">
+              <Layers className="size-3 text-brand-dark/60" aria-hidden="true" />
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-brand-dark/70">
+                Kolekce
+              </span>
+            </div>
             {/* Soft bottom fade so overlaid title sits cleanly */}
-            <div className="absolute inset-0 bg-gradient-to-t from-white/45 via-white/10 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-white/55 via-white/15 to-transparent" />
           </div>
         )}
 
