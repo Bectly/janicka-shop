@@ -18,7 +18,7 @@ import {
   dailySeed,
   mergeWithFillers,
 } from "@/lib/curated/fill-with-random";
-import { HeroBento } from "@/components/shop/hero-bento";
+import { HeroSection } from "@/components/shop/hero-section";
 import { EditorialStoryStrip } from "@/components/shop/editorial-story-strip";
 import { getSiteSetting, HERO_EDITORIAL_IMAGE_KEY } from "@/lib/site-settings";
 import { buildItemListSchema, buildWebSiteSchema, buildOrganizationSchema, jsonLdString } from "@/lib/structured-data";
@@ -68,6 +68,22 @@ async function getNewProductsForPage() {
       seed: dailySeed("new"),
       minVisible: MIN_VISIBLE_PRODUCTS,
       targetCount: TARGET,
+    });
+  } catch {
+    return [];
+  }
+}
+
+async function getTopCategoriesForBento() {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("products");
+  try {
+    const db = await getDb();
+    return await db.category.findMany({
+      orderBy: { sortOrder: "asc" },
+      take: 4,
+      select: { id: true, name: true, slug: true },
     });
   } catch {
     return [];
@@ -662,11 +678,6 @@ export default async function HomePage() {
 
       {/* Editorial story strip — brand statement, moved below products */}
       <EditorialStoryStrip />
-
-      {/* Janičin moment — editorial photo + brand quote, 2-col on desktop */}
-      <ScrollReveal>
-        <JanickaMomentSection editorialImageUrl={editorialImageUrl} />
-      </ScrollReveal>
 
       {/* Categories — streams independently */}
       <Suspense fallback={<div className="min-h-[740px]" aria-hidden="true" />}>

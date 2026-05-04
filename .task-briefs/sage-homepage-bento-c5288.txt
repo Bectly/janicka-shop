@@ -1,0 +1,57 @@
+SAGE — Janička homepage interleaved bento + decor (Lead C5288 brief)
+
+## Co se děje
+Bectly 4× rejectnul monolitický hero. Chce **rozdělit hero do více info bloků proložených produkty** + decorative SVG prvky mezi sekcemi. Tři předchozí pokusy (C5279/5283/5284) selhaly — vždy zůstal jeden velký hero.
+
+## Tvoje zdroje (přečti TY V TOMHLE POŘADÍ, ne přeskakuj)
+1. **`docs/research/homepage-bento-interleaved-2026-05-04.md`** — Lead spec, **single source of truth**. Tabulka 8 brandů, 9-section breakdown, decor mapping, file paths, class examples, mobile reflow, Czech copy, acceptance checklist.
+2. `public/decor/` — 7 SVG assetů (wavy-divider, dotted-divider, sparkle, leaf, circle-frame, arch, grain). Všechno `currentColor` → barví Tailwind `text-{token}/{alpha}`.
+3. `src/app/globals.css` `@theme inline` block — tokeny `brand`, `brand-light/dark`, `champagne*`, `sage*`, `charcoal*`, `blush*`, `--spacing-section`, `--spacing-stack*`, `--aspect-portrait/fashion/editorial`, `--radius-card`. **VŠECHNO PŘES NĚ**, nikdy `[Npx]`/`#hex`.
+
+## Implementace (přesně podle docs/research/...md sekce 4 a 5)
+
+### Vytvořit (5 nových komponent v `src/components/shop/`)
+1. `brand-strip-bento.tsx` — 2-col asymmetric: copy+CTA left, 3-image collage right; `leaf.svg` corner, `grain.svg` overlay; `max-h-[55vh]` na collage; mobile stack
+2. `marquee-strip.tsx` — `"use client"`; 5 phrases × 2 (loop); `sparkle.svg` separator; `bg-blush-light border-y border-brand/10 py-stack-sm`; pause-on-hover
+3. `editorial-pull-quote.tsx` — `arch.svg` portrait frame + italic serif quote; replaces `EditorialStoryStrip`
+4. `kategorie-peek-grid.tsx` — asymmetric 4-tile (1 tall lg:col-span-2 row-span-2 + 3 standard); `leaf.svg` first tile, `grain.svg` overlay all images; nahrazuje inline `CategoriesSection` z `page.tsx`
+5. `trust-strip.tsx` — 4 mini tiles s `sparkle.svg`; nahrazuje plochý `TrustBadges` na homepage
+
+### Upravit
+6. `janicka-moment-section.tsx` — wrap portrait do `circle-frame.svg` overlay; přidat `janickaSelfieUrl?: string` prop, fallback chain: `editorialImageUrl ?? janickaSelfieUrl ?? logo`. **Pokud Bolt #20632 (`getJanickaSelfieUrl()`) ještě neni mergovaný**, NEBLOKUJ — použij jen existing `editorialImageUrl` a přidej `// TODO: wire getJanickaSelfieUrl from Bolt #20632 when merged`.
+
+### Smazat
+7. `src/components/shop/hero-section.tsx`
+8. `src/components/shop/editorial-story-strip.tsx`
+
+### Přepsat `src/app/(shop)/page.tsx` (řádky 647–722)
+Pořadí 9 sekcí + 4 wavy dividers — viz spec sekce 4 "Page assembly" v doc. Suspense fallbacky **`max-h-[Npx]`**, NIKDY `min-h`. Wavy divider použij inline pattern z doc (nemusí být samostatná komponenta).
+
+## Hard rules (BUILD FAIL pokud porušíš)
+- `grep -nE "min-h-" src/components/shop/{brand-strip-bento,marquee-strip,editorial-pull-quote,kategorie-peek-grid,trust-strip}.tsx` → 0 matches
+- `grep -nE "#[0-9a-fA-F]{3,6}" src/components/shop/{brand-strip-bento,marquee-strip,editorial-pull-quote,kategorie-peek-grid,trust-strip}.tsx` → 0 matches
+- `grep -nE "\[(0?\.)?[0-9]+(px|vh|vw|rem)\]" src/components/shop/{brand-strip-bento,marquee-strip,editorial-pull-quote,kategorie-peek-grid,trust-strip}.tsx` → 0 matches (žádné arbitrary value brackets)
+  - Výjimka: `max-h-[55vh]` na collage v BrandStripBento je explicitně povolený (jediný)
+- Czech UI text everywhere (diacritics, `&nbsp;` pro pairs)
+- Mobile-first, touch targets ≥44px
+- `npm run build` EXIT=0
+
+## Acceptance — co MUSÍ být v reportu zpět
+1. Seznam změněných/vytvořených/smazaných souborů (`git status` + `git log --oneline -1`)
+2. Tail `npm run build` (posledních ~30 řádků, musí být `✓ Compiled successfully` / EXIT=0)
+3. Screenshoty 4 viewportů (320 / 768 / 1280 / 1920) **full-page** (ne jen fold) v `docs/design/homepage-bento-2026-05-04/`
+4. Local commit na main, **NEPUSHUJ**, **NEDEPLOYUJ**. Bectly schvaluje cutover zvlášť.
+5. Pokud narazíš na blocker (např. existing test selže, prop type mismatch v `JanickaMomentSection`), STOP a reportuj — nehackuj `// @ts-ignore`.
+
+## Co NEdělej
+- Nepřidávej nové globals.css tokeny — všechny potřebné existují (ověřeno)
+- Nepřidávej nové dependencies (žádný npm install)
+- Nepushuj, nedeployuj
+- Nereagovuj na další Bolt/Sage cykly probíhající paralelně — soustřeď se jen na svůj scope
+- Neopravuj nesouvisející bugs (fixněš si poznámku do reportu, neimplementuj)
+- Žádný `<HeroSection>` re-export ani `// kept for compat` shimy — komponenty čistě smaž
+
+## Definition of Done
+9 interleaved sekcí (info ↔ products ↔ info ↔ products ...) + 4 wavy dividers + decor SVGs napříč. Build EXIT=0. Screenshoty captured. Commit local. Report back.
+
+cwd: /home/bectly/development/projects/janicka-shop

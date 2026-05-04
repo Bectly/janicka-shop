@@ -13,7 +13,7 @@ export default async function NewCollectionPage() {
   const db = await getDb();
   const products = await db.product.findMany({
     where: { active: true, sold: false },
-    select: { id: true, name: true, slug: true, price: true, images: true, brand: true },
+    select: { id: true, name: true, slug: true, price: true, images: true, brand: true, condition: true },
     orderBy: { createdAt: "desc" },
     take: 500,
   });

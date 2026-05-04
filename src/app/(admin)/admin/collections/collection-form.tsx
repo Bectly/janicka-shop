@@ -12,6 +12,7 @@ import {
   updateCollection,
   type CollectionFormState,
 } from "./actions";
+import { CONDITION_LABELS, CONDITION_COLORS } from "@/lib/constants";
 
 interface Product {
   id: string;
@@ -20,6 +21,7 @@ interface Product {
   price: number;
   images: string;
   brand: string | null;
+  condition: string;
 }
 
 interface CollectionFormProps {
@@ -260,13 +262,13 @@ export function CollectionForm({ collection, allProducts }: CollectionFormProps)
               const imgUrl = getFirstImageUrl(product.images);
               return (
                 <div key={product.id} className="flex items-center gap-3 p-2.5">
-                  <div className="size-10 shrink-0 overflow-hidden rounded-md bg-muted">
+                  <div className="size-[50px] shrink-0 overflow-hidden rounded-md bg-muted">
                     {imgUrl ? (
                       <Image
                         src={imgUrl}
                         alt={product.name}
-                        width={40}
-                        height={40}
+                        width={50}
+                        height={50}
                         unoptimized
                         className="size-full object-cover"
                       />
@@ -278,10 +280,19 @@ export function CollectionForm({ collection, allProducts }: CollectionFormProps)
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{product.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {product.brand && `${product.brand} · `}
-                      {formatPrice(product.price)}
-                    </p>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                      <span className="text-xs text-muted-foreground">
+                        {product.brand && `${product.brand} · `}
+                        {formatPrice(product.price)}
+                      </span>
+                      <span
+                        className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
+                          CONDITION_COLORS[product.condition] ?? "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {CONDITION_LABELS[product.condition] ?? product.condition}
+                      </span>
+                    </div>
                   </div>
                   <button
                     type="button"
@@ -350,10 +361,19 @@ export function CollectionForm({ collection, allProducts }: CollectionFormProps)
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm">{product.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {product.brand && `${product.brand} · `}
-                      {formatPrice(product.price)}
-                    </p>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                      <span className="text-xs text-muted-foreground">
+                        {product.brand && `${product.brand} · `}
+                        {formatPrice(product.price)}
+                      </span>
+                      <span
+                        className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
+                          CONDITION_COLORS[product.condition] ?? "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {CONDITION_LABELS[product.condition] ?? product.condition}
+                      </span>
+                    </div>
                   </div>
                   <div
                     className={`flex size-5 shrink-0 items-center justify-center rounded border-2 ${
