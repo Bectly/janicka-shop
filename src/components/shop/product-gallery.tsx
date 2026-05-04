@@ -402,7 +402,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
 
   if (totalSlides === 0) {
     return (
-      <div className="aspect-[3/4] overflow-hidden rounded-2xl bg-muted">
+      <div className="aspect-fashion overflow-hidden rounded-card bg-muted">
         <div className="flex size-full items-center justify-center bg-gradient-to-br from-muted to-muted/50">
           <span className="text-6xl text-muted-foreground/20">
             {productName.charAt(0)}
@@ -417,7 +417,7 @@ export function ProductGallery({ images, productName, videoUrl }: ProductGallery
       <div className="min-w-0 max-w-full overflow-hidden space-y-3">
         {/* Main image/video — swipeable on touch devices */}
         <div
-          className="group relative aspect-[3/4] overflow-hidden rounded-2xl bg-muted touch-pan-y"
+          className="group relative aspect-fashion overflow-hidden rounded-card bg-muted touch-pan-y"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}

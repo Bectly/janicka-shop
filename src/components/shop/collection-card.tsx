@@ -47,7 +47,7 @@ export function CollectionCard({
   return (
     <Link
       href={`/collections/${slug}`}
-      className={`group relative overflow-hidden rounded-2xl shadow-sm transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_16px_40px_-8px_rgba(180,130,140,0.20)] haptic-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 ${wide ? "sm:col-span-2" : ""}`}
+      className={`group relative overflow-hidden rounded-card shadow-card-rest transition-all ease-out-expo duration-slow hover:-translate-y-1 hover:shadow-card-hover haptic-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 ${wide ? "sm:col-span-2" : ""}`}
     >
       {/* ── Image / empty state ────────────────────────────── */}
       {/* Aspect ratios kept tall enough that overlaid text block ≥ ~80px even on 2-col tablet (~320px wide) */}
@@ -62,7 +62,7 @@ export function CollectionCard({
                 ? "(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 66vw"
                 : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               }
-              className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
+              className="object-cover object-center transition-transform ease-out-expo duration-slow group-hover:scale-105"
               priority={priority}
               quality={90}
             />
@@ -85,9 +85,9 @@ export function CollectionCard({
               </div>
             </div>
             {/* Small Kolekce eyebrow — signals editorial intent over generic placeholder */}
-            <div className="absolute left-4 top-4 inline-flex items-center gap-1 rounded-full bg-white/55 px-2 py-0.5 ring-1 ring-brand-dark/10 backdrop-blur-sm">
+            <div className="absolute left-4 top-4 inline-flex items-center gap-1 rounded-pill bg-white/55 px-2 py-0.5 ring-1 ring-brand-dark/10 backdrop-blur-sm">
               <Layers className="size-3 text-brand-dark/60" aria-hidden="true" />
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-brand-dark/70">
+              <span className="text-eyebrow !text-brand-dark/70">
                 Kolekce
               </span>
             </div>
@@ -111,7 +111,7 @@ export function CollectionCard({
 
           {/* Title */}
           <h2
-            className={`font-heading font-bold tracking-tight transition-colors duration-200 ${
+            className={`font-heading font-bold tracking-tight transition-colors ease-out-expo duration-soft ${
               wide ? "text-xl sm:text-2xl" : "text-lg sm:text-xl"
             } ${hasImage ? "text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]" : "text-brand-dark"}`}
           >

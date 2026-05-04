@@ -121,8 +121,8 @@ export function ProductCard({
   /* ==================== FEATURED VARIANT ==================== */
   if (isFeatured) {
     return (
-      <Link href={`/products/${slug}`} className="group relative block transition-all duration-500 ease-out hover:-translate-y-2 haptic-press">
-        <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-muted shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-500 ease-out group-hover:shadow-[0_24px_60px_-12px_rgba(180,130,140,0.25)]">
+      <Link href={`/products/${slug}`} className="group relative block transition-all duration-slow ease-out-expo hover:-translate-y-2 haptic-press">
+        <div className="relative aspect-fashion overflow-hidden rounded-card bg-muted shadow-card-rest transition-all duration-slow ease-out-expo group-hover:shadow-card-hover">
           {imageBlock}
 
           {/* Action buttons — revealed on hover (always visible on touch) */}
@@ -178,8 +178,8 @@ export function ProductCard({
 
   /* ==================== STANDARD VARIANT ==================== */
   return (
-    <Link href={`/products/${slug}`} className="group block transition-all duration-500 ease-out hover:-translate-y-2 haptic-press">
-      <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-muted shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] transition-all duration-500 ease-out group-hover:shadow-[0_20px_50px_-12px_rgba(180,130,140,0.22)]">
+    <Link href={`/products/${slug}`} className="group block transition-all duration-slow ease-out-expo hover:-translate-y-2 haptic-press">
+      <div className="relative aspect-fashion overflow-hidden rounded-card bg-muted shadow-card-rest transition-all duration-slow ease-out-expo group-hover:shadow-card-hover">
         {imageBlock}
 
         {/* Action buttons — revealed on hover (always visible on touch) */}

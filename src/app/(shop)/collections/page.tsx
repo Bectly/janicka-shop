@@ -60,7 +60,7 @@ export default async function CollectionsPage() {
             <span className="mx-2">/</span>
             <span className="text-foreground">Kolekce</span>
           </nav>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1 text-xs font-semibold tracking-wide text-primary">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1 text-eyebrow !text-primary">
             <Layers className="size-3" />
             Kurátorský výběr
           </span>
