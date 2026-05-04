@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { formatPrice } from "@/lib/format";
 import { CONDITION_LABELS, CONDITION_COLORS, COLOR_MAP, FREE_SHIPPING_THRESHOLD } from "@/lib/constants";
 import { getImageUrls } from "@/lib/images";
@@ -7,10 +6,8 @@ import { cn } from "@/lib/utils";
 import { WishlistButton } from "./wishlist-button";
 import { QuickViewButton } from "./quick-view-modal";
 import { TimeElapsedBadge } from "./time-elapsed-badge";
+import { ProductCardImage } from "./product-card-image";
 import { Truck } from "lucide-react";
-
-const BLUR_DATA_URL =
-  "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNlNWUwZGIiLz48L3N2Zz4=";
 
 interface ProductCardProps {
   id: string;
@@ -59,8 +56,6 @@ export function ProductCard({
     : 0;
 
   const parsedImages = getImageUrls(images);
-  const mainImage = parsedImages[0];
-  const secondImage = parsedImages[1];
 
   let parsedSizes: string[] = [];
   let parsedColors: string[] = [];
@@ -105,43 +100,18 @@ export function ProductCard({
   );
 
   /* ---------- Image block (shared between variants) ---------- */
-  const imageBlock = mainImage ? (
-    <>
-      <Image
-        src={mainImage}
-        alt={name}
-        fill
-        className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-        sizes={isFeatured
-          ? "(max-width: 640px) 100vw, (max-width: 1024px) 66vw, 50vw"
-          : "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-        }
-        priority={priority}
-        placeholder="blur"
-        blurDataURL={BLUR_DATA_URL}
-        unoptimized
-      />
-      {secondImage && (
-        <Image
-          src={secondImage}
-          alt={`${name} — detail`}
-          fill
-          className="object-cover opacity-0 transition-all duration-700 ease-out group-hover:opacity-100 group-hover:scale-105"
-          sizes={isFeatured
-            ? "(max-width: 640px) 100vw, (max-width: 1024px) 66vw, 50vw"
-            : "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          }
-          unoptimized
-          loading="lazy"
-        />
-      )}
-    </>
-  ) : (
-    <div className="flex size-full items-center justify-center bg-gradient-to-br from-muted to-muted/50">
-      <span className={cn("text-muted-foreground/30", isFeatured ? "text-5xl" : "text-3xl")}>
-        {name.charAt(0)}
-      </span>
-    </div>
+  const imageSizes = isFeatured
+    ? "(max-width: 640px) 100vw, (max-width: 1024px) 66vw, 50vw"
+    : "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw";
+
+  const imageBlock = (
+    <ProductCardImage
+      images={parsedImages}
+      alt={name}
+      sizes={imageSizes}
+      priority={priority}
+      showThumbStrip={!isFeatured}
+    />
   );
 
   /* ==================== FEATURED VARIANT ==================== */

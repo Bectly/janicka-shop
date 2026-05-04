@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useTransition, useCallback } from "react";
+import { useState, useTransition, useCallback, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Eye, Loader2, ArrowRight, Sparkles } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -25,10 +26,21 @@ interface QuickViewButtonProps {
   productId: string;
 }
 
+const MAX_QV_THUMBS = 8;
+
 export function QuickViewButton({ productId }: QuickViewButtonProps) {
   const [open, setOpen] = useState(false);
   const [product, setProduct] = useState<QuickViewProduct | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [activeIdx, setActiveIdx] = useState(0);
+
+  // Reset selected image when modal closes or a different product loads.
+  useEffect(() => {
+    if (!open) setActiveIdx(0);
+  }, [open]);
+  useEffect(() => {
+    setActiveIdx(0);
+  }, [product?.id]);
 
   const handleOpen = useCallback(
     (e: React.MouseEvent) => {
@@ -117,40 +129,90 @@ export function QuickViewButton({ productId }: QuickViewButtonProps) {
             </div>
           ) : (
             <div className="grid gap-5 sm:grid-cols-2">
-              {/* Image */}
-              <Link
-                href={`/products/${product.slug}`}
-                onClick={handleClose}
-                className="relative aspect-[3/4] overflow-hidden rounded-lg bg-muted"
-              >
-                {images[0] ? (
-                  <Image
-                    src={images[0]}
-                    alt={product.name}
-                    fill
-                    className="object-cover transition-transform duration-150 hover:scale-105"
-                    sizes="(max-width: 640px) 90vw, 300px"
-                    unoptimized
-                  />
-                ) : (
-                  <div className="flex size-full items-center justify-center">
-                    <span className="text-3xl text-muted-foreground/30">
-                      {product.name.charAt(0)}
+              {/* Image gallery */}
+              <div className="flex flex-col gap-2">
+                <Link
+                  href={`/products/${product.slug}`}
+                  onClick={handleClose}
+                  className="relative aspect-[3/4] overflow-hidden rounded-lg bg-muted"
+                >
+                  {images[activeIdx] ? (
+                    <Image
+                      key={`qv-main-${activeIdx}`}
+                      src={images[activeIdx]}
+                      alt={
+                        activeIdx === 0
+                          ? product.name
+                          : `${product.name} — foto ${activeIdx + 1}`
+                      }
+                      fill
+                      className="object-cover transition-transform duration-150 hover:scale-105"
+                      sizes="(max-width: 640px) 90vw, 300px"
+                      unoptimized
+                    />
+                  ) : (
+                    <div className="flex size-full items-center justify-center">
+                      <span className="text-3xl text-muted-foreground/30">
+                        {product.name.charAt(0)}
+                      </span>
+                    </div>
+                  )}
+                  {hasDiscount && (
+                    <span className="absolute top-2 left-2 rounded-md bg-destructive/90 px-2 py-0.5 text-xs font-semibold text-white">
+                      -
+                      {Math.round(
+                        ((product.compareAt! - product.price) /
+                          product.compareAt!) *
+                          100
+                      )}{" "}
+                      %
                     </span>
+                  )}
+                </Link>
+                {images.length > 1 && (
+                  <div
+                    className="flex gap-1.5 overflow-x-auto pb-1"
+                    role="tablist"
+                    aria-label="Fotky produktu"
+                  >
+                    {images.slice(0, MAX_QV_THUMBS).map((url, i) => {
+                      const isActive = i === activeIdx;
+                      return (
+                        <button
+                          key={`qv-thumb-${url}-${i}`}
+                          type="button"
+                          role="tab"
+                          aria-selected={isActive}
+                          aria-label={`Zobrazit foto ${i + 1}`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setActiveIdx(i);
+                          }}
+                          onMouseEnter={() => setActiveIdx(i)}
+                          onFocus={() => setActiveIdx(i)}
+                          className={cn(
+                            "relative size-12 shrink-0 overflow-hidden rounded-md border-2 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                            isActive
+                              ? "border-primary"
+                              : "border-transparent hover:border-primary/40"
+                          )}
+                        >
+                          <Image
+                            src={url}
+                            alt=""
+                            fill
+                            sizes="48px"
+                            className="object-cover"
+                            unoptimized
+                            loading="lazy"
+                          />
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
-                {hasDiscount && (
-                  <span className="absolute top-2 left-2 rounded-md bg-destructive/90 px-2 py-0.5 text-xs font-semibold text-white">
-                    -
-                    {Math.round(
-                      ((product.compareAt! - product.price) /
-                        product.compareAt!) *
-                        100
-                    )}{" "}
-                    %
-                  </span>
-                )}
-              </Link>
+              </div>
 
               {/* Info */}
               <div className="flex flex-col">
