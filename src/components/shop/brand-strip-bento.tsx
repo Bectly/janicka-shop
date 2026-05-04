@@ -150,7 +150,7 @@ export function BrandStripBento({ collageImages }: BrandStripBentoProps) {
                   alt="Janička"
                   width={400}
                   height={218}
-                  className="h-auto w-[180px] opacity-70 drop-shadow-md sm:w-[220px]"
+                  className="h-auto w-44 opacity-70 drop-shadow-md sm:w-56"
                 />
               </div>
             )}

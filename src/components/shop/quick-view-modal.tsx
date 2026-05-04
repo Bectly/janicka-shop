@@ -222,7 +222,7 @@ function QuickViewBody({
                   : `${product.name} — foto ${activeIdx + 1}`
               }
               fill
-              className="animate-image-cross-fade object-cover transition-transform ease-out-expo duration-sublime group-hover/main:scale-[1.03]"
+              className="animate-image-cross-fade object-contain transition-transform ease-out-expo duration-sublime group-hover/main:scale-[1.03]"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 60vw, 560px"
               unoptimized
               priority

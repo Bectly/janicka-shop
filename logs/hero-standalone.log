@@ -1,0 +1,22 @@
+▲ Next.js 16.2.3
+- Local:         http://localhost:3005
+- Network:       http://0.0.0.0:3005
+✓ Ready in 0ms
+Failed to prepare server Error: An error occurred while loading instrumentation hook: [site-url] NEXT_PUBLIC_SITE_URL points at a *.vercel.app preview host (https://janicka-shop.vercel.app). Production must use the canonical jvsatnik.cz domain.
+    at <unknown> (.next/server/chunks/src_lib_env-check_ts_0s0m-z-._.js:1:2184)
+    at Module.e [as register] (.next/server/chunks/src_078_k.o._.js:1:156)
+Error: An error occurred while loading instrumentation hook: [site-url] NEXT_PUBLIC_SITE_URL points at a *.vercel.app preview host (https://janicka-shop.vercel.app). Production must use the canonical jvsatnik.cz domain.
+    at <unknown> (.next/server/chunks/src_lib_env-check_ts_0s0m-z-._.js:1:2184)
+    at Module.e [as register] (.next/server/chunks/src_078_k.o._.js:1:156)
+⨯ unhandledRejection:  Error: An error occurred while loading instrumentation hook: [site-url] NEXT_PUBLIC_SITE_URL points at a *.vercel.app preview host (https://janicka-shop.vercel.app). Production must use the canonical jvsatnik.cz domain.
+    at <unknown> (.next/server/chunks/src_lib_env-check_ts_0s0m-z-._.js:1:2184)
+    at Module.e [as register] (.next/server/chunks/src_078_k.o._.js:1:156)
+Failed to prepare server Error: An error occurred while loading instrumentation hook: [site-url] NEXT_PUBLIC_SITE_URL points at a *.vercel.app preview host (https://janicka-shop.vercel.app). Production must use the canonical jvsatnik.cz domain.
+    at <unknown> (.next/server/chunks/src_lib_env-check_ts_0s0m-z-._.js:1:2184)
+    at Module.e [as register] (.next/server/chunks/src_078_k.o._.js:1:156)
+Error: An error occurred while loading instrumentation hook: [site-url] NEXT_PUBLIC_SITE_URL points at a *.vercel.app preview host (https://janicka-shop.vercel.app). Production must use the canonical jvsatnik.cz domain.
+    at <unknown> (.next/server/chunks/src_lib_env-check_ts_0s0m-z-._.js:1:2184)
+    at Module.e [as register] (.next/server/chunks/src_078_k.o._.js:1:156)
+Error: An error occurred while loading instrumentation hook: [site-url] NEXT_PUBLIC_SITE_URL points at a *.vercel.app preview host (https://janicka-shop.vercel.app). Production must use the canonical jvsatnik.cz domain.
+    at <unknown> (.next/server/chunks/src_lib_env-check_ts_0s0m-z-._.js:1:2184)
+    at Module.e [as register] (.next/server/chunks/src_078_k.o._.js:1:156)

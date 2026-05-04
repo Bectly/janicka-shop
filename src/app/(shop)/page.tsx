@@ -1,13 +1,12 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
 import Link from "next/link";
+import Image from "next/image";
 import { getDb } from "@/lib/db";
 import { cacheLife, cacheTag } from "next/cache";
 import { ProductCard } from "@/components/shop/product-card";
-import { CategoryCard } from "@/components/shop/category-card";
 import { CollectionCard } from "@/components/shop/collection-card";
 import { NewsletterForm } from "@/components/shop/newsletter-form";
-import { TrustBadges } from "@/components/shop/trust-badges";
 import { MothersDayBanner } from "@/components/shop/mothers-day-banner";
 import { RecentlySoldFeed } from "@/components/shop/recently-sold-feed";
 import { RecentlyViewedSection } from "@/components/shop/recently-viewed";
@@ -18,13 +17,18 @@ import {
   dailySeed,
   mergeWithFillers,
 } from "@/lib/curated/fill-with-random";
-import { HeroBento } from "@/components/shop/hero-bento";
-import { EditorialStoryStrip } from "@/components/shop/editorial-story-strip";
+import { BrandStripBento } from "@/components/shop/brand-strip-bento";
+import { MarqueeStrip } from "@/components/shop/marquee-strip";
+import { EditorialPullQuote } from "@/components/shop/editorial-pull-quote";
+import { KategoriePeekGrid } from "@/components/shop/kategorie-peek-grid";
+import { TrustStrip } from "@/components/shop/trust-strip";
+import { JanickaMomentSection } from "@/components/shop/janicka-moment-section";
 import { getSiteSetting, HERO_EDITORIAL_IMAGE_KEY } from "@/lib/site-settings";
+import { getImageUrls } from "@/lib/images";
 import { buildItemListSchema, buildWebSiteSchema, buildOrganizationSchema, jsonLdString } from "@/lib/structured-data";
 import { ScrollReveal } from "@/components/shop/scroll-reveal";
 import { ProductCarousel } from "@/components/shop/product-carousel";
-import { LayoutGrid, Star, Tag, Heart, Layers, Mail } from "lucide-react";
+import { Star, Tag, Heart, Layers, Mail } from "lucide-react";
 
 /* ---------- Cached DB fetches (cross-request via "use cache") ---------- */
 
@@ -50,9 +54,6 @@ async function getNewProductsForPage() {
     });
     if (recent.length >= TARGET) return recent;
 
-    // Top up with the most-recent active products outside the 30-day window so
-    // the section never renders 1–3 lonely cards. mergeWithFillers hides the
-    // section entirely if the catalog can't reach MIN_VISIBLE_PRODUCTS.
     const fillerPool = await db.product.findMany({
       where: {
         active: true,
@@ -68,22 +69,6 @@ async function getNewProductsForPage() {
       seed: dailySeed("new"),
       minVisible: MIN_VISIBLE_PRODUCTS,
       targetCount: TARGET,
-    });
-  } catch {
-    return [];
-  }
-}
-
-async function getTopCategoriesForBento() {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("products");
-  try {
-    const db = await getDb();
-    return await db.category.findMany({
-      orderBy: { sortOrder: "asc" },
-      take: 4,
-      select: { id: true, name: true, slug: true },
     });
   } catch {
     return [];
@@ -110,10 +95,6 @@ async function getFeaturedProductsForPage() {
     });
     if (featured.length >= TARGET) return featured;
 
-    // Top up with the most-recent non-featured active products so the section
-    // never renders 1–3 lonely cards (bectly: "vypadá to hrozně"). Curated
-    // featured products keep their priority position; only the filler portion
-    // is shuffled deterministically by daily seed.
     const fillerPool = await db.product.findMany({
       where: {
         active: true,
@@ -138,55 +119,6 @@ async function getFeaturedProductsForPage() {
 
 /* ---------- Async streamed sections ---------- */
 
-async function CategoriesSection() {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("products");
-  let categories;
-  try {
-    const db = await getDb();
-    categories = await db.category.findMany({
-      orderBy: { sortOrder: "asc" },
-      include: {
-        _count: {
-          select: { products: { where: { active: true, sold: false } } },
-        },
-      },
-    });
-  } catch {
-    return null;
-  }
-
-  return (
-    <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-      <div className="flex items-end justify-between">
-        <div>
-          <span className="mb-3 flex w-fit items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase">
-            <LayoutGrid className="size-3" aria-hidden="true" /> Kategorie
-          </span>
-          <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
-            Kategorie
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Najděte přesně to, co hledáte
-          </p>
-        </div>
-      </div>
-      <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        {categories.map((cat) => (
-          <CategoryCard
-            key={cat.id}
-            name={cat.name}
-            slug={cat.slug}
-            description={cat.description}
-            productCount={cat._count.products}
-          />
-        ))}
-      </div>
-    </section>
-  );
-}
-
 async function NewProductsSection() {
   const newProducts = await getNewProductsForPage();
 
@@ -195,13 +127,21 @@ async function NewProductsSection() {
   const lowestPricesMap = await getLowestPrices30d(newProducts.map((p) => p.id));
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <section className="mx-auto max-w-7xl px-4 py-section sm:px-6 lg:px-8">
       <div className="flex items-end justify-between">
         <div>
-          <span className="mb-3 flex w-fit items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase">
-            <span className="size-1.5 rounded-full bg-brand animate-pulse" aria-hidden="true" /> Nové
+          <Image
+            src="/decor/dotted-divider.svg"
+            alt=""
+            aria-hidden="true"
+            width={48}
+            height={8}
+            className="mb-stack-xs h-2 w-12 text-brand/30"
+          />
+          <span className="mb-3 flex w-fit items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold tracking-[0.25em] text-brand uppercase">
+            <span className="size-1.5 rounded-full bg-brand animate-pulse" aria-hidden="true" /> 01 / Nové
           </span>
-          <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
+          <h2 className="section-heading font-heading text-2xl font-bold text-foreground sm:text-3xl">
             Nově přidané
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -215,7 +155,7 @@ async function NewProductsSection() {
           Zobrazit vše &rarr;
         </Link>
       </div>
-      <div className="mt-8">
+      <div className="mt-stack">
         <ProductCarousel ariaLabel="Nově přidané produkty">
           {newProducts.map((product, i) => (
             <ProductCard
@@ -241,10 +181,9 @@ async function NewProductsSection() {
           ))}
         </ProductCarousel>
       </div>
-      <div className="mt-8 text-center sm:hidden">
+      <div className="mt-stack text-center sm:hidden">
         <Button
           variant="outline"
-          className="min-h-[44px]"
           render={<Link href="/products?sort=newest" />}
         >
           Zobrazit všechny novinky
@@ -262,13 +201,21 @@ async function FeaturedProductsSection() {
   const lowestPricesMap = await getLowestPrices30d(featuredProducts.map((p) => p.id));
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <section className="mx-auto max-w-7xl px-4 py-section sm:px-6 lg:px-8">
       <div className="flex items-end justify-between">
         <div>
-          <span className="mb-3 flex w-fit items-center gap-1.5 rounded-full bg-champagne/50 px-3 py-1 text-xs font-semibold tracking-wider text-champagne-dark uppercase">
-            <Star className="size-3" aria-hidden="true" /> Výběr
+          <Image
+            src="/decor/dotted-divider.svg"
+            alt=""
+            aria-hidden="true"
+            width={48}
+            height={8}
+            className="mb-stack-xs h-2 w-12 text-champagne-dark/40"
+          />
+          <span className="mb-3 flex w-fit items-center gap-1.5 rounded-full bg-champagne/50 px-3 py-1 text-xs font-semibold tracking-[0.25em] text-champagne-dark uppercase">
+            <Star className="size-3" aria-hidden="true" /> 03 / Vybrané
           </span>
-          <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
+          <h2 className="section-heading font-heading text-2xl font-bold text-foreground sm:text-3xl">
             Doporučujeme
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -282,7 +229,7 @@ async function FeaturedProductsSection() {
           Zobrazit vše &rarr;
         </Link>
       </div>
-      <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
+      <div className="mt-stack grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
         {featuredProducts.map((product, i) => (
           <div key={product.id} className={i === 0 || i === 5 ? "col-span-2" : undefined}>
             <ProductCard
@@ -307,7 +254,7 @@ async function FeaturedProductsSection() {
           </div>
         ))}
       </div>
-      <div className="mt-8 text-center sm:hidden">
+      <div className="mt-stack text-center sm:hidden">
         <Button variant="outline" render={<Link href="/products" />}>
           Zobrazit všechny produkty
         </Button>
@@ -340,12 +287,8 @@ async function SaleProductsSection() {
     if (onSale.length >= TARGET) {
       saleProducts = onSale;
     } else if (onSale.length === 0) {
-      // No discounted items at all — keep section hidden rather than show
-      // full-price fillers under a "Výprodej" heading (would mislead buyers).
       return null;
     } else {
-      // 1–3 sale items: top up with most-recent active products so the row
-      // doesn't look broken. Hidden if even after topup we'd be below MIN.
       const fillerPool = await db.product.findMany({
         where: {
           active: true,
@@ -371,13 +314,13 @@ async function SaleProductsSection() {
 
   return (
     <section className="bg-brand/[0.04]">
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-section sm:px-6 lg:px-8">
         <div className="flex items-end justify-between">
           <div>
             <span className="mb-3 flex w-fit items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase">
               <Tag className="size-3" aria-hidden="true" /> Akce
             </span>
-            <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
+            <h2 className="section-heading font-heading text-2xl font-bold text-foreground sm:text-3xl">
               Výprodej
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -391,7 +334,7 @@ async function SaleProductsSection() {
             Zobrazit vše &rarr;
           </Link>
         </div>
-        <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
+        <div className="mt-stack grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
           {saleProducts.map((product, i) => (
             <div key={product.id} className={i === 0 || i === 5 ? "col-span-2" : undefined}>
               <ProductCard
@@ -415,7 +358,7 @@ async function SaleProductsSection() {
             </div>
           ))}
         </div>
-        <div className="mt-8 text-center sm:hidden">
+        <div className="mt-stack text-center sm:hidden">
           <Button
             variant="outline"
             render={<Link href="/products?sale=true" />}
@@ -454,24 +397,24 @@ async function PopularBrandsSection() {
   if (popularBrands.length === 0) return null;
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <section className="mx-auto max-w-7xl px-4 py-section sm:px-6 lg:px-8">
       <div className="text-center">
         <span className="mx-auto mb-4 flex w-fit items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase">
           <Heart className="size-3" aria-hidden="true" /> Značky
         </span>
-        <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
+        <h2 className="section-heading font-heading text-2xl font-bold text-foreground sm:text-3xl">
           Populární značky
         </h2>
         <p className="mt-3 text-sm text-muted-foreground">
           Oblíbené značky v naší nabídce
         </p>
       </div>
-      <div className="mt-8 flex flex-wrap justify-center gap-2.5">
+      <div className="mt-stack flex flex-wrap justify-center gap-2.5">
         {popularBrands.map(([brand, count]) => (
           <Link
             key={brand}
             href={`/products?brand=${encodeURIComponent(brand)}`}
-            className="group inline-flex min-h-[44px] items-center gap-1.5 rounded-full border border-border/60 bg-gradient-to-br from-card to-blush-light px-4 py-3 text-sm font-medium text-foreground/80 shadow-sm transition-all duration-200 hover:border-brand/30 hover:from-blush hover:to-brand-light/20 hover:text-primary hover:shadow-[0_4px_14px_-4px_oklch(0.55_0.20_350_/_0.15)]"
+            className="group inline-flex h-11 items-center gap-1.5 rounded-full border border-border/60 bg-gradient-to-br from-card to-blush-light px-4 py-3 text-sm font-medium text-foreground/80 shadow-sm transition-all duration-200 hover:border-brand/30 hover:from-blush hover:to-brand-light/20 hover:text-primary"
           >
             {brand}
             <span className="text-[11px] text-muted-foreground/60 transition-colors group-hover:text-primary/50">
@@ -511,13 +454,13 @@ async function FeaturedCollectionsSection() {
   if (featuredCollections.length === 0) return null;
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <section className="mx-auto max-w-7xl px-4 py-section sm:px-6 lg:px-8">
       <div className="flex items-end justify-between">
         <div>
           <span className="mb-3 flex w-fit items-center gap-1.5 rounded-full bg-sage-light/60 px-3 py-1 text-xs font-semibold tracking-wider text-sage-dark uppercase">
             <Layers className="size-3" aria-hidden="true" /> Kolekce
           </span>
-          <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
+          <h2 className="section-heading font-heading text-2xl font-bold text-foreground sm:text-3xl">
             Kolekce
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -531,7 +474,7 @@ async function FeaturedCollectionsSection() {
           Všechny kolekce &rarr;
         </Link>
       </div>
-      <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-stack grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {featuredCollections.map((collection, i) => (
           <CollectionCard
             key={collection.id}
@@ -545,7 +488,7 @@ async function FeaturedCollectionsSection() {
           />
         ))}
       </div>
-      <div className="mt-6 text-center sm:hidden">
+      <div className="mt-stack-sm text-center sm:hidden">
         <Button variant="outline" render={<Link href="/collections" />}>
           Všechny kolekce
         </Button>
@@ -593,7 +536,6 @@ async function RecentlySoldSection() {
 }
 
 async function JsonLdSection() {
-  // Re-uses cached results from NewProductsSection + FeaturedProductsSection — no extra DB queries.
   const [newProducts, featuredProducts] = await Promise.all([
     getNewProductsForPage(),
     getFeaturedProductsForPage(),
@@ -646,94 +588,128 @@ async function JsonLdSection() {
 }
 
 
+/* ---------- Inline wavy divider ---------- */
+
+function WavyDivider({
+  tone,
+}: {
+  tone: "brand" | "champagne" | "sage" | "brand-light";
+}) {
+  const toneClass =
+    tone === "brand"
+      ? "text-brand/30"
+      : tone === "champagne"
+        ? "text-champagne-dark/40"
+        : tone === "sage"
+          ? "text-sage/40"
+          : "text-brand-light/40";
+  return (
+    <div aria-hidden="true" className={toneClass}>
+      <Image
+        src="/decor/wavy-divider.svg"
+        alt=""
+        width={1440}
+        height={24}
+        className="h-auto w-full opacity-60"
+      />
+    </div>
+  );
+}
+
 
 /* ---------- Main page ---------- */
 
 export default async function HomePage() {
   await connection();
-  const [editorialImageUrl, bentoCategories, bentoProducts] = await Promise.all([
+  const [editorialImageUrl, bentoProducts] = await Promise.all([
     getSiteSetting(HERO_EDITORIAL_IMAGE_KEY),
-    getTopCategoriesForBento(),
     getNewProductsForPage(),
   ]);
+  const collageImages = bentoProducts
+    .slice(0, 3)
+    .map((p) => getImageUrls(p.images)[0] ?? null);
+
   return (
     <>
-      {/* Hero bento — 4-tile editorial mosaic (brand / Janička / new peek / categories).
-          Spec: docs/research/fashion-hero-bento-2026-05-04.md */}
-      <HeroBento
-        editorialImageUrl={editorialImageUrl}
-        newProducts={bentoProducts.slice(0, 3).map((p) => ({
-          id: p.id,
-          slug: p.slug,
-          name: p.name,
-          images: p.images,
-        }))}
-        categories={bentoCategories}
-      />
+      {/* JSON-LD structured data — streamed, non-blocking */}
+      <Suspense fallback={null}>
+        <JsonLdSection />
+      </Suspense>
+
+      {/* 01 — BrandStripBento (info: copy + CTAs + 3-image collage) */}
+      <BrandStripBento collageImages={collageImages} />
+      <WavyDivider tone="brand" />
+
+      {/* 02 — MarqueeStrip (Czech mottos scrolling) */}
+      <MarqueeStrip />
+
+      {/* 03 — NewProductsSection (products) */}
+      <ScrollReveal>
+        <Suspense fallback={<div className="max-h-[500px]" aria-hidden="true" />}>
+          <NewProductsSection />
+        </Suspense>
+      </ScrollReveal>
+      <WavyDivider tone="champagne" />
+
+      {/* 04 — EditorialPullQuote (info: arch portrait + serif quote) */}
+      <EditorialPullQuote portraitUrl={editorialImageUrl} />
 
       {/* Mother's Day banner — date-gated May 1–10, 2026 */}
       <Suspense fallback={null}>
         <MothersDayBanner />
       </Suspense>
 
-      {/* Nově přidané — full grid below the bento */}
-      <ScrollReveal>
-        <Suspense fallback={<div className="min-h-[500px]" aria-hidden="true" />}>
-          <NewProductsSection />
-        </Suspense>
-      </ScrollReveal>
-
-      {/* Editorial story strip — bridges Nově přidané and Kategorie */}
-      <EditorialStoryStrip />
-
-      {/* Categories — streams independently */}
-      <Suspense fallback={<div className="min-h-[740px]" aria-hidden="true" />}>
-        <CategoriesSection />
+      {/* 05 — KategoriePeekGrid (info+nav: asymmetric 4-tile) */}
+      <Suspense fallback={<div className="max-h-[740px]" aria-hidden="true" />}>
+        <KategoriePeekGrid />
       </Suspense>
 
-      {/* Featured products — streams independently */}
+      {/* 06 — FeaturedProductsSection (products) */}
       <ScrollReveal>
-        <Suspense fallback={<div className="min-h-[1800px]" aria-hidden="true" />}>
+        <Suspense fallback={<div className="max-h-[1800px]" aria-hidden="true" />}>
           <FeaturedProductsSection />
         </Suspense>
       </ScrollReveal>
+      <WavyDivider tone="sage" />
 
-      {/* Collections — streams independently */}
+      {/* 07 — JanickaMomentSection (info: circle-frame portrait + story) */}
       <ScrollReveal>
-        <Suspense fallback={<div className="min-h-[1900px]" aria-hidden="true" />}>
+        <JanickaMomentSection editorialImageUrl={editorialImageUrl} />
+      </ScrollReveal>
+
+      {/* 08 — RecentlySold (social proof ticker) */}
+      <ScrollReveal>
+        <Suspense fallback={<div className="max-h-[240px]" aria-hidden="true" />}>
+          <RecentlySoldSection />
+        </Suspense>
+      </ScrollReveal>
+      <WavyDivider tone="brand-light" />
+
+      {/* 09 — TrustStrip (info: 4 trust tiles) */}
+      <TrustStrip />
+
+      {/* Downstream sections — unchanged order */}
+      <ScrollReveal>
+        <Suspense fallback={<div className="max-h-[1900px]" aria-hidden="true" />}>
           <FeaturedCollectionsSection />
         </Suspense>
       </ScrollReveal>
 
-      {/* Sale products — streams independently */}
       <ScrollReveal>
-        <Suspense fallback={<div className="min-h-[1800px]" aria-hidden="true" />}>
+        <Suspense fallback={<div className="max-h-[1800px]" aria-hidden="true" />}>
           <SaleProductsSection />
         </Suspense>
       </ScrollReveal>
 
-      {/* Popular brands — streams independently */}
       <ScrollReveal>
-        <Suspense fallback={<div className="min-h-[340px]" aria-hidden="true" />}>
+        <Suspense fallback={<div className="max-h-[340px]" aria-hidden="true" />}>
           <PopularBrandsSection />
-        </Suspense>
-      </ScrollReveal>
-
-      {/* Trust badges — no data, renders instantly */}
-      <ScrollReveal>
-        <TrustBadges />
-      </ScrollReveal>
-
-      {/* Recently sold — streams independently */}
-      <ScrollReveal>
-        <Suspense fallback={<div className="min-h-[240px]" aria-hidden="true" />}>
-          <RecentlySoldSection />
         </Suspense>
       </ScrollReveal>
 
       {/* Recently viewed — client-side, renders instantly */}
       <ScrollReveal>
-        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <section className="mx-auto max-w-7xl px-4 py-section sm:px-6 lg:px-8">
           <RecentlyViewedSection />
         </section>
       </ScrollReveal>
@@ -741,17 +717,16 @@ export default async function HomePage() {
       {/* Newsletter — no data, renders instantly */}
       <ScrollReveal>
         <section className="relative overflow-hidden bg-gradient-to-br from-brand-light/30 via-blush to-champagne-light/50">
-          {/* Decorative background glow */}
           <div aria-hidden="true" className="pointer-events-none absolute inset-0">
             <div className="absolute -left-24 -top-24 size-64 rounded-full bg-brand/8 blur-3xl" />
             <div className="absolute -bottom-12 -right-12 size-48 rounded-full bg-champagne/30 blur-2xl" />
           </div>
-          <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+          <div className="relative mx-auto max-w-7xl px-4 py-section sm:px-6 lg:px-8">
             <div className="mx-auto max-w-lg text-center">
               <span className="mx-auto mb-4 flex w-fit items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand uppercase">
                 <Mail className="size-3" aria-hidden="true" /> Newsletter
               </span>
-              <h2 className="section-heading font-heading text-[1.75rem] font-bold text-foreground sm:text-[2rem]">
+              <h2 className="section-heading font-heading text-2xl font-bold text-foreground sm:text-3xl">
                 Buďte v obraze
               </h2>
               <p className="mt-2 text-sm text-muted-foreground">
