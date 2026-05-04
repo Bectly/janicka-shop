@@ -18,7 +18,7 @@ import {
   dailySeed,
   mergeWithFillers,
 } from "@/lib/curated/fill-with-random";
-import { HeroSection } from "@/components/shop/hero-section";
+import { HeroBento } from "@/components/shop/hero-bento";
 import { EditorialStoryStrip } from "@/components/shop/editorial-story-strip";
 import { getSiteSetting, HERO_EDITORIAL_IMAGE_KEY } from "@/lib/site-settings";
 import { buildItemListSchema, buildWebSiteSchema, buildOrganizationSchema, jsonLdString } from "@/lib/structured-data";
@@ -651,7 +651,11 @@ async function JsonLdSection() {
 
 export default async function HomePage() {
   await connection();
-  const editorialImageUrl = await getSiteSetting(HERO_EDITORIAL_IMAGE_KEY);
+  const [editorialImageUrl, bentoCategories, bentoProducts] = await Promise.all([
+    getSiteSetting(HERO_EDITORIAL_IMAGE_KEY),
+    getTopCategoriesForBento(),
+    getNewProductsForPage(),
+  ]);
   return (
     <>
       {/* JSON-LD structured data — streamed, non-blocking */}
@@ -659,24 +663,31 @@ export default async function HomePage() {
         <JsonLdSection />
       </Suspense>
 
-      {/* Hero — max-h token envelope (max-h-hero-sm / max-h-hero), products visible at fold */}
-      <HeroSection />
-
-      {/* Nově přidané — peeks at fold-edge, first content user sees on scroll */}
-      <div id="new-products">
-        <ScrollReveal>
-          <Suspense fallback={<div className="min-h-[500px]" aria-hidden="true" />}>
-            <NewProductsSection />
-          </Suspense>
-        </ScrollReveal>
-      </div>
+      {/* Hero bento — 4-tile editorial mosaic */}
+      <HeroBento
+        editorialImageUrl={editorialImageUrl}
+        newProducts={bentoProducts.slice(0, 3).map((p) => ({
+          id: p.id,
+          slug: p.slug,
+          name: p.name,
+          images: p.images,
+        }))}
+        categories={bentoCategories}
+      />
 
       {/* Mother's Day banner — date-gated May 1–10, 2026 */}
       <Suspense fallback={null}>
         <MothersDayBanner />
       </Suspense>
 
-      {/* Editorial story strip — brand statement, moved below products */}
+      {/* Nově přidané — full grid below the bento */}
+      <ScrollReveal>
+        <Suspense fallback={<div className="min-h-[500px]" aria-hidden="true" />}>
+          <NewProductsSection />
+        </Suspense>
+      </ScrollReveal>
+
+      {/* Editorial story strip — bridges Nově přidané and Kategorie */}
       <EditorialStoryStrip />
 
       {/* Categories — streams independently */}
