@@ -23,6 +23,7 @@ import { StickyCategoryNav } from "@/components/shop/sticky-category-nav";
 import { GridViewSwitcher, type ViewMode } from "@/components/shop/grid-view-switcher";
 import { buildItemListSchema, jsonLdString } from "@/lib/structured-data";
 import { ALL_SIZES, getSizesForCategory } from "@/lib/sizes";
+import { parseMeasurements, type ProductMeasurements } from "@/lib/images";
 
 const PRODUCTS_PER_PAGE = 12;
 
@@ -47,6 +48,15 @@ export interface CatalogProduct {
   categorySlug: string;
   lowestPrice30d: number | null;
   wishlistCount: number;
+  /** Stringified JSON: { chest?, waist?, hips?, length?, sleeve?, inseam?, shoulders? } in cm. */
+  measurements: string;
+}
+
+/** Numeric ranges discovered in the live catalog — used to seed filter UI. */
+export interface MeasurementRanges {
+  chest?: { min: number; max: number };
+  waist?: { min: number; max: number };
+  length?: { min: number; max: number };
 }
 
 interface ProductsClientProps {
@@ -79,8 +89,22 @@ interface Filters {
   colors: string[];
   minPrice: number | null;
   maxPrice: number | null;
+  chestMin: number | null;
+  chestMax: number | null;
+  waistMin: number | null;
+  waistMax: number | null;
+  lengthMin: number | null;
+  lengthMax: number | null;
   page: number;
   view: ViewMode;
+}
+
+/** Bounded float parser for measurement ranges (cm). 0–500 covers all garments. */
+function parseCm(v: string | string[] | undefined): number | null {
+  if (typeof v !== "string" || v === "") return null;
+  const n = parseFloat(v);
+  if (!Number.isFinite(n)) return null;
+  return Math.max(0, Math.min(500, n));
 }
 
 function filtersFromParams(
@@ -100,6 +124,12 @@ function filtersFromParams(
     colors: toArray(params.color),
     minPrice: Number.isFinite(rawMin) ? Math.max(0, Math.min(999999, rawMin)) : null,
     maxPrice: Number.isFinite(rawMax) ? Math.max(0, Math.min(999999, rawMax)) : null,
+    chestMin: parseCm(params.chest_min),
+    chestMax: parseCm(params.chest_max),
+    waistMin: parseCm(params.waist_min),
+    waistMax: parseCm(params.waist_max),
+    lengthMin: parseCm(params.length_min),
+    lengthMax: parseCm(params.length_max),
     page: Math.max(1, parseInt(typeof params.page === "string" ? params.page : "1") || 1),
     view,
   };
@@ -116,6 +146,12 @@ function filtersToSearchString(f: Filters): string {
   for (const c of f.colors) p.append("color", c);
   if (f.minPrice !== null) p.set("minPrice", String(f.minPrice));
   if (f.maxPrice !== null) p.set("maxPrice", String(f.maxPrice));
+  if (f.chestMin !== null) p.set("chest_min", String(f.chestMin));
+  if (f.chestMax !== null) p.set("chest_max", String(f.chestMax));
+  if (f.waistMin !== null) p.set("waist_min", String(f.waistMin));
+  if (f.waistMax !== null) p.set("waist_max", String(f.waistMax));
+  if (f.lengthMin !== null) p.set("length_min", String(f.lengthMin));
+  if (f.lengthMax !== null) p.set("length_max", String(f.lengthMax));
   if (f.page > 1) p.set("page", String(f.page));
   if (f.view && f.view !== "grid-3") p.set("view", f.view);
   const qs = p.toString();
@@ -136,11 +172,36 @@ function computeState(products: CatalogProduct[], f: Filters) {
 
   const matchedForGrid: CatalogProduct[] = [];
 
+  // Per-dimension active flags — recomputed once outside the loop.
+  const chestActive = f.chestMin !== null || f.chestMax !== null;
+  const waistActive = f.waistMin !== null || f.waistMax !== null;
+  const lengthActive = f.lengthMin !== null || f.lengthMax !== null;
+
   for (const p of products) {
     // Base filters (sale, price) — applied to everything
     if (f.sale && !p.compareAt) continue;
     if (f.minPrice !== null && p.price < f.minPrice) continue;
     if (f.maxPrice !== null && p.price > f.maxPrice) continue;
+
+    // Measurement filters — additive: a product without a given measurement
+    // value is never excluded, only narrowed when its value falls outside the
+    // range. This keeps inventory without measurement data discoverable while
+    // letting buyers who care surface matching pieces.
+    if (chestActive || waistActive || lengthActive) {
+      const m = parseMeasurements(p.measurements);
+      if (chestActive && typeof m.chest === "number") {
+        if (f.chestMin !== null && m.chest < f.chestMin) continue;
+        if (f.chestMax !== null && m.chest > f.chestMax) continue;
+      }
+      if (waistActive && typeof m.waist === "number") {
+        if (f.waistMin !== null && m.waist < f.waistMin) continue;
+        if (f.waistMax !== null && m.waist > f.waistMax) continue;
+      }
+      if (lengthActive && typeof m.length === "number") {
+        if (f.lengthMin !== null && m.length < f.lengthMin) continue;
+        if (f.lengthMax !== null && m.length > f.lengthMax) continue;
+      }
+    }
 
     const pSizes = parseJsonArray(p.sizes);
     const pColors = parseJsonArray(p.colors);
@@ -340,6 +401,40 @@ export function ProductsClient({
     (c) => (state.colors[c] ?? 0) > 0 || filters.colors.includes(c),
   );
 
+  // Discover live measurement ranges (chest/waist/length) from the catalog so
+  // the filter UI can seed inputs with realistic min/max bounds instead of
+  // hard-coded numbers. Only the dimensions actually present (>=1 product with
+  // data) get exposed — no point offering a "length" filter if nothing has it.
+  const measurementRanges: MeasurementRanges = useMemo(() => {
+    const seed = (): { min: number; max: number } | undefined => undefined;
+    const acc: { chest?: { min: number; max: number }; waist?: { min: number; max: number }; length?: { min: number; max: number } } = {
+      chest: seed(),
+      waist: seed(),
+      length: seed(),
+    };
+    function bump(key: "chest" | "waist" | "length", v: number) {
+      const cur = acc[key];
+      if (!cur) acc[key] = { min: v, max: v };
+      else {
+        if (v < cur.min) cur.min = v;
+        if (v > cur.max) cur.max = v;
+      }
+    }
+    for (const p of products) {
+      let m: ProductMeasurements;
+      try {
+        m = parseMeasurements(p.measurements);
+      } catch {
+        continue;
+      }
+      if (typeof m.chest === "number") bump("chest", m.chest);
+      if (typeof m.waist === "number") bump("waist", m.waist);
+      if (typeof m.length === "number") bump("length", m.length);
+    }
+    return acc;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [products]);
+
   // --- Mutation helpers ---
 
   function update(partial: Partial<Filters>) {
@@ -365,6 +460,12 @@ export function ProductsClient({
         colors: [],
         minPrice: null,
         maxPrice: null,
+        chestMin: null,
+        chestMax: null,
+        waistMin: null,
+        waistMax: null,
+        lengthMin: null,
+        lengthMax: null,
         page: 1,
         view: filters.view,
       });
@@ -459,7 +560,14 @@ export function ProductsClient({
             colors: filters.colors,
             minPrice: filters.minPrice,
             maxPrice: filters.maxPrice,
+            chestMin: filters.chestMin,
+            chestMax: filters.chestMax,
+            waistMin: filters.waistMin,
+            waistMax: filters.waistMax,
+            lengthMin: filters.lengthMin,
+            lengthMax: filters.lengthMax,
           }}
+          measurementRanges={measurementRanges}
           onChange={(patch) => update(patch)}
           onClearAll={clearAll}
         />

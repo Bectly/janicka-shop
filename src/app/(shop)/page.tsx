@@ -13,6 +13,11 @@ import { RecentlySoldFeed } from "@/components/shop/recently-sold-feed";
 import { RecentlyViewedSection } from "@/components/shop/recently-viewed";
 import { Button } from "@/components/ui/button";
 import { getLowestPrices30d } from "@/lib/price-history";
+import {
+  MIN_VISIBLE_PRODUCTS,
+  dailySeed,
+  mergeWithFillers,
+} from "@/lib/curated/fill-with-random";
 import { HeroSection } from "@/components/shop/hero-section";
 import { buildItemListSchema, buildWebSiteSchema, buildOrganizationSchema, jsonLdString } from "@/lib/structured-data";
 import { ScrollReveal } from "@/components/shop/scroll-reveal";
@@ -29,25 +34,38 @@ async function getNewProductsForPage() {
     const db = await getDb();
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const include = {
+      category: { select: { name: true } },
+      _count: { select: { wishlistedBy: true } },
+    } as const;
+    const TARGET = 8;
+
     const recent = await db.product.findMany({
       where: { active: true, sold: false, createdAt: { gte: thirtyDaysAgo } },
-      include: {
-        category: { select: { name: true } },
-        _count: { select: { wishlistedBy: true } },
-      },
-      take: 8,
+      include,
+      take: TARGET,
       orderBy: { createdAt: "desc" },
     });
-    if (recent.length > 0) return recent;
-    // Fallback: if nothing in last 30 days, show the 8 most recently added products
-    return db.product.findMany({
-      where: { active: true, sold: false },
-      include: {
-        category: { select: { name: true } },
-        _count: { select: { wishlistedBy: true } },
+    if (recent.length >= TARGET) return recent;
+
+    // Top up with the most-recent active products outside the 30-day window so
+    // the section never renders 1–3 lonely cards. mergeWithFillers hides the
+    // section entirely if the catalog can't reach MIN_VISIBLE_PRODUCTS.
+    const fillerPool = await db.product.findMany({
+      where: {
+        active: true,
+        sold: false,
+        id: { notIn: recent.map((p) => p.id) },
       },
-      take: 8,
+      include,
+      take: (TARGET - recent.length) * 3,
       orderBy: { createdAt: "desc" },
+    });
+
+    return mergeWithFillers(recent, fillerPool, {
+      seed: dailySeed("new"),
+      minVisible: MIN_VISIBLE_PRODUCTS,
+      targetCount: TARGET,
     });
   } catch {
     return [];
@@ -60,26 +78,39 @@ async function getFeaturedProductsForPage() {
   cacheTag("products");
   try {
     const db = await getDb();
+    const include = {
+      category: { select: { name: true } },
+      _count: { select: { wishlistedBy: true } },
+    } as const;
+    const TARGET = 8;
+
     const featured = await db.product.findMany({
       where: { featured: true, active: true, sold: false },
-      include: {
-        category: { select: { name: true } },
-        _count: { select: { wishlistedBy: true } },
-      },
-      take: 8,
+      include,
+      take: TARGET,
       orderBy: { createdAt: "desc" },
     });
-    if (featured.length > 0) return featured;
-    // Fallback: if nothing is marked featured, show latest active products so the
-    // "Doporučujeme" section still renders meaningful content.
-    return db.product.findMany({
-      where: { active: true, sold: false },
-      include: {
-        category: { select: { name: true } },
-        _count: { select: { wishlistedBy: true } },
+    if (featured.length >= TARGET) return featured;
+
+    // Top up with the most-recent non-featured active products so the section
+    // never renders 1–3 lonely cards (bectly: "vypadá to hrozně"). Curated
+    // featured products keep their priority position; only the filler portion
+    // is shuffled deterministically by daily seed.
+    const fillerPool = await db.product.findMany({
+      where: {
+        active: true,
+        sold: false,
+        id: { notIn: featured.map((p) => p.id) },
       },
-      take: 8,
+      include,
+      take: (TARGET - featured.length) * 3,
       orderBy: { createdAt: "desc" },
+    });
+
+    return mergeWithFillers(featured, fillerPool, {
+      seed: dailySeed("featured"),
+      minVisible: MIN_VISIBLE_PRODUCTS,
+      targetCount: TARGET,
     });
   } catch {
     return [];
@@ -275,21 +306,45 @@ async function SaleProductsSection() {
   let lowestPricesMap;
   try {
     const db = await getDb();
-    saleProducts = await db.product.findMany({
-      where: {
-        active: true,
-        sold: false,
-        compareAt: { not: null },
-      },
-      include: {
-        category: { select: { name: true } },
-        _count: { select: { wishlistedBy: true } },
-      },
-      take: 8,
+    const include = {
+      category: { select: { name: true } },
+      _count: { select: { wishlistedBy: true } },
+    } as const;
+    const TARGET = 8;
+
+    const onSale = await db.product.findMany({
+      where: { active: true, sold: false, compareAt: { not: null } },
+      include,
+      take: TARGET,
       orderBy: { createdAt: "desc" },
     });
 
-    if (saleProducts.length === 0) return null;
+    if (onSale.length >= TARGET) {
+      saleProducts = onSale;
+    } else if (onSale.length === 0) {
+      // No discounted items at all — keep section hidden rather than show
+      // full-price fillers under a "Výprodej" heading (would mislead buyers).
+      return null;
+    } else {
+      // 1–3 sale items: top up with most-recent active products so the row
+      // doesn't look broken. Hidden if even after topup we'd be below MIN.
+      const fillerPool = await db.product.findMany({
+        where: {
+          active: true,
+          sold: false,
+          id: { notIn: onSale.map((p) => p.id) },
+        },
+        include,
+        take: (TARGET - onSale.length) * 3,
+        orderBy: { createdAt: "desc" },
+      });
+      saleProducts = mergeWithFillers(onSale, fillerPool, {
+        seed: dailySeed("sale"),
+        minVisible: MIN_VISIBLE_PRODUCTS,
+        targetCount: TARGET,
+      });
+      if (saleProducts.length === 0) return null;
+    }
 
     lowestPricesMap = await getLowestPrices30d(saleProducts.map((p) => p.id));
   } catch {

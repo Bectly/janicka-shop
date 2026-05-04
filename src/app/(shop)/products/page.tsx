@@ -142,6 +142,7 @@ async function getCachedCatalog(): Promise<{
       categorySlug: p.category.slug,
       lowestPrice30d: lowestPricesMap.get(p.id) ?? null,
       wishlistCount: p._count?.wishlistedBy ?? 0,
+      measurements: p.measurements ?? "{}",
     };
   });
 

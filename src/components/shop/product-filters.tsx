@@ -44,6 +44,19 @@ export interface ProductFiltersState {
   colors: string[];
   minPrice: number | null;
   maxPrice: number | null;
+  chestMin: number | null;
+  chestMax: number | null;
+  waistMin: number | null;
+  waistMax: number | null;
+  lengthMin: number | null;
+  lengthMax: number | null;
+}
+
+/** Live min/max measurement bounds discovered in the catalog (cm). */
+export interface FilterMeasurementRanges {
+  chest?: { min: number; max: number };
+  waist?: { min: number; max: number };
+  length?: { min: number; max: number };
 }
 
 interface ProductFiltersProps {
@@ -55,6 +68,7 @@ interface ProductFiltersProps {
   categoryCounts?: Record<string, number>;
   totalFiltered: number;
   filters: ProductFiltersState;
+  measurementRanges?: FilterMeasurementRanges;
   onChange: (patch: Partial<ProductFiltersState>) => void;
   onClearAll: () => void;
 }
@@ -127,6 +141,7 @@ export function ProductFilters({
   categoryCounts,
   totalFiltered,
   filters,
+  measurementRanges,
   onChange,
   onClearAll,
 }: ProductFiltersProps) {
@@ -142,7 +157,21 @@ export function ProductFilters({
   const activeColors = filters.colors;
   const minPrice = filters.minPrice !== null ? String(filters.minPrice) : "";
   const maxPrice = filters.maxPrice !== null ? String(filters.maxPrice) : "";
+  const chestMin = filters.chestMin !== null ? String(filters.chestMin) : "";
+  const chestMax = filters.chestMax !== null ? String(filters.chestMax) : "";
+  const waistMin = filters.waistMin !== null ? String(filters.waistMin) : "";
+  const waistMax = filters.waistMax !== null ? String(filters.waistMax) : "";
+  const lengthMin = filters.lengthMin !== null ? String(filters.lengthMin) : "";
+  const lengthMax = filters.lengthMax !== null ? String(filters.lengthMax) : "";
   const saleOnly = filters.sale;
+  const hasMeasurementData = !!(
+    measurementRanges &&
+    (measurementRanges.chest || measurementRanges.waist || measurementRanges.length)
+  );
+  const activeMeasurementCount =
+    (filters.chestMin !== null || filters.chestMax !== null ? 1 : 0) +
+    (filters.waistMin !== null || filters.waistMax !== null ? 1 : 0) +
+    (filters.lengthMin !== null || filters.lengthMax !== null ? 1 : 0);
 
   /**
    * Adapter: the old codebase spoke in URL-param keys ("brand", "size", "sale",
@@ -185,6 +214,17 @@ export function ProductFilters({
             patch.maxPrice = Number.isFinite(n) ? n : null;
             break;
           }
+          case "chestMin":
+          case "chestMax":
+          case "waistMin":
+          case "waistMax":
+          case "lengthMin":
+          case "lengthMax": {
+            const n = typeof value === "string" && value ? parseFloat(value) : NaN;
+            // Bounded 0–500 cm — sanity range covers all garments.
+            patch[key] = Number.isFinite(n) ? Math.max(0, Math.min(500, n)) : null;
+            break;
+          }
         }
       }
       onChange(patch);
@@ -213,6 +253,7 @@ export function ProductFilters({
     activeColors.length +
     (minPrice ? 1 : 0) +
     (maxPrice ? 1 : 0) +
+    activeMeasurementCount +
     (saleOnly ? 1 : 0) +
     (activeCategory ? 1 : 0);
 
@@ -380,6 +421,24 @@ export function ProductFilters({
       ))}
       {minPrice && <FilterChip label={`od ${minPrice} Kč`} onRemove={() => updateParams({ minPrice: null })} />}
       {maxPrice && <FilterChip label={`do ${maxPrice} Kč`} onRemove={() => updateParams({ maxPrice: null })} />}
+      {(filters.chestMin !== null || filters.chestMax !== null) && (
+        <FilterChip
+          label={`Hruď ${filters.chestMin ?? "?"}–${filters.chestMax ?? "?"} cm`}
+          onRemove={() => onChange({ chestMin: null, chestMax: null })}
+        />
+      )}
+      {(filters.waistMin !== null || filters.waistMax !== null) && (
+        <FilterChip
+          label={`Pas ${filters.waistMin ?? "?"}–${filters.waistMax ?? "?"} cm`}
+          onRemove={() => onChange({ waistMin: null, waistMax: null })}
+        />
+      )}
+      {(filters.lengthMin !== null || filters.lengthMax !== null) && (
+        <FilterChip
+          label={`Délka ${filters.lengthMin ?? "?"}–${filters.lengthMax ?? "?"} cm`}
+          onRemove={() => onChange({ lengthMin: null, lengthMax: null })}
+        />
+      )}
       {saleOnly && <FilterChip label="Ve slevě" onRemove={() => updateParams({ sale: null })} />}
       <Button variant="link" onClick={clearAll} className="min-h-11 h-auto px-2 text-xs text-destructive">
         Smazat vše
@@ -406,6 +465,97 @@ export function ProductFilters({
         </select>
         <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
       </div>
+    </div>
+  );
+
+  /**
+   * Measurement range row — controlled inputs paired as [min, max] for one
+   * dimension. Hint shows live catalog bounds (e.g. "rozsah 80–110") so the
+   * shopper knows what's actually available. Empty → null (no bound applied).
+   */
+  function renderMeasurementRow(
+    key: "chest" | "waist" | "length",
+    label: string,
+    range: { min: number; max: number } | undefined,
+  ) {
+    if (!range) return null;
+    const minKey = `${key}Min` as const;
+    const maxKey = `${key}Max` as const;
+    const minVal = filters[minKey];
+    const maxVal = filters[maxKey];
+    const hint = `Rozsah v nabídce: ${Math.floor(range.min)}–${Math.ceil(range.max)} cm`;
+    return (
+      <div className="space-y-1.5" key={key}>
+        <div className="flex items-center justify-between gap-2">
+          <label
+            htmlFor={`measure-${key}-min`}
+            className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground"
+          >
+            {label}
+          </label>
+          <span className="text-[10px] text-muted-foreground/70" aria-hidden="true">
+            {hint}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Input
+            id={`measure-${key}-min`}
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={500}
+            placeholder={`od ${Math.floor(range.min)}`}
+            defaultValue={minVal !== null ? String(minVal) : ""}
+            onBlur={(e) => updateParams({ [minKey]: e.target.value || null })}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                updateParams({ [minKey]: e.currentTarget.value || null });
+              }
+            }}
+            className="h-8 text-xs"
+            aria-label={`${label} — minimum v centimetrech`}
+          />
+          <span className="text-xs text-muted-foreground" aria-hidden="true">
+            –
+          </span>
+          <Input
+            id={`measure-${key}-max`}
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={500}
+            placeholder={`do ${Math.ceil(range.max)}`}
+            defaultValue={maxVal !== null ? String(maxVal) : ""}
+            onBlur={(e) => updateParams({ [maxKey]: e.target.value || null })}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                updateParams({ [maxKey]: e.currentTarget.value || null });
+              }
+            }}
+            className="h-8 text-xs"
+            aria-label={`${label} — maximum v centimetrech`}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  /**
+   * Single measurements accordion section — second-hand UX critical: real
+   * measurements are the #1 fix for size-driven returns. Shown only when at
+   * least one product has measurement data, so empty catalogs don't expose
+   * useless inputs.
+   */
+  const measurementsSection = hasMeasurementData && measurementRanges && (
+    <div className="space-y-2.5 pb-1">
+      <p className="text-[11px] leading-snug text-muted-foreground">
+        Filtruje pouze kousky se zadanými rozměry. Ostatní zůstávají viditelné.
+      </p>
+      {renderMeasurementRow("chest", "Hruď / prsa", measurementRanges.chest)}
+      {renderMeasurementRow("waist", "Pas", measurementRanges.waist)}
+      {renderMeasurementRow("length", "Délka", measurementRanges.length)}
     </div>
   );
 
@@ -719,6 +869,19 @@ export function ProductFilters({
               </div>
             </AccordionContent>
           </AccordionItem>
+          {measurementsSection && (
+            <AccordionItem value="measurements">
+              <AccordionTrigger className="min-h-11 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-foreground hover:no-underline hover:text-foreground/70">
+                Rozměry (cm)
+                {activeMeasurementCount > 0 && (
+                  <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-primary/15 px-1.5 text-[11px] font-semibold leading-5 text-primary">
+                    {activeMeasurementCount}
+                  </span>
+                )}
+              </AccordionTrigger>
+              <AccordionContent>{measurementsSection}</AccordionContent>
+            </AccordionItem>
+          )}
           <AccordionItem value="sale">
             <AccordionTrigger className="min-h-11 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-foreground hover:no-underline hover:text-foreground/70">
               Sleva
@@ -978,6 +1141,20 @@ export function ProductFilters({
                     </div>
                   </AccordionContent>
                 </AccordionItem>
+
+                {measurementsSection && (
+                  <AccordionItem value={6}>
+                    <AccordionTrigger className="text-sm font-semibold">
+                      Rozměry (cm)
+                      {activeMeasurementCount > 0 && (
+                        <span className="ml-2 rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground">
+                          {activeMeasurementCount}
+                        </span>
+                      )}
+                    </AccordionTrigger>
+                    <AccordionContent>{measurementsSection}</AccordionContent>
+                  </AccordionItem>
+                )}
 
                 <AccordionItem value={5}>
                   <AccordionTrigger className="text-sm font-semibold">

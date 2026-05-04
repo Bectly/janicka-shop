@@ -12,6 +12,7 @@ import { ProductCarousel } from "@/components/shop/product-carousel";
 import { ProductGallery } from "@/components/shop/product-gallery";
 import { AddToCartButton } from "@/components/shop/add-to-cart-button";
 import { getLowestPrices30d } from "@/lib/price-history";
+import { MIN_VISIBLE_PRODUCTS, mergeWithFillers } from "@/lib/curated/fill-with-random";
 import { buildProductSchema, buildBreadcrumbSchema, buildFaqSchema, buildVideoObjectSchema, jsonLdString } from "@/lib/structured-data";
 import { ShareButtons } from "@/components/shop/share-buttons";
 import { WishlistButton } from "@/components/shop/wishlist-button";
@@ -154,6 +155,7 @@ async function RelatedProductsSection({
     },
   } as const;
 
+  const TARGET = 8;
   const relatedProducts = sold
     ? await (async () => {
         const sourceProduct = await db.product.findUnique({
@@ -178,11 +180,36 @@ async function RelatedProductsSection({
           return { product: p, score };
         });
         scored.sort((a, b) => b.score - a.score);
-        return scored.slice(0, 8).map((s) => s.product);
+        return scored.slice(0, TARGET).map((s) => s.product);
       })()
-    : await db.product.findMany({ ...relatedQuery, take: 8 });
+    : await db.product.findMany({ ...relatedQuery, take: TARGET });
 
-  if (relatedProducts.length === 0) return null;
+  // Top up with active products outside the same category so the section
+  // never renders 1–3 lonely cards on small catalogs / niche categories.
+  // Curated (same-category) products keep priority; fillers come from broader
+  // catalog and are seeded by productId so refresh on the same PDP is stable.
+  let merged = relatedProducts;
+  if (relatedProducts.length < TARGET) {
+    const excludeIds = [productId, ...relatedProducts.map((p) => p.id)];
+    const fillerPool = await db.product.findMany({
+      where: {
+        id: { notIn: excludeIds },
+        active: true,
+        sold: false,
+      },
+      select: relatedQuery.select,
+      take: (TARGET - relatedProducts.length) * 3,
+      orderBy: { createdAt: "desc" },
+    });
+    merged = mergeWithFillers(relatedProducts, fillerPool, {
+      seed: `pdp-${productId}`,
+      minVisible: MIN_VISIBLE_PRODUCTS,
+      targetCount: TARGET,
+    });
+  }
+
+  if (merged.length === 0) return null;
+  const finalProducts = merged;
 
   const allIds = [productId, ...relatedProducts.map((p) => p.id)];
   const lowestPricesMap = await getLowestPrices30d(allIds);

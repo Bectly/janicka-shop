@@ -27,15 +27,17 @@ export function ProductCardImage({
   priority = false,
   showThumbStrip = true,
 }: ProductCardImageProps) {
-  const [activeIdx, setActiveIdx] = useState(0);
+  // null = no thumb hovered (CSS crossfade governs preview).
+  // number = explicit thumb index — that image wins, crossfade is suppressed.
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
-  const reset = useCallback(() => setActiveIdx(0), []);
+  const reset = useCallback(() => setHoveredIdx(null), []);
   const handleThumbActivate = useCallback(
     (idx: number) => (e: React.SyntheticEvent) => {
       // Stop the event from bubbling to parent <Link> (PDP navigation).
       e.preventDefault();
       e.stopPropagation();
-      setActiveIdx(idx);
+      setHoveredIdx(idx);
     },
     [],
   );
@@ -53,11 +55,12 @@ export function ProductCardImage({
   const thumbs = images.slice(0, MAX_THUMBS);
   const hasMultiple = images.length > 1;
 
-  // When activeIdx === 0 we keep the legacy CSS-driven crossfade ([0]→[1] on
-  // group-hover) so users who never reach a thumb still see the second image,
-  // matching pre-refactor behaviour. When activeIdx > 0, we render that image
-  // explicitly at full opacity.
-  const explicitOverlay = activeIdx > 0 ? images[activeIdx] : null;
+  // When no thumb is hovered we keep the legacy CSS-driven crossfade ([0]→[1] on
+  // group-hover) so users who never reach a thumb still see the second image.
+  // When a thumb IS hovered, render that image explicitly and suppress the
+  // crossfade — otherwise hovering thumb 0 would leak images[1] over images[0]
+  // and thumb 1 would look identical to thumb 0 (off-by-2 bug).
+  const explicitOverlay = hoveredIdx !== null ? images[hoveredIdx] : null;
 
   return (
     <div className="absolute inset-0" onMouseLeave={reset}>
@@ -75,7 +78,7 @@ export function ProductCardImage({
       />
 
       {/* Layer 2: secondary image — CSS hover crossfade (preserves legacy UX) */}
-      {second && activeIdx === 0 && (
+      {second && hoveredIdx === null && (
         <Image
           src={second}
           alt={`${alt} — detail`}
@@ -90,9 +93,9 @@ export function ProductCardImage({
       {/* Layer 3: explicit thumb selection (cross-fade in) */}
       {explicitOverlay && (
         <Image
-          key={`overlay-${activeIdx}`}
+          key={`overlay-${hoveredIdx}`}
           src={explicitOverlay}
-          alt={`${alt} — foto ${activeIdx + 1}`}
+          alt={`${alt} — foto ${(hoveredIdx ?? 0) + 1}`}
           fill
           className="object-cover opacity-100 transition-opacity duration-200 ease-out group-hover:scale-105"
           sizes={sizes}
@@ -106,13 +109,13 @@ export function ProductCardImage({
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[6] hidden p-2 sm:flex">
           <div className="pointer-events-auto mx-auto flex max-w-full gap-1 rounded-full bg-background/90 p-1 shadow-md backdrop-blur-sm opacity-0 translate-y-2 transition-all duration-200 ease-out group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:translate-y-0">
             {thumbs.map((url, i) => {
-              const isActive = i === activeIdx;
+              const isActive = i === hoveredIdx;
               return (
                 <button
                   key={`${url}-${i}`}
                   type="button"
-                  onMouseEnter={() => setActiveIdx(i)}
-                  onFocus={() => setActiveIdx(i)}
+                  onMouseEnter={() => setHoveredIdx(i)}
+                  onFocus={() => setHoveredIdx(i)}
                   onClick={handleThumbActivate(i)}
                   aria-label={`Zobrazit foto ${i + 1}`}
                   aria-current={isActive ? "true" : undefined}
