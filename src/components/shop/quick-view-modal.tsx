@@ -45,8 +45,16 @@ export function QuickViewButton({ productId }: QuickViewButtonProps) {
     [productId, product]
   );
 
-  const handleClose = useCallback(() => {
+  const handleClose = useCallback((e?: React.MouseEvent) => {
+    e?.stopPropagation();
     setOpen(false);
+  }, []);
+
+  // Stops events bubbling from the Dialog portal (X button, overlay click,
+  // close buttons) through React's synthetic event tree to the parent <Link>
+  // that wraps <ProductCard>, which would otherwise navigate to the PDP.
+  const stopPropagation = useCallback((e: React.SyntheticEvent) => {
+    e.stopPropagation();
   }, []);
 
   const images = product ? getImageUrls(product.images) : [];
@@ -70,7 +78,11 @@ export function QuickViewButton({ productId }: QuickViewButtonProps) {
     product?.compareAt && product.compareAt > product.price;
 
   return (
-    <>
+    <span
+      style={{ display: "contents" }}
+      onClick={stopPropagation}
+      onPointerDown={stopPropagation}
+    >
       <button
         type="button"
         onClick={handleOpen}
@@ -222,6 +234,6 @@ export function QuickViewButton({ productId }: QuickViewButtonProps) {
           )}
         </DialogContent>
       </Dialog>
-    </>
+    </span>
   );
 }
