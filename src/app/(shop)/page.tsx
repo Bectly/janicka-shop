@@ -19,7 +19,8 @@ import {
   mergeWithFillers,
 } from "@/lib/curated/fill-with-random";
 import { HeroSection } from "@/components/shop/hero-section";
-import { HeroProductPeekStrip } from "@/components/shop/hero-product-peek-strip";
+import { EditorialStoryStrip } from "@/components/shop/editorial-story-strip";
+import { JanickaMomentSection } from "@/components/shop/janicka-moment-section";
 import { getSiteSetting, HERO_EDITORIAL_IMAGE_KEY } from "@/lib/site-settings";
 import { buildItemListSchema, buildWebSiteSchema, buildOrganizationSchema, jsonLdString } from "@/lib/structured-data";
 import { ScrollReveal } from "@/components/shop/scroll-reveal";
@@ -643,19 +644,18 @@ export default async function HomePage() {
         <JsonLdSection />
       </Suspense>
 
-      {/* Hero — dominant logo + brand statement + cherry blossom particles */}
-      <HeroSection
-        editorialImageUrl={editorialImageUrl}
-        peekStrip={<HeroProductPeekStrip />}
-      />
+      {/* Hero — compact logo + tagline + CTAs (~58-62vh) */}
+      <HeroSection />
+
+      {/* Editorial story strip — italic brand statement bridging hero and product grid */}
+      <EditorialStoryStrip />
 
       {/* Mother's Day banner — date-gated May 1–10, 2026 */}
       <Suspense fallback={null}>
         <MothersDayBanner />
       </Suspense>
 
-      {/* New products — above-fold priority on mobile (Sage C4803) */}
-      {/* min-h reserves space so CategoriesSection below doesn't shift when this streams in */}
+      {/* Nově přidané — full grid, lands at fold-edge as the welcome page punchline */}
       <div id="new-products">
         <ScrollReveal>
           <Suspense fallback={<div className="min-h-[500px]" aria-hidden="true" />}>
@@ -664,8 +664,12 @@ export default async function HomePage() {
         </ScrollReveal>
       </div>
 
+      {/* Janičin moment — editorial photo + brand quote, 2-col on desktop */}
+      <ScrollReveal>
+        <JanickaMomentSection editorialImageUrl={editorialImageUrl} />
+      </ScrollReveal>
+
       {/* Categories — streams independently */}
-      {/* min-h reserves space so sections below don't shift when this streams in */}
       <Suspense fallback={<div className="min-h-[740px]" aria-hidden="true" />}>
         <CategoriesSection />
       </Suspense>
@@ -674,6 +678,13 @@ export default async function HomePage() {
       <ScrollReveal>
         <Suspense fallback={<div className="min-h-[1800px]" aria-hidden="true" />}>
           <FeaturedProductsSection />
+        </Suspense>
+      </ScrollReveal>
+
+      {/* Collections — streams independently */}
+      <ScrollReveal>
+        <Suspense fallback={<div className="min-h-[1900px]" aria-hidden="true" />}>
+          <FeaturedCollectionsSection />
         </Suspense>
       </ScrollReveal>
 
@@ -688,13 +699,6 @@ export default async function HomePage() {
       <ScrollReveal>
         <Suspense fallback={<div className="min-h-[340px]" aria-hidden="true" />}>
           <PopularBrandsSection />
-        </Suspense>
-      </ScrollReveal>
-
-      {/* Collections — streams independently */}
-      <ScrollReveal>
-        <Suspense fallback={<div className="min-h-[1900px]" aria-hidden="true" />}>
-          <FeaturedCollectionsSection />
         </Suspense>
       </ScrollReveal>
 
