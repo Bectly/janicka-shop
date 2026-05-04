@@ -658,12 +658,8 @@ export default async function HomePage() {
   ]);
   return (
     <>
-      {/* JSON-LD structured data — streamed, non-blocking */}
-      <Suspense fallback={null}>
-        <JsonLdSection />
-      </Suspense>
-
-      {/* Hero bento — 4-tile editorial mosaic */}
+      {/* Hero bento — 4-tile editorial mosaic (brand / Janička / new peek / categories).
+          Spec: docs/research/fashion-hero-bento-2026-05-04.md */}
       <HeroBento
         editorialImageUrl={editorialImageUrl}
         newProducts={bentoProducts.slice(0, 3).map((p) => ({

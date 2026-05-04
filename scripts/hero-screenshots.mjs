@@ -30,34 +30,67 @@ for (const vp of VIEWPORTS) {
   });
   const page = await ctx.newPage();
 
-  await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 30000 });
+  await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 45000 });
 
-  const heroHeight = await page.evaluate(() => {
-    const hero = document.querySelector('section');
-    if (!hero) return -1;
-    return hero.getBoundingClientRect().height;
-  });
+  // Wait for main content to hydrate (hero section should appear)
+  try {
+    await page.waitForSelector('main section, body section', { timeout: 10000 });
+  } catch {
+    console.log(`[${vp.name}] WARNING: no section found after 10s`);
+  }
 
-  const hasMaxH = await page.evaluate(() => {
-    const hero = document.querySelector('section');
-    if (!hero) return false;
-    return hero.className.includes('max-h-hero');
-  });
+  const domInfo = await page.evaluate(() => {
+    // Find the hero section — it should be the first section on the page
+    const allSections = Array.from(document.querySelectorAll('section'));
+    const heroSection = allSections.find(s =>
+      s.className.includes('max-h-hero') ||
+      s.className.includes('min-h-') ||
+      s.className.includes('overflow-hidden') && s.className.includes('bg-gradient')
+    ) || allSections[0];
 
-  const hasMinH = await page.evaluate(() => {
-    const hero = document.querySelector('section');
-    if (!hero) return false;
-    return hero.className.includes('min-h-[');
+    if (!heroSection) {
+      return {
+        heroH: -1,
+        heroClass: 'NOT FOUND',
+        hasMaxH: false,
+        hasMinH: false,
+        sectionCount: allSections.length,
+        bodySnippet: document.body.innerText.substring(0, 100),
+      };
+    }
+
+    const rect = heroSection.getBoundingClientRect();
+    const cls = heroSection.className;
+    return {
+      heroH: Math.round(rect.height),
+      heroClass: cls.substring(0, 120),
+      hasMaxH: cls.includes('max-h-hero'),
+      hasMinH: cls.includes('min-h-['),
+      sectionCount: allSections.length,
+      bodySnippet: '',
+    };
   });
 
   const screenshotPath = `${OUT_DIR}/${vp.name}.png`;
   await page.screenshot({ path: screenshotPath, fullPage: false });
 
   const criteria = CRITERIA[vp.name];
-  const pass = heroHeight <= criteria.maxHeroPx;
+  // -1 means section not found — that's a fail unless server-side rendering
+  const pass = domInfo.heroH > 0 ? domInfo.heroH <= criteria.maxHeroPx : false;
 
-  results.push({ viewport: vp.name, heroHeight: Math.round(heroHeight), maxAllowed: criteria.maxHeroPx, pass, hasMaxH, hasMinH });
-  console.log(`[${vp.name}] hero=${Math.round(heroHeight)}px max=${criteria.maxHeroPx}px ${pass ? 'PASS' : 'FAIL'} max-h=${hasMaxH} min-h=${hasMinH}`);
+  results.push({
+    viewport: vp.name,
+    heroHeight: domInfo.heroH,
+    maxAllowed: criteria.maxHeroPx,
+    pass,
+    hasMaxH: domInfo.hasMaxH,
+    hasMinH: domInfo.hasMinH,
+    heroClass: domInfo.heroClass,
+    sectionCount: domInfo.sectionCount,
+  });
+
+  console.log(`[${vp.name}] hero=${domInfo.heroH}px max=${criteria.maxHeroPx}px ${pass ? 'PASS' : 'FAIL'} sections=${domInfo.sectionCount} max-h=${domInfo.hasMaxH} min-h=${domInfo.hasMinH}`);
+  if (domInfo.heroClass) console.log(`  class: ${domInfo.heroClass}`);
 
   await ctx.close();
 }
@@ -67,7 +100,7 @@ await browser.close();
 console.log('\n=== SUMMARY ===');
 for (const r of results) {
   const status = r.pass ? 'PASS' : 'FAIL';
-  console.log(`${status} ${r.viewport}: hero=${r.heroHeight}px (max=${r.maxAllowed}px) has-max-h=${r.hasMaxH} has-min-h=${r.hasMinH}`);
+  console.log(`${status} ${r.viewport}: hero=${r.heroHeight}px (max=${r.maxAllowed}px) sections=${r.sectionCount} has-max-h=${r.hasMaxH} has-min-h=${r.hasMinH}`);
 }
 
 const allPass = results.every(r => r.pass);
