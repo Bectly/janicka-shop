@@ -67,6 +67,21 @@
   --spacing-stack-sm: 1rem;
   --spacing-stack-xs: 0.5rem;
 
+  /* Modal/sheet width tokens — used by max-w-modal-{sm,md,lg} utilities */
+  --spacing-modal-sm: 32rem;
+  --spacing-modal-md: 44rem;
+  --spacing-modal-lg: 60rem;
+  --spacing-modal-xl: 72rem;
+
+  /* Modal vertical sizing — min-heights for content panels & galleries */
+  --spacing-modal-content-min: 28rem;
+  --spacing-modal-gallery-min: 32rem;
+
+  /* Editorial aspect ratios — used by aspect-portrait / aspect-fashion */
+  --aspect-portrait: 4 / 5;
+  --aspect-fashion: 3 / 4;
+  --aspect-editorial: 2 / 3;
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -74,6 +89,20 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-card: 1rem;
+  --radius-modal: 1.75rem;
+  --radius-pill: 9999px;
+
+  /* Editorial elevation system — soft, layered, brand-tinted */
+  --shadow-card-rest: 0 1px 2px oklch(0.18 0.04 350 / 0.04),
+                      0 8px 24px -12px oklch(0.18 0.05 350 / 0.10);
+  --shadow-card-hover: 0 4px 12px -2px oklch(0.55 0.15 350 / 0.10),
+                       0 24px 48px -16px oklch(0.55 0.18 350 / 0.18);
+  --shadow-modal-elevated: 0 1px 2px oklch(0.18 0.04 350 / 0.05),
+                           0 12px 32px -8px oklch(0.18 0.05 350 / 0.18),
+                           0 40px 80px -24px oklch(0.55 0.12 350 / 0.18);
+  --shadow-glow-brand: 0 0 0 1px oklch(0.55 0.20 350 / 0.10),
+                       0 0 32px -4px oklch(0.55 0.20 350 / 0.25);
 }
 
 :root {
@@ -574,6 +603,101 @@
 
 @utility animate-scale-in {
   animation: scale-in 120ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ─── Editorial easing + duration tokens ─── */
+/* Used together: `transition-all ease-out-expo duration-soft` */
+@utility ease-out-expo {
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+@utility ease-out-quart {
+  transition-timing-function: cubic-bezier(0.25, 1, 0.5, 1);
+}
+@utility ease-soft-spring {
+  transition-timing-function: cubic-bezier(0.34, 1.42, 0.64, 1);
+}
+@utility duration-snap   { transition-duration: 160ms; }
+@utility duration-soft   { transition-duration: 240ms; }
+@utility duration-slow   { transition-duration: 420ms; }
+@utility duration-sublime { transition-duration: 640ms; }
+
+/* ─── Modal entrance: rise + fade + micro-scale ─── */
+/* Replaces shadcn default zoom-in-95 for a more editorial feel —
+   the popup lifts from below with soft expo easing instead of "popping". */
+@keyframes modal-rise-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 24px)) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes modal-rise-out {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 16px)) scale(0.98);
+  }
+}
+
+@utility animate-modal-rise-in {
+  animation: modal-rise-in 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@utility animate-modal-rise-out {
+  animation: modal-rise-out 200ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+/* ─── Image cross-fade for gallery swap (replaces hard `key` re-mount) ─── */
+@keyframes image-cross-fade {
+  from { opacity: 0; transform: scale(1.02); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@utility animate-image-cross-fade {
+  animation: image-cross-fade 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ─── Eyebrow text — uppercase tracking, editorial label style ─── */
+@utility text-eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+/* ─── Tagline — italic serif, atmospheric subline ─── */
+@utility text-tagline-italic {
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-size: clamp(1rem, 0.5vw + 0.875rem, 1.125rem);
+  line-height: 1.45;
+  color: var(--color-charcoal-light);
+  letter-spacing: 0.005em;
+}
+
+/* ─── Modal backdrop: warm blush wash instead of cold black ─── */
+@utility modal-backdrop-warm {
+  background: linear-gradient(
+    180deg,
+    oklch(0.20 0.03 350 / 0.32),
+    oklch(0.25 0.05 350 / 0.42)
+  );
+}
+
+/* Reduced-motion additions for new modal/image animations */
+@media (prefers-reduced-motion: reduce) {
+  .animate-modal-rise-in,
+  .animate-modal-rise-out,
+  .animate-image-cross-fade {
+    animation: none !important;
+  }
 }
 
 /* ─── Bottom-nav-aware fixed positioning ─── */
