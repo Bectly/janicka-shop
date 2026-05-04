@@ -7,7 +7,8 @@ import { Trash2, ShoppingBag, ArrowLeft, Clock, Lock, RotateCcw, ShieldCheck, Ch
 import { Button } from "@/components/ui/button";
 import { useCartStore, type CartItem } from "@/lib/cart-store";
 import { formatPrice } from "@/lib/format";
-import { releaseReservation, extendReservations } from "@/lib/actions/reservation";
+import { releaseReservation, reserveProduct } from "@/lib/actions/reservation";
+import { useReservationHeartbeat } from "@/hooks/use-reservation-heartbeat";
 import { FREE_SHIPPING_THRESHOLD, SHIPPING_PRICES, SHIPPING_METHOD_LABELS } from "@/lib/constants";
 import { CartRecommendations } from "@/components/shop/cart-recommendations";
 import { CartExitIntent } from "@/components/shop/cart-exit-intent";
@@ -77,22 +78,12 @@ export default function CartPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted, restoreToken]);
 
-  // Extend reservations on mount
-  useEffect(() => {
-    if (!mounted || items.length === 0) return;
-    const productIds = items.map((i) => i.productId);
-    extendReservations(productIds).then((result) => {
-      for (const [productId, reservedUntil] of Object.entries(result)) {
-        // updateReservation handles both cases:
-        // truthy → updates expiry, null → removes item by productId
-        updateReservation(productId, reservedUntil);
-      }
-    }).catch(() => {
-      // Non-critical — reservations continue with existing expiry
-    });
-    // Only run on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mounted]);
+  // Sliding heartbeat — pings extendReservations every 60s while tab visible.
+  // The hook fires an initial ping immediately on mount, replacing the prior
+  // mount-only extend call. When server returns null for an item the hook
+  // marks it locally expired (past timestamp) instead of silently removing,
+  // so the soft-expire CTA below can surface.
+  useReservationHeartbeat(mounted);
 
   const handleRemove = useCallback(async (item: CartItem) => {
     removeItem(item.productId, item.size, item.color);
@@ -204,6 +195,7 @@ export default function CartPage() {
             key={`${item.productId}-${item.size}-${item.color}`}
             item={item}
             onRemove={() => handleRemove(item)}
+            onReservationUpdate={updateReservation}
           />
         ))}
       </div>
@@ -306,85 +298,175 @@ function useCountdown(expiresAt: string | undefined): string {
 function CartItemRow({
   item,
   onRemove,
+  onReservationUpdate,
 }: {
   item: CartItem;
   onRemove: () => void;
+  onReservationUpdate: (productId: string, reservedUntil: string | null) => void;
 }) {
   const countdown = useCountdown(item.reservedUntil);
   const isExpired = countdown === "0:00";
   const isUrgent = countdown !== "" && !isExpired && countdownSeconds(countdown) < 120;
   const [isRemoving, startTransition] = useTransition();
+  const [retryStatus, setRetryStatus] = useState<
+    "idle" | "retrying" | "reserved_by_other" | "sold"
+  >("idle");
+
+  const handleRetry = useCallback(async () => {
+    setRetryStatus("retrying");
+    try {
+      const result = await reserveProduct(item.productId);
+      if (result.success && result.reservedUntil) {
+        onReservationUpdate(item.productId, result.reservedUntil);
+        setRetryStatus("idle");
+        return;
+      }
+      // Distinguish sold/inactive vs reserved-by-other from the error message
+      // returned by reserveProduct. On "Produkt nebyl nalezen" or unavailable
+      // we treat as sold (auto-remove). Otherwise reserved by another visitor.
+      const msg = result.error ?? "";
+      if (/nalezen|nedostupn/i.test(msg) && !/rezervov/i.test(msg)) {
+        setRetryStatus("sold");
+        // Auto-remove after a short delay so user sees the message.
+        window.setTimeout(() => onRemove(), 2500);
+      } else {
+        setRetryStatus("reserved_by_other");
+      }
+    } catch {
+      setRetryStatus("reserved_by_other");
+    }
+  }, [item.productId, onRemove, onReservationUpdate]);
 
   return (
-    <div className={`flex gap-4 py-4 ${isExpired ? "opacity-50" : ""}`}>
-      {/* Product image */}
-      <div className="size-20 shrink-0 overflow-hidden rounded-lg bg-muted">
-        {item.image ? (
-          <Image
-            src={item.image}
-            alt={item.name}
-            width={80}
-            height={80}
-            className="size-full object-cover"
-            unoptimized
-          />
-        ) : (
-          <div className="flex size-full items-center justify-center text-lg text-muted-foreground/30">
-            {item.name.charAt(0)}
-          </div>
-        )}
-      </div>
-
-      <div className="flex flex-1 flex-col">
-        <div className="flex justify-between">
-          <div>
-            <Link
-              href={`/products/${item.slug}`}
-              className="text-sm font-medium transition-colors duration-150 hover:text-primary"
-            >
-              {item.name}
-            </Link>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              {item.size && `${item.size}`}
-              {item.size && item.color && " · "}
-              {item.color && `${item.color}`}
-            </p>
-          </div>
-          <span className="text-sm font-semibold">
-            {formatPrice(item.price)}
-          </span>
+    <div className={`flex flex-col gap-2 py-4 ${isExpired ? "opacity-90" : ""}`}>
+      <div className={`flex gap-4 ${isExpired && retryStatus !== "idle" ? "opacity-60" : ""}`}>
+        {/* Product image */}
+        <div className="size-20 shrink-0 overflow-hidden rounded-lg bg-muted">
+          {item.image ? (
+            <Image
+              src={item.image}
+              alt={item.name}
+              width={80}
+              height={80}
+              className="size-full object-cover"
+              unoptimized
+            />
+          ) : (
+            <div className="flex size-full items-center justify-center text-lg text-muted-foreground/30">
+              {item.name.charAt(0)}
+            </div>
+          )}
         </div>
 
-        <div className="mt-auto flex items-center justify-between pt-2">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">Unikátní kus</span>
-            {countdown && !isExpired && (
-              <span className={`flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-xs font-medium transition-colors ${
-                isUrgent
-                  ? "animate-pulse border-destructive/30 bg-destructive/10 text-destructive"
-                  : "border-champagne-dark/30 bg-champagne-light text-charcoal-light"
-              }`}>
-                <Clock className="size-3" />
-                {countdown}
-              </span>
-            )}
-            {isExpired && (
-              <span className="flex items-center gap-1 rounded-md border border-destructive/30 bg-destructive/10 px-1.5 py-0.5 text-xs font-medium text-destructive">
-                <AlertCircle className="size-3" />
-                Rezervace vypršela
-              </span>
-            )}
+        <div className="flex flex-1 flex-col">
+          <div className="flex justify-between">
+            <div>
+              <Link
+                href={`/products/${item.slug}`}
+                className="text-sm font-medium transition-colors duration-150 hover:text-primary"
+              >
+                {item.name}
+              </Link>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {item.size && `${item.size}`}
+                {item.size && item.color && " · "}
+                {item.color && `${item.color}`}
+              </p>
+            </div>
+            <span className="text-sm font-semibold">
+              {formatPrice(item.price)}
+            </span>
           </div>
-          <button
-            onClick={() => startTransition(() => { onRemove(); })}
-            disabled={isRemoving}
-            className="flex size-11 items-center justify-center rounded-lg text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-destructive disabled:cursor-not-allowed disabled:opacity-50"
-            aria-label="Odebrat z košíku"
+
+          <div className="mt-auto flex items-center justify-between pt-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Unikátní kus</span>
+              {countdown && !isExpired && (
+                <span className={`flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-xs font-medium transition-colors ${
+                  isUrgent
+                    ? "animate-pulse border-destructive/30 bg-destructive/10 text-destructive"
+                    : "border-champagne-dark/30 bg-champagne-light text-charcoal-light"
+                }`}>
+                  <Clock className="size-3" />
+                  {countdown}
+                </span>
+              )}
+              {isExpired && (
+                <span className="flex items-center gap-1 rounded-md border border-destructive/30 bg-destructive/10 px-1.5 py-0.5 text-xs font-medium text-destructive">
+                  <AlertCircle className="size-3" />
+                  Rezervace vypršela
+                </span>
+              )}
+            </div>
+            <button
+              onClick={() => startTransition(() => { onRemove(); })}
+              disabled={isRemoving}
+              className="flex size-11 items-center justify-center rounded-lg text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-destructive disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label="Odebrat z košíku"
+            >
+              <Trash2 className="size-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Soft-expire CTA — countdown hit 0:00, give user a one-click retry
+          before forcing manual remove. Three outcomes are surfaced inline. */}
+      {isExpired && retryStatus === "idle" && (
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-champagne-dark/30 bg-champagne-light/60 px-3 py-2 text-xs text-charcoal">
+          <span className="flex-1">
+            Rezervace vypršela. Zkuste ji obnovit, ať vám kousek neuteče.
+          </span>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 gap-1 text-xs"
+            onClick={handleRetry}
           >
-            <Trash2 className="size-4" />
+            <RotateCcw className="size-3" />
+            Obnovit rezervaci
+          </Button>
+        </div>
+      )}
+      {isExpired && retryStatus === "retrying" && (
+        <div className="flex items-center gap-2 rounded-lg border border-champagne-dark/30 bg-champagne-light/60 px-3 py-2 text-xs text-charcoal">
+          <Clock className="size-3.5 shrink-0 animate-pulse" />
+          <span>Obnovuji rezervaci…</span>
+        </div>
+      )}
+      {isExpired && retryStatus === "reserved_by_other" && (
+        <div
+          role="alert"
+          className="flex flex-wrap items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive"
+        >
+          <AlertCircle className="size-3.5 shrink-0" />
+          <span className="flex-1">
+            Někdo už si tento kus rezervoval první.
+          </span>
+          <Link
+            href={`/products?ref=${encodeURIComponent(item.productId)}`}
+            className="font-semibold underline underline-offset-2 hover:no-underline"
+          >
+            Zobrazit podobné
+          </Link>
+          <button
+            type="button"
+            onClick={() => startTransition(() => { onRemove(); })}
+            className="font-semibold underline underline-offset-2 hover:no-underline"
+          >
+            Odebrat
           </button>
         </div>
-      </div>
+      )}
+      {isExpired && retryStatus === "sold" && (
+        <div
+          role="alert"
+          className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive"
+        >
+          <AlertCircle className="size-3.5 shrink-0" />
+          <span>Tento kus byl právě prodán. Odebírám z košíku…</span>
+        </div>
+      )}
     </div>
   );
 }
