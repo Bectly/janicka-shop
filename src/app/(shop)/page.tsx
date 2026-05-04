@@ -18,9 +18,8 @@ import {
   dailySeed,
   mergeWithFillers,
 } from "@/lib/curated/fill-with-random";
-import { HeroSection } from "@/components/shop/hero-section";
+import { HeroBento } from "@/components/shop/hero-bento";
 import { EditorialStoryStrip } from "@/components/shop/editorial-story-strip";
-import { JanickaMomentSection } from "@/components/shop/janicka-moment-section";
 import { getSiteSetting, HERO_EDITORIAL_IMAGE_KEY } from "@/lib/site-settings";
 import { buildItemListSchema, buildWebSiteSchema, buildOrganizationSchema, jsonLdString } from "@/lib/structured-data";
 import { ScrollReveal } from "@/components/shop/scroll-reveal";
