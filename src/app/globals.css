@@ -623,26 +623,33 @@
 
 /* ─── Modal entrance: rise + fade + micro-scale ─── */
 /* Replaces shadcn default zoom-in-95 for a more editorial feel —
-   the popup lifts from below with soft expo easing instead of "popping". */
+   the popup lifts from below with soft expo easing instead of "popping".
+   Uses individual `translate` + `scale` properties (not `transform: translate()`)
+   so the keyframe composes with Tailwind v4's `-translate-x-1/2 -translate-y-1/2`
+   utility (which sets the `translate` property, not `transform`) without doubling. */
 @keyframes modal-rise-in {
   from {
     opacity: 0;
-    transform: translate(-50%, calc(-50% + 24px)) scale(0.98);
+    translate: -50% calc(-50% + 24px);
+    scale: 0.98;
   }
   to {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    translate: -50% -50%;
+    scale: 1;
   }
 }
 
 @keyframes modal-rise-out {
   from {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    translate: -50% -50%;
+    scale: 1;
   }
   to {
     opacity: 0;
-    transform: translate(-50%, calc(-50% + 16px)) scale(0.98);
+    translate: -50% calc(-50% + 16px);
+    scale: 0.98;
   }
 }
 
