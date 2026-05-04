@@ -1,28 +1,26 @@
-"use client";
-
-import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface JanickaSealProps {
   variant?: "default" | "compact";
   tone?: "default" | "onDark";
+  photoUrl?: string | null;
   className?: string;
 }
 
 /**
  * "Vybrala a nafotila Janička osobně" — personal authenticity seal.
- * QW-05: differentiator vs. mass second-hand marketplaces.
  *
- * Avatar at /janicka/avatar.jpg — falls back to "J" initials badge if missing
- * (so the component never crashes when the asset hasn't been uploaded yet).
+ * Renders the "J" initial badge by default. Pass `photoUrl` (e.g. from a
+ * SiteSetting) to swap in a real photo — only do that when the URL is known
+ * to resolve, since a missing asset would render the browser's broken-image
+ * icon before client JS can fall back.
  */
 export function JanickaSeal({
   variant = "default",
   tone = "default",
+  photoUrl = null,
   className,
 }: JanickaSealProps) {
-  const [avatarFailed, setAvatarFailed] = useState(false);
-
   const sizePx = variant === "compact" ? 20 : 24;
   const textCls = variant === "compact" ? "text-[11px]" : "text-sm";
   const onDark = tone === "onDark";
@@ -39,11 +37,10 @@ export function JanickaSeal({
       )}
       aria-label="Vybrala a nafotila Janička osobně"
     >
-      {!avatarFailed ? (
-        // Plain <img> so onError fallback works without next/image build-time validation.
+      {photoUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src="/janicka/avatar.jpg"
+          src={photoUrl}
           alt=""
           width={sizePx}
           height={sizePx}
@@ -52,7 +49,6 @@ export function JanickaSeal({
             onDark && "ring-1 ring-white/40",
           )}
           style={{ width: sizePx, height: sizePx }}
-          onError={() => setAvatarFailed(true)}
         />
       ) : (
         <span

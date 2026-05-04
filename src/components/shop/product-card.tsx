@@ -7,7 +7,6 @@ import { WishlistButton } from "./wishlist-button";
 import { QuickViewButton } from "./quick-view-modal";
 import { TimeElapsedBadge } from "./time-elapsed-badge";
 import { ProductCardImage } from "./product-card-image";
-import { JanickaSeal } from "./janicka-seal";
 import { Heart, Truck } from "lucide-react";
 
 interface ProductCardProps {
@@ -145,7 +144,6 @@ export function ProductCard({
 
           {/* Editorial gradient overlay with product info */}
           <div className="absolute inset-x-0 bottom-0 z-[5] bg-gradient-to-t from-black/65 via-black/35 to-transparent px-5 pt-24 pb-5 transition-all duration-500 group-hover:from-black/75 group-hover:via-black/45">
-            <JanickaSeal variant="compact" tone="onDark" className="mb-2 hidden sm:flex" />
             <div className="flex items-center gap-1.5">
               {brand && (
                 <span className="text-[11px] font-semibold tracking-[0.12em] text-white/90 uppercase">{brand}</span>
