@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ArrowDown, Heart, Percent } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 /* ─── Cherry blossom petal SVG paths (5 variants) ─── */
 const PETAL_PATHS = [
@@ -46,7 +46,7 @@ export function HeroSection() {
   }, []);
 
   return (
-    <section className="relative flex min-h-[58vh] items-center overflow-hidden bg-gradient-to-br from-brand-light/40 via-blush to-champagne-light/60 lg:min-h-[62vh]">
+    <section className="relative flex max-h-hero-sm sm:max-h-hero items-center overflow-hidden bg-gradient-to-br from-brand-light/40 via-blush to-champagne-light/60">
       {/* Cherry blossom petals — CSS animated, no JS runtime cost */}
       <div
         aria-hidden="true"
@@ -91,12 +91,12 @@ export function HeroSection() {
       />
 
       {/* Hero content */}
-      <div className="relative mx-auto flex w-full max-w-7xl flex-col items-center px-4 py-10 text-center sm:px-6 sm:py-12 lg:px-8 lg:py-14">
+      <div className="relative mx-auto flex w-full max-w-7xl flex-col items-center px-4 py-6 text-center sm:px-6 sm:py-8 lg:px-8 lg:py-10">
         <h1 className="sr-only">
           Janička — second hand &amp; vintage móda, značkové oblečení levně
         </h1>
 
-        {/* Editorial photo (when admin uploaded) — otherwise the brand logo */}
+        {/* Brand logo */}
         <div
           className={`relative transition-all duration-1000 ease-out ${
             mounted
@@ -111,34 +111,22 @@ export function HeroSection() {
             height={218}
             priority
             fetchPriority="high"
-            className="mx-auto h-auto w-[140px] drop-shadow-lg sm:w-[180px] lg:w-[210px]"
+            className="mx-auto h-auto w-[112px] drop-shadow-lg sm:w-[140px] lg:w-[160px]"
           />
         </div>
 
         {/* Tagline — editorial serif italic accent */}
         <p
-          className={`mt-4 max-w-xl font-heading italic text-xl leading-snug text-charcoal sm:mt-5 sm:text-2xl lg:text-3xl transition-all duration-1000 delay-200 ease-out ${
+          className={`mt-3 max-w-xl font-heading italic text-lg leading-snug text-charcoal sm:mt-4 sm:text-xl lg:text-2xl transition-all duration-1000 delay-200 ease-out ${
             mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
           }`}
         >
           Každý kousek vybírám a&nbsp;fotím osobně.
         </p>
 
-        {/* Brand editorial pill */}
+        {/* Single primary CTA */}
         <div
-          className={`mt-4 inline-flex items-center gap-1.5 rounded-full border border-brand/30 bg-card/60 px-4 py-1 backdrop-blur-sm transition-all duration-1000 delay-[400ms] ease-out ${
-            mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-          }`}
-        >
-          <Heart className="size-3 text-brand" aria-hidden="true" />
-          <span className="text-sm font-medium text-brand/80">
-            Česká rodinná second hand značka
-          </span>
-        </div>
-
-        {/* CTA buttons */}
-        <div
-          className={`mt-6 flex flex-wrap justify-center gap-3 transition-all duration-1000 delay-500 ease-out ${
+          className={`mt-5 transition-all duration-1000 delay-[400ms] ease-out sm:mt-6 ${
             mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
           }`}
         >
@@ -150,30 +138,6 @@ export function HeroSection() {
             Prohlédnout kolekci
             <ArrowRight data-icon="inline-end" className="size-4" />
           </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            data-track="hero-cta-sale"
-            render={<Link href="/products?sale=true" />}
-          >
-            <Percent data-icon="inline-start" className="size-4" />
-            Výprodej
-          </Button>
-        </div>
-
-        {/* Scroll cue — animated arrow to #new-products */}
-        <div
-          className={`mt-6 transition-all duration-1000 delay-700 ease-out ${
-            mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-          }`}
-        >
-          <a
-            href="#new-products"
-            className="flex flex-col items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-brand"
-          >
-            Objevte nové kousky
-            <ArrowDown className="size-4 animate-bounce" aria-hidden="true" />
-          </a>
         </div>
       </div>
     </section>

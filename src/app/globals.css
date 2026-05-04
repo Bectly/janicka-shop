@@ -77,6 +77,10 @@
   --spacing-modal-content-min: 28rem;
   --spacing-modal-gallery-min: 32rem;
 
+  /* Hero envelope — max-h utility, NOT min-h (min-h lets content overflow the envelope) */
+  --height-hero: 45vh;
+  --height-hero-sm: 40vh;
+
   /* Editorial aspect ratios — used by aspect-portrait / aspect-fashion */
   --aspect-portrait: 4 / 5;
   --aspect-fashion: 3 / 4;
