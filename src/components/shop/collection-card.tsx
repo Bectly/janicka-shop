@@ -50,7 +50,7 @@ export function CollectionCard({
       className={`group relative overflow-hidden rounded-2xl shadow-sm transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_16px_40px_-8px_rgba(180,130,140,0.20)] haptic-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 ${wide ? "sm:col-span-2" : ""}`}
     >
       {/* ── Image / empty state ────────────────────────────── */}
-      <div className={`relative overflow-hidden ${wide ? "aspect-[4/3] sm:aspect-[16/9]" : "aspect-[4/3]"}`}>
+      <div className={`relative overflow-hidden ${wide ? "aspect-[4/3] sm:aspect-[3/2]" : "aspect-[4/3] sm:aspect-[3/2] lg:aspect-[4/3]"}`}>
         {hasImage ? (
           <>
             <Image
@@ -65,8 +65,8 @@ export function CollectionCard({
               priority={priority}
               quality={90}
             />
-            {/* Editorial gradient — ensures text legibility */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent" />
+            {/* Editorial gradient — stronger via stop ensures WCAG AA on count pill text */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/40 to-black/10" />
             {/* Subtle brand-tint on hover */}
             <div className="absolute inset-0 bg-primary/0 transition-colors duration-300 group-hover:bg-primary/8" />
           </>
@@ -74,20 +74,31 @@ export function CollectionCard({
           <div
             className={`absolute inset-0 bg-gradient-to-br ${gradientTheme} transition-opacity duration-300 group-hover:opacity-90`}
           >
+            {/* Decorative initial — editorial signal of curated emptiness */}
+            <div
+              className="pointer-events-none absolute -right-4 -top-6 select-none font-heading text-[8rem] font-bold leading-none text-brand-dark/[0.08] sm:text-[10rem]"
+              aria-hidden="true"
+            >
+              {title.charAt(0)}
+            </div>
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="rounded-2xl bg-white/30 p-4 shadow-sm backdrop-blur-sm">
-                <Layers className="size-8 text-brand-dark/50" />
+              <div className="rounded-full bg-white/40 p-3 shadow-sm backdrop-blur-sm ring-1 ring-white/30">
+                <Layers className="size-6 text-brand-dark/60" />
               </div>
             </div>
+            {/* Soft bottom fade so overlaid title sits cleanly */}
+            <div className="absolute inset-0 bg-gradient-to-t from-white/45 via-white/10 to-transparent" />
           </div>
         )}
 
         {/* ── Overlaid content ─────────────────────────────── */}
         <div className="absolute bottom-0 left-0 right-0 p-4 lg:p-5">
-          {/* Count pill */}
+          {/* Count pill — WCAG AA: solid black/45 background + white text = ≥4.5:1 */}
           {countLabel && (
-            <div className="mb-2 inline-flex items-center rounded-full bg-white/20 px-2.5 py-0.5 backdrop-blur-sm">
-              <span className={`text-[11px] font-medium ${hasImage ? "text-white/90" : "text-brand-dark/80"}`}>
+            <div className={`mb-2 inline-flex items-center rounded-full px-2.5 py-0.5 backdrop-blur-sm ${
+              hasImage ? "bg-black/45 ring-1 ring-white/15" : "bg-white/60 ring-1 ring-brand-dark/10"
+            }`}>
+              <span className={`text-[11px] font-semibold ${hasImage ? "text-white" : "text-brand-dark/85"}`}>
                 {countLabel}
               </span>
             </div>
@@ -97,21 +108,19 @@ export function CollectionCard({
           <h2
             className={`font-heading font-bold tracking-tight transition-colors duration-200 ${
               wide ? "text-xl sm:text-2xl" : "text-lg sm:text-xl"
-            } ${hasImage ? "text-white" : "text-brand-dark"}`}
+            } ${hasImage ? "text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]" : "text-brand-dark"}`}
           >
             {title}
           </h2>
 
-          {/* Description */}
-          {description && (
-            <p
-              className={`mt-1 line-clamp-2 text-sm leading-snug ${
-                hasImage ? "text-white/75" : "text-brand-dark/65"
-              }`}
-            >
-              {description}
-            </p>
-          )}
+          {/* Description — fallback text when admin nevyplnil */}
+          <p
+            className={`mt-1 line-clamp-2 text-sm leading-snug ${
+              hasImage ? "text-white/85 drop-shadow-[0_1px_1px_rgba(0,0,0,0.4)]" : "text-brand-dark/70"
+            }`}
+          >
+            {description || (countLabel ? `Kurátorovaný výběr — ${countLabel}` : "Kurátorovaný výběr")}
+          </p>
 
           {/* CTA arrow — subtle directional hint, no redundant text (whole card is the link) */}
           <p
