@@ -45,7 +45,7 @@ export function HeroSection({
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- non-deterministic petal positions must be generated client-side after hydration
-    setPetals(generatePetals(12));
+    setPetals(generatePetals(6));
     // Trigger entrance animation after mount
     const raf = requestAnimationFrame(() => setMounted(true));
     return () => cancelAnimationFrame(raf);
@@ -54,7 +54,7 @@ export function HeroSection({
   const hasEditorial = Boolean(editorialImageUrl);
 
   return (
-    <section className="relative min-h-[60vh] lg:min-h-[65vh] overflow-hidden bg-gradient-to-br from-brand-light/40 via-blush to-champagne-light/60">
+    <section className="relative min-h-[50vh] lg:min-h-[55vh] overflow-hidden bg-gradient-to-br from-brand-light/40 via-blush to-champagne-light/60">
       {/* Cherry blossom petals — CSS animated, no JS runtime cost */}
       <div
         aria-hidden="true"
@@ -99,7 +99,7 @@ export function HeroSection({
       />
 
       {/* Hero content */}
-      <div className="relative mx-auto flex max-w-7xl flex-col items-center px-4 py-12 text-center sm:px-6 sm:py-16 lg:px-8 lg:py-24">
+      <div className="relative mx-auto flex max-w-7xl flex-col items-center px-4 py-8 text-center sm:px-6 sm:py-10 lg:px-8 lg:py-14">
         <h1 className="sr-only">
           Janička — second hand &amp; vintage móda, značkové oblečení levně
         </h1>
@@ -113,7 +113,7 @@ export function HeroSection({
           }`}
         >
           {hasEditorial ? (
-            <div className="relative mx-auto w-[200px] sm:w-[260px] lg:w-[340px]">
+            <div className="relative mx-auto w-[160px] sm:w-[200px] lg:w-[240px]">
               <Image
                 src={editorialImageUrl as string}
                 alt="Janička — editoriální foto"
@@ -141,14 +141,14 @@ export function HeroSection({
               height={218}
               priority
               fetchPriority="high"
-              className="mx-auto h-auto w-[200px] drop-shadow-lg sm:w-[280px] lg:w-[360px]"
+              className="mx-auto h-auto w-[160px] drop-shadow-lg sm:w-[200px] lg:w-[240px]"
             />
           )}
         </div>
 
         {/* Tagline — editorial serif italic accent */}
         <p
-          className={`mt-4 max-w-lg font-heading italic text-xl leading-snug text-charcoal sm:mt-6 sm:max-w-xl sm:text-2xl lg:text-3xl transition-all duration-1000 delay-200 ease-out ${
+          className={`mt-3 max-w-lg font-heading italic text-lg leading-snug text-charcoal sm:mt-4 sm:max-w-xl sm:text-xl lg:text-2xl transition-all duration-1000 delay-200 ease-out ${
             mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
           }`}
         >
