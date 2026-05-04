@@ -644,18 +644,10 @@ export default async function HomePage() {
         <JsonLdSection />
       </Suspense>
 
-      {/* Hero — compact logo + tagline + CTAs (~58-62vh) */}
+      {/* Hero — max-h token envelope (max-h-hero-sm / max-h-hero), products visible at fold */}
       <HeroSection />
 
-      {/* Editorial story strip — italic brand statement bridging hero and product grid */}
-      <EditorialStoryStrip />
-
-      {/* Mother's Day banner — date-gated May 1–10, 2026 */}
-      <Suspense fallback={null}>
-        <MothersDayBanner />
-      </Suspense>
-
-      {/* Nově přidané — full grid, lands at fold-edge as the welcome page punchline */}
+      {/* Nově přidané — peeks at fold-edge, first content user sees on scroll */}
       <div id="new-products">
         <ScrollReveal>
           <Suspense fallback={<div className="min-h-[500px]" aria-hidden="true" />}>
@@ -663,6 +655,14 @@ export default async function HomePage() {
           </Suspense>
         </ScrollReveal>
       </div>
+
+      {/* Mother's Day banner — date-gated May 1–10, 2026 */}
+      <Suspense fallback={null}>
+        <MothersDayBanner />
+      </Suspense>
+
+      {/* Editorial story strip — brand statement, moved below products */}
+      <EditorialStoryStrip />
 
       {/* Janičin moment — editorial photo + brand quote, 2-col on desktop */}
       <ScrollReveal>
