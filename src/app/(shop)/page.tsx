@@ -18,7 +18,7 @@ import {
   dailySeed,
   mergeWithFillers,
 } from "@/lib/curated/fill-with-random";
-import { HeroSection } from "@/components/shop/hero-section";
+import { HeroBento } from "@/components/shop/hero-bento";
 import { EditorialStoryStrip } from "@/components/shop/editorial-story-strip";
 import { getSiteSetting, HERO_EDITORIAL_IMAGE_KEY } from "@/lib/site-settings";
 import { buildItemListSchema, buildWebSiteSchema, buildOrganizationSchema, jsonLdString } from "@/lib/structured-data";
@@ -651,30 +651,39 @@ async function JsonLdSection() {
 
 export default async function HomePage() {
   await connection();
-  const editorialImageUrl = await getSiteSetting(HERO_EDITORIAL_IMAGE_KEY);
+  const [editorialImageUrl, bentoCategories, bentoProducts] = await Promise.all([
+    getSiteSetting(HERO_EDITORIAL_IMAGE_KEY),
+    getTopCategoriesForBento(),
+    getNewProductsForPage(),
+  ]);
   return (
     <>
-            {/* Hero — max-h token ceiling (max-h-hero-sm / max-h-hero), NOT min-h.
-          3 prior failures (#5279/#5283/#5284) used min-h — content overran the envelope.
-          Ganni-pattern: ≤45vh hero so products peek at fold-edge.
-          Spec: docs/research/fashion-hero-patterns-2026-05-04.md */}
-      <HeroSection />
-
-      {/* Nově přidané — peeks at fold-edge (Ganni-pattern welcome punchline) */}
-      <div id="new-products">
-        <ScrollReveal>
-          <Suspense fallback={<div className="min-h-[500px]" aria-hidden="true" />}>
-            <NewProductsSection />
-          </Suspense>
-        </ScrollReveal>
-      </div>
+      {/* Hero bento — 4-tile editorial mosaic (brand / Janička / new peek / categories).
+          Spec: docs/research/fashion-hero-bento-2026-05-04.md */}
+      <HeroBento
+        editorialImageUrl={editorialImageUrl}
+        newProducts={bentoProducts.slice(0, 3).map((p) => ({
+          id: p.id,
+          slug: p.slug,
+          name: p.name,
+          images: p.images,
+        }))}
+        categories={bentoCategories}
+      />
 
       {/* Mother's Day banner — date-gated May 1–10, 2026 */}
       <Suspense fallback={null}>
         <MothersDayBanner />
       </Suspense>
 
-      {/* Editorial story strip — moved BELOW products per Ganni-pattern spec */}
+      {/* Nově přidané — full grid below the bento */}
+      <ScrollReveal>
+        <Suspense fallback={<div className="min-h-[500px]" aria-hidden="true" />}>
+          <NewProductsSection />
+        </Suspense>
+      </ScrollReveal>
+
+      {/* Editorial story strip — bridges Nově přidané and Kategorie */}
       <EditorialStoryStrip />
 
       {/* Categories — streams independently */}
