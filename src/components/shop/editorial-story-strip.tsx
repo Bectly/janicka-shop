@@ -19,16 +19,11 @@ export function EditorialStoryStrip() {
             Vybírám sama, fotím sama, balím s láskou.
           </span>
         </p>
-
-        <div
-          aria-hidden="true"
-          className="flex items-center gap-3 text-brand/40"
-        >
+        <div aria-hidden="true" className="flex items-center gap-3 text-brand/40">
           <span className="h-px w-10 bg-brand/20" />
           <span className="text-xs uppercase tracking-[0.2em]">Janička</span>
           <span className="h-px w-10 bg-brand/20" />
         </div>
-
         <ul className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-charcoal-light/80">
           {beats.map(({ icon: Icon, label }) => (
             <li key={label} className="inline-flex items-center gap-1.5">
